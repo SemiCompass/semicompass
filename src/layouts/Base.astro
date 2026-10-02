@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { BUILD_ENV } from 'astro:env/server';
 
 interface Props {
   title: string;
@@ -16,6 +17,7 @@ const { title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {BUILD_ENV === 'preview' && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
     <header class="site-header">
