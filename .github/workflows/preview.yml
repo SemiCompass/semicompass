@@ -10,11 +10,39 @@ on:
 permissions: {}
 
 jobs:
-  create:
+  # 1つ目: 開いている変更案の番号を調べる（秘密の情報は使わない）
+  find-pr:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      number: ${{ steps.find.outputs.number }}
+    steps:
+      - id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          number=$(gh api "repos/${REPO}/commits/${HEAD_SHA}/pulls" \
+            --jq '[.[] | select(.state == "open" and .base.ref == "main")][0].number // empty')
+          case "$number" in
+            ''|*[!0-9]*)
+              echo "開いている変更案が見つからないため、プレビューは作らない"
+              number=""
+              ;;
+          esac
+          echo "number=${number}" >> "$GITHUB_OUTPUT"
+
+  # 2つ目: プレビューを作る（Cloudflare の秘密の情報を使うのはここだけ）
+  create:
+    needs: find-pr
+    if: needs.find-pr.outputs.number != ''
     runs-on: ubuntu-latest
     # preview の Environment（CLOUDFLARE_API_TOKEN、CLOUDFLARE_ACCOUNT_ID）を使う。main だけに限定済み
     environment: preview
@@ -22,7 +50,7 @@ jobs:
       contents: read
       actions: read
     concurrency:
-      group: preview-${{ github.event.workflow_run.pull_requests[0].number }}
+      group: preview-${{ needs.find-pr.outputs.number }}
       cancel-in-progress: true
     steps:
       # 変更案ではなく、main の設定（wrangler.jsonc、パッケージ）を使う
@@ -53,13 +81,12 @@ jobs:
 
       - name: プレビューを作る
         env:
-          # 変更案の番号は、変更案が作る成果物ではなく、GitHubのイベントから取る
-          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          PR_NUMBER: ${{ needs.find-pr.outputs.number }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-preview.ndjson
         run: |
-          case "$PR_NUMBER" in ''|*[!0-9]*) echo "変更案の番号を取得できない"; exit 1;; esac
+          case "$PR_NUMBER" in ''|*[!0-9]*) echo "変更案の番号が不正"; exit 1;; esac
           npx wrangler preview --name "pr-${PR_NUMBER}"
           # プレビューのURLを、ログで確かめられるようにする
           cat "$WRANGLER_OUTPUT_FILE_PATH" || true
