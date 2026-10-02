@@ -1,0 +1,7 @@
+# 全ページに付けるヘッダー（アーキテクチャ設計書10.4）。
+# CSPは外部を読み込まない最小の指定。外部の送信先を足すときは、外部送信の公表（/external-transmission/）の更新と一緒に変える。
+/*
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'

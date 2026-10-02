@@ -8,9 +8,14 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:preview": "BUILD_ENV=preview astro build",
+    "build:production": "BUILD_ENV=production astro build",
     "preview": "astro preview"
   },
   "dependencies": {
     "astro": "7.3.5"
+  },
+  "devDependencies": {
+    "wrangler": "4.147.0"
   }
 }
