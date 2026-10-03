@@ -16,7 +16,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.head_repository.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: read
@@ -43,7 +43,7 @@ jobs:
   create:
     needs: find-pr
     if: needs.find-pr.outputs.number != ''
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # preview の Environment（CLOUDFLARE_API_TOKEN、CLOUDFLARE_ACCOUNT_ID）を使う。main だけに限定済み
     environment: preview
     permissions:
