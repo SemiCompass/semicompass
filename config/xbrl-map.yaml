@@ -22,8 +22,13 @@
 #   完全に一致する行だけを使う。セグメント別の従業員数の行（Member を含むコンテキスト）は使わない。
 # ・セグメントの一覧から除く、または別に扱うメンバー：
 #   TotalOfReportableSegmentsAndOthersMember（合計。セグメントではない）、
+#   ReportableSegmentsMember（IFRSの、報告セグメントの合計。セグメントではない。ソニーの書類にある）、
 #   ReconcilingItemsMember（調整額。segment_adjustment に使う）、
 #   NonConsolidatedMember（単体の文脈。セグメントではない）。
+#   メンバー名は、前置きを除いた名前の完全一致で判定する（OtherReportableSegmentsMember のように、名前の一部が
+#   似ているだけの別のメンバーは、セグメントとして残す）。
+# ・セグメントの要素（外部売上、売上合計、利益）は、候補を先頭から順に探し、メンバー付きの行が1つでもある
+#   最初の候補だけを、その書類で使う（候補どうしの行を混ぜない）。
 # ・セグメントの member は、コンテキストIDの、期間（Duration など）の後（最初の _ の後）の部分から、会社固有の前置き
 #   （jpcrp030000-asr_E01740-000 のような形）を除いた名前。数値の行に日本語のセグメント名はないため、自動取得の
 #   データの name には、この名前（前置きを除いたメンバー名）を入れる。画面の日本語の名前は、セグメント対応表
@@ -89,6 +94,7 @@ standards:
         - jpigp_cor:RevenueIFRS                       # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）。メンバーを含む行
       segment_profit:
         - jpigp_cor:SegmentProfitLossIFRS             # 確認済み（京セラ、アドバンテスト）
+        - jpigp_cor:OperatingProfitLossIFRS           # 確認済み（ソニー）。メンバーを含む行（営業利益の要素で、セグメント別の利益も表す）
     expected_absent:
       - ordinary_income   # IFRSには経常利益がない（確認済み。ソニー、レゾナック、京セラ、アドバンテスト）
   # 米国基準：確認済み（キヤノン）。売上と純利益だけ。営業利益とセグメントの数値は、キヤノンの書類にない。

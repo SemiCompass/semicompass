@@ -48,7 +48,10 @@ SCALE_TO_YEN = {"yen": 0, "thousand_yen": 3, "million_yen": 6}
 PREFIX_PATTERN = re.compile(r"^jpcrp\d+-[a-z]+_E\d{5}-\d{3}")  # 会社固有の前置き
 MEMBER_PATTERN = re.compile(r"^[A-Za-z0-9]+Member$")
 TOTAL_MEMBER = "TotalOfReportableSegmentsAndOthersMember"
+REPORTABLE_MEMBER = "ReportableSegmentsMember"  # IFRSの、報告セグメントの合計（ソニー）
 RECONCILING_MEMBER = "ReconcilingItemsMember"
+# セグメントの一覧から除くメンバー。名前の完全一致で判定する（OtherReportableSegmentsMember などは除かない）
+NOT_SEGMENT_MEMBERS = frozenset({TOTAL_MEMBER, REPORTABLE_MEMBER, RECONCILING_MEMBER})
 NON_CONSOLIDATED_MEMBER = "NonConsolidatedMember"
 NUMBER_PATTERN = re.compile(r"^[+-]?(\d+(\.\d*)?|\.\d+)$")
 LABEL_NOISE = re.compile(r"[（(](IFRS|US ?GAAP)[）)]")
@@ -238,14 +241,17 @@ def _segments(rows: list[dict], items: dict, duration: str, work: _Extraction) -
     totals, profits = items.get("segment_total_sales", []), items.get("segment_profit", [])
 
     def by_member(elements: list[str]) -> dict[str, list[dict]]:
-        found: dict[str, list[dict]] = {}
-        for element in elements:  # 要素は、先頭から順に探す
+        # 候補を先頭から順に探し、メンバー付きの行がある最初の要素だけを使う（候補どうしの行を混ぜない）
+        for element in elements:
+            found: dict[str, list[dict]] = {}
             for r in rows:
                 if r["element"] == element and parse_decimal(r["value"]) is not None:
                     member = segment_member(r["context"], duration)
                     if member is not None:
                         found.setdefault(member, []).append(r)
-        return found
+            if found:
+                return found
+        return {}
 
     skipped = sorted({r["context"] for r in rows if r["element"] in external and r["context"].startswith(duration + "_")
                       and parse_decimal(r["value"]) is not None and segment_member(r["context"], duration) is None})
@@ -255,7 +261,7 @@ def _segments(rows: list[dict], items: dict, duration: str, work: _Extraction) -
     ext, tot, prof = by_member(external), by_member(totals), by_member(profits)
     segments = []
     for member, member_rows in ext.items():
-        if member in (TOTAL_MEMBER, RECONCILING_MEMBER):
+        if member in NOT_SEGMENT_MEMBERS:
             continue
         segment = {"name": member, "member": member,
                    "net_sales_external": work.reported(f"segment:{member}:net_sales_external", member_rows[0], "money")}
