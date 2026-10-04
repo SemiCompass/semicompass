@@ -1,0 +1,366 @@
+"""データの形式の検証（アーキテクチャ設計書 P10）の最初の版。
+
+引数なしで、リポジトリ全体を検査する。--path で、1ファイルだけも検査できる。
+
+対象と、使うスキーマ（jsonschema Draft 2020-12、format の検査を有効にする）：
+* data/companies/*.yaml        schemas/data/company.schema.json
+* data/auto/*.json             schemas/data/auto-company.schema.json
+* data/supply-chain.yaml       schemas/data/supply-chain.schema.json
+* config/xbrl-map.yaml         schemas/config/xbrl-map.schema.json
+
+スキーマで確かめられない整合（データ定義書 13章の検証規則）：
+* V-01 スキーマに合う（format の date、date-time の検査を含む）
+* V-02 ファイル名と識別子が一致する（data/companies の slug、data/auto の company）
+* V-03 識別子が重複しない（企業の slug、edinet_code、securities_code、sources の id、
+  supply-chain の slug、data/auto の filings の doc_id、financials・employees の期間）。
+  data/auto の financials・employees が古い順であること（データ定義書 5.1）も、ここで確かめる
+* V-04 参照の先が存在する（data/auto の company が企業マスタにあり、edinet_code が一致する、
+  selection.source・parent.source・history[].source が同じファイルの sources にある、
+  categories・processes が supply-chain.yaml にある、revisions の path が実在する値を指す、
+  revisions の doc_id・supersedes が filings にある、financials・employees の doc_id が filings にある）
+* YAMLの落とし穴：引用符なしの日付（YAMLが日付型に変える）、yes・no・on・off など（YAML 1.1 では真偽値）
+
+実装していない規則：V-05〜V-21（本文、公開済みの識別子の削除、必須項目の充足、日付の前後、拠点、予算など）。
+
+出力は、エラーの一覧（ファイル、場所、規則、内容）。終了コードは、エラーがあれば1、なければ0。
+--path が対象外のファイルのときは2。
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime
+import json
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+import yaml
+from jsonschema import Draft202012Validator
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "edinet"))
+
+from ingest_company import format_checker  # noqa: E402  date-time の検査は、取り込みと同じ内容にする
+
+SCHEMAS = {
+    "company": "schemas/data/company.schema.json",
+    "auto": "schemas/data/auto-company.schema.json",
+    "supply-chain": "schemas/data/supply-chain.schema.json",
+    "xbrl-map": "schemas/config/xbrl-map.schema.json",
+}
+PLAIN_NON_STANDARD_BOOL = {"yes", "no", "on", "off", "y", "n"}
+BOOL_TAG = "tag:yaml.org,2002:bool"
+TIMESTAMP_TAG = "tag:yaml.org,2002:timestamp"
+
+
+@dataclass(frozen=True)
+class Problem:
+    file: str
+    path: str
+    rule: str
+    message: str
+
+    def __str__(self) -> str:
+        return f"{self.file}: {self.path or '(全体)'}: [{self.rule}] {self.message}"
+
+
+def pointer(parts) -> str:
+    return "".join("/" + str(p).replace("~", "~0").replace("/", "~1") for p in parts)
+
+
+# ---- 読み込み ----
+
+def load_yaml(path: Path) -> tuple[object, list[tuple[str, str, str]]]:
+    """YAMLを読む。(内容、YAMLの落とし穴の一覧 [(path, rule, message)])。読めなければ ValueError。"""
+    text = path.read_text(encoding="utf-8")
+    try:
+        node = yaml.compose(text)
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as error:
+        raise ValueError(f"YAMLとして読めない（{str(error).splitlines()[0] if str(error) else type(error).__name__}）") from None
+    pitfalls: list[tuple[str, str, str]] = []
+    if node is not None:
+        _scan_nodes(node, [], pitfalls)
+    return data, pitfalls
+
+
+def _scan_nodes(node, parts: list, out: list) -> None:
+    if isinstance(node, yaml.MappingNode):
+        for key_node, value_node in node.value:
+            key = key_node.value if isinstance(key_node, yaml.ScalarNode) else "?"
+            _scan_nodes(value_node, parts + [key], out)
+    elif isinstance(node, yaml.SequenceNode):
+        for i, item in enumerate(node.value):
+            _scan_nodes(item, parts + [i], out)
+    elif isinstance(node, yaml.ScalarNode) and node.style is None:  # 引用符なし
+        line = node.start_mark.line + 1
+        if node.tag == TIMESTAMP_TAG:
+            out.append((pointer(parts), "YAML", f"{line}行目: 引用符なしの日付 {node.value} は、YAMLが日付型に変える。"
+                        "引用符で囲んで文字列にする"))
+        elif node.tag == BOOL_TAG and node.value.lower() in PLAIN_NON_STANDARD_BOOL:
+            out.append((pointer(parts), "YAML", f"{line}行目: 引用符なしの {node.value} は、YAML 1.1 では真偽値になる。"
+                        "文字列なら引用符で囲み、真偽値なら true／false と書く"))
+
+
+def load_json(path: Path) -> object:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, UnicodeDecodeError) as error:
+        raise ValueError(f"JSONとして読めない（{type(error).__name__}）") from None
+
+
+# ---- スキーマ（V-01） ----
+
+class SchemaSet:
+    def __init__(self, schema_root: Path):
+        self.validators = {}
+        self.documents = {}
+        for kind, rel in SCHEMAS.items():
+            schema = json.loads((schema_root / rel).read_text(encoding="utf-8"))
+            Draft202012Validator.check_schema(schema)
+            self.documents[kind] = schema
+            self.validators[kind] = Draft202012Validator(schema, format_checker=format_checker())
+
+    def errors(self, kind: str, data: object, file: str) -> list[Problem]:
+        found = sorted(self.validators[kind].iter_errors(data), key=lambda e: [str(p) for p in e.absolute_path])
+        return [Problem(file, pointer(e.absolute_path), "V-01", e.message[:300]) for e in found]
+
+
+# ---- 検査の本体 ----
+
+def kind_of(path: Path, root: Path) -> str | None:
+    try:
+        rel = path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return None
+    if rel.startswith("data/companies/") and rel.endswith(".yaml") and rel.count("/") == 2:
+        return "company"
+    if rel.startswith("data/auto/") and rel.endswith(".json") and rel.count("/") == 2:
+        return "auto"
+    if rel == "data/supply-chain.yaml":
+        return "supply-chain"
+    if rel == "config/xbrl-map.yaml":
+        return "xbrl-map"
+    return None
+
+
+def collect_files(root: Path) -> list[tuple[str, Path]]:
+    files: list[tuple[str, Path]] = []
+    files += [("company", p) for p in sorted((root / "data" / "companies").glob("*.yaml"))]
+    files += [("auto", p) for p in sorted((root / "data" / "auto").glob("*.json"))]
+    for kind, rel in (("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml")):
+        if (root / rel).is_file():
+            files.append((kind, root / rel))
+    return files
+
+
+def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path | None = None) -> list[Problem]:
+    """root の下のデータを検査する。only を指定すると、そのファイルのエラーだけを返す。"""
+    schemas = SchemaSet(schema_root)
+    problems: list[Problem] = []
+    loaded: dict[str, tuple[str, Path, object]] = {}
+    for kind, path in collect_files(root):
+        rel = path.relative_to(root).as_posix()
+        try:
+            if kind == "auto":
+                data, pitfalls = load_json(path), []
+            else:
+                data, pitfalls = load_yaml(path)
+        except ValueError as error:
+            problems.append(Problem(rel, "", "V-01", str(error)))
+            continue
+        loaded[rel] = (kind, path, data)
+        problems += [Problem(rel, p, rule, msg) for p, rule, msg in pitfalls]
+        problems += schemas.errors(kind, data, rel)
+
+    supply = next((d for k, _, d in loaded.values() if k == "supply-chain"), None)
+    problems += check_supply_chain(loaded, supply, schemas)
+    companies = {rel: d for rel, (k, _, d) in loaded.items() if k == "company" and isinstance(d, dict)}
+    problems += check_companies(companies, supply)
+    problems += check_auto({rel: d for rel, (k, _, d) in loaded.items() if k == "auto" and isinstance(d, dict)}, companies)
+    if only is not None:
+        target = only.resolve().relative_to(root.resolve()).as_posix()
+        problems = [p for p in problems if p.file == target]
+    return problems
+
+
+def _slugs(supply, key) -> set[str] | None:
+    if not isinstance(supply, dict) or not isinstance(supply.get(key), list):
+        return None
+    return {i["slug"] for i in supply[key] if isinstance(i, dict) and isinstance(i.get("slug"), str)}
+
+
+def check_supply_chain(loaded, supply, schemas: SchemaSet) -> list[Problem]:
+    out: list[Problem] = []
+    if not isinstance(supply, dict):
+        return out
+    file = "data/supply-chain.yaml"
+    for key in ("categories", "processes"):
+        items = supply.get(key)
+        if not isinstance(items, list):
+            continue
+        seen: dict = {}
+        for i, item in enumerate(items):
+            if isinstance(item, dict) and isinstance(item.get("slug"), str):
+                if item["slug"] in seen:
+                    out.append(Problem(file, pointer([key, i, "slug"]), "V-03", f"slug {item['slug']} が重複している"))
+                seen[item["slug"]] = i
+    categories = _slugs(supply, "categories")
+    if categories is not None and isinstance(supply.get("processes"), list):
+        for i, item in enumerate(supply["processes"]):
+            if isinstance(item, dict) and item.get("stage") in {"design", "materials", "front-end", "back-end"} \
+                    and item["stage"] not in categories:
+                out.append(Problem(file, pointer(["processes", i, "stage"]), "V-04",
+                                   f"stage {item['stage']} が categories にない"))
+    # スキーマの値の一覧（company.schema.json）と、supply-chain.yaml の整合
+    props = schemas.documents["company"]["properties"]
+    for key, enum_path in (("categories", props["categories"]["items"]["enum"]),
+                           ("processes", props["processes"]["items"]["enum"])):
+        slugs = _slugs(supply, key)
+        if slugs is not None and slugs != set(enum_path):
+            out.append(Problem(file, f"/{key}", "V-04", "company.schema.json の値の一覧と一致しない"
+                               f"（スキーマにだけある：{sorted(set(enum_path) - slugs)}、"
+                               f"supply-chain.yaml にだけある：{sorted(slugs - set(enum_path))}）"))
+    return out
+
+
+def check_companies(companies: dict[str, dict], supply) -> list[Problem]:
+    out: list[Problem] = []
+    categories, processes = _slugs(supply, "categories"), _slugs(supply, "processes")
+    seen: dict[str, dict[str, str]] = {"slug": {}, "edinet_code": {}, "securities_code": {}}
+    for rel, data in companies.items():
+        slug = data.get("slug")
+        if isinstance(slug, str) and Path(rel).stem != slug:
+            out.append(Problem(rel, "/slug", "V-02", f"ファイル名（{Path(rel).stem}）と slug（{slug}）が一致しない"))
+        for key in seen:
+            value = data.get(key)
+            if isinstance(value, str):
+                if value in seen[key]:
+                    out.append(Problem(rel, f"/{key}", "V-03", f"{key} {value} が {seen[key][value]} と重複している"))
+                else:
+                    seen[key][value] = rel
+        source_ids: set[str] = set()
+        for i, source in enumerate(data.get("sources") or []):
+            if isinstance(source, dict) and isinstance(source.get("id"), str):
+                if source["id"] in source_ids:
+                    out.append(Problem(rel, pointer(["sources", i, "id"]), "V-03", f"sources の id {source['id']} が重複している"))
+                source_ids.add(source["id"])
+        refs = []
+        if isinstance(data.get("selection"), dict):
+            refs.append((["selection", "source"], data["selection"].get("source")))
+        if isinstance(data.get("parent"), dict):
+            refs.append((["parent", "source"], data["parent"].get("source")))
+        for i, item in enumerate(data.get("history") or []):
+            if isinstance(item, dict):
+                refs.append((["history", i, "source"], item.get("source")))
+        for parts, value in refs:
+            if isinstance(value, str) and value not in source_ids:
+                out.append(Problem(rel, pointer(parts), "V-04", f"出典 {value} が、同じファイルの sources にない"))
+        for key, allowed in (("categories", categories), ("processes", processes)):
+            if allowed is None or not isinstance(data.get(key), list):
+                continue
+            for i, value in enumerate(data[key]):
+                if isinstance(value, str) and value not in allowed:
+                    out.append(Problem(rel, pointer([key, i]), "V-04", f"{key} の {value} が supply-chain.yaml にない"))
+    return out
+
+
+def resolve_pointer(data, path: str):
+    """JSON Pointer を解く。見つからなければ KeyError。"""
+    node = data
+    for raw in path.split("/")[1:]:
+        part = raw.replace("~1", "/").replace("~0", "~")
+        if isinstance(node, list):
+            if not part.isdigit() or int(part) >= len(node):
+                raise KeyError(path)
+            node = node[int(part)]
+        elif isinstance(node, dict) and part in node:
+            node = node[part]
+        else:
+            raise KeyError(path)
+    return node
+
+
+def check_auto(autos: dict[str, dict], companies: dict[str, dict]) -> list[Problem]:
+    out: list[Problem] = []
+    by_slug = {d["slug"]: d for d in companies.values() if isinstance(d.get("slug"), str)}
+    for rel, data in autos.items():
+        company = data.get("company")
+        if isinstance(company, str):
+            if Path(rel).stem != company:
+                out.append(Problem(rel, "/company", "V-02", f"ファイル名（{Path(rel).stem}）と company（{company}）が一致しない"))
+            master = by_slug.get(company)
+            if master is None:
+                out.append(Problem(rel, "/company", "V-04", f"company {company} が data/companies にない"))
+            elif master.get("edinet_code") != data.get("edinet_code"):
+                out.append(Problem(rel, "/edinet_code", "V-04",
+                                   f"edinet_code（{data.get('edinet_code')}）が企業マスタ（{master.get('edinet_code')}）と一致しない"))
+        doc_ids: set[str] = set()
+        for i, f in enumerate(data.get("filings") or []):
+            if isinstance(f, dict) and isinstance(f.get("doc_id"), str):
+                if f["doc_id"] in doc_ids:
+                    out.append(Problem(rel, pointer(["filings", i, "doc_id"]), "V-03", f"doc_id {f['doc_id']} が重複している"))
+                doc_ids.add(f["doc_id"])
+        for section, key in (("financials", lambda r: (r.get("fiscal_period_end"), r.get("period_type"))),
+                             ("employees", lambda r: (r.get("fiscal_period_end"),))):
+            rows = data.get(section) or []
+            seen: dict = {}
+            for i, row in enumerate(rows):
+                if not isinstance(row, dict):
+                    continue
+                k = key(row)
+                if k in seen:
+                    out.append(Problem(rel, pointer([section, i]), "V-03", f"期間 {'、'.join(map(str, k))} が "
+                                       f"/{section}/{seen[k]} と重複している"))
+                seen.setdefault(k, i)
+                if isinstance(row.get("doc_id"), str) and row["doc_id"] not in doc_ids:
+                    out.append(Problem(rel, pointer([section, i, "doc_id"]), "V-04", f"doc_id {row['doc_id']} が filings にない"))
+            sort_key = (lambda r: (r.get("fiscal_period_end") or "", r.get("period_end") or "")) if section == "financials" \
+                else (lambda r: r.get("fiscal_period_end") or "")
+            dict_rows = [r for r in rows if isinstance(r, dict)]
+            if any(sort_key(a) > sort_key(b) for a, b in zip(dict_rows, dict_rows[1:])):
+                out.append(Problem(rel, f"/{section}", "V-03", f"{section} が期間の古い順になっていない"))
+        for i, rev in enumerate(data.get("revisions") or []):
+            if not isinstance(rev, dict):
+                continue
+            path = rev.get("path")
+            if isinstance(path, str):
+                try:
+                    resolve_pointer(data, path)
+                except KeyError:
+                    out.append(Problem(rel, pointer(["revisions", i, "path"]), "V-04", f"path {path} が、実在する値を指していない"))
+            for key in ("supersedes", "doc_id"):
+                if isinstance(rev.get(key), str) and rev[key] not in doc_ids:
+                    out.append(Problem(rel, pointer(["revisions", i, key]), "V-04", f"{key} {rev[key]} が filings にない"))
+    return out
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="データの形式の検証（引数なしで、リポジトリ全体）")
+    parser.add_argument("--path", type=Path, metavar="FILE", help="1ファイルだけ検査する")
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None, *, root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT) -> int:
+    args = parse_args(sys.argv[1:] if argv is None else argv)
+    only = None
+    if args.path is not None:
+        only = args.path if args.path.is_absolute() else Path.cwd() / args.path
+        if kind_of(only, root) is None or not only.is_file():
+            print(f"error: 検査の対象のファイルではない、またはない: {args.path}", file=sys.stderr)
+            return 2
+    try:
+        problems = validate(root, schema_root, only)
+    except (OSError, ValueError) as error:
+        print(f"error: 検査を始められない（{type(error).__name__}）", file=sys.stderr)
+        return 2
+    files = collect_files(root) if only is None else [(kind_of(only, root), only)]
+    for problem in problems:
+        print(problem)
+    print(f"検査したファイル {len(files)}件 / エラー {len(problems)}件")
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
