@@ -1,21 +1,39 @@
 # XBRLの要素と表示項目の対応（データ定義書 7.8、schemas/config/xbrl-map.schema.json）
 #
-# 【確認の状況】確認済み（東京エレクトロン、SUMCO、ソニー、レゾナックの実際の書類、2026年10月）の要素は、
-# 各項目のコメントに「確認済み」と書く。「未確認」と書いた要素は、実際の書類で確かめていない暫定の候補であり、
-# 未確認。段階2で実際の書類で確かめる。確かめるまで、未確認の要素で取り込んだ値を公開に使わない。
+# 【確認の状況】確認済み（東京エレクトロン、SUMCO、ソニー、レゾナック、富士電機、京セラ、アドバンテスト、キヤノンの
+# 実際の書類8件、2026年10月）の要素は、各項目のコメントに「確認済み」と、確認した会社を書く。
+# 「未確認」と書いた要素は、実際の書類で確かめていない。未確認。段階2で実際の書類で確かめる。
+# 確かめるまで、未確認の要素で取り込んだ値を公開に使わない。
+# 【未確認のまま残すもの】日本基準の jppfs_cor:OperatingRevenue1（売上の代わりとしての使い方）、
+# 半期報告書での米国基準、日本基準の半期のセグメント。
 #
 # 【段階3（取り込み）で使う規則】
 # ・CSV は UTF-16LE（BOMあり）。取り込みの対象は、書類の中の jpcrp030000-asr（有価証券報告書）と
 #   jpcrp040300-ssr（半期報告書）のファイル。jpaud のファイル（監査報告書）は使わない。
 # ・当期のコンテキスト：有価証券報告書は CurrentYearDuration（期間）と CurrentYearInstant（時点）、
 #   半期報告書は InterimDuration と InterimInstant。比較の前期は Prior1YearDuration、Prior1InterimDuration など。
-# ・連結かどうかは、コンテキストIDで判定する：_NonConsolidatedMember を含まない行が連結。
-#   CSV の「連結・個別」の列は、IFRS の連結の行で「その他」になるため、使わない。
-# ・セグメントの member は、コンテキストIDの、期間（Duration など）の後（_ の後）の部分。
-# ・地域別の売上は、4つの書類では、数値の項目が見つからなかった。見つからなければ regions は空にする。
+# ・会計基準、連結の有無、期間は、DEI（下の dei）から読む。連結の判定は、DEIの連結財務諸表の作成の有無と、
+#   コンテキストで行う（_NonConsolidatedMember を含まない行が連結）。CSV の「連結・個別」の列は使わない
+#   （IFRS の連結の行は「その他」になる）。
+# ・fiscal_period_end は、DEIの fiscal_year_end の年月（有価証券報告書も半期報告書も、その期を含む決算期の期末。
+#   データ定義書 2.4.3）。period_type は、DEIの period_type（FY → annual、HY → half）。
+#   period_start は、DEIの fiscal_year_start。period_end は、DEIの period_end（半期は、その半期の末日）。
+# ・従業員は、コンテキストIDが CurrentYearInstant（連結）、CurrentYearInstant_NonConsolidatedMember（単体）に
+#   完全に一致する行だけを使う。セグメント別の従業員数の行（Member を含むコンテキスト）は使わない。
+# ・セグメントの一覧から除く、または別に扱うメンバー：
+#   TotalOfReportableSegmentsAndOthersMember（合計。セグメントではない）、
+#   ReconcilingItemsMember（調整額。segment_adjustment に使う）、
+#   NonConsolidatedMember（単体の文脈。セグメントではない）。
+# ・セグメントの member は、コンテキストIDの、期間（Duration など）の後（最初の _ の後）の部分から、会社固有の前置き
+#   （jpcrp030000-asr_E01740-000 のような形）を除いた名前。数値の行に日本語のセグメント名はないため、自動取得の
+#   データの name には、この名前（前置きを除いたメンバー名）を入れる。画面の日本語の名前は、セグメント対応表
+#   （data/segments/）から表示する。
+# ・地域別の売上は、8つの書類のどれにも数値の項目がなかった。regions は空にする。
+# ・米国基準（キヤノン）は、売上と純利益だけ。営業利益は null、segments は [] にする。
 #
 # 要素名は `接頭辞:名前` の形で、優先の順に並べる。接頭辞の意味:
 #   jppfs_cor  日本基準の財務諸表   jpigp_cor  IFRSの財務諸表   jpcrp_cor  有価証券報告書・半期報告書の本文の項目
+#   jpdei_cor  書類の基本情報（DEI）
 schema_version: 1
 
 # 書類の種類のコード → doc_type（データ定義書 5.3）。コードは文字列で書く
@@ -26,61 +44,92 @@ doc_types:
   "170": amended_semiannual_report  # 訂正半期報告書
 
 standards:
+  # 日本基準：確認済み（東京エレクトロン、SUMCO、富士電機）。ただし次を除く。
+  #   jppfs_cor:OperatingRevenue1 は、存在だけ確認。売上の代わりとしての使い方は未確認（末尾に置く）
+  #   半期報告書のセグメント：未確認
+  #   地域別の売上：項目なし（8つの書類のどれにも数値の項目がなかった）
   jgaap:
-    # セグメント別の売上、地域別の売上：日本基準では未確認のため、項目を置かない
     items:
       net_sales:
-        - jppfs_cor:NetSales                          # 確認済み（東京エレクトロン、SUMCO、ソニー、レゾナックの実際の書類、2026年10月）
-        - jppfs_cor:OperatingRevenue1                 # 未確認
-        - jpcrp_cor:NetSalesSummaryOfBusinessResults  # 確認済み（東京エレクトロン、SUMCO、ソニー、レゾナックの実際の書類、2026年10月）
+        - jppfs_cor:NetSales                          # 確認済み（東京エレクトロン、SUMCO、富士電機）
+        - jpcrp_cor:NetSalesSummaryOfBusinessResults  # 確認済み（東京エレクトロン、SUMCO、富士電機）
+        - jppfs_cor:OperatingRevenue1                 # 未確認（存在だけ確認。売上の代わりとしての使い方は未確認）
       operating_income:
-        - jppfs_cor:OperatingIncome                   # 未確認
+        - jppfs_cor:OperatingIncome                   # 確認済み（東京エレクトロン、SUMCO、富士電機）
       ordinary_income:
-        - jppfs_cor:OrdinaryIncome                    # 未確認
-        - jpcrp_cor:OrdinaryIncomeLossSummaryOfBusinessResults  # 未確認
+        - jppfs_cor:OrdinaryIncome                    # 確認済み（東京エレクトロン、SUMCO、富士電機）
+        - jpcrp_cor:OrdinaryIncomeLossSummaryOfBusinessResults  # 確認済み（東京エレクトロン、SUMCO、富士電機）
       net_income:
-        - jppfs_cor:ProfitLossAttributableToOwnersOfParent      # 未確認
-        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentSummaryOfBusinessResults  # 未確認
+        - jppfs_cor:ProfitLossAttributableToOwnersOfParent      # 確認済み（東京エレクトロン、SUMCO、富士電機）
+        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentSummaryOfBusinessResults  # 確認済み（東京エレクトロン、SUMCO、富士電機）
+      segment_external_sales:
+        - jpcrp_cor:RevenuesFromExternalCustomers     # 確認済み（富士電機）。コンテキストにセグメントのメンバーを含む行
+      segment_total_sales:
+        - jppfs_cor:NetSales                          # 確認済み（富士電機）。コンテキストにセグメントのメンバーを含む行
+      segment_profit:
+        - jppfs_cor:OperatingIncome                   # 確認済み（富士電機）。コンテキストにセグメントのメンバーを含む行
     expected_absent: []
+  # IFRS：確認済み（ソニー、レゾナック、京セラ、アドバンテスト）。会社により要素名が異なる
   ifrs:
     items:
       net_sales:
-        - jpigp_cor:RevenueIFRS                       # 確認済み（レゾナックの実際の書類、2026年10月）。会社により要素名が異なる
-        - jpigp_cor:NetSalesIFRS                      # 確認済み（ソニーの実際の書類、2026年10月）。会社により要素名が異なる
-        - jpcrp_cor:RevenueIFRSSummaryOfBusinessResults  # 未確認
+        - jpigp_cor:NetSalesIFRS                      # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
+        - jpigp_cor:RevenueIFRS                       # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
+        - jpcrp_cor:RevenueIFRSSummaryOfBusinessResults  # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
       operating_income:
-        - jpigp_cor:OperatingProfitLossIFRS           # 未確認
+        - jpigp_cor:OperatingProfitLossIFRS           # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
       net_income:
-        - jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS  # 未確認
-        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentIFRSSummaryOfBusinessResults  # 未確認
+        - jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS  # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
+        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentIFRSSummaryOfBusinessResults  # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
       segment_external_sales:
-        # 確認済み（レゾナックとソニーの実際の書類、2026年10月）。会社により要素名が異なる
-        - jpigp_cor:RevenueFromExternalCustomersIFRS
-        - jpigp_cor:SalesToExternalCustomersIFRS
+        - jpigp_cor:SalesToExternalCustomersIFRS      # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
+        - jpigp_cor:RevenueFromExternalCustomersIFRS  # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
+      segment_total_sales:
+        - jpigp_cor:NetSalesIFRS                      # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）。メンバーを含む行
+        - jpigp_cor:RevenueIFRS                       # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）。メンバーを含む行
+      segment_profit:
+        - jpigp_cor:SegmentProfitLossIFRS             # 確認済み（京セラ、アドバンテスト）
     expected_absent:
-      - ordinary_income   # IFRSには経常利益がない
-  # 米国基準：未確認
+      - ordinary_income   # IFRSには経常利益がない（確認済み。ソニー、レゾナック、京セラ、アドバンテスト）
+  # 米国基準：確認済み（キヤノン）。売上と純利益だけ。営業利益とセグメントの数値は、キヤノンの書類にない。
+  # 半期報告書での米国基準：未確認
   usgaap:
     items:
       net_sales:
-        - jpcrp_cor:RevenuesUSGAAPSummaryOfBusinessResults                # 未確認
-      operating_income:
-        - jpcrp_cor:OperatingIncomeLossUSGAAPSummaryOfBusinessResults     # 未確認
+        - jpcrp_cor:RevenuesUSGAAPSummaryOfBusinessResults  # 確認済み（キヤノン）
       net_income:
-        - jpcrp_cor:NetIncomeLossAttributableToOwnersOfParentUSGAAPSummaryOfBusinessResults  # 未確認
+        - jpcrp_cor:NetIncomeLossAttributableToOwnersOfParentUSGAAPSummaryOfBusinessResults  # 確認済み（キヤノン）
     expected_absent:
-      - ordinary_income   # 米国基準には経常利益がない（未確認）
+      - operating_income  # キヤノンの書類にない（確認済み）
+      - ordinary_income   # 米国基準には経常利益がない（確認済み。キヤノン）
 
 # 働く環境（有価証券報告書の「従業員の状況」。データ定義書 5.5）。有価証券報告書だけにある。
-# 半期報告書には、従業員の項目がない。確認済み（東京エレクトロン、SUMCO、ソニー、レゾナックの実際の書類、2026年10月）
+# 半期報告書には、従業員の項目がない。確認済み（東京エレクトロン、ソニー、キヤノン）
 employees:
   employees_consolidated:
-    - jpcrp_cor:NumberOfEmployees      # コンテキストは CurrentYearInstant（Member を含まない）
+    - jpcrp_cor:NumberOfEmployees      # 確認済み。コンテキストIDは CurrentYearInstant に完全に一致する行（連結）
   employees_non_consolidated:
-    - jpcrp_cor:NumberOfEmployees      # コンテキストは CurrentYearInstant_NonConsolidatedMember
+    - jpcrp_cor:NumberOfEmployees      # 確認済み。コンテキストIDは CurrentYearInstant_NonConsolidatedMember に完全に一致する行（単体）
   average_age:
-    - jpcrp_cor:AverageAgeYearsInformationAboutReportingCompanyInformationAboutEmployees
+    - jpcrp_cor:AverageAgeYearsInformationAboutReportingCompanyInformationAboutEmployees  # 確認済み
   average_length_of_service:
-    - jpcrp_cor:AverageLengthOfServiceYearsInformationAboutReportingCompanyInformationAboutEmployees
+    - jpcrp_cor:AverageLengthOfServiceYearsInformationAboutReportingCompanyInformationAboutEmployees  # 確認済み
   average_annual_salary:
-    - jpcrp_cor:AverageAnnualSalaryInformationAboutReportingCompanyInformationAboutEmployees
+    - jpcrp_cor:AverageAnnualSalaryInformationAboutReportingCompanyInformationAboutEmployees  # 確認済み
+
+# 書類の基本情報（DEI）。会計基準、連結の有無、期間を、ここから読む。確認済み（8件の実際の書類）
+dei:
+  elements:
+    accounting_standard: jpdei_cor:AccountingStandardsDEI                                    # 値は、下の accounting_standards の左側
+    consolidated: jpdei_cor:WhetherConsolidatedFinancialStatementsArePreparedDEI             # 連結財務諸表の作成の有無
+    period_type: jpdei_cor:TypeOfCurrentPeriodDEI                                            # 値は、下の period_types の左側
+    fiscal_year_start: jpdei_cor:CurrentFiscalYearStartDateDEI
+    period_end: jpdei_cor:CurrentPeriodEndDateDEI                                            # 半期は、その半期の末日
+    fiscal_year_end: jpdei_cor:CurrentFiscalYearEndDateDEI
+  accounting_standards:   # DEIの会計基準の値 → standards のキー
+    "Japan GAAP": jgaap
+    "IFRS": ifrs
+    "US GAAP": usgaap
+  period_types:           # DEIの期間の種類の値 → period_type（データ定義書 2.4.3）
+    "FY": annual
+    "HY": half
