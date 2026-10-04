@@ -8,6 +8,11 @@ on:
         description: 書類管理番号（S100XXXX）。複数はカンマで区切る（最大10件）
         required: true
         type: string
+      include_dei:
+        description: DEI（jpdei_cor:）の行も出す（会計基準、連結財務諸表の作成の有無を確かめる）
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,12 +37,16 @@ jobs:
           EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
           # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
           INPUT_DOC_IDS: ${{ inputs.doc_ids }}
+          INPUT_INCLUDE_DEI: ${{ inputs.include_dei }}
         run: |
           args=()
           IFS=',' read -ra ids <<< "$INPUT_DOC_IDS"
           for id in "${ids[@]}"; do
             args+=(--doc-id "$(echo "$id" | xargs)")
           done
+          if [ "$INPUT_INCLUDE_DEI" = "true" ]; then
+            args+=(--include-dei)
+          fi
           "$RUNNER_TEMP/venv/bin/python" scripts/edinet/inspect_document.py "${args[@]}" \
             --out "$RUNNER_TEMP/inspect.json"
 
