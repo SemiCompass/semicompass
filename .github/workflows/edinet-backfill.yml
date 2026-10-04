@@ -1,0 +1,112 @@
+name: edinet-backfill
+
+# 手動で動かす。EDINETの書類を、複数の企業分まとめて取り込み、data/auto/ に書いて、変更案（Pull request）を作る。
+# 変更案は、運営者が内容を見てから取り込む（自動では取り込まない）。
+on:
+  workflow_dispatch:
+    inputs:
+      companies:
+        description: 企業の slug を、カンマで区切る
+        required: true
+        type: string
+        default: "tokyo-electron,sony,advantest"
+      from:
+        description: 日付の範囲の始め（YYYY-MM-DD）
+        required: true
+        type: string
+        default: "2025-04-01"
+      to:
+        description: 日付の範囲の終わり（YYYY-MM-DD。今日以前）
+        required: true
+        type: string
+        default: "2026-10-02"
+      max_requests:
+        description: EDINET API の呼び出しの上限（日数と書類の取得の合計）
+        required: true
+        type: string
+        default: "600"
+      retry_failed:
+        description: 失敗した書類も、もう一度取りに行く
+        required: false
+        type: boolean
+        default: false
+
+# 変更案を作るために、書き込みの権限が要る。環境は main だけに限定済み
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: edinet-backfill
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-24.04
+    environment: edinet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 書類を取り込む
+        env:
+          EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+          # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
+          INPUT_COMPANIES: ${{ inputs.companies }}
+          INPUT_FROM: ${{ inputs.from }}
+          INPUT_TO: ${{ inputs.to }}
+          INPUT_MAX_REQUESTS: ${{ inputs.max_requests }}
+          INPUT_RETRY_FAILED: ${{ inputs.retry_failed }}
+        run: |
+          args=()
+          IFS=',' read -ra slugs <<< "$INPUT_COMPANIES"
+          if [ "${#slugs[@]}" -gt 30 ]; then echo "企業の数が多すぎる（最大30社）"; exit 2; fi
+          for slug in "${slugs[@]}"; do
+            slug="$(echo "$slug" | xargs)"
+            if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then echo "slug の形が正しくない"; exit 2; fi
+            args+=(--company "$slug")
+          done
+          for v in "$INPUT_FROM" "$INPUT_TO"; do
+            if ! [[ "$v" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then echo "日付の形が正しくない"; exit 2; fi
+          done
+          if ! [[ "$INPUT_MAX_REQUESTS" =~ ^[0-9]{1,5}$ ]]; then echo "上限の形が正しくない"; exit 2; fi
+          if [ "$INPUT_RETRY_FAILED" = "true" ]; then args+=(--retry-failed); fi
+          "$RUNNER_TEMP/venv/bin/python" scripts/edinet/ingest_all.py "${args[@]}" \
+            --from "$INPUT_FROM" --to "$INPUT_TO" \
+            --max-requests "$INPUT_MAX_REQUESTS" \
+            --write-data-auto --out-dir data/auto \
+            --summary "$RUNNER_TEMP/summary.md"
+
+      - name: 変更案を作る
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain -- data/auto)" ]; then
+            echo "変更がないため、変更案は作らない"
+            exit 0
+          fi
+          branch="data/auto-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add data/auto
+          git commit -m "開示データの取り込み（手動の実行 ${GITHUB_RUN_ID}）"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "データ：開示データの取り込み（手動の実行 ${GITHUB_RUN_ID}）" \
+            --body-file "$RUNNER_TEMP/summary.md"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: backfill
+          path: ${{ runner.temp }}/summary.md
+          retention-days: 7
+          if-no-files-found: ignore
