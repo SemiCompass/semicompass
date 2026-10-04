@@ -1,0 +1,457 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/data/company.schema.json",
+  "title": "企業マスタ（D01）",
+  "description": "データ定義書（第1段階）4.1。data/companies/{slug}.yaml。ファイル名はslugと一致させること（スキーマでは検査できないため、別の検査で行う）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "slug",
+    "name",
+    "short_names",
+    "name_en",
+    "name_kana",
+    "type",
+    "categories",
+    "listing",
+    "selection"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 3,
+      "maxLength": 60
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!.*(株式会社|有限会社|合同会社)).+$"
+    },
+    "short_names": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "name_en": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name_kana": {
+      "type": "string",
+      "pattern": "^[ァ-ヺー・ヽヾ]+$"
+    },
+    "search_aliases": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "type": {
+      "enum": [
+        "domestic_listed",
+        "foreign_subsidiary",
+        "conglomerate"
+      ]
+    },
+    "securities_code": {
+      "type": "string",
+      "pattern": "^[0-9][0-9A-Z]{3}$"
+    },
+    "edinet_code": {
+      "type": "string",
+      "pattern": "^E[0-9]{5}$"
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "design",
+          "front-end",
+          "back-end",
+          "materials",
+          "equipment",
+          "devices",
+          "test"
+        ]
+      }
+    },
+    "processes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "circuit-design",
+          "photomask",
+          "wafer",
+          "cleaning",
+          "oxidation-diffusion",
+          "deposition",
+          "lithography",
+          "etching",
+          "ion-implantation",
+          "cmp",
+          "interconnect",
+          "inspection-metrology",
+          "dicing",
+          "bonding",
+          "packaging",
+          "advanced-packaging",
+          "final-test"
+        ]
+      }
+    },
+    "listing": {
+      "enum": [
+        "detailed",
+        "coming_soon"
+      ]
+    },
+    "detailed_since": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "tagline": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "website_url": {
+      "type": "string",
+      "pattern": "^https://\\S+$"
+    },
+    "ir_url": {
+      "type": "string",
+      "pattern": "^https://\\S+$"
+    },
+    "recruit_url": {
+      "type": "string",
+      "pattern": "^https://\\S+$"
+    },
+    "accounting_standard": {
+      "enum": [
+        "jgaap",
+        "ifrs",
+        "usgaap"
+      ]
+    },
+    "fiscal_year_end_month": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12
+    },
+    "is_holding_company": {
+      "type": "boolean"
+    },
+    "parent": {
+      "$ref": "#/$defs/parent"
+    },
+    "selection": {
+      "$ref": "#/$defs/selection"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/history"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "corrections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/correction"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "domestic_listed",
+              "conglomerate"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "securities_code",
+          "edinet_code"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "foreign_subsidiary"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "parent"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "listing": {
+            "const": "detailed"
+          }
+        },
+        "required": [
+          "listing"
+        ]
+      },
+      "then": {
+        "required": [
+          "detailed_since",
+          "tagline",
+          "ir_url",
+          "recruit_url",
+          "processes",
+          "sources"
+        ],
+        "properties": {
+          "processes": {
+            "minItems": 1
+          },
+          "sources": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "listing": {
+            "const": "detailed"
+          },
+          "type": {
+            "enum": [
+              "domestic_listed",
+              "conglomerate"
+            ]
+          }
+        },
+        "required": [
+          "listing",
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "accounting_standard",
+          "fiscal_year_end_month",
+          "is_holding_company"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "parent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "name_en",
+        "country",
+        "source"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name_en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "listed_market": {
+          "type": "string",
+          "minLength": 1
+        },
+        "filer_ids": {
+          "type": "object"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^S[0-9]+$"
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "note",
+        "decided_on",
+        "source"
+      ],
+      "properties": {
+        "basis": {
+          "enum": [
+            "revenue_ratio",
+            "global_share",
+            "domestic_fab"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "decided_on": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^S[0-9]+$"
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "date",
+        "type",
+        "description",
+        "source"
+      ],
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "type": {
+          "enum": [
+            "rename",
+            "merger",
+            "split",
+            "listing",
+            "delisting",
+            "code_change",
+            "other"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^S[0-9]+$"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "publisher",
+        "url",
+        "accessed_on"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^S[0-9]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://\\S+$"
+        },
+        "published_on": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "accessed_on": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "doc_id": {
+          "type": "string",
+          "pattern": "^S100[0-9A-Z]{4}$"
+        },
+        "pages": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "correction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "date",
+        "severity",
+        "description"
+      ],
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "severity": {
+          "enum": [
+            "major",
+            "normal"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "issue": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
