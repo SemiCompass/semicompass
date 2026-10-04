@@ -38,6 +38,7 @@ PERIOD_OF_TYPE = {"annual_report": "annual", "amended_annual_report": "annual",
                   "semiannual_report": "half", "amended_semiannual_report": "half"}
 TOP_KEYS = ("schema_version", "company", "edinet_code", "updated_at", "filings", "financials", "employees",
             "announcements", "revisions")
+TRANSIENT = "transient"  # 取得の error の値。通信の一時的な失敗（filings に記録しない）
 FILING_KEYS = ("doc_id", "doc_type", "edinet_doc_type_code", "fiscal_period_end", "period_type", "period_start",
                "period_end", "submitted_at", "url", "status", "supersedes", "ingested_at", "error")
 
@@ -197,9 +198,17 @@ class _Builder:
                    and f["period_type"] == ptype and f["submitted_at"] < submitted and f["doc_id"] != row["docID"]]
         return max(earlier, key=lambda f: (f["submitted_at"], f["doc_id"]))["doc_id"] if earlier else None
 
+    def drop_failed(self, doc_id):
+        """再取得の結果で置き換えるため、同じ doc_id の failed の行を除く。"""
+        self.data["filings"] = [f for f in self.data["filings"] if not (f["doc_id"] == doc_id and f["status"] == "failed")]
+
     def add(self, doc):
         row = doc["filing"]
         doc_id = row["docID"]
+        if doc.get("error") == TRANSIENT:
+            self.changes.append({"kind": "not_recorded", "doc_id": doc_id, "reason": "transient",
+                                 "message": "transient: 通信の一時的な失敗。filings に記録せず、次の実行で再取得される"})
+            return
         doc_type = self.doc_types[str(row["docTypeCode"])]
         submitted = submitted_at(row["submitDateTime"])
         result, error = doc.get("result"), doc.get("error")
@@ -218,7 +227,7 @@ class _Builder:
         else:
             period = listing_period(row, doc_type)
         if period is None:
-            self.changes.append({"kind": "not_recorded", "doc_id": doc_id,
+            self.changes.append({"kind": "not_recorded", "doc_id": doc_id, "reason": "period_unknown",
                                  "message": "対象の期間を決められず、filings に書けない（一覧の periodStart、periodEnd が読めない）"})
             return
         fpe, ptype, pstart, pend = period
@@ -229,7 +238,7 @@ class _Builder:
         if doc_type in AMENDED:
             supersedes = self.supersedes_of(row, fpe, ptype, submitted)
             if supersedes is None:
-                self.changes.append({"kind": "not_recorded", "doc_id": doc_id,
+                self.changes.append({"kind": "not_recorded", "doc_id": doc_id, "reason": "supersedes_unknown",
                                      "message": "訂正の書類だが、置き換える元の書類が決まらず、filings に書けない"})
                 return
         if status_error is not None:
@@ -237,6 +246,7 @@ class _Builder:
             if supersedes:
                 filing["supersedes"] = supersedes
             filing["error"] = status_error
+            self.drop_failed(doc_id)
             self.data["filings"].append(filing)
             self.changes.append({"kind": "failed", "doc_id": doc_id, "message": status_error})
             if result is not None:
@@ -247,6 +257,7 @@ class _Builder:
         if supersedes:
             filing["supersedes"] = supersedes
         filing["ingested_at"] = self.now_text
+        self.drop_failed(doc_id)
         self.data["filings"].append(filing)
         self.changes.append({"kind": "added", "doc_id": doc_id,
                              "message": f"{fpe} {ptype}（{doc_type}）を取り込んだ"})
@@ -296,10 +307,11 @@ class _Builder:
 
 
 def build(slug: str, edinet_code: str, existing: dict | None, documents: list[dict], now: datetime,
-          doc_types: dict[str, str]) -> tuple[dict, list[dict]]:
+          doc_types: dict[str, str], retry_failed: bool = False) -> tuple[dict, list[dict]]:
     """既存の内容に、書類を取り込んだ新しい内容と、変更の一覧を返す。変更がなければ、既存の内容をそのまま返す。"""
     builder = _Builder(slug, edinet_code, existing, now, doc_types)
-    known = {f["doc_id"] for f in builder.data["filings"]}
+    # retry_failed のときは、failed の書類を既知としない（取り込み直して、failed の行を置き換える）
+    known = {f["doc_id"] for f in builder.data["filings"] if not (retry_failed and f["status"] == "failed")}
     pairs = []
     seen: set[str] = set()
     for doc in documents:

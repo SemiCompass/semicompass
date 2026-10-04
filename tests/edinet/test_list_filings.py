@@ -223,10 +223,18 @@ class FilteringTest(Base):
         self.assertEqual(filing, {
             "slug": "advantest", "docID": "S100AAA1", "edinetCode": "E01950", "docTypeCode": "120",
             "periodStart": "2025-04-01", "periodEnd": "2026-03-31", "submitDateTime": "2026-06-20 15:00",
-            "docDescription": "有価証券報告書", "withdrawalStatus": "0", "docInfoEditStatus": "0"})
+            "docDescription": "有価証券報告書", "withdrawalStatus": "0", "docInfoEditStatus": "0",
+            "parentDocID": None})  # 値がなければ空（null）のまま
         self.assertNotIn("fiscal_period_end", json.dumps(data))  # 変換はしない
         self.assertEqual(data["parameters"]["companies"], ["advantest"])
         self.assertEqual(data["parameters"]["api_requests"], 1)
+
+    def test_parent_doc_id_is_output(self):
+        self.run_day([row("S100AAA2", "E01950", "130", parentDocID="S100AAA1"), row("S100AAA3", "E01950", "120")])
+        by_id = {f["docID"]: f for f in self.filings()}
+        self.assertEqual(by_id["S100AAA2"]["parentDocID"], "S100AAA1")
+        self.assertIsNone(by_id["S100AAA3"]["parentDocID"])
+        self.assertIn("parentDocID", lf.FILING_FIELDS)
 
     def test_table_has_slug_kind_doc_id_period_and_submit_time(self):
         code, out, _, _, _ = self.run_day([row("S100AAA2", "E01950", "130")])

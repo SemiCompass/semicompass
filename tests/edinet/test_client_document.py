@@ -157,3 +157,23 @@ class GetDocumentTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TransientFlagTest(unittest.TestCase):
+    def fail(self, step, **kwargs):
+        server = DocServer(step)
+        edinet, _ = make(server, **kwargs)
+        with self.assertRaises(client.EdinetError) as raised:
+            edinet.get_document("S100AAA1")
+        return raised.exception
+
+    def test_timeout_connection_and_exhausted_429_are_transient(self):
+        self.assertTrue(self.fail(TimeoutError("timed out")).transient)
+        self.assertTrue(self.fail(urllib.error.URLError(ConnectionRefusedError("refused"))).transient)
+        self.assertTrue(self.fail(lambda request: (_ for _ in ()).throw(http_error(request, 429))).transient)
+
+    def test_other_failures_are_not_transient(self):
+        self.assertFalse(self.fail(lambda request: (_ for _ in ()).throw(http_error(request, 401))).transient)
+        self.assertFalse(self.fail(lambda request: (_ for _ in ()).throw(http_error(request, 500))).transient)
+        self.assertFalse(self.fail(FakeResponse(b"{}")).transient)
+        self.assertFalse(client.EdinetError("x").transient)

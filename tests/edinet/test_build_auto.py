@@ -4,6 +4,7 @@ import io
 import json
 import os
 import unittest
+import urllib.error
 from datetime import datetime
 from pathlib import Path
 from unittest import mock
@@ -255,6 +256,63 @@ class FailureTest(unittest.TestCase):
         self.assertEqual(data["filings"][0]["error"], "anomaly:doc_type_mismatch")
 
 
+class RetryAndTransientTest(unittest.TestCase):
+    def failed_state(self):
+        bad = {"filing": listing("S100AAA1"), "result": None, "error": "zip_format"}
+        data, _ = build(None, [bad])
+        self.assertEqual(data["filings"][0]["status"], "failed")
+        return data
+
+    def test_transient_is_not_recorded(self):
+        gone = {"filing": listing("S100AAA1"), "result": None, "error": build_auto.TRANSIENT}
+        data, changes = build(None, [gone])
+        self.assertEqual(data["filings"], [])
+        self.assertEqual([(c["kind"], c["reason"]) for c in changes], [("not_recorded", "transient")])
+        self.assertIn("transient", changes[0]["message"])
+
+    def test_without_retry_failed_docs_are_known(self):
+        state = self.failed_state()
+        data, changes = build(state, [doc("S100AAA1")], T2)
+        self.assertEqual(data, state)
+        self.assertEqual(changes, [])
+
+    def test_retry_replaces_failed_row_on_success(self):
+        state = self.failed_state()
+        data, changes = build_auto.build(SLUG, CODE, state, [doc("S100AAA1")], T2, DOC_TYPES, retry_failed=True)
+        self.assertEqual(errors(data), [])
+        self.assertEqual([(f["doc_id"], f["status"]) for f in data["filings"]], [("S100AAA1", "ingested")])
+        self.assertNotIn("error", data["filings"][0])
+        self.assertEqual(len(data["financials"]), 1)
+        self.assertEqual(data["updated_at"], "2026-10-05T11:30:00+09:00")
+        self.assertEqual([c["kind"] for c in changes], ["added"])
+
+    def test_retry_failing_again_keeps_a_single_failed_row(self):
+        state = self.failed_state()
+        rows = [x for x in rows_for() if "OperatingIncome" not in x[0]]
+        data, _ = build_auto.build(SLUG, CODE, state, [doc("S100AAA1", rows)], T2, DOC_TYPES, retry_failed=True)
+        self.assertEqual([(f["doc_id"], f["status"], f["error"]) for f in data["filings"]],
+                         [("S100AAA1", "failed", "anomaly:operating_income_not_found")])
+
+    def test_retry_with_transient_keeps_old_failed_row(self):
+        state = self.failed_state()
+        gone = {"filing": listing("S100AAA1"), "result": None, "error": build_auto.TRANSIENT}
+        data, changes = build_auto.build(SLUG, CODE, state, [gone], T2, DOC_TYPES, retry_failed=True)
+        self.assertEqual(data, state)
+        self.assertEqual(changes[0]["reason"], "transient")
+
+    def test_retry_of_amended_doc_replaces_failed_row_and_supersedes(self):
+        first, _ = build(None, [doc("S100AAA1")])
+        failed = {"filing": listing("S100AAA9", "130", submitted="2026-07-10 10:00", parentDocID="S100AAA1"),
+                  "result": None, "error": "zip_format"}
+        state, _ = build(first, [failed])
+        data, _ = build_auto.build(SLUG, CODE, state, [doc("S100AAA9", rows_for("1500000000"), doc_code="130",
+                                                          submitted="2026-07-10 10:00", parentDocID="S100AAA1")],
+                                   T2, DOC_TYPES, retry_failed=True)
+        self.assertEqual({f["doc_id"]: f["status"] for f in data["filings"]},
+                         {"S100AAA1": "superseded", "S100AAA9": "ingested"})
+        self.assertEqual(errors(data), [])
+
+
 class SelectionTest(unittest.TestCase):
     def test_other_company_and_withdrawn_rows_are_excluded(self):
         other = {"filing": listing("S100AAA2", code="E00001"), "result": ext(rows_for(code="E00001"), "S100AAA2"), "error": None}
@@ -370,6 +428,80 @@ class CliTest(Base):
         code, _, err, _ = self.go(self.args([listing("S100AAA1")]), server)
         data = json.loads((self.tmp / "out" / f"{SLUG}.json").read_text(encoding="utf-8"))
         self.assertEqual(data["filings"][0]["error"], "edinet_code_mismatch")
+
+    def run_with(self, step, rows, *extra, existing=None):
+        argv = self.args(rows, *extra)
+        if existing is not None:
+            argv += ["--existing", str(existing)]
+        return self.go(argv, DocServer(step))
+
+    def test_transient_failures_are_not_recorded_and_refetched(self):
+        path = self.tmp / "out" / f"{SLUG}.json"
+        steps = {"timeout": TimeoutError("timed out"),
+                 "connection": urllib.error.URLError(ConnectionRefusedError("refused")),
+                 "429": lambda req: (_ for _ in ()).throw(fk.http_error(req, 429))}
+        for name, step in steps.items():
+            code, out, err, server = self.run_with(step, [listing("S100AAA1")])
+            self.assertEqual(code, 0, msg=f"{name}: {err}")
+            self.assertIn("transient", out, msg=name)
+            self.assertFalse(path.exists(), msg=name)  # 記録するものがないので、書かない
+            for t in (out, err):
+                self.assertNotIn(KEY, t)
+        # 既存のファイルがあるとき：書き換えず、次の実行で再取得される
+        code, _, err, _ = self.run_with(zip_response(csv_text(rows_for("1000000000", "2027-03-31", start="2026-04-01"))),
+                                        [listing("S100AAA2", start="2026-04-01", end="2027-03-31", submitted="2027-06-20 15:00")])
+        self.assertEqual(code, 0, msg=err)
+        before = path.read_text(encoding="utf-8")
+        rows = [listing("S100AAA2", start="2026-04-01", end="2027-03-31", submitted="2027-06-20 15:00"), listing("S100AAA1")]
+        code, out, _, server = self.run_with(steps["timeout"], rows, existing=path)
+        self.assertEqual(path.read_text(encoding="utf-8"), before)
+        self.assertEqual(len(server.requests), 1)  # S100AAA1 だけ取得した
+        self.assertIn("transient", out)
+        code, _, err, server = self.run_with(zip_response(csv_text(rows_for())), rows, existing=path)
+        self.assertEqual(code, 0, msg=err)
+        self.assertEqual(len(server.requests), 1)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual([f["doc_id"] for f in data["filings"]], ["S100AAA1", "S100AAA2"])  # 提出の古い順
+
+    def test_other_failures_are_still_recorded_and_auth_still_aborts(self):
+        path = self.tmp / "out" / f"{SLUG}.json"
+        code, _, _, _ = self.run_with(FakeResponse(b"PK not really"), [listing("S100AAA1")])
+        self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["filings"][0]["error"], "zip_format")
+        path.unlink()
+        auth = lambda req: (_ for _ in ()).throw(fk.http_error(req, 401))  # noqa: E731
+        code, _, _, _ = self.run_with(auth, [listing("S100AAA1")], "--retry-failed")
+        self.assertEqual(code, 1)
+        self.assertFalse(path.exists())
+
+    def test_retry_failed_flag(self):
+        path = self.tmp / "out" / f"{SLUG}.json"
+        rows = [listing("S100AAA1")]
+        self.run_with(FakeResponse(b"PK not really"), rows)
+        # 指定しなければ、今のまま（再取得しない）
+        code, out, _, server = self.run_with(zip_response(csv_text(rows_for())), rows, existing=path)
+        self.assertEqual(server.requests, [])
+        self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["filings"][0]["status"], "failed")
+        # 指定すると、再取得して、failed の行を置き換える
+        code, out, err, server = self.run_with(zip_response(csv_text(rows_for())), rows, "--retry-failed", existing=path)
+        self.assertEqual(code, 0, msg=err)
+        self.assertEqual(len(server.requests), 1)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual([(f["doc_id"], f["status"]) for f in data["filings"]], [("S100AAA1", "ingested")])
+        self.assertEqual(ingest.validate(data), [])
+        self.assertEqual(len(data["financials"]), 1)
+        # 取り込み済みの書類は、指定しても再取得しない
+        code, out, _, server = self.run_with(zip_response(csv_text(rows_for())), rows, "--retry-failed", existing=path)
+        self.assertEqual(server.requests, [])
+        self.assertIn("変更がない", out)
+
+    def test_retry_failed_counts_toward_max_requests(self):
+        path = self.tmp / "out" / f"{SLUG}.json"
+        rows = [listing("S100AAA1"), listing("S100AAA2")]
+        self.run_with(FakeResponse(b"PK not really"), rows)
+        code, _, err, server = self.run_with(zip_response(csv_text(rows_for())), rows, "--retry-failed",
+                                             "--max-requests", "1", existing=path)
+        self.assertEqual(code, 2)
+        self.assertEqual(server.requests, [])
 
     def test_out_dir_under_data_auto_is_rejected(self):
         # data/auto/ が実在しなくても検査が働くことを確かめるため、実在するフォルダを禁止の場所に差し替える
