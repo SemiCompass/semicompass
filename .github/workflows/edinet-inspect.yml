@@ -1,0 +1,50 @@
+name: edinet-inspect
+
+# 手動で動かす。EDINETの書類（CSV形式）を取得し、実際の要素の名前を調べる（データは書き込まない）
+on:
+  workflow_dispatch:
+    inputs:
+      doc_ids:
+        description: 書類管理番号（S100XXXX）。複数はカンマで区切る（最大10件）
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    # edinet の Environment（EDINET_API_KEY）を使う。main だけに限定済み
+    environment: edinet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 書類を調べる
+        env:
+          EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+          # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
+          INPUT_DOC_IDS: ${{ inputs.doc_ids }}
+        run: |
+          args=()
+          IFS=',' read -ra ids <<< "$INPUT_DOC_IDS"
+          for id in "${ids[@]}"; do
+            args+=(--doc-id "$(echo "$id" | xargs)")
+          done
+          "$RUNNER_TEMP/venv/bin/python" scripts/edinet/inspect_document.py "${args[@]}" \
+            --out "$RUNNER_TEMP/inspect.json"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: inspect
+          path: ${{ runner.temp }}/inspect.json
+          retention-days: 7
+          if-no-files-found: ignore
