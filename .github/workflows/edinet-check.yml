@@ -1,0 +1,23 @@
+name: edinet-check
+
+# 手動で動かす。EDINET API への接続とAPIキーが有効かだけを確かめる（データは書き込まない）
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    # edinet の Environment（EDINET_API_KEY）を使う。main だけに限定済み
+    environment: edinet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: EDINET API への接続を確かめる
+        env:
+          EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+        run: python3 scripts/edinet/check_connection.py
