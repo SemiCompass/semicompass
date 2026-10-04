@@ -1,0 +1,62 @@
+name: edinet-list-filings
+
+# 手動で動かす。EDINETの書類一覧から、指定した企業の有価証券報告書・半期報告書を探す（データは書き込まない）
+on:
+  workflow_dispatch:
+    inputs:
+      company:
+        description: 企業の slug（data/companies/{slug}.yaml）。複数はカンマで区切る
+        required: true
+        type: string
+      from:
+        description: 日付の範囲の始め（YYYY-MM-DD）。toと一緒に指定する。空なら日本時間の前日だけ
+        required: false
+        type: string
+      to:
+        description: 日付の範囲の終わり（YYYY-MM-DD）
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  list:
+    runs-on: ubuntu-24.04
+    # edinet の Environment（EDINET_API_KEY）を使う。main だけに限定済み
+    environment: edinet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 書類を探す
+        env:
+          EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+          # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
+          INPUT_COMPANY: ${{ inputs.company }}
+          INPUT_FROM: ${{ inputs.from }}
+          INPUT_TO: ${{ inputs.to }}
+        run: |
+          args=()
+          IFS=',' read -ra slugs <<< "$INPUT_COMPANY"
+          for slug in "${slugs[@]}"; do
+            args+=(--company "$(echo "$slug" | xargs)")
+          done
+          if [ -n "$INPUT_FROM" ] || [ -n "$INPUT_TO" ]; then
+            args+=(--from "$INPUT_FROM" --to "$INPUT_TO")
+          fi
+          "$RUNNER_TEMP/venv/bin/python" scripts/edinet/list_filings.py "${args[@]}" \
+            --out "$RUNNER_TEMP/filings.json"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: filings
+          path: ${{ runner.temp }}/filings.json
+          retention-days: 7
+          if-no-files-found: ignore
