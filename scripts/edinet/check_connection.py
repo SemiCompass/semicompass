@@ -14,95 +14,36 @@ APIキーは、環境変数 EDINET_API_KEY から読む（コマンドの引数�
 from __future__ import annotations
 
 import argparse
-import json
 import os
-import re
 import sys
 import time
-import urllib.error
-import urllib.request
-from datetime import date, datetime, timedelta
-from urllib.parse import quote, quote_plus, urlencode
-from zoneinfo import ZoneInfo
+from datetime import date
+from pathlib import Path
 
-API_URL = "https://api.edinet-fsa.go.jp/api/v2/documents.json"
-ENV_KEY = "EDINET_API_KEY"
-TIMEOUT_SECONDS = 30
-MAX_RETRIES = 3  # 429のときの再試行は最大3回（最初の1回を含めて4回まで呼ぶ）
-RETRY_BASE_SECONDS = 30  # 再試行の間隔は 30秒、60秒、120秒
-RETRY_MAX_SECONDS = 300
-MESSAGE_MAX_LENGTH = 200
-MASK = "***"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-EXIT_OK = 0
-EXIT_FAILURE = 1
-EXIT_USAGE = 2
-
-_QUERY_KEY_PATTERN = re.compile(r"(?i)(Subscription-Key=)[^&\s'\")>]*")
-
-
-class EdinetError(Exception):
-    """接続の確認の失敗。メッセージは、キーを伏せ字にした文だけを持つ。"""
-
-    def __init__(self, message: str, exit_code: int = EXIT_FAILURE):
-        super().__init__(message)
-        self.exit_code = exit_code
-
-
-def redact(text: str, key: str | None = None) -> str:
-    """文章の中のキーと、`Subscription-Key=` に続く値を伏せ字にする。"""
-    text = _QUERY_KEY_PATTERN.sub(r"\1" + MASK, text)
-    if key:
-        for form in {key, quote(key, safe=""), quote_plus(key)}:
-            text = text.replace(form, MASK)
-    return text
-
-
-def default_date(now: datetime | None = None) -> date:
-    """日本時間の前日。"""
-    now = now or datetime.now(ZoneInfo("Asia/Tokyo"))
-    return now.astimezone(ZoneInfo("Asia/Tokyo")).date() - timedelta(days=1)
-
-
-class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    """リダイレクトを追わない（キー入りのURLを、別の送信先へ送らないため）。"""
-
-    def redirect_request(self, *args, **kwargs):  # noqa: D102
-        return None
-
-
-def _open(request: urllib.request.Request, timeout: float):
-    return urllib.request.build_opener(_NoRedirect).open(request, timeout=timeout)
-
-
-def _status_of(body: dict) -> tuple[str | None, str]:
-    """応答のJSONから、ステータスとメッセージを取り出す。
-
-    エラーのときは StatusCode と message（トップレベル）、
-    それ以外は metadata.status と metadata.message で返る。
-    """
-    if "StatusCode" in body:
-        return str(body["StatusCode"]), str(body.get("message", ""))
-    metadata = body.get("metadata")
-    if isinstance(metadata, dict):
-        status = metadata.get("status")
-        return (None if status is None else str(status)), str(metadata.get("message", ""))
-    return None, ""
-
-
-def _parse_json(raw: bytes) -> dict | None:
-    try:
-        body = json.loads(raw.decode("utf-8"))
-    except (ValueError, UnicodeDecodeError):
-        return None
-    return body if isinstance(body, dict) else None
-
-
-def _retry_wait(attempt: int, retry_after: str | None) -> float:
-    wait = RETRY_BASE_SECONDS * (2**attempt)
-    if retry_after and retry_after.isdigit():
-        wait = max(wait, int(retry_after))
-    return min(wait, RETRY_MAX_SECONDS)
+import client  # noqa: E402
+from client import (  # noqa: E402,F401 - テストと他のスクリプトが、このモジュールの名前で使う
+    API_URL,
+    ENV_KEY,
+    EXIT_FAILURE,
+    EXIT_OK,
+    EXIT_USAGE,
+    MASK,
+    MAX_RETRIES,
+    MESSAGE_MAX_LENGTH,
+    RETRY_BASE_SECONDS,
+    RETRY_MAX_SECONDS,
+    TIMEOUT_SECONDS,
+    EdinetError,
+    _call_once,
+    _failure_text,
+    _NoRedirect,
+    _open,
+    _retry_wait,
+    default_date,
+    redact,
+)
 
 
 def fetch_document_list(
@@ -113,86 +54,9 @@ def fetch_document_list(
     sleep=time.sleep,
     timeout: float = TIMEOUT_SECONDS,
 ) -> dict:
-    """書類一覧API（type=1）を呼び、成功なら `metadata` を返す。失敗は EdinetError。
-
-    429は、間隔を空けて最大 MAX_RETRIES 回まで再試行する。
-    """
-    query = urlencode({"date": target_date.isoformat(), "type": "1", "Subscription-Key": key})
-    attempt = 0
-    while True:
-        status, message, metadata, retry_after = _call_once(
-            f"{API_URL}?{query}", key, open_url, timeout
-        )
-        if status == "200":
-            return metadata
-        if status == "429" and attempt < MAX_RETRIES:
-            sleep(_retry_wait(attempt, retry_after))
-            attempt += 1
-            continue
-        raise EdinetError(_failure_text(status, message, key, retries=attempt))
-
-
-def _call_once(url: str, key: str, open_url, timeout: float):
-    """1回呼び、(ステータス, メッセージ, metadata, Retry-After) を返す。
-
-    例外は、キーを含みうる元の例外を引き継がず（from None）、伏せ字にした文だけを持つ
-    EdinetError にして投げる。
-    """
-    request = urllib.request.Request(url, headers={"Accept": "application/json"})
-    http_status: int | None = None
-    raw = b""
-    retry_after = None
-    try:
-        response = open_url(request, timeout)
-        try:
-            raw = response.read()
-            http_status = getattr(response, "status", None) or response.getcode()
-        finally:
-            response.close()
-    except urllib.error.HTTPError as error:
-        http_status = error.code
-        retry_after = error.headers.get("Retry-After") if error.headers else None
-        try:
-            raw = error.read()
-        except Exception:  # noqa: BLE001 - 本文が読めなくても、ステータスで判定する
-            raw = b""
-        finally:
-            error.close()
-    except (TimeoutError, urllib.error.URLError, OSError) as error:
-        reason = getattr(error, "reason", error)
-        if isinstance(reason, TimeoutError) or "timed out" in str(reason):
-            text = f"{int(timeout)}秒以内に応答がなかった（タイムアウト）"
-        else:
-            text = f"接続できなかった（{type(reason).__name__}: {redact(str(reason), key)}）"
-        raise EdinetError(text) from None
-    except Exception as error:  # noqa: BLE001 - 想定外の例外も、キーを伏せた文に変える
-        raise EdinetError(
-            f"想定外のエラー（{type(error).__name__}: {redact(str(error), key)}）"
-        ) from None
-
-    body = _parse_json(raw)
-    status, message = _status_of(body) if body is not None else (None, "")
-    if status is None and http_status not in (None, 200):
-        # JSONのステータスがないときは、HTTPのステータスで判定する。
-        # HTTP 200でも metadata.status がなければ、成功とは扱わない
-        status = str(http_status)
-    if body is None and http_status == 200:
-        raise EdinetError("応答がJSONとして読めなかった") from None
-    metadata = body.get("metadata", {}) if body is not None and status == "200" else {}
-    return status, message, metadata, retry_after
-
-
-def _failure_text(status: str | None, message: str, key: str, *, retries: int) -> str:
-    detail = redact(message, key)[:MESSAGE_MAX_LENGTH]
-    label = {
-        "401": "認証に失敗した（キーが正しいか、有効かを確かめる）",
-        "429": f"アクセスが多すぎる（再試行を{retries}回行ったが解消しなかった）",
-    }.get(status or "", None)
-    if status is not None and status.startswith("5"):
-        label = f"EDINET側のエラー（停止している可能性がある。ステータス {status}）"
-    if label is None:
-        label = f"成功ではないステータスが返った（{status}）"
-    return f"{label}。{detail}" if detail else label
+    """書類一覧API（type=1）を呼び、成功なら `metadata` を返す。失敗は EdinetError。"""
+    edinet = client.EdinetClient(key, open_url=open_url, sleep=sleep, timeout=timeout)
+    return edinet.get_documents(target_date, 1).get("metadata", {})
 
 
 def _valid_date(text: str) -> date:

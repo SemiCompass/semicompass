@@ -1,0 +1,4 @@
+# scripts/ とその単体テストが使うPythonの依存（版を固定する）。
+# 直接の依存だけを書いている。jsonschema の依存（attrs、referencing、rpds-py、jsonschema-specifications）は固定していない。
+PyYAML==6.0.1
+jsonschema==4.26.0
