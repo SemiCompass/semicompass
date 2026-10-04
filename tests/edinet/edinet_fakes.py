@@ -21,8 +21,8 @@ class FakeResponse:
         self._raw = body if isinstance(body, bytes) else json.dumps(body).encode("utf-8")
         self.status = status
 
-    def read(self):
-        return self._raw
+    def read(self, size=None):
+        return self._raw if size is None else self._raw[:size]
 
     def getcode(self):
         return self.status

@@ -1,7 +1,7 @@
 """EDINET API（v2）のクライアント（共通部品）。
 
-書類一覧API（documents.json）を呼ぶ。check_connection.py（接続の確認）と
-list_filings.py（書類の調査）が使う。取り込み（J01）の本体ではなく、ファイルは書き込まない。
+書類一覧API（documents.json）と書類取得API（documents/{docID}）を呼ぶ。check_connection.py（接続の確認）、
+list_filings.py（書類の調査）、inspect_document.py（書類の要素の調査）が使う。取り込み（J01）の本体ではなく、ファイルは書き込まない。
 
 リポジトリが公開で、APIキーはURLのクエリに入るため、次を守る。
   * キーとキー入りのURLを、標準出力、エラー文、例外のメッセージ、ログ、ファイルに出さない
@@ -23,6 +23,9 @@ from urllib.parse import quote, quote_plus, urlencode
 from zoneinfo import ZoneInfo
 
 API_URL = "https://api.edinet-fsa.go.jp/api/v2/documents.json"
+DOCUMENT_URL = "https://api.edinet-fsa.go.jp/api/v2/documents/"  # + docID（書類取得API）
+DOC_ID_PATTERN = re.compile(r"^S100[0-9A-Z]{4}$")  # データ定義書2.2のdoc_id
+MAX_DOWNLOAD_BYTES = 200 * 1024 * 1024  # 書類取得の応答の大きさの上限
 ENV_KEY = "EDINET_API_KEY"
 TIMEOUT_SECONDS = 30
 MAX_RETRIES = 3  # 429のときの再試行は最大3回（最初の1回を含めて4回まで呼ぶ）
@@ -103,20 +106,22 @@ def _retry_wait(attempt: int, retry_after: str | None) -> float:
     return min(wait, RETRY_MAX_SECONDS)
 
 
-def _call_once(url: str, key: str, open_url, timeout: float):
-    """1回呼び、(ステータス, メッセージ, 成功時の応答のJSON, Retry-After) を返す。
+def _fetch_raw(
+    url: str, key: str, open_url, timeout: float, max_bytes: int | None = None, accept: str = "application/json"
+):
+    """1回呼び、(HTTPのステータス, 応答の本体のバイト列, Retry-After) を返す。
 
     例外は、キーを含みうる元の例外を引き継がず（from None）、伏せ字にした文だけを持つ
-    EdinetError にして投げる。
+    EdinetError にして投げる。max_bytes を指定すると、それを超える応答は読まずに失敗にする。
     """
-    request = urllib.request.Request(url, headers={"Accept": "application/json"})
+    request = urllib.request.Request(url, headers={"Accept": accept})
     http_status: int | None = None
     raw = b""
     retry_after = None
     try:
         response = open_url(request, timeout)
         try:
-            raw = response.read()
+            raw = response.read() if max_bytes is None else response.read(max_bytes + 1)
             http_status = getattr(response, "status", None) or response.getcode()
         finally:
             response.close()
@@ -140,7 +145,14 @@ def _call_once(url: str, key: str, open_url, timeout: float):
         raise EdinetError(
             f"想定外のエラー（{type(error).__name__}: {redact(str(error), key)}）"
         ) from None
+    if max_bytes is not None and len(raw) > max_bytes:
+        raise EdinetError(f"応答が大きすぎる（上限 {max_bytes // (1024 * 1024)}MB）") from None
+    return http_status, raw, retry_after
 
+
+def _call_once(url: str, key: str, open_url, timeout: float):
+    """1回呼び、(ステータス, メッセージ, 成功時の応答のJSON, Retry-After) を返す。"""
+    http_status, raw, retry_after = _fetch_raw(url, key, open_url, timeout)
     body = _parse_json(raw)
     status, message = _status_of(body) if body is not None else (None, "")
     if status is None and http_status not in (None, 200):
@@ -166,8 +178,30 @@ def _failure_text(status: str | None, message: str, key: str, *, retries: int) -
     return f"{label}。{detail}" if detail else label
 
 
+def _classify_document(http_status: int | None, raw: bytes) -> tuple[str | None, str]:
+    """書類取得の応答を判定し、(ステータス, メッセージ) を返す。成功（ZIP）は ("200", "")。
+
+    取得に失敗したときは、HTTPが200でも、JSONのエラーが返ることがある。
+    応答の先頭が ZIP（PK）か、JSONかで判定する。
+    """
+    if raw[:2] == b"PK":
+        return "200", ""
+    body = _parse_json(raw)
+    if body is None:
+        if http_status in (None, 200):
+            raise EdinetError("応答がZIPでもJSONでもなかった") from None
+        return str(http_status), ""
+    status, message = _status_of(body)
+    if status is None or status == "200":
+        # ZIPではないのに成功の印のJSON、またはステータスのないJSONは、成功とは扱わない
+        if http_status in (None, 200):
+            raise EdinetError("ZIPではなくJSONが返った（書類を取得できなかった）") from None
+        status = str(http_status)
+    return status, message
+
+
 class EdinetClient:
-    """書類一覧APIのクライアント。1つのインスタンスの中で、呼び出しの間隔と回数を管理する。"""
+    """書類一覧API・書類取得APIのクライアント。1つのインスタンスの中で、呼び出しの間隔と回数を管理する。"""
 
     def __init__(
         self,
@@ -202,6 +236,22 @@ class EdinetClient:
                 self._sleep(wait)
         self.request_count += 1
 
+    def _with_retries(self, call):
+        """call() が (ステータス, メッセージ, 成功時の値, Retry-After) を返す。429は再試行する。"""
+        attempt = 0
+        while True:
+            self._before_call()
+            status, message, value, retry_after = call()
+            self._last_call = self._monotonic()
+            if status == "200":
+                return value
+            if status == "429" and attempt < MAX_RETRIES:
+                self._sleep(_retry_wait(attempt, retry_after))
+                attempt += 1
+                self._last_call = None  # 再試行の待ち（30秒以上）が、呼び出しの間隔を満たす
+                continue
+            raise EdinetError(_failure_text(status, message, self._key, retries=attempt))
+
     def get_documents(self, target_date: date, doc_type: int) -> dict:
         """書類一覧API（type=doc_type）を呼び、成功なら応答のJSON全体を返す。失敗は EdinetError。
 
@@ -212,16 +262,29 @@ class EdinetClient:
             {"date": target_date.isoformat(), "type": str(doc_type), "Subscription-Key": self._key}
         )
         url = f"{API_URL}?{query}"
-        attempt = 0
-        while True:
-            self._before_call()
+
+        def call():
             status, message, body, retry_after = _call_once(url, self._key, self._open_url, self._timeout)
-            self._last_call = self._monotonic()
-            if status == "200":
-                return body
-            if status == "429" and attempt < MAX_RETRIES:
-                self._sleep(_retry_wait(attempt, retry_after))
-                attempt += 1
-                self._last_call = None  # 再試行の待ち（30秒以上）が、呼び出しの間隔を満たす
-                continue
-            raise EdinetError(_failure_text(status, message, self._key, retries=attempt))
+            return status, message, body, retry_after
+
+        return self._with_retries(call)
+
+    def get_document(self, doc_id: str, doc_type: int = 5, *, max_bytes: int = MAX_DOWNLOAD_BYTES) -> bytes:
+        """書類取得API（type=doc_type）を呼び、成功なら応答（既定のtype=5はCSVのZIP）のバイト列を返す。
+
+        応答の先頭がZIP（PK）なら成功。HTTPが200でも、JSONのエラーが返ることがあるため、
+        JSONのステータスで判定する。429は再試行する。失敗は EdinetError。
+        """
+        if not DOC_ID_PATTERN.match(doc_id):
+            raise EdinetError(f"doc_id の形が正しくない: {doc_id[:20]!r}", EXIT_USAGE)
+        query = urlencode({"type": str(doc_type), "Subscription-Key": self._key})
+        url = f"{DOCUMENT_URL}{doc_id}?{query}"
+
+        def call():
+            http_status, raw, retry_after = _fetch_raw(
+                url, self._key, self._open_url, self._timeout, max_bytes, accept="*/*"
+            )
+            status, message = _classify_document(http_status, raw)
+            return status, message, raw, retry_after
+
+        return self._with_retries(call)
