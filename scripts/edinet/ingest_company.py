@@ -9,6 +9,9 @@ J01の段階3b。結果は --out-dir に書く。段階3cまでは、`data/auto/
 * 一覧の中の、その企業の書類のうち、既存の filings にない doc_id だけを取得して取り込む
 * 取り込めない書類（異常、取得の失敗）は、filings に failed で記録し、値は入れない
 * 結果が data/auto のスキーマ（jsonschema と、formatの検査）に合格しないときは、書かずに終了コード1
+* --retry-failed を付けると、既存の filings の failed の書類も再取得する（一覧にあるものだけ。成功したら failed の行を置き換える）
+* 通信の一時的な失敗（429の再試行を使い切った、接続できない、タイムアウト）は、filings に記録せず、
+  変更の一覧に not_recorded（transient）として出す。次の実行で再取得される。認証の失敗（401）は、全体を止める
 * 取り込む書類がなく、変更もないときは、ファイルを書かない
 
 終了コード: 0 成功 / 1 接続・応答の失敗、またはスキーマに不合格 / 2 設定・引数の誤り
@@ -58,6 +61,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--existing", type=Path, metavar="FILE", help="既存の data/auto/{slug}.json。なければ省略")
     parser.add_argument("--out-dir", required=True, type=Path, metavar="DIR",
                         help="結果（{slug}.json）を書くフォルダ。data/auto/ の下は拒否する（段階3cで外す）")
+    parser.add_argument("--retry-failed", action="store_true",
+                        help="既存の filings で status が failed の書類も、一覧にあれば再取得する"
+                             "（成功したら、failed の行を置き換える）")
     parser.add_argument("--max-requests", type=_positive_int, default=DEFAULT_MAX_REQUESTS,
                         help=f"書類の取得の上限（既定 {DEFAULT_MAX_REQUESTS}）。超えるなら、実行前にエラーで終わる")
     return parser.parse_args(argv)
@@ -126,7 +132,8 @@ def main(
         existing = load_json(args.existing, "既存のファイル") if args.existing else None
         xbrl_map = yaml.safe_load(XBRL_MAP_PATH.read_text(encoding="utf-8"))
         doc_types = {str(k): v for k, v in xbrl_map["doc_types"].items()}
-        known = {f["doc_id"] for f in (existing or {}).get("filings", [])}
+        known = {f["doc_id"] for f in (existing or {}).get("filings", [])
+                 if not (args.retry_failed and f["status"] == "failed")}
         usable, _ = build_auto.classify_rows(rows, edinet_code, doc_types)
         targets, seen = [], set(known)
         for row, _doc_type in usable:
@@ -148,7 +155,8 @@ def main(
             ingested_at = build_auto.jst_text(moment)
             for row in targets:
                 documents.append(fetch_one(edinet, row, ingested_at, xbrl_map, key, edinet_code))
-        data, changes = build_auto.build(args.company, edinet_code, existing, documents, moment, doc_types)
+        data, changes = build_auto.build(args.company, edinet_code, existing, documents, moment, doc_types,
+                                         retry_failed=args.retry_failed)
     except UsageError as error:
         print(f"error: {redact(str(error), key)}", file=sys.stderr)
         return client.EXIT_USAGE
@@ -190,7 +198,8 @@ def fetch_one(edinet, row: dict, ingested_at: str, xbrl_map: dict, key: str, edi
     except EdinetError as error:
         if "認証に失敗" in str(error):
             raise
-        doc["error"] = "fetch_failed"
+        # 通信の一時的な失敗は、filings に記録しない（次の実行で再取得される）
+        doc["error"] = build_auto.TRANSIENT if getattr(error, "transient", False) else "fetch_failed"
         return doc
     try:
         rows = document_rows(raw)

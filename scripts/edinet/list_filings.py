@@ -73,6 +73,7 @@ FILING_FIELDS = (
     "docDescription",
     "withdrawalStatus",
     "docInfoEditStatus",
+    "parentDocID",
 )
 
 

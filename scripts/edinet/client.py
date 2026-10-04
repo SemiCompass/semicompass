@@ -45,9 +45,10 @@ _QUERY_KEY_PATTERN = re.compile(r"(?i)(Subscription-Key=)[^&\s'\")>]*")
 class EdinetError(Exception):
     """接続の確認の失敗。メッセージは、キーを伏せ字にした文だけを持つ。"""
 
-    def __init__(self, message: str, exit_code: int = EXIT_FAILURE):
+    def __init__(self, message: str, exit_code: int = EXIT_FAILURE, *, transient: bool = False):
         super().__init__(message)
         self.exit_code = exit_code
+        self.transient = transient  # 通信の一時的な失敗（429の再試行を使い切った、接続できない、タイムアウト）
 
 
 def redact(text: str, key: str | None = None) -> str:
@@ -140,7 +141,7 @@ def _fetch_raw(
             text = f"{int(timeout)}秒以内に応答がなかった（タイムアウト）"
         else:
             text = f"接続できなかった（{type(reason).__name__}: {redact(str(reason), key)}）"
-        raise EdinetError(text) from None
+        raise EdinetError(text, transient=True) from None
     except Exception as error:  # noqa: BLE001 - 想定外の例外も、キーを伏せた文に変える
         raise EdinetError(
             f"想定外のエラー（{type(error).__name__}: {redact(str(error), key)}）"
@@ -250,7 +251,8 @@ class EdinetClient:
                 attempt += 1
                 self._last_call = None  # 再試行の待ち（30秒以上）が、呼び出しの間隔を満たす
                 continue
-            raise EdinetError(_failure_text(status, message, self._key, retries=attempt))
+            raise EdinetError(_failure_text(status, message, self._key, retries=attempt),
+                              transient=status == "429")
 
     def get_documents(self, target_date: date, doc_type: int) -> dict:
         """書類一覧API（type=doc_type）を呼び、成功なら応答のJSON全体を返す。失敗は EdinetError。
