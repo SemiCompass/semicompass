@@ -24,7 +24,10 @@
 
 実装していない規則：V-05〜V-21（本文、公開済みの識別子の削除、必須項目の充足、日付の前後、拠点、予算など）。
 
-出力は、エラーの一覧（ファイル、場所、規則、内容）。終了コードは、エラーがあれば1、なければ0。
+* 警告（終了コードは変えない。--strict でエラーにする）：superseded の書類が、どの書類の supersedes からも
+  指されていない（訂正報告書の連鎖が切れている）。取り込み直すまで、既存のファイルに残りうるため、警告にしている
+
+出力は、エラーと警告の一覧（ファイル、場所、規則、内容）。終了コードは、エラーがあれば1、なければ0。
 --path が対象外のファイルのときは2。
 """
 
@@ -62,9 +65,11 @@ class Problem:
     path: str
     rule: str
     message: str
+    severity: str = "error"  # "error" か "warning"。警告は、終了コードを1にしない（--strict で、エラーとして扱う）
 
     def __str__(self) -> str:
-        return f"{self.file}: {self.path or '(全体)'}: [{self.rule}] {self.message}"
+        mark = "警告 " if self.severity == "warning" else ""
+        return f"{mark}{self.file}: {self.path or '(全体)'}: [{self.rule}] {self.message}"
 
 
 def pointer(parts) -> str:
@@ -336,6 +341,13 @@ def check_auto(autos: dict[str, dict], companies: dict[str, dict]) -> list[Probl
             dict_rows = [r for r in rows if isinstance(r, dict)]
             if any(sort_key(a) > sort_key(b) for a, b in zip(dict_rows, dict_rows[1:])):
                 out.append(Problem(rel, f"/{section}", "V-03", f"{section} が期間の古い順になっていない"))
+        pointed = {f.get("supersedes") for f in data.get("filings") or []
+                   if isinstance(f, dict) and f.get("status") != "failed"}
+        for i, f in enumerate(data.get("filings") or []):
+            if isinstance(f, dict) and f.get("status") == "superseded" and f.get("doc_id") not in pointed:
+                out.append(Problem(rel, pointer(["filings", i, "status"]), "V-04",
+                                   f"superseded の書類 {f.get('doc_id')} が、どの書類の supersedes からも指されていない"
+                                   "（訂正報告書の連鎖が切れている。取り込み直すと直る）", severity="warning"))
         for i, rev in enumerate(data.get("revisions") or []):
             if not isinstance(rev, dict):
                 continue
@@ -356,6 +368,7 @@ def check_auto(autos: dict[str, dict], companies: dict[str, dict]) -> list[Probl
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="データの形式の検証（引数なしで、リポジトリ全体）")
     parser.add_argument("--path", type=Path, metavar="FILE", help="1ファイルだけ検査する")
+    parser.add_argument("--strict", action="store_true", help="警告も、エラーとして扱う（終了コードを1にする）")
     return parser.parse_args(argv)
 
 
@@ -373,10 +386,12 @@ def main(argv: list[str] | None = None, *, root: Path = REPO_ROOT, schema_root: 
         print(f"error: 検査を始められない（{type(error).__name__}）", file=sys.stderr)
         return 2
     files = collect_files(root) if only is None else [(kind_of(only, root), only)]
+    errors = [p for p in problems if p.severity == "error" or args.strict]
     for problem in problems:
         print(problem)
-    print(f"検査したファイル {len(files)}件 / エラー {len(problems)}件")
-    return 1 if problems else 0
+    print(f"検査したファイル {len(files)}件 / エラー {len([p for p in problems if p.severity == 'error'])}件"
+          f" / 警告 {len([p for p in problems if p.severity == 'warning'])}件")
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":

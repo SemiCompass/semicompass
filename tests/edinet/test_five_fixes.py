@@ -84,14 +84,16 @@ def check_all(testcase, data):
 
 class Q2Test(unittest.TestCase):
     def rows(self, period):
-        return dei(period=period, end="2025-09-30", code=CODE) + fin_rows("InterimDuration", 500_000_000, 100_000_000,
+        # Q2（旧様式）は CurrentYTDDuration、HY は InterimDuration（実書類 S100UPNV などで確認したコンテキスト）
+        duration = "CurrentYTDDuration" if period == "Q2" else "InterimDuration"
+        return dei(period=period, end="2025-09-30", code=CODE) + fin_rows(duration, 500_000_000, 100_000_000,
                                                                            ordinary=1, ni=2)
 
     def test_q2_is_half_only_for_doc_type_160(self):
         result = ext_with(self.rows("Q2"), "160")
         self.assertFalse(result["stopped"])
         self.assertEqual((result["financial"]["period_type"], result["financial"]["net_sales"]["context"]),
-                         ("half", "InterimDuration"))
+                         ("half", "CurrentYTDDuration"))
         self.assertEqual(result["anomalies"], [])
         self.assertIsNone(result["employee"])
 
@@ -310,7 +312,10 @@ class AccountingStandardSwitchTest(unittest.TestCase):
         row = data["financials"][0]
         self.assertEqual((row["accounting_standard"], row["doc_id"], row["net_sales"]["doc_id"]), ("ifrs", "S100AAA2", "S100AAA2"))
         self.assertEqual(data["revisions"], second["revisions"])
-        self.assertEqual({f["doc_id"]: f["status"] for f in data["filings"]}["S100AAA7"], "superseded")
+        # S100AAA7 は、2025-03 期の連鎖（S100AAA1 → S100AAA7）の最後なので ingested のまま（値は、より新しい
+        # S100AAA2 の前期の列のものを残す）。前の版の S100AAA1 は superseded
+        self.assertEqual({f["doc_id"]: f["status"] for f in data["filings"]},
+                         {"S100AAA1": "superseded", "S100AAA7": "ingested", "S100AAA2": "ingested"})
         check_all(self, data)
 
     def test_newer_leaf_values_block_the_switch(self):

@@ -172,6 +172,10 @@ def render_summary(results: list[dict], api: dict, key: str) -> str:
         if missing:
             lines.append("**前期の列にセグメントがない（既存を残した）**")
             lines += [f"* {c['doc_id']}：{short(c['message'], key)}" for c in missing] + [""]
+        fixed = [c for c in changes if c["kind"] == "supersedes_fixed"]
+        if fixed:
+            lines.append("**訂正報告書の連鎖を直した（supersedes）**")
+            lines += [f"* {c['doc_id']}：{short(c['message'], key)}" for c in fixed] + [""]
         failed = [c for c in changes if c["kind"] == "failed"]
         if failed:
             lines.append("**failed の書類**")

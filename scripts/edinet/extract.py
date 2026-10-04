@@ -12,6 +12,8 @@ stopped（DEIが読めず、取り出しを止めたか）。
 実装で決めたこと：
 * DEIの値が未知（会計基準、期間の種類）、読めない（連結の有無、日付）、欠けている、食い違うときは、
   異常にして、取り出しを止める（推測で続けない）
+* 使うコンテキストは、DEIの期間の種類で決める（FY：CurrentYearDuration／Instant、HY：InterimDuration／Instant、
+  Q2（docTypeCode 160 のときだけ）：CurrentYTDDuration／CurrentQuarterInstant。前期は Prior1…）
 * 売上高などの当期の値は、コンテキストIDが当期の期間（CurrentYearDuration、InterimDuration）に完全に
   一致する行から、会計基準の候補の要素を先頭から順に探して、最初の行を使う。連結か単体かは、DEIの連結の有無で決め、
   行の選び方は変えない（連結の値も、連結財務諸表がない会社の値も、Member を含まないコンテキストの行）
@@ -59,6 +61,9 @@ CONTEXTS = {  # period_type → (期間のコンテキスト、時点のコン�
     "annual": ("CurrentYearDuration", "CurrentYearInstant"),
     "half": ("InterimDuration", "InterimInstant"),
 }
+# DEIの期間の種類が Q2（旧様式の半期報告書。docTypeCode が 160 のときだけ有効）の書類のコンテキスト。
+# (当期の期間, 当期の時点, 前期の期間, 前期の時点)。確認済み：S100UPNV、S100URKY、S100UQ07（config/xbrl-map.yaml の先頭のコメント）
+RAW_PERIOD_CONTEXTS = {"Q2": ("CurrentYTDDuration", "CurrentQuarterInstant", "Prior1YTDDuration", "Prior1QuarterInstant")}
 DEI_EDINET_CODE = "jpdei_cor:EDINETCodeDEI"
 # DEIの期間の種類のうち、書類の種類のコード（docTypeCode）が一致するときだけ有効な値（config/xbrl-map.yaml の先頭のコメント）
 PERIOD_TYPE_DOC_CODES = {"Q2": frozenset({"160"})}
@@ -67,6 +72,15 @@ PRIOR_CONTEXTS = {  # 前期の列。period_type → (期間のコンテキス�
     "annual": ("Prior1YearDuration", "Prior1YearInstant"),
     "half": ("Prior1InterimDuration", "Prior1InterimInstant"),
 }
+
+
+def contexts_for(dei: dict) -> tuple[str, str, str, str]:
+    """DEIの期間の種類に応じて、(当期の期間, 当期の時点, 前期の期間, 前期の時点) のコンテキストIDを決める。
+    FY は CurrentYear…／Prior1Year…、HY は Interim…／Prior1Interim…、Q2 は CurrentYTD…／Prior1YTD…。"""
+    raw = RAW_PERIOD_CONTEXTS.get(dei["period_type_raw"])
+    if raw is not None:
+        return raw
+    return CONTEXTS[dei["period_type"]] + PRIOR_CONTEXTS[dei["period_type"]]
 
 
 def _norm(name: str) -> str:
@@ -321,7 +335,7 @@ def extract(rows: list[dict], doc_id: str, ingested_at: str, xbrl_map: dict, doc
     if dei is None:
         return result
     standard, period_type = dei["accounting_standard"], dei["period_type"]
-    duration, instant = CONTEXTS[period_type]
+    duration, instant, _, _ = contexts_for(dei)
     spec = xbrl_map["standards"][standard]
     items = spec["items"]
 
@@ -370,7 +384,7 @@ def _comparative(rows: list[dict], xbrl_map: dict, dei: dict, doc_id: str, inges
     換算できない項目や、違う値の行が重なる項目は、入れずに notes に書く。
     """
     standard, period_type = dei["accounting_standard"], dei["period_type"]
-    duration, instant = PRIOR_CONTEXTS[period_type]
+    _, _, duration, instant = contexts_for(dei)
     spec = xbrl_map["standards"][standard]
     items = spec["items"]
     work = _Extraction(doc_id, ingested_at, company_code_of(rows))

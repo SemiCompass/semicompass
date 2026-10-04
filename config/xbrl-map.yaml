@@ -36,6 +36,17 @@
 # ・DEIの期間の種類 "Q2" は、書類の種類のコード（docTypeCode）が 160（半期報告書）のときだけ、half として扱う
 #   （2024〜2025年の半期報告書で確認）。160 以外で "Q2" が出たときは、未知の値として異常にする
 #   （dei_unknown_period_type）。この条件は extract.py が持つ（スキーマは変えないため、ここには書けない）。
+# ・使うコンテキストは、DEIの期間の種類で決める。どれも、コンテキストIDの完全一致で探す
+#   （Member 付きのセグメントは、「当期の期間_」で始まるもの）。
+#     FY（有価証券報告書）  CurrentYearDuration／CurrentYearInstant、前期は Prior1YearDuration／Prior1YearInstant
+#     HY（半期報告書）      InterimDuration／InterimInstant、前期は Prior1InterimDuration／Prior1InterimInstant
+#     Q2（旧様式の半期報告書。docTypeCode が 160 のときだけ）
+#                           CurrentYTDDuration／CurrentQuarterInstant、前期は Prior1YTDDuration／Prior1QuarterInstant
+#   Q2 の書類のセグメントは、CurrentYTDDuration_{前置き}{メンバー名}、Prior1YTDDuration_{前置き}{メンバー名}。
+#   要素名は通常の書類と同じ。従業員の行はない（employees の行は作らない）。period_type は half、
+#   fiscal_period_end は DEI の fiscal_year_end の年月。確認済み：S100UPNV（東京エレクトロン、Japan GAAP）、
+#   S100URKY（ソニー、IFRS）、S100UQ07（アドバンテスト、IFRS）。いずれも期間 2024-04-01〜2024-09-30、
+#   DEI の fiscal_year_end が 2025-03-31。
 # ・先頭が「*:」の候補（例：*:SalesAndFinancialServicesRevenueIFRS）は、会社固有の前置きを無視し、要素IDの
 #   「:」より後の名前（ローカル名）が一致するものに当てはまる。当てはまるのは、前置きが
 #   jpcrp（数字）-（asr または ssr）_E（5桁の数字）-（3桁の数字）の形で、その E コードが、その書類の企業の
