@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "company": "kioxia",
+  "edinet_code": "E35948",
+  "updated_at": "2026-10-04T21:12:41+09:00",
+  "filings": [
+    {
+      "doc_id": "S100W440",
+      "doc_type": "annual_report",
+      "edinet_doc_type_code": "120",
+      "fiscal_period_end": "2025-03",
+      "period_type": "annual",
+      "period_start": "2024-04-01",
+      "period_end": "2025-03-31",
+      "submitted_at": "2025-06-26T11:04:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100W440.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-10-04T21:12:41+09:00"
+    },
+    {
+      "doc_id": "S100X3DB",
+      "doc_type": "semiannual_report",
+      "edinet_doc_type_code": "160",
+      "fiscal_period_end": "2026-03",
+      "period_type": "half",
+      "period_start": "2025-04-01",
+      "period_end": "2025-09-30",
+      "submitted_at": "2025-11-13T15:34:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100X3DB.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-10-04T21:12:41+09:00"
+    },
+    {
+      "doc_id": "S100YJ18",
+      "doc_type": "annual_report",
+      "edinet_doc_type_code": "120",
+      "fiscal_period_end": "2026-03",
+      "period_type": "annual",
+      "period_start": "2025-04-01",
+      "period_end": "2026-03-31",
+      "submitted_at": "2026-06-24T11:15:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YJ18.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-10-04T21:12:41+09:00"
+    }
+  ],
+  "financials": [
+    {
+      "fiscal_period_end": "2025-03",
+      "period_type": "annual",
+      "period_start": "2024-04-01",
+      "period_end": "2025-03-31",
+      "accounting_standard": "ifrs",
+      "consolidated": true,
+      "doc_id": "S100W440",
+      "net_sales_label": "売上収益",
+      "net_sales": {
+        "value": 1706460,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:RevenueIFRS",
+        "context": "CurrentYearDuration",
+        "doc_id": "S100W440",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "operating_income": {
+        "value": 451748,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:OperatingProfitLossIFRS",
+        "context": "CurrentYearDuration",
+        "doc_id": "S100W440",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "net_income": {
+        "value": 272315,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS",
+        "context": "CurrentYearDuration",
+        "doc_id": "S100W440",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "segments": [],
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2026-03",
+      "period_type": "half",
+      "period_start": "2025-04-01",
+      "period_end": "2025-09-30",
+      "accounting_standard": "ifrs",
+      "consolidated": true,
+      "doc_id": "S100X3DB",
+      "net_sales_label": "売上収益",
+      "net_sales": {
+        "value": 791145,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:RevenueIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100X3DB",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "operating_income": {
+        "value": 130820,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:OperatingProfitLossIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100X3DB",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "net_income": {
+        "value": 58946,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100X3DB",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "segments": [],
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2026-03",
+      "period_type": "annual",
+      "period_start": "2025-04-01",
+      "period_end": "2026-03-31",
+      "accounting_standard": "ifrs",
+      "consolidated": true,
+      "doc_id": "S100YJ18",
+      "net_sales_label": "売上収益",
+      "net_sales": {
+        "value": 2337628,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:RevenueIFRS",
+        "context": "CurrentYearDuration",
+        "doc_id": "S100YJ18",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "operating_income": {
+        "value": 870369,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:OperatingProfitLossIFRS",
+        "context": "CurrentYearDuration",
+        "doc_id": "S100YJ18",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "net_income": {
+        "value": 554490,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS",
+        "context": "CurrentYearDuration",
+        "doc_id": "S100YJ18",
+        "ingested_at": "2026-10-04T21:12:41+09:00"
+      },
+      "segments": [],
+      "regions": []
+    }
+  ],
+  "employees": [
+    {
+      "fiscal_period_end": "2025-03",
+      "as_of": "2025-03-31",
+      "doc_id": "S100W440",
+      "consolidated": {
+        "employees": {
+          "value": 15042,
+          "unit": "persons",
+          "original_unit": "persons",
+          "element": "jpcrp_cor:NumberOfEmployees",
+          "context": "CurrentYearInstant",
+          "doc_id": "S100W440",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        }
+      },
+      "non_consolidated": {
+        "employees": {
+          "value": 127,
+          "unit": "persons",
+          "original_unit": "persons",
+          "element": "jpcrp_cor:NumberOfEmployees",
+          "context": "CurrentYearInstant_NonConsolidatedMember",
+          "doc_id": "S100W440",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        },
+        "average_age": {
+          "value": 46.5,
+          "unit": "years",
+          "original_unit": "years",
+          "element": "jpcrp_cor:AverageAgeYearsInformationAboutReportingCompanyInformationAboutEmployees",
+          "context": "CurrentYearInstant_NonConsolidatedMember",
+          "doc_id": "S100W440",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        },
+        "average_length_of_service": {
+          "value": 14.5,
+          "unit": "years",
+          "original_unit": "years",
+          "element": "jpcrp_cor:AverageLengthOfServiceYearsInformationAboutReportingCompanyInformationAboutEmployees",
+          "context": "CurrentYearInstant_NonConsolidatedMember",
+          "doc_id": "S100W440",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        },
+        "average_annual_salary": {
+          "value": 11485500,
+          "unit": "yen",
+          "original_unit": "yen",
+          "element": "jpcrp_cor:AverageAnnualSalaryInformationAboutReportingCompanyInformationAboutEmployees",
+          "context": "CurrentYearInstant_NonConsolidatedMember",
+          "doc_id": "S100W440",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        }
+      }
+    },
+    {
+      "fiscal_period_end": "2026-03",
+      "as_of": "2026-03-31",
+      "doc_id": "S100YJ18",
+      "consolidated": {
+        "employees": {
+          "value": 15218,
+          "unit": "persons",
+          "original_unit": "persons",
+          "element": "jpcrp_cor:NumberOfEmployees",
+          "context": "CurrentYearInstant",
+          "doc_id": "S100YJ18",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        }
+      },
+      "non_consolidated": {
+        "employees": {
+          "value": 140,
+          "unit": "persons",
+          "original_unit": "persons",
+          "element": "jpcrp_cor:NumberOfEmployees",
+          "context": "CurrentYearInstant_NonConsolidatedMember",
+          "doc_id": "S100YJ18",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        },
+        "average_age": {
+          "value": 46.2,
+          "unit": "years",
+          "original_unit": "years",
+          "element": "jpcrp_cor:AverageAgeYearsInformationAboutReportingCompanyInformationAboutEmployees",
+          "context": "CurrentYearInstant_NonConsolidatedMember",
+          "doc_id": "S100YJ18",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        },
+        "average_length_of_service": {
+          "value": 13.9,
+          "unit": "years",
+          "original_unit": "years",
+          "element": "jpcrp_cor:AverageLengthOfServiceYearsInformationAboutReportingCompanyInformationAboutEmployees",
+          "context": "CurrentYearInstant_NonConsolidatedMember",
+          "doc_id": "S100YJ18",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        },
+        "average_annual_salary": {
+          "value": 13066018,
+          "unit": "yen",
+          "original_unit": "yen",
+          "element": "jpcrp_cor:AverageAnnualSalaryInformationAboutReportingCompanyInformationAboutEmployees",
+          "context": "CurrentYearInstant_NonConsolidatedMember",
+          "doc_id": "S100YJ18",
+          "ingested_at": "2026-10-04T21:12:41+09:00"
+        }
+      }
+    }
+  ],
+  "announcements": [],
+  "revisions": []
+}
