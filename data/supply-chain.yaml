@@ -1,0 +1,172 @@
+# 工程・プロダクトの分類（データ定義書 4.3、schemas/data/supply-chain.schema.json）
+# 企業と工程の結び付きは、企業マスタ（data/companies/）に持ち、このファイルには持たない。
+schema_version: 1
+
+categories:
+  - slug: design
+    name: 設計
+    order: 1
+  - slug: front-end
+    name: 前工程
+    order: 2
+  - slug: back-end
+    name: 後工程
+    order: 3
+  - slug: materials
+    name: 材料
+    order: 4
+  - slug: equipment
+    name: 装置
+    order: 5
+  - slug: devices
+    name: デバイス
+    order: 6
+  - slug: test
+    name: 検査
+    order: 7
+
+processes:
+  - slug: circuit-design
+    name: 回路設計（設計ツールを含む）
+    stage: design
+    order: 1
+    mvp: true
+    short_description: 半導体の回路を設計し、製造に使う設計データを作る工程。
+  - slug: photomask
+    name: フォトマスクの製造
+    stage: design
+    order: 2
+    mvp: false
+    short_description: 設計データをもとに、露光で使う回路パターンの原版を作る工程。
+  - slug: wafer
+    name: シリコンウェーハの製造
+    stage: materials
+    order: 3
+    mvp: true
+    short_description: 半導体の材料となる、シリコンの円盤（ウェーハ）を作る工程。
+  - slug: cleaning
+    name: 洗浄
+    stage: front-end
+    order: 4
+    mvp: true
+    short_description: ウェーハの表面から、微粒子や汚れ、不純物を取り除く工程。
+  - slug: oxidation-diffusion
+    name: 酸化・拡散
+    stage: front-end
+    order: 5
+    mvp: false
+    short_description: 高温でウェーハの表面に酸化膜を作り、不純物を内部に広げる工程。
+  - slug: deposition
+    name: 成膜（CVD、PVD、ALD）
+    stage: front-end
+    order: 6
+    mvp: true
+    short_description: ウェーハの上に、絶縁膜や金属膜などの薄い膜を形成する工程。
+  - slug: lithography
+    name: リソグラフィ（塗布・露光・現像）
+    stage: front-end
+    order: 7
+    mvp: true
+    short_description: ウェーハに感光材を塗り、露光と現像で回路のパターンを写す工程。
+  - slug: etching
+    name: エッチング
+    stage: front-end
+    order: 8
+    mvp: true
+    short_description: 不要な部分の膜を削り取り、回路の形を作る工程。
+  - slug: ion-implantation
+    name: イオン注入
+    stage: front-end
+    order: 9
+    mvp: false
+    short_description: 不純物のイオンをウェーハに打ち込み、電気の性質を変える工程。
+  - slug: cmp
+    name: CMP（平坦化）
+    stage: front-end
+    order: 10
+    mvp: true
+    short_description: 薬液と研磨を組み合わせて、ウェーハの表面を平らにする工程。
+  - slug: interconnect
+    name: 配線
+    stage: front-end
+    order: 11
+    mvp: false
+    short_description: 素子どうしを金属の配線でつなぎ、回路を形作る工程。
+  - slug: inspection-metrology
+    name: 検査・計測
+    stage: front-end
+    order: 12
+    mvp: false
+    short_description: 加工後のウェーハの寸法や欠陥を、検査・測定する工程。
+  - slug: dicing
+    name: ダイシング
+    stage: back-end
+    order: 13
+    mvp: true
+    short_description: ウェーハを切って、チップ（ダイ）に分ける工程。
+  - slug: bonding
+    name: ボンディング（ダイボンド、ワイヤボンド）
+    stage: back-end
+    order: 14
+    mvp: false
+    short_description: チップを基板に固定し、細い金属線で端子とつなぐ工程。
+  - slug: packaging
+    name: パッケージング（封止）
+    stage: back-end
+    order: 15
+    mvp: true
+    short_description: チップを樹脂などで封止し、守って取り扱える形にする工程。
+  - slug: advanced-packaging
+    name: 先端パッケージ
+    stage: back-end
+    order: 16
+    mvp: false
+    short_description: 複数のチップを積み重ねたり並べたりして、高密度につなぐ工程。
+  - slug: final-test
+    name: 最終検査（テスト）
+    stage: back-end
+    order: 17
+    mvp: true
+    short_description: 完成したチップが仕様どおり動くかを、電気的に試験する工程。
+
+# 工程の流れの矢印。主な流れは、材料（ウェーハ）→前工程→後工程の順。
+# 前工程は、運用ルール書4.1・データ定義書4.3の並びの順に1本でつなぐ。実際は層ごとに工程を繰り返すが、図では簡略化して1回だけ表す。
+flow:
+  # 設計から前工程へ
+  - from: circuit-design
+    to: photomask
+  - from: photomask
+    to: lithography
+  # 前工程
+  - from: wafer
+    to: cleaning
+  - from: cleaning
+    to: oxidation-diffusion
+  - from: oxidation-diffusion
+    to: deposition
+  - from: deposition
+    to: lithography
+  - from: lithography
+    to: etching
+  - from: etching
+    to: ion-implantation
+  - from: ion-implantation
+    to: cmp
+  - from: cmp
+    to: interconnect
+  - from: interconnect
+    to: inspection-metrology
+  # 前工程から後工程へ
+  - from: inspection-metrology
+    to: dicing
+  # 後工程（先端パッケージは、ボンディングとパッケージングの代わりに通る別の経路）
+  - from: dicing
+    to: bonding
+  - from: bonding
+    to: packaging
+  - from: packaging
+    to: final-test
+  - from: dicing
+    to: advanced-packaging
+  - from: advanced-packaging
+    to: final-test
