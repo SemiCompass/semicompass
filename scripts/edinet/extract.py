@@ -59,6 +59,10 @@ CONTEXTS = {  # period_type → (期間のコンテキスト、時点のコン�
     "annual": ("CurrentYearDuration", "CurrentYearInstant"),
     "half": ("InterimDuration", "InterimInstant"),
 }
+PRIOR_CONTEXTS = {  # 前期の列。period_type → (期間のコンテキスト、時点のコンテキスト)
+    "annual": ("Prior1YearDuration", "Prior1YearInstant"),
+    "half": ("Prior1InterimDuration", "Prior1InterimInstant"),
+}
 
 
 def _norm(name: str) -> str:
@@ -319,7 +323,70 @@ def extract(rows: list[dict], doc_id: str, ingested_at: str, xbrl_map: dict) -> 
     result["financial"] = financial
     if period_type == "annual":
         result["employee"] = _employee(prepared, xbrl_map, dei, doc_id, instant, work)
+    result["comparative"] = _comparative(prepared, xbrl_map, dei, doc_id, ingested_at)
     return result
+
+
+def prior_fiscal_period_end(fiscal_year_end: str) -> str:
+    """DEIの fiscal_year_end（YYYY-MM-DD）の1年前の年月（YYYY-MM）。"""
+    return f"{int(fiscal_year_end[:4]) - 1:04d}{fiscal_year_end[4:7]}"
+
+
+def _comparative(rows: list[dict], xbrl_map: dict, dei: dict, doc_id: str, ingested_at: str) -> dict:
+    """前期の列の値を、当期と同じ規則で取り出す。前期の列にない項目は、入れない（異常にしない）。
+
+    財務は、連結の値（売上高など）、セグメント、調整額。従業員は、連結と単体の従業員数だけ。
+    換算できない項目や、違う値の行が重なる項目は、入れずに notes に書く。
+    """
+    standard, period_type = dei["accounting_standard"], dei["period_type"]
+    duration, instant = PRIOR_CONTEXTS[period_type]
+    spec = xbrl_map["standards"][standard]
+    items = spec["items"]
+    work = _Extraction(doc_id, ingested_at)
+    prior = prior_fiscal_period_end(dei["fiscal_year_end"])
+    notes: list[str] = []
+
+    def taken(name: str, element_list: list[str], context: str, kind: str):
+        before = len(work.anomalies)
+        row = work.find(rows, element_list, context, name)
+        if row is None:
+            return None
+        value = work.reported(name, row, kind)
+        if len(work.anomalies) > before or value["value"] is None:
+            notes.append(f"前期の列の {name} は、取り出せないため使わない")
+            return None
+        return value
+
+    financial: dict = {"fiscal_period_end": prior, "period_type": period_type}
+    for item in ("net_sales", "operating_income", "ordinary_income", "net_income"):
+        if item == "ordinary_income" and standard != "jgaap":
+            continue
+        value = taken(item, items.get(item, []), duration, "money")
+        if value is not None:
+            financial[item] = value
+    if standard != "usgaap":
+        before = len(work.anomalies)
+        segments, adjustment = _segments(rows, items, duration, work)
+        if len(work.anomalies) > before:
+            notes.append("前期の列のセグメントは、取り出せない値があるため使わない")
+        elif segments:
+            financial["segments"] = segments
+            if adjustment is not None:
+                financial["segment_adjustment"] = adjustment
+    employee = None
+    if period_type == "annual":
+        spec_e = xbrl_map["employees"]
+        employee = {"fiscal_period_end": prior}
+        consolidated = taken("employees_consolidated", spec_e["employees_consolidated"], instant, "persons")
+        if consolidated is not None:
+            employee["consolidated"] = {"employees": consolidated}
+        single = taken("employees_non_consolidated", spec_e["employees_non_consolidated"],
+                       f"{instant}_{NON_CONSOLIDATED_MEMBER}", "persons")
+        if single is not None:
+            employee["non_consolidated"] = {"employees": single}
+        if len(employee) == 1:
+            employee = None
+    return {"financial": financial, "employee": employee, "notes": notes + work.notes}
 
 
 def _employee(rows: list[dict], xbrl_map: dict, dei: dict, doc_id: str, instant: str, work: _Extraction) -> dict:
