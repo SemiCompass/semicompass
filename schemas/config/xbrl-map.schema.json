@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "schemas/config/xbrl-map.schema.json",
   "title": "XBRLの対応（config/xbrl-map.yaml）",
-  "description": "データ定義書（第1段階）7.8。要素の名前は、開発のときにEDINETのタクソノミで確かめて入れる。",
+  "description": "データ定義書（第1段階）7.8。要素の名前は、開発のときにEDINETのタクソノミで確かめて入れる。 deiは、書類の基本情報（jpdei_cor:）から、会計基準、連結の有無、期間を読むための対応（任意。7.8）。",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -52,6 +52,9 @@
     },
     "employees": {
       "$ref": "#/$defs/candidates"
+    },
+    "dei": {
+      "$ref": "#/$defs/dei"
     }
   },
   "$defs": {
@@ -85,6 +88,76 @@
           "items": {
             "type": "string",
             "minLength": 1
+          }
+        }
+      }
+    },
+    "dei": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elements",
+        "accounting_standards",
+        "period_types"
+      ],
+      "properties": {
+        "elements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "accounting_standard",
+            "consolidated",
+            "period_type",
+            "fiscal_year_start",
+            "period_end",
+            "fiscal_year_end"
+          ],
+          "properties": {
+            "accounting_standard": {
+              "type": "string",
+              "pattern": "^jpdei_cor:\\S+$"
+            },
+            "consolidated": {
+              "type": "string",
+              "pattern": "^jpdei_cor:\\S+$"
+            },
+            "period_type": {
+              "type": "string",
+              "pattern": "^jpdei_cor:\\S+$"
+            },
+            "fiscal_year_start": {
+              "type": "string",
+              "pattern": "^jpdei_cor:\\S+$"
+            },
+            "period_end": {
+              "type": "string",
+              "pattern": "^jpdei_cor:\\S+$"
+            },
+            "fiscal_year_end": {
+              "type": "string",
+              "pattern": "^jpdei_cor:\\S+$"
+            }
+          }
+        },
+        "accounting_standards": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "enum": [
+              "jgaap",
+              "ifrs",
+              "usgaap"
+            ]
+          }
+        },
+        "period_types": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "enum": [
+              "annual",
+              "half"
+            ]
           }
         }
       }
