@@ -1,13 +1,21 @@
 # XBRLの要素と表示項目の対応（データ定義書 7.8、schemas/config/xbrl-map.schema.json）
 #
-# 【未確認。段階2で実際の書類で確かめる】
-# doc_types は、EDINET API仕様書（v2）の書類の種類のコードに従う。
-# standards と employees の要素名は、EDINETタクソノミの知識からの暫定の候補であり、
-# 実際の有価証券報告書・半期報告書のXBRLで確かめていない。名前（接頭辞を含む）の誤りや、
-# 抜けている候補がありうる。確かめるまで、この対応で取り込んだ値を公開に使わない。
+# 【確認の状況】確認済み（東京エレクトロン、SUMCO、ソニー、レゾナックの実際の書類、2026年10月）の要素は、
+# 各項目のコメントに「確認済み」と書く。「未確認」と書いた要素は、実際の書類で確かめていない暫定の候補であり、
+# 未確認。段階2で実際の書類で確かめる。確かめるまで、未確認の要素で取り込んだ値を公開に使わない。
 #
-# 要素名は `接頭辞:名前` の形で、優先の順に並べる。接頭辞の意味（暫定）:
-#   jppfs_cor  日本基準の財務諸表   jpigp_cor  IFRSの財務諸表   jpcrp_cor  有価証券報告書の本文の項目
+# 【段階3（取り込み）で使う規則】
+# ・CSV は UTF-16LE（BOMあり）。取り込みの対象は、書類の中の jpcrp030000-asr（有価証券報告書）と
+#   jpcrp040300-ssr（半期報告書）のファイル。jpaud のファイル（監査報告書）は使わない。
+# ・当期のコンテキスト：有価証券報告書は CurrentYearDuration（期間）と CurrentYearInstant（時点）、
+#   半期報告書は InterimDuration と InterimInstant。比較の前期は Prior1YearDuration、Prior1InterimDuration など。
+# ・連結かどうかは、コンテキストIDで判定する：_NonConsolidatedMember を含まない行が連結。
+#   CSV の「連結・個別」の列は、IFRS の連結の行で「その他」になるため、使わない。
+# ・セグメントの member は、コンテキストIDの、期間（Duration など）の後（_ の後）の部分。
+# ・地域別の売上は、4つの書類では、数値の項目が見つからなかった。見つからなければ regions は空にする。
+#
+# 要素名は `接頭辞:名前` の形で、優先の順に並べる。接頭辞の意味:
+#   jppfs_cor  日本基準の財務諸表   jpigp_cor  IFRSの財務諸表   jpcrp_cor  有価証券報告書・半期報告書の本文の項目
 schema_version: 1
 
 # 書類の種類のコード → doc_type（データ定義書 5.3）。コードは文字列で書く
@@ -19,48 +27,57 @@ doc_types:
 
 standards:
   jgaap:
+    # セグメント別の売上、地域別の売上：日本基準では未確認のため、項目を置かない
     items:
       net_sales:
-        - jppfs_cor:NetSales
-        - jpcrp_cor:NetSalesSummaryOfBusinessResults
+        - jppfs_cor:NetSales                          # 確認済み（東京エレクトロン、SUMCO、ソニー、レゾナックの実際の書類、2026年10月）
+        - jppfs_cor:OperatingRevenue1                 # 未確認
+        - jpcrp_cor:NetSalesSummaryOfBusinessResults  # 確認済み（東京エレクトロン、SUMCO、ソニー、レゾナックの実際の書類、2026年10月）
       operating_income:
-        - jppfs_cor:OperatingIncome
+        - jppfs_cor:OperatingIncome                   # 未確認
       ordinary_income:
-        - jppfs_cor:OrdinaryIncome
-        - jpcrp_cor:OrdinaryIncomeLossSummaryOfBusinessResults
+        - jppfs_cor:OrdinaryIncome                    # 未確認
+        - jpcrp_cor:OrdinaryIncomeLossSummaryOfBusinessResults  # 未確認
       net_income:
-        - jppfs_cor:ProfitLossAttributableToOwnersOfParent
-        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentSummaryOfBusinessResults
+        - jppfs_cor:ProfitLossAttributableToOwnersOfParent      # 未確認
+        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentSummaryOfBusinessResults  # 未確認
     expected_absent: []
   ifrs:
     items:
       net_sales:
-        - jpigp_cor:RevenueIFRS
-        - jpcrp_cor:RevenueIFRSSummaryOfBusinessResults
+        - jpigp_cor:RevenueIFRS                       # 確認済み（レゾナックの実際の書類、2026年10月）。会社により要素名が異なる
+        - jpigp_cor:NetSalesIFRS                      # 確認済み（ソニーの実際の書類、2026年10月）。会社により要素名が異なる
+        - jpcrp_cor:RevenueIFRSSummaryOfBusinessResults  # 未確認
       operating_income:
-        - jpigp_cor:OperatingProfitLossIFRS
+        - jpigp_cor:OperatingProfitLossIFRS           # 未確認
       net_income:
-        - jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS
-        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentIFRSSummaryOfBusinessResults
+        - jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS  # 未確認
+        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentIFRSSummaryOfBusinessResults  # 未確認
+      segment_external_sales:
+        # 確認済み（レゾナックとソニーの実際の書類、2026年10月）。会社により要素名が異なる
+        - jpigp_cor:RevenueFromExternalCustomersIFRS
+        - jpigp_cor:SalesToExternalCustomersIFRS
     expected_absent:
       - ordinary_income   # IFRSには経常利益がない
+  # 米国基準：未確認
   usgaap:
     items:
       net_sales:
-        - jpcrp_cor:RevenuesUSGAAPSummaryOfBusinessResults
+        - jpcrp_cor:RevenuesUSGAAPSummaryOfBusinessResults                # 未確認
       operating_income:
-        - jpcrp_cor:OperatingIncomeLossUSGAAPSummaryOfBusinessResults
+        - jpcrp_cor:OperatingIncomeLossUSGAAPSummaryOfBusinessResults     # 未確認
       net_income:
-        - jpcrp_cor:NetIncomeLossAttributableToOwnersOfParentUSGAAPSummaryOfBusinessResults
+        - jpcrp_cor:NetIncomeLossAttributableToOwnersOfParentUSGAAPSummaryOfBusinessResults  # 未確認
     expected_absent:
-      - ordinary_income   # 米国基準には経常利益がない
+      - ordinary_income   # 米国基準には経常利益がない（未確認）
 
-# 働く環境（有価証券報告書の「従業員の状況」。データ定義書 5.5）
+# 働く環境（有価証券報告書の「従業員の状況」。データ定義書 5.5）。有価証券報告書だけにある。
+# 半期報告書には、従業員の項目がない。確認済み（東京エレクトロン、SUMCO、ソニー、レゾナックの実際の書類、2026年10月）
 employees:
   employees_consolidated:
-    - jpcrp_cor:NumberOfEmployees
+    - jpcrp_cor:NumberOfEmployees      # コンテキストは CurrentYearInstant（Member を含まない）
   employees_non_consolidated:
-    - jpcrp_cor:NumberOfEmployees
+    - jpcrp_cor:NumberOfEmployees      # コンテキストは CurrentYearInstant_NonConsolidatedMember
   average_age:
     - jpcrp_cor:AverageAgeYearsInformationAboutReportingCompanyInformationAboutEmployees
   average_length_of_service:

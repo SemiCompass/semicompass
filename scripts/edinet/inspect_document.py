@@ -14,6 +14,8 @@ config/xbrl-map.yaml の要素名を確かめるための調査で、`data/auto/
 * 数値の行（値が数値の行）だけを取り出す。文章の行と、要素IDが TextBlock で終わる行は除く
 * 概念ごとに、要素IDと項目名の部分一致で探し、最大30行を出す（当期らしい行を先に出す）
 * --out には、数値の行のすべてを、列名のままのJSONで書く（`data/auto/` の下は拒否する）
+* --include-dei を付けたときだけ、要素IDが jpdei_cor: で始まる行（数値以外を含む）を、画面と --out の
+  書類ごとの dei_rows に出す（会計基準、連結財務諸表の作成の有無の判定を確かめるため。書類ごとに最大200行）
 
 キーは、標準出力、エラー文、例外、ファイルに出さない（リポジトリは公開）。
 
@@ -55,6 +57,8 @@ DEFAULT_MAX_REQUESTS = 10
 MAX_UNCOMPRESSED_BYTES = 200 * 1024 * 1024  # 展開後の合計の大きさの上限
 MAX_ZIP_FILES = 500  # ZIPの中のファイルの数の上限
 MAX_ROWS_PER_CONCEPT = 30
+DEI_PREFIX = "jpdei_cor:"  # DEI（書類の基本情報）の要素IDの接頭辞
+MAX_DEI_ROWS = 200  # --include-dei で、1つの書類の dei_rows に入れる行数の上限
 CSV_FIELD_LIMIT = 50 * 1024 * 1024  # TextBlock の行は、1つの値が大きい
 
 # 列名（実際のヘッダー行の見出し）の候補。比較は、空白と大文字小文字を無視する
@@ -90,6 +94,7 @@ CONCEPTS = (
     ("average_service", "平均勤続年数", ("AverageLengthOfService",), ("平均勤続年数",), None),
     ("average_salary", "平均年間給与", ("AverageAnnualSalary",), ("平均年間給与",), None),
 )
+DEI_DISPLAY_COLUMNS = (("element", "要素ID"), ("label", "項目名"), ("context", "コンテキストID"), ("value", "値"))
 DISPLAY_COLUMNS = (("element", "要素ID"), ("label", "項目名"), ("context", "コンテキストID"),
                    ("consolidated", "連結・個別"), ("unit", "単位"), ("value", "値"))
 
@@ -195,6 +200,17 @@ def extract_numeric_rows(header: list[str], rows: list[list[str]]) -> tuple[list
     return numeric, positions
 
 
+def extract_dei_rows(header: list[str], rows: list[list[str]], positions: dict[str, int]) -> list[dict]:
+    """要素IDが jpdei_cor: で始まる行を、数値以外の行も含めて、列名のままの辞書にして返す。"""
+    names = unique_headers(header)
+    found = []
+    for row in rows:
+        padded = row + [""] * (len(names) - len(row))
+        if padded[positions["element"]].strip().startswith(DEI_PREFIX):
+            found.append({names[i]: padded[i] for i in range(len(names))})
+    return found
+
+
 def _context_ok(context: str, rule: str | None) -> bool:
     has_member = "Member" in context
     if rule is None:
@@ -270,9 +286,15 @@ def _read_zip(raw: bytes) -> list[tuple[str, int, bytes | None]]:
         return files
 
 
-def inspect_zip(doc_id: str, raw: bytes) -> dict:
-    """1つの書類のZIPを調べ、画面に出す内容とJSONに書く内容をまとめる。"""
+def inspect_zip(doc_id: str, raw: bytes, include_dei: bool = False) -> dict:
+    """1つの書類のZIPを調べ、画面に出す内容とJSONに書く内容をまとめる。
+
+    include_dei が真のときだけ、DEIの行（dei_rows。書類ごとに最大 MAX_DEI_ROWS 行）も集める。
+    """
     result: dict = {"doc_id": doc_id, "files": [], "csv_files": [], "numeric_rows": [], "errors": []}
+    if include_dei:
+        result["dei_rows"] = []
+        result["dei_row_total"] = 0
     try:
         files = read_zip(raw)
     except ValueError as error:
@@ -298,6 +320,14 @@ def inspect_zip(doc_id: str, raw: bytes) -> dict:
         })
         for values in numeric:
             result["numeric_rows"].append({"doc_id": doc_id, "file": shown, "values": values})
+        if include_dei:
+            dei = extract_dei_rows(header, rows, positions)
+            room = MAX_DEI_ROWS - len(result["dei_rows"])
+            taken = dei[:max(room, 0)]
+            result["dei_row_total"] += len(dei)
+            result["dei_rows"] += [{"doc_id": doc_id, "file": shown, "values": values} for values in taken]
+            result["csv_files"][-1]["_dei"] = taken
+            result["csv_files"][-1]["_dei_count"] = len(dei)
     return result
 
 
@@ -335,6 +365,16 @@ def render(result: dict) -> str:
                               for role, _ in DISPLAY_COLUMNS])
             for text in format_rows([title for _, title in DISPLAY_COLUMNS], table).splitlines():
                 lines.append("    " + text)
+        if "_dei" in csv_file:
+            names, positions = csv_file["_names"], csv_file["_positions"]
+            count, shown = csv_file["_dei_count"], csv_file["_dei"]
+            suffix = f"、表示 {len(shown)}（書類ごとの上限 {MAX_DEI_ROWS}）" if count > len(shown) else ""
+            lines.append(f"  【DEI（{DEI_PREFIX}）】 {count}行{suffix}")
+            if shown:
+                table = [[_printable(row.get(names[positions[role]], "")) if role in positions else "-"
+                          for role, _ in DEI_DISPLAY_COLUMNS] for row in shown]
+                for text in format_rows([title for _, title in DEI_DISPLAY_COLUMNS], table).splitlines():
+                    lines.append("    " + text)
     for message in result["errors"]:
         lines.append(f"（問題）{message}")
     return "\n".join(lines)
@@ -348,10 +388,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                         help=f"APIの呼び出しの上限（既定 {DEFAULT_MAX_REQUESTS}）。超えそうなら、実行前にエラーで終わる")
     parser.add_argument("--out", type=Path, metavar="FILE",
                         help="数値の行のすべてをJSONで書くファイル（data/auto/ の下は拒否）。省略時は書かない")
+    parser.add_argument("--include-dei", action="store_true",
+                        help=f"要素IDが {DEI_PREFIX} で始まる行（数値以外の行を含む）も、画面と --out の dei_rows に出す"
+                             f"（会計基準、連結財務諸表の作成の有無を確かめるため。書類ごとに最大{MAX_DEI_ROWS}行）")
     return parser.parse_args(argv)
 
 
-def build_payload(results: list[dict], requests: int, doc_ids: list[str], now: datetime | None) -> dict:
+def build_payload(
+    results: list[dict], requests: int, doc_ids: list[str], now: datetime | None, include_dei: bool = False
+) -> dict:
     documents = []
     for r in results:
         documents.append({
@@ -361,6 +406,9 @@ def build_payload(results: list[dict], requests: int, doc_ids: list[str], now: d
             "errors": r["errors"],
             "numeric_rows": r["numeric_rows"],
         })
+        if include_dei:
+            documents[-1]["dei_rows"] = r.get("dei_rows", [])
+            documents[-1]["dei_row_total"] = r.get("dei_row_total", 0)
     generated = (now or datetime.now(ZoneInfo("Asia/Tokyo"))).astimezone(ZoneInfo("Asia/Tokyo"))
     return {"generated_at": generated.replace(microsecond=0).isoformat(),
             "parameters": {"doc_ids": doc_ids, "api_requests": requests}, "documents": documents}
@@ -399,7 +447,7 @@ def main(
                 results.append({"doc_id": doc_id, "files": [], "csv_files": [], "numeric_rows": [],
                                 "errors": [f"取得に失敗した: {redact(str(error), key)}"]})
                 continue
-            results.append(inspect_zip(doc_id, raw))
+            results.append(inspect_zip(doc_id, raw, include_dei=args.include_dei))
     except EdinetError as error:
         print(f"error: {redact(str(error), key)}", file=sys.stderr)
         return error.exit_code
@@ -414,7 +462,7 @@ def main(
     print(f"書類 {len(results)}件（API呼び出し {edinet.request_count}回）/ 問題のあった書類 {len(failed)}件")
     if args.out is not None:
         try:
-            payload = build_payload(results, edinet.request_count, doc_ids, now)
+            payload = build_payload(results, edinet.request_count, doc_ids, now, args.include_dei)
             args.out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         except OSError as error:
             print(f"error: 結果を書けない（{type(error).__name__}）", file=sys.stderr)
