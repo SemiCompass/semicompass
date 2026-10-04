@@ -182,6 +182,65 @@ class SegmentTest(unittest.TestCase):
         self.assertTrue(res["notes"])
 
 
+class IfrsSegmentProfitTest(unittest.TestCase):
+    OP = "jpigp_cor:OperatingProfitLossIFRS"
+    SP = "jpigp_cor:SegmentProfitLossIFRS"
+    EXT = "jpigp_cor:SalesToExternalCustomersIFRS"
+
+    def base(self):
+        return dei("IFRS") + [r("jpigp_cor:RevenueIFRS", CUR, "9000000000", "売上収益（IFRS）"),
+                              r(self.OP, CUR, "800000000", "営業利益（IFRS）"),
+                              r("jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS", CUR, "500000000")] + EMP
+
+    def member(self, name, element, value):
+        return r(element, f"{CUR}_{PFX}{name}", value)
+
+    def test_sony_shape(self):
+        rows = self.base() + [
+            self.member("GameMember", self.EXT, "4000000000"), self.member("GameMember", self.OP, "400000000"),
+            self.member("MusicMember", self.EXT, "2000000000"), self.member("MusicMember", self.OP, "250000000"),
+            self.member("ReportableSegmentsMember", self.EXT, "9100000000"),
+            self.member("ReportableSegmentsMember", self.OP, "900000000"),
+            self.member("ReconcilingItemsMember", self.OP, "-100000000")]
+        res = run(rows)
+        f = res["financial"]
+        self.assertEqual([s["member"] for s in f["segments"]], ["GameMember", "MusicMember"])
+        self.assertEqual([s["profit"]["value"] for s in f["segments"]], [400, 250])
+        self.assertEqual(f["segments"][0]["profit"]["element"], self.OP)
+        self.assertEqual(f["segments"][0]["profit"]["context"], f"{CUR}_{PFX}GameMember")
+        self.assertEqual(f["segment_adjustment"]["value"], -100)
+        self.assertEqual(f["operating_income"]["value"], 800)  # 全社の営業利益は、メンバーなしの行
+        self.assertEqual(res["anomalies"], [])
+
+    def test_segment_profit_element_has_priority(self):
+        rows = self.base() + [
+            self.member("AMember", self.EXT, "1000000000"),
+            self.member("AMember", self.SP, "70000000"), self.member("AMember", self.OP, "99000000"),
+            self.member("ReconcilingItemsMember", self.OP, "-1000000")]
+        f = run(rows)["financial"]
+        self.assertEqual(f["segments"][0]["profit"]["value"], 70)
+        self.assertEqual(f["segments"][0]["profit"]["element"], self.SP)
+        self.assertNotIn("segment_adjustment", f)  # 先の候補の行だけを使い、候補どうしを混ぜない
+
+    def test_similar_member_names_are_kept(self):
+        rows = self.base()
+        for name in ("OtherReportableSegmentsMember", "XyzReportableSegmentMember",
+                     "SubTotalOfReportableSegmentsAndOthersMember", "ReconcilingItemsOtherMember"):
+            rows += [self.member(name, self.EXT, "1000000"), self.member(name, self.OP, "100000")]
+        rows += [self.member("ReportableSegmentsMember", self.EXT, "5000000")]
+        f = run(rows)["financial"]
+        self.assertEqual([s["member"] for s in f["segments"]],
+                         ["OtherReportableSegmentsMember", "XyzReportableSegmentMember",
+                          "SubTotalOfReportableSegmentsAndOthersMember", "ReconcilingItemsOtherMember"])
+        self.assertNotIn("segment_adjustment", f)
+
+    def test_reportable_member_is_excluded_for_other_standards_too(self):
+        rows = dei() + JG + EMP + seg("ReportableSegmentsMember", "1000000000", "1100000000", "37000000") + \
+            seg("AMember", "500000000")
+        f = run(rows)["financial"]
+        self.assertEqual([s["member"] for s in f["segments"]], ["AMember"])
+
+
 class EmployeeTest(unittest.TestCase):
     def test_not_mixed(self):
         res = run(dei() + JG + EMP)

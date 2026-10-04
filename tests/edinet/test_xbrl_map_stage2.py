@@ -76,7 +76,7 @@ class FinalXbrlMapTest(unittest.TestCase):
             "segment_external_sales": ["jpigp_cor:SalesToExternalCustomersIFRS",
                                        "jpigp_cor:RevenueFromExternalCustomersIFRS"],
             "segment_total_sales": ["jpigp_cor:NetSalesIFRS", "jpigp_cor:RevenueIFRS"],
-            "segment_profit": ["jpigp_cor:SegmentProfitLossIFRS"],
+            "segment_profit": ["jpigp_cor:SegmentProfitLossIFRS", "jpigp_cor:OperatingProfitLossIFRS"],
         })
         self.assertEqual(ifrs["expected_absent"], ["ordinary_income"])
 
@@ -190,6 +190,8 @@ class FinalXbrlMapTest(unittest.TestCase):
                         "jpigp_cor:SalesToExternalCustomersIFRS", "jpigp_cor:RevenueFromExternalCustomersIFRS"):
             self.assertIn("確認済み" + IFRS, line_of(element), msg=element)
         self.assertIn("確認済み（京セラ、アドバンテスト）", line_of("jpigp_cor:SegmentProfitLossIFRS"))
+        start = next(i for i, line in enumerate(LINES) if "- jpigp_cor:SegmentProfitLossIFRS" in line) + 1
+        self.assertIn("確認済み（ソニー）", line_of("jpigp_cor:OperatingProfitLossIFRS", after=start))
         for element in DATA["standards"]["usgaap"]["items"].values():
             self.assertIn("確認済み（キヤノン）", line_of(element[0]))
         self.assertIn("確認済み（東京エレクトロン、ソニー、キヤノン）", TEXT)
