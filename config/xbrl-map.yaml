@@ -1,0 +1,69 @@
+# XBRLの要素と表示項目の対応（データ定義書 7.8、schemas/config/xbrl-map.schema.json）
+#
+# 【未確認。段階2で実際の書類で確かめる】
+# doc_types は、EDINET API仕様書（v2）の書類の種類のコードに従う。
+# standards と employees の要素名は、EDINETタクソノミの知識からの暫定の候補であり、
+# 実際の有価証券報告書・半期報告書のXBRLで確かめていない。名前（接頭辞を含む）の誤りや、
+# 抜けている候補がありうる。確かめるまで、この対応で取り込んだ値を公開に使わない。
+#
+# 要素名は `接頭辞:名前` の形で、優先の順に並べる。接頭辞の意味（暫定）:
+#   jppfs_cor  日本基準の財務諸表   jpigp_cor  IFRSの財務諸表   jpcrp_cor  有価証券報告書の本文の項目
+schema_version: 1
+
+# 書類の種類のコード → doc_type（データ定義書 5.3）。コードは文字列で書く
+doc_types:
+  "120": annual_report            # 有価証券報告書
+  "130": amended_annual_report    # 訂正有価証券報告書
+  "160": semiannual_report        # 半期報告書
+  "170": amended_semiannual_report  # 訂正半期報告書
+
+standards:
+  jgaap:
+    items:
+      net_sales:
+        - jppfs_cor:NetSales
+        - jpcrp_cor:NetSalesSummaryOfBusinessResults
+      operating_income:
+        - jppfs_cor:OperatingIncome
+      ordinary_income:
+        - jppfs_cor:OrdinaryIncome
+        - jpcrp_cor:OrdinaryIncomeLossSummaryOfBusinessResults
+      net_income:
+        - jppfs_cor:ProfitLossAttributableToOwnersOfParent
+        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentSummaryOfBusinessResults
+    expected_absent: []
+  ifrs:
+    items:
+      net_sales:
+        - jpigp_cor:RevenueIFRS
+        - jpcrp_cor:RevenueIFRSSummaryOfBusinessResults
+      operating_income:
+        - jpigp_cor:OperatingProfitLossIFRS
+      net_income:
+        - jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS
+        - jpcrp_cor:ProfitLossAttributableToOwnersOfParentIFRSSummaryOfBusinessResults
+    expected_absent:
+      - ordinary_income   # IFRSには経常利益がない
+  usgaap:
+    items:
+      net_sales:
+        - jpcrp_cor:RevenuesUSGAAPSummaryOfBusinessResults
+      operating_income:
+        - jpcrp_cor:OperatingIncomeLossUSGAAPSummaryOfBusinessResults
+      net_income:
+        - jpcrp_cor:NetIncomeLossAttributableToOwnersOfParentUSGAAPSummaryOfBusinessResults
+    expected_absent:
+      - ordinary_income   # 米国基準には経常利益がない
+
+# 働く環境（有価証券報告書の「従業員の状況」。データ定義書 5.5）
+employees:
+  employees_consolidated:
+    - jpcrp_cor:NumberOfEmployees
+  employees_non_consolidated:
+    - jpcrp_cor:NumberOfEmployees
+  average_age:
+    - jpcrp_cor:AverageAgeYearsInformationAboutReportingCompanyInformationAboutEmployees
+  average_length_of_service:
+    - jpcrp_cor:AverageLengthOfServiceYearsInformationAboutReportingCompanyInformationAboutEmployees
+  average_annual_salary:
+    - jpcrp_cor:AverageAnnualSalaryInformationAboutReportingCompanyInformationAboutEmployees
