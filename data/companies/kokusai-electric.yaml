@@ -1,0 +1,18 @@
+schema_version: 1
+slug: kokusai-electric
+name: "KOKUSAI ELECTRIC"
+short_names:
+  - "KOKUSAI ELECTRIC"
+name_en: "KOKUSAI ELECTRIC CORPORATION"
+name_kana: "コクサイエレクトリック"
+type: domestic_listed
+securities_code: "6525"
+edinet_code: E37488
+categories:
+  - equipment
+  - front-end
+listing: coming_soon
+selection:
+  basis: revenue_ratio
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

@@ -1,0 +1,29 @@
+schema_version: 1
+slug: jasm
+name: "ジャパン・アドバンスト・セミコンダクター・マニュファクチャリング"
+short_names:
+  - "JASM"
+name_en: "Japan Advanced Semiconductor Manufacturing, Inc."
+name_kana: "ジャパンアドバンストセミコンダクターマニュファクチャリング"
+type: foreign_subsidiary
+categories:
+  - devices
+  - front-end
+listing: coming_soon
+parent:
+  name: "台湾積体電路製造"
+  name_en: "Taiwan Semiconductor Manufacturing Company Limited"
+  country: TW
+  listed_market: "台湾証券取引所（TWSE）、NYSE（ADR）"
+  source: S1
+selection:
+  basis: domestic_fab
+  note: "運営者が掲載企業リスト（第1.0版）で承認。国内の主要な生産拠点は、公開資料で確認予定"
+  decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "JASM Set to Expand in Kumamoto, Japan"
+    publisher: "TSMC"
+    url: "https://pr.tsmc.com/english/news/3105"
+    published_on: "2024-02-06"
+    accessed_on: "2026-10-04"

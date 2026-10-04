@@ -1,0 +1,17 @@
+schema_version: 1
+slug: nippon-sanso
+name: "日本酸素ホールディングス"
+short_names:
+  - "日本酸素ホールディングス"
+name_en: "NIPPON SANSO HOLDINGS CORPORATION"
+name_kana: "ニッポンサンソホールディングス"
+type: conglomerate
+securities_code: "4091"
+edinet_code: E00783
+categories:
+  - materials
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

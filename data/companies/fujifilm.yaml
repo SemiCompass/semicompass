@@ -1,0 +1,17 @@
+schema_version: 1
+slug: fujifilm
+name: "富士フイルムホールディングス"
+short_names:
+  - "富士フイルムホールディングス"
+name_en: "FUJIFILM Holdings Corporation"
+name_kana: "フジフイルムホールディングス"
+type: conglomerate
+securities_code: "4901"
+edinet_code: E00988
+categories:
+  - materials
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

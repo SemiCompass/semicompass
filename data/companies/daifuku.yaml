@@ -1,0 +1,18 @@
+schema_version: 1
+slug: daifuku
+name: "ダイフク"
+short_names:
+  - "ダイフク"
+name_en: "DAIFUKU CO., LTD."
+name_kana: "ダイフク"
+type: domestic_listed
+securities_code: "6383"
+edinet_code: E01551
+categories:
+  - equipment
+  - front-end
+listing: coming_soon
+selection:
+  basis: revenue_ratio
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

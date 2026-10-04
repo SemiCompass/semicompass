@@ -1,0 +1,18 @@
+schema_version: 1
+slug: mitsubishi-gas-chemical
+name: "三菱瓦斯化学"
+short_names:
+  - "三菱瓦斯化学"
+name_en: "MITSUBISHI GAS CHEMICAL COMPANY,INC."
+name_kana: "ミツビシガスカガク"
+type: conglomerate
+securities_code: "4182"
+edinet_code: E00815
+categories:
+  - materials
+  - back-end
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

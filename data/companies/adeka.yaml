@@ -1,0 +1,17 @@
+schema_version: 1
+slug: adeka
+name: "ADEKA"
+short_names:
+  - "ADEKA"
+name_en: "ADEKA CORPORATION"
+name_kana: "アデカ"
+type: conglomerate
+securities_code: "4401"
+edinet_code: E00878
+categories:
+  - materials
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

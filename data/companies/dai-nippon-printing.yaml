@@ -1,0 +1,18 @@
+schema_version: 1
+slug: dai-nippon-printing
+name: "大日本印刷"
+short_names:
+  - "大日本印刷"
+name_en: "Dai Nippon Printing Co.,Ltd."
+name_kana: "ダイニッポンインサツ"
+type: conglomerate
+securities_code: "7912"
+edinet_code: E00693
+categories:
+  - design
+  - materials
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

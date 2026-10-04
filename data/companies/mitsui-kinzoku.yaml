@@ -1,0 +1,18 @@
+schema_version: 1
+slug: mitsui-kinzoku
+name: "三井金属"
+short_names:
+  - "三井金属"
+name_en: "Mitsui Kinzoku Company, Limited"
+name_kana: "ミツイキンゾク"
+type: conglomerate
+securities_code: "5706"
+edinet_code: E00024
+categories:
+  - materials
+  - back-end
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

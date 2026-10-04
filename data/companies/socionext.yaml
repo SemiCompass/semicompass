@@ -1,0 +1,17 @@
+schema_version: 1
+slug: socionext
+name: "ソシオネクスト"
+short_names:
+  - "ソシオネクスト"
+name_en: "Socionext Inc."
+name_kana: "ソシオネクスト"
+type: domestic_listed
+securities_code: "6526"
+edinet_code: E37978
+categories:
+  - design
+listing: coming_soon
+selection:
+  basis: revenue_ratio
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"
