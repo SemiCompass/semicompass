@@ -245,13 +245,44 @@ class _Builder:
     def filing(self, doc_id):
         return next((f for f in self.data["filings"] if f["doc_id"] == doc_id), None)
 
-    def supersedes_of(self, row, fpe, ptype, submitted):
-        parent = str(row.get("parentDocID") or "")
-        if DOC_ID.match(parent) and parent != row["docID"]:
-            return parent
-        earlier = [f for f in self.data["filings"] if f["status"] == "ingested" and f["fiscal_period_end"] == fpe
-                   and f["period_type"] == ptype and f["submitted_at"] < submitted and f["doc_id"] != row["docID"]]
+    def previous_version(self, fpe, ptype, submitted, doc_id):
+        """同じ期間（fiscal_period_end と period_type）の、(submitted, doc_id) がこの書類より前の書類のうち、
+        最も新しいもの（元の書類、または前の訂正報告書）。failed の書類は数えない。"""
+        earlier = [f for f in self.data["filings"] if f["status"] != "failed" and f["fiscal_period_end"] == fpe
+                   and f["period_type"] == ptype and f["doc_id"] != doc_id
+                   and (f["submitted_at"], f["doc_id"]) < (submitted, doc_id)]
         return max(earlier, key=lambda f: (f["submitted_at"], f["doc_id"]))["doc_id"] if earlier else None
+
+    def supersedes_of(self, row, fpe, ptype, submitted):
+        """訂正報告書の supersedes：同じ期間の、より前に提出された書類のうち、最も新しいもの。一覧の parentDocID が
+        連鎖の途中を飛ばして元の書類を指していても、この規則を優先する。前の書類が見つからないときだけ、parentDocID。"""
+        previous = self.previous_version(fpe, ptype, submitted, row["docID"])
+        if previous is not None:
+            return previous
+        parent = str(row.get("parentDocID") or "")
+        return parent if DOC_ID.match(parent) and parent != row["docID"] else None
+
+    def normalize_chain(self):
+        """訂正報告書の連鎖をそろえる（既存のファイルの supersedes も、再実行で直る）。
+
+        各訂正報告書の supersedes を、同じ期間の、その書類より前に提出された書類のうち、最も新しいものにする。
+        前の版（ingested）は superseded にする。連鎖の最後の書類だけが ingested のままになる。
+        failed の訂正報告書の supersedes も直すが、前の版の status は変えない（値を置き換えていないため）。
+        前の書類が見つからないときは、supersedes を変えない。
+        """
+        for f in sorted(self.data["filings"], key=lambda x: (x["submitted_at"], x["doc_id"])):
+            if f["doc_type"] not in AMENDED:
+                continue
+            previous = self.previous_version(f["fiscal_period_end"], f["period_type"], f["submitted_at"], f["doc_id"])
+            if previous is None:
+                continue
+            if f.get("supersedes") != previous:
+                self.changes.append({"kind": "supersedes_fixed", "doc_id": f["doc_id"],
+                                     "message": f"supersedes を {f.get('supersedes')} から {previous} に直した"
+                                                "（同じ期間の、前に提出された書類のうち最も新しいもの）"})
+                f["supersedes"] = previous
+            if f["status"] != "failed":
+                self.mark_superseded(previous, f["doc_id"])
 
     def drop_failed(self, doc_id):
         """再取得の結果で置き換えるため、同じ doc_id の failed の行を除く。"""
@@ -582,7 +613,11 @@ class _Builder:
                 self.add_revision(filing, source_doc, path, old, new, f"{path}: {old} → {new}（置き換え元 {source_doc}）")
             rows[index] = merged
         else:  # 古い書類があとから届いた。値は変えない
-            self.mark_superseded(filing["doc_id"], old_row["doc_id"])
+            # 値を出した書類が、同じ期間の書類のときだけ、この書類を superseded にする（別の期の書類の前期の列による
+            # 値のときは、この書類は、その期の連鎖の中の書類のままで、前の版との関係は normalize_chain が決める）
+            if source is not None and (source["fiscal_period_end"], source["period_type"]) == (
+                    filing["fiscal_period_end"], filing["period_type"]):
+                self.mark_superseded(filing["doc_id"], old_row["doc_id"])
 
     def insert(self, section, rows, new_row, key):
         before = copy.deepcopy(rows)
@@ -618,6 +653,7 @@ def build(slug: str, edinet_code: str, existing: dict | None, documents: list[di
     pairs.sort(key=lambda d: (submitted_at(d["filing"]["submitDateTime"]), d["filing"]["docID"]))
     for doc in pairs:
         builder.add(doc)
+    builder.normalize_chain()
     data = builder.data
     data["filings"].sort(key=lambda f: (f["submitted_at"], f["doc_id"]))
     data["filings"] = [{k: f[k] for k in FILING_KEYS if k in f} for f in data["filings"]]

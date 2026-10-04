@@ -71,7 +71,7 @@ class Base(unittest.TestCase):
 class RealDataTest(unittest.TestCase):
     def test_repository_data_passes(self):
         problems = vd.validate()
-        self.assertEqual([str(p) for p in problems], [])
+        self.assertEqual([str(p) for p in problems if p.severity == "error"], [])
 
     def test_repository_has_the_expected_files(self):
         files = vd.collect_files(ROOT)

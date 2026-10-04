@@ -106,7 +106,7 @@ def validate(data: dict) -> list[str]:
 def render_changes(slug: str, changes: list[dict], fetched: int) -> str:
     labels = {"added": "取り込み", "replaced": "値の置き換え", "superseded": "元の書類の状態", "failed": "失敗",
               "anomaly": "異常", "segments_changed": "セグメントの区分", "segments_missing_in_comparative": "前期の列にセグメントなし",
-              "accounting_standard_changed": "会計基準の変更", "not_recorded": "記録できなかった書類"}
+              "accounting_standard_changed": "会計基準の変更", "supersedes_fixed": "supersedes の修正", "not_recorded": "記録できなかった書類"}
     lines = [f"企業 {slug}: 取得した書類 {fetched}件"]
     if not changes:
         lines.append("変更なし")
