@@ -1,0 +1,64 @@
+name: edinet-extract
+
+# 手動で動かす。EDINETの書類から、業績と従業員の値を取り出して確かめる（data/auto/ には書き込まない）
+on:
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: 「書類番号:企業のslug」を、カンマで区切る（最大10組）。例 S100YEOO:tokyo-electron
+        required: true
+        type: string
+        default: "S100YEOO:tokyo-electron,S100YEEB:fuji-electric,S100YE2C:sony,S100YUOR:sumco,S100XTLJ:canon"
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    # edinet の Environment（EDINET_API_KEY）を使う。main だけに限定済み
+    environment: edinet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 取り出す
+        env:
+          EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+          # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
+          INPUT_TARGETS: ${{ inputs.targets }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/results"
+          status=0
+          IFS=',' read -ra pairs <<< "$INPUT_TARGETS"
+          if [ "${#pairs[@]}" -gt 10 ]; then
+            echo "組の数が多すぎる（最大10組）"; exit 2
+          fi
+          for pair in "${pairs[@]}"; do
+            pair="$(echo "$pair" | xargs)"
+            id="${pair%%:*}"
+            slug="${pair#*:}"
+            # パスやコマンドに使う前に、形を確かめる
+            if ! [[ "$id" =~ ^S100[0-9A-Za-z]{4}$ ]] || ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+              echo "形が正しくない組: （書類番号:slug の形で書く）"; status=1; continue
+            fi
+            echo "=== $id ($slug) ==="
+            "$RUNNER_TEMP/venv/bin/python" scripts/edinet/extract_document.py \
+              --doc-id "$id" --company "$slug" --out "$RUNNER_TEMP/results/${id}.json" || status=1
+            sleep 2
+          done
+          exit $status
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: extract
+          path: ${{ runner.temp }}/results
+          retention-days: 7
+          if-no-files-found: ignore
