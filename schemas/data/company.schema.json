@@ -245,6 +245,11 @@
           },
           "sources": {
             "minItems": 1
+          },
+          "selection": {
+            "required": [
+              "source"
+            ]
           }
         }
       }
@@ -318,8 +323,7 @@
       "required": [
         "basis",
         "note",
-        "decided_on",
-        "source"
+        "decided_on"
       ],
       "properties": {
         "basis": {
