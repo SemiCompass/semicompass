@@ -8,6 +8,13 @@ interface Props {
 }
 
 const { title, description } = Astro.props;
+
+// 正規のURL：site とそのページのパスから作る。末尾はスラッシュに統一する（要件定義書3.1）
+if (!Astro.site) {
+  throw new Error('astro.config.mjs の site が設定されていない');
+}
+const canonicalPath = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const canonicalUrl = new URL(canonicalPath, Astro.site).href;
 ---
 
 <!doctype html>
@@ -17,6 +24,7 @@ const { title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
     {BUILD_ENV === 'preview' && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
