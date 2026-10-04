@@ -1,0 +1,28 @@
+schema_version: 1
+slug: micron-memory-japan
+name: "マイクロンメモリジャパン"
+short_names:
+  - "マイクロンメモリジャパン"
+name_en: "Micron Memory Japan"
+name_kana: "マイクロンメモリジャパン"
+type: foreign_subsidiary
+categories:
+  - devices
+  - front-end
+listing: coming_soon
+parent:
+  name: "マイクロン・テクノロジー"
+  name_en: "Micron Technology, Inc."
+  country: US
+  listed_market: "NASDAQ"
+  source: S1
+selection:
+  basis: domestic_fab
+  note: "運営者が掲載企業リスト（第1.0版）で承認。国内の主要な生産拠点は、公開資料で確認予定"
+  decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "Micron Memory Japan（二次資料。公式資料での確認が必要）"
+    publisher: "Wikipedia"
+    url: "https://en.wikipedia.org/wiki/Micron_Memory_Japan"
+    accessed_on: "2026-10-04"

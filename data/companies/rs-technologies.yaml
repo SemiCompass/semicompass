@@ -1,0 +1,17 @@
+schema_version: 1
+slug: rs-technologies
+name: "RS Technologies"
+short_names:
+  - "RS Technologies"
+name_en: "RS Technologies Co.,Ltd."
+name_kana: "アールエステクノロジーズ"
+type: domestic_listed
+securities_code: "3445"
+edinet_code: E31042
+categories:
+  - materials
+listing: coming_soon
+selection:
+  basis: revenue_ratio
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

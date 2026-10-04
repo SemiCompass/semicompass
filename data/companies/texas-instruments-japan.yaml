@@ -1,0 +1,28 @@
+schema_version: 1
+slug: texas-instruments-japan
+name: "日本テキサス・インスツルメンツ"
+short_names:
+  - "日本TI"
+name_en: "Texas Instruments Japan Limited"
+name_kana: "ニホンテキサスインスツルメンツ"
+type: foreign_subsidiary
+categories:
+  - devices
+  - front-end
+listing: coming_soon
+parent:
+  name: "テキサス・インスツルメンツ"
+  name_en: "Texas Instruments Incorporated"
+  country: US
+  listed_market: "NASDAQ"
+  source: S1
+selection:
+  basis: domestic_fab
+  note: "運営者が掲載企業リスト（第1.0版）で承認。国内の主要な生産拠点は、公開資料で確認予定"
+  decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "日本テキサス・インスツルメンツ合同会社（企業情報。TI社の連結子会社であること）"
+    publisher: "厚生労働省（若者雇用促進総合サイト）"
+    url: "https://f-style.mhlw.go.jp/wp-content/uploads/2024/12/日本テキサス・インスツルメンツ合同会社-1.pdf"
+    accessed_on: "2026-10-04"

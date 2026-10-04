@@ -1,0 +1,18 @@
+schema_version: 1
+slug: nitto-denko
+name: "日東電工"
+short_names:
+  - "日東電工"
+name_en: "NITTO DENKO CORPORATION"
+name_kana: "ニットウデンコウ"
+type: conglomerate
+securities_code: "6988"
+edinet_code: E01888
+categories:
+  - materials
+  - back-end
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

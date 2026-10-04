@@ -1,0 +1,17 @@
+schema_version: 1
+slug: sanken-electric
+name: "サンケン電気"
+short_names:
+  - "サンケン電気"
+name_en: "Sanken Electric Co.,Ltd."
+name_kana: "サンケンデンキ"
+type: domestic_listed
+securities_code: "6707"
+edinet_code: E01790
+categories:
+  - devices
+listing: coming_soon
+selection:
+  basis: revenue_ratio
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

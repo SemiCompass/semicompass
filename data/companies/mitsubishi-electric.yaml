@@ -1,0 +1,17 @@
+schema_version: 1
+slug: mitsubishi-electric
+name: "三菱電機"
+short_names:
+  - "三菱電機"
+name_en: "Mitsubishi Electric Corporation"
+name_kana: "ミツビシデンキ"
+type: conglomerate
+securities_code: "6503"
+edinet_code: E01739
+categories:
+  - devices
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

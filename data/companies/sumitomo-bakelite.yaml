@@ -1,0 +1,18 @@
+schema_version: 1
+slug: sumitomo-bakelite
+name: "住友ベークライト"
+short_names:
+  - "住友ベークライト"
+name_en: "Sumitomo Bakelite Company Limited"
+name_kana: "スミトモベークライト"
+type: domestic_listed
+securities_code: "4203"
+edinet_code: E00819
+categories:
+  - materials
+  - back-end
+listing: coming_soon
+selection:
+  basis: revenue_ratio
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

@@ -1,0 +1,17 @@
+schema_version: 1
+slug: agc
+name: "AGC"
+short_names:
+  - "AGC"
+name_en: "AGC Inc."
+name_kana: "エイジーシー"
+type: conglomerate
+securities_code: "5201"
+edinet_code: E01122
+categories:
+  - materials
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

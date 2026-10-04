@@ -1,0 +1,18 @@
+schema_version: 1
+slug: canon
+name: "キヤノン"
+short_names:
+  - "キヤノン"
+name_en: "CANON INC."
+name_kana: "キヤノン"
+type: conglomerate
+securities_code: "7751"
+edinet_code: E02274
+categories:
+  - equipment
+  - front-end
+listing: coming_soon
+selection:
+  basis: global_share
+  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"

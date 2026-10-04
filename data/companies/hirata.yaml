@@ -1,0 +1,17 @@
+schema_version: 1
+slug: hirata
+name: "平田機工"
+short_names:
+  - "平田機工"
+name_en: "HIRATA Corporation"
+name_kana: "ヒラタキコウ"
+type: domestic_listed
+securities_code: "6258"
+edinet_code: E01733
+categories:
+  - equipment
+listing: coming_soon
+selection:
+  basis: revenue_ratio
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  decided_on: "2026-10-04"
