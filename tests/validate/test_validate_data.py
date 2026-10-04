@@ -275,6 +275,23 @@ class ReferenceRuleTest(Base):  # V-04
         self.has(problems, "V-04", "実在", path="/revisions/0/path")
         self.has(problems, "V-04", "実在", path=f"/revisions/{len(data['revisions']) - 1}/path")
 
+    def test_removed_items_with_null_new_are_allowed_only_for_removed_item_paths(self):
+        data = auto_data()
+        base = data["revisions"][0]
+        data["revisions"] += [{**base, "path": "/financials/0/ordinary_income/value", "old": 1, "new": None},
+                              {**base, "path": "/financials/0/segment_adjustment/value", "old": 1, "new": None}]
+        del data["financials"][0]["ordinary_income"]
+        self.write_auto(data)
+        self.assertEqual([p for p in self.check() if p.rule == "V-04"], [])
+        # new が null でなければ、不合格。行が実在しなければ、不合格。ほかの項目の path も、不合格
+        data["revisions"][-2]["new"] = 5
+        data["revisions"].append({**base, "path": "/financials/9/ordinary_income/value", "old": 1, "new": None})
+        data["revisions"].append({**base, "path": "/financials/0/net_sales_missing/value", "old": 1, "new": None})
+        self.write_auto(data)
+        paths = sorted(p.path for p in self.check() if p.rule == "V-04" and "実在" in p.message)
+        n = len(data["revisions"])
+        self.assertEqual(paths, sorted([f"/revisions/{n - 4}/path", f"/revisions/{n - 2}/path", f"/revisions/{n - 1}/path"]))
+
     def test_revision_path_that_exists_passes(self):
         data = auto_data()
         self.assertTrue(data["revisions"][0]["path"].startswith("/financials/0/"))

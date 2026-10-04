@@ -33,6 +33,15 @@
 #   （jpcrp030000-asr_E01740-000 のような形）を除いた名前。数値の行に日本語のセグメント名はないため、自動取得の
 #   データの name には、この名前（前置きを除いたメンバー名）を入れる。画面の日本語の名前は、セグメント対応表
 #   （data/segments/）から表示する。
+# ・DEIの期間の種類 "Q2" は、書類の種類のコード（docTypeCode）が 160（半期報告書）のときだけ、half として扱う
+#   （2024〜2025年の半期報告書で確認）。160 以外で "Q2" が出たときは、未知の値として異常にする
+#   （dei_unknown_period_type）。この条件は extract.py が持つ（スキーマは変えないため、ここには書けない）。
+# ・先頭が「*:」の候補（例：*:SalesAndFinancialServicesRevenueIFRS）は、会社固有の前置きを無視し、要素IDの
+#   「:」より後の名前（ローカル名）が一致するものに当てはまる。当てはまるのは、前置きが
+#   jpcrp（数字）-（asr または ssr）_E（5桁の数字）-（3桁の数字）の形で、その E コードが、その書類の企業の
+#   EDINETコード（DEIの jpdei_cor:EDINETCodeDEI の値）と一致するときだけ。他社の前置きの要素、共通の名前空間
+#   （jpigp_cor、jppfs_cor など）の要素には当てはめない。確認済み：ソニーの2024年3月期の書類（S100TS7P）。
+#   前期の列にも、同じ規則を使う。
 # ・地域別の売上は、8つの書類のどれにも数値の項目がなかった。regions は空にする。
 # ・米国基準（キヤノン）は、売上と純利益だけ。営業利益は null、segments は [] にする。
 #
@@ -89,9 +98,11 @@ standards:
       segment_external_sales:
         - jpigp_cor:SalesToExternalCustomersIFRS      # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
         - jpigp_cor:RevenueFromExternalCustomersIFRS  # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）
+        - "*:SalesAndFinancialServicesRevenueToCustomersIFRS"  # 確認済み（ソニーの2024年3月期の書類）。会社固有の要素（先頭のコメントの「*:」の規則）
       segment_total_sales:
         - jpigp_cor:NetSalesIFRS                      # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）。メンバーを含む行
         - jpigp_cor:RevenueIFRS                       # 確認済み（ソニー、レゾナック、京セラ、アドバンテスト）。メンバーを含む行
+        - "*:SalesAndFinancialServicesRevenueIFRS"    # 確認済み（ソニーの2024年3月期の書類）。メンバーを含む行。会社固有の要素（「*:」の規則）
       segment_profit:
         - jpigp_cor:SegmentProfitLossIFRS             # 確認済み（京セラ、アドバンテスト）
         - jpigp_cor:OperatingProfitLossIFRS           # 確認済み（ソニー）。メンバーを含む行（営業利益の要素で、セグメント別の利益も表す）
@@ -139,3 +150,4 @@ dei:
   period_types:           # DEIの期間の種類の値 → period_type（データ定義書 2.4.3）
     "FY": annual
     "HY": half
+    "Q2": half            # docTypeCode が 160（半期報告書）のときだけ有効（先頭のコメント）。確認済み（2024〜2025年の半期報告書）

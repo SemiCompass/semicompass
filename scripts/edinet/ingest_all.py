@@ -164,6 +164,14 @@ def render_summary(results: list[dict], api: dict, key: str) -> str:
         if segments_changed:
             lines.append("**セグメントの区分が変わった（前期の列による置き換え）**")
             lines += [f"* {c['doc_id']}：{short(c['message'], key)}" for c in segments_changed] + [""]
+        standard_changed = [c for c in changes if c["kind"] == "accounting_standard_changed"]
+        if standard_changed:
+            lines.append("**会計基準が変わった（前期の列による置き換え）**")
+            lines += [f"* {c['doc_id']}：{short(c['message'], key)}" for c in standard_changed] + [""]
+        missing = [c for c in changes if c["kind"] == "segments_missing_in_comparative"]
+        if missing:
+            lines.append("**前期の列にセグメントがない（既存を残した）**")
+            lines += [f"* {c['doc_id']}：{short(c['message'], key)}" for c in missing] + [""]
         failed = [c for c in changes if c["kind"] == "failed"]
         if failed:
             lines.append("**failed の書類**")

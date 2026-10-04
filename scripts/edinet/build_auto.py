@@ -27,6 +27,7 @@ from __future__ import annotations
 import copy
 import re
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 JST = ZoneInfo("Asia/Tokyo")
@@ -113,10 +114,10 @@ def _sort_key_financial(row: dict):
 
 
 def _leaves(node, path: str, member_key: bool):
-    """値（/value）の点を、(path, value, その値の doc_id) で返す。segments は member で対応づけるため、呼び出し側で扱う。"""
+    """値（/value）の点を、(path, value, その値の doc_id, unit) で返す。segments は member で対応づけるため、呼び出し側で扱う。"""
     if isinstance(node, dict):
         if "value" in node and "unit" in node:
-            yield path + "/value", node["value"], node.get("doc_id")
+            yield path + "/value", node["value"], node.get("doc_id"), node["unit"]
             return
         for key, child in node.items():
             if key == "segments":
@@ -124,11 +125,21 @@ def _leaves(node, path: str, member_key: bool):
             yield from _leaves(child, f"{path}/{key}", member_key)
 
 
+def same_amount(unit, old, new) -> bool:
+    """同じ値とみなすか。unit が million_yen のときは、差の絶対値が 1 未満なら同じ（表示の単位の丸め。元の精度のある値を残す）。
+    yen、persons、years などは、厳密に比べる。"""
+    if old == new:
+        return True
+    if old is None or new is None or unit != "million_yen":
+        return False
+    return abs(Decimal(str(old)) - Decimal(str(new))) < 1
+
+
 def segment_values(row: dict, base: str) -> dict[tuple, tuple[str, object, object]]:
     """セグメントの値を、(member, 項目の名前) をキーに {キー: (path, value, doc_id)} にする。"""
     out = {}
     for i, segment in enumerate(row.get("segments", [])):
-        for path, value, doc_id in _leaves(segment, f"{base}/segments/{i}", False):
+        for path, value, doc_id, _unit in _leaves(segment, f"{base}/segments/{i}", False):
             out[(segment["member"], path.rsplit(f"/segments/{i}/", 1)[1])] = (path, value, doc_id)
     return out
 
@@ -138,8 +149,8 @@ def value_changes(old: dict | None, new: dict, base_old: str, base_new: str) -> 
     if old is None:
         return []
     changes = []
-    old_main = {path: (value, doc) for path, value, doc in _leaves(old, base_old, False)}
-    new_main = {path: value for path, value, _ in _leaves(new, base_new, False)}
+    old_main = {path: (value, doc) for path, value, doc, _ in _leaves(old, base_old, False)}
+    new_main = {path: value for path, value, _, _ in _leaves(new, base_new, False)}
     for path_new, value in new_main.items():
         path_old = base_old + path_new[len(base_new):]
         previous, doc = old_main.get(path_old, (None, None))
@@ -165,6 +176,9 @@ def value_changes(old: dict | None, new: dict, base_old: str, base_new: str) -> 
 
 REPORTED_ITEMS = ("net_sales", "operating_income", "ordinary_income", "net_income")
 SEGMENT_FIELDS = ("net_sales_external", "net_sales_total", "profit")
+FINANCIAL_ORDER = ("fiscal_period_end", "period_type", "period_start", "period_end", "accounting_standard", "consolidated",
+                   "doc_id", "net_sales_label", "net_sales", "operating_income", "ordinary_income", "net_income",
+                   "segments", "segment_adjustment", "regions")
 
 
 def _slot_keys(node, prefix=()):
@@ -190,6 +204,13 @@ def _set(node, keys, value):
     for key in keys[:-1]:
         node = node[key]
     node[keys[-1]] = value
+
+
+def _reorder(row: dict) -> None:
+    """財務の行のキーを、データ定義書の表の順にそろえる。"""
+    ordered = {k: row[k] for k in FINANCIAL_ORDER if k in row}
+    row.clear()
+    row.update(ordered)
 
 
 def _restamp(reported: dict, doc_id: str, ingested_at: str) -> dict:
@@ -313,13 +334,14 @@ class _Builder:
         return other is None or (filing["submitted_at"], filing["doc_id"]) > other
 
     def merge(self, old_row, new_row, filing):
-        """新しい行に、古い行の値のうち、filing より新しい書類（前期の列で置き換えた値など）のものを残す。"""
+        """新しい行に、古い行の値のうち、filing より新しい書類（前期の列で置き換えた値など）のもの、
+        および差が表示の単位の丸め（1百万円未満）の値を残す。"""
         merged = copy.deepcopy(new_row)
         for keys in _slot_keys(old_row):
             old_leaf = _get(old_row, keys)
             if _get(merged, keys) is not None and not self.newer_than(filing, old_leaf.get("doc_id")):
                 _set(merged, keys, copy.deepcopy(old_leaf))
-        group_docs = [d for seg in old_row.get("segments", []) for _, _, d in _leaves(seg, "", False)]
+        group_docs = [d for seg in old_row.get("segments", []) for _, _, d, _ in _leaves(seg, "", False)]
         if old_row.get("segment_adjustment"):
             group_docs.append(old_row["segment_adjustment"].get("doc_id"))
         if any(not self.newer_than(filing, d) for d in group_docs if d):
@@ -327,7 +349,28 @@ class _Builder:
             merged.pop("segment_adjustment", None)
             if "segment_adjustment" in old_row:
                 merged["segment_adjustment"] = copy.deepcopy(old_row["segment_adjustment"])
+        self.keep_rounded(old_row, merged)
         return merged
+
+    @staticmethod
+    def keep_rounded(old_row, merged):
+        """値が厳密には違うが、同じとみなせる（差が1百万円未満）leaf は、元の精度のある値（古い方）を残す。"""
+        for keys in _slot_keys(merged):
+            old_leaf, new_leaf = _get(old_row, keys), _get(merged, keys)
+            if old_leaf and new_leaf and old_leaf["value"] != new_leaf["value"] \
+                    and same_amount(new_leaf.get("unit"), old_leaf["value"], new_leaf["value"]):
+                _set(merged, keys, copy.deepcopy(old_leaf))
+        old_map = {s["member"]: s for s in old_row.get("segments", [])}
+        for segment in merged.get("segments", []):
+            before = old_map.get(segment["member"])
+            for field in SEGMENT_FIELDS:
+                if before and field in before and field in segment and before[field]["value"] != segment[field]["value"] \
+                        and same_amount(segment[field].get("unit"), before[field]["value"], segment[field]["value"]):
+                    segment[field] = copy.deepcopy(before[field])
+        old_adj, new_adj = old_row.get("segment_adjustment"), merged.get("segment_adjustment")
+        if old_adj and new_adj and old_adj["value"] != new_adj["value"] \
+                and same_amount(new_adj.get("unit"), old_adj["value"], new_adj["value"]):
+            merged["segment_adjustment"] = copy.deepcopy(old_adj)
 
     def add_revision(self, filing, supersedes, path, old, new, message):
         self.data["revisions"].append({"at": self.now_text, "doc_id": filing["doc_id"], "supersedes": supersedes,
@@ -338,7 +381,9 @@ class _Builder:
         """後の書類の前期の列の値が、取り込み済みの前期の値と違うとき、前期の値を置き換える（組替え・遡及修正）。
 
         前期に当たる行（fiscal_period_end が1年前で、period_type が同じ）がなければ、何もしない。
-        提出日時が新しい書類の値を残す。net_sales_label、accounting_standard、consolidated は置き換えない。
+        提出日時が新しい書類の値を残す。net_sales_label、accounting_standard、consolidated は、
+        会計基準が同じなら置き換えない（会計基準が切り替わったときは、switch_accounting_standard）。
+        unit が million_yen の値は、差が1百万円未満なら同じとみなす。
         """
         if not comparative:
             return
@@ -355,79 +400,150 @@ class _Builder:
         if index is None:
             return
         row, base = rows[index], f"/financials/{index}"
+        if comp.get("accounting_standard") and row["accounting_standard"] != comp["accounting_standard"]:
+            self.switch_accounting_standard(filing, comp, row, base)
+            return
         for item in REPORTED_ITEMS:
             if item not in comp or item not in row:
                 continue
             old, new = row[item], comp[item]
-            if old["value"] != new["value"] and self.newer_than(filing, old.get("doc_id")):
+            if not same_amount(old.get("unit"), old["value"], new["value"]) and self.newer_than(filing, old.get("doc_id")):
                 row[item] = _restamp(new, filing["doc_id"], self.now_text)
                 self.add_revision(filing, old.get("doc_id") or row["doc_id"], f"{base}/{item}/value", old["value"],
                                   new["value"], f"{base}/{item}/value: {old['value']} → {new['value']}"
                                   f"（前期の列による置き換え。置き換え元 {old.get('doc_id')}）")
         if "segments" in comp:
             self.apply_comparative_segments(filing, comp, row, base)
+        elif row.get("segments"):
+            self.changes.append({"kind": "segments_missing_in_comparative", "doc_id": filing["doc_id"],
+                                 "message": f"前期の列にセグメントがない（既存を残した）。{base}"})
 
     def apply_comparative_segments(self, filing, comp, row, base):
         old_segments = row.get("segments", [])
         old_map = {s["member"]: s for s in old_segments}
         new_map = {s["member"]: s for s in comp["segments"]}
 
-        def value_of(segment, field):
-            return segment[field]["value"] if segment and field in segment else None
+        def differs(m, field):
+            if (field in old_map[m]) != (field in new_map[m]):
+                return True
+            return field in old_map[m] and not same_amount(old_map[m][field].get("unit"), old_map[m][field]["value"],
+                                                            new_map[m][field]["value"])
 
-        differs = set(old_map) != set(new_map) or any(
-            (field in old_map[m]) != (field in new_map[m]) or value_of(old_map[m], field) != value_of(new_map[m], field)
-            for m in new_map for field in SEGMENT_FIELDS)
+        changed = set(old_map) != set(new_map) or any(differs(m, f) for m in new_map for f in SEGMENT_FIELDS)
         old_adj, new_adj = row.get("segment_adjustment"), comp.get("segment_adjustment")
-        if new_adj is not None and (old_adj is None or old_adj["value"] != new_adj["value"]):
-            differs = True
-        if not differs:
+        if new_adj is not None and (old_adj is None or not same_amount(old_adj.get("unit"), old_adj["value"], new_adj["value"])):
+            changed = True
+        if not changed:
             return
-        group_docs = [d for s in old_segments for _, _, d in _leaves(s, "", False)]
+        group_docs = [d for s in old_segments for _, _, d, _ in _leaves(s, "", False)]
         if old_adj:
             group_docs.append(old_adj.get("doc_id"))
         if any(not self.newer_than(filing, d) for d in group_docs if d):
             return  # 提出日時が新しい書類の値を残す
-        stamp = lambda reported: _restamp(reported, filing["doc_id"], self.now_text)  # noqa: E731
-        new_segments = [{k: (stamp(v) if isinstance(v, dict) else v) for k, v in s.items()} for s in comp["segments"]]
-        fallback = next(iter(group_docs), None) or row["doc_id"]
-        for j, segment in enumerate(new_segments):
+        self.replace_segments(filing, row, base, comp["segments"], new_adj,
+                              next(iter(group_docs), None) or row["doc_id"], "前期の列による置き換え")
+
+    def replace_segments(self, filing, row, base, new_segments, new_adj, fallback_doc, reason):
+        """segments と segment_adjustment を、新しい内容に丸ごと置き換える。名前が同じメンバーの値の変化は、
+        revisions に値ごとに1件。メンバーの追加・削除は revisions に書けないので、変更の一覧に出す。
+        値の差が1百万円未満（表示の単位の丸め）の leaf は、元の精度のある値を残す。"""
+        old_segments = row.get("segments", [])
+        old_map = {s["member"]: s for s in old_segments}
+        old_adj = row.get("segment_adjustment")
+        result = []
+        for segment in new_segments:
+            fresh = {k: (_restamp(v, filing["doc_id"], self.now_text) if isinstance(v, dict) else v)
+                     for k, v in segment.items()}
+            before = old_map.get(segment["member"])
+            for field in SEGMENT_FIELDS:
+                if before and field in before and field in segment and before[field]["value"] != segment[field]["value"] \
+                        and same_amount(segment[field].get("unit"), before[field]["value"], segment[field]["value"]):
+                    fresh[field] = copy.deepcopy(before[field])
+            result.append(fresh)
+        for j, segment in enumerate(result):
             before = old_map.get(segment["member"])
             if before is None:
                 continue
             for field in SEGMENT_FIELDS:
-                old_v, new_v = value_of(before, field), value_of(segment, field)
+                old_v = before[field]["value"] if field in before else None
+                new_v = segment[field]["value"] if field in segment else None
                 if old_v != new_v:
-                    doc = before[field].get("doc_id") if field in before else fallback
+                    doc = (before[field].get("doc_id") if field in before else None) or fallback_doc
                     path = f"{base}/segments/{j}/{field}/value"
-                    self.add_revision(filing, doc or fallback, path, old_v, new_v,
-                                      f"{path}: {old_v} → {new_v}（前期の列による置き換え。置き換え元 {doc or fallback}）")
-        if new_adj is not None or old_adj is not None:
-            old_v = old_adj["value"] if old_adj else None
-            new_v = new_adj["value"] if new_adj else None
-            if old_v != new_v:
-                path = f"{base}/segment_adjustment/value"
-                doc = (old_adj or {}).get("doc_id") or fallback
-                self.add_revision(filing, doc, path, old_v, new_v,
-                                  f"{path}: {old_v} → {new_v}（前期の列による置き換え。置き換え元 {doc}）")
-        row["segments"] = new_segments
-        row.pop("segment_adjustment", None)
+                    self.add_revision(filing, doc, path, old_v, new_v,
+                                      f"{path}: {old_v} → {new_v}（{reason}。置き換え元 {doc}）")
+        adjustment = None
         if new_adj is not None:
-            row["segment_adjustment"] = stamp(new_adj)
-        # segments と segment_adjustment は、キーの順（データ定義書の表の順）を保つ
-        ordered = {k: row[k] for k in ("fiscal_period_end", "period_type", "period_start", "period_end",
-                                       "accounting_standard", "consolidated", "doc_id", "net_sales_label",
-                                       "net_sales", "operating_income", "ordinary_income", "net_income", "segments",
-                                       "segment_adjustment", "regions") if k in row}
-        row.clear()
-        row.update(ordered)
-        added = sorted(set(new_map) - set(old_map))
-        removed = sorted(set(old_map) - set(new_map))
+            adjustment = _restamp(new_adj, filing["doc_id"], self.now_text)
+            if old_adj and old_adj["value"] != new_adj["value"] \
+                    and same_amount(new_adj.get("unit"), old_adj["value"], new_adj["value"]):
+                adjustment = copy.deepcopy(old_adj)
+        old_v = old_adj["value"] if old_adj else None
+        new_v = adjustment["value"] if adjustment else None
+        if old_v != new_v:
+            path = f"{base}/segment_adjustment/value"
+            doc = (old_adj or {}).get("doc_id") or fallback_doc
+            self.add_revision(filing, doc, path, old_v, new_v, f"{path}: {old_v} → {new_v}（{reason}。置き換え元 {doc}）")
+        row["segments"] = result
+        row.pop("segment_adjustment", None)
+        if adjustment is not None:
+            row["segment_adjustment"] = adjustment
+        _reorder(row)
+        added = sorted(set(s["member"] for s in result) - set(old_map))
+        removed = sorted(set(old_map) - set(s["member"] for s in result))
         if added or removed:
             parts = ([f"追加：{'、'.join(added)}"] if added else []) + ([f"削除：{'、'.join(removed)}"] if removed else [])
             self.changes.append({"kind": "segments_changed", "doc_id": filing["doc_id"],
                                  "message": f"セグメントの区分が変わった（{'、'.join(parts)}）。{base} は、"
                                             f"{filing['doc_id']} の前期の列で置き換えた"})
+
+    def switch_accounting_standard(self, filing, comp, row, base):
+        """会計基準が切り替わったとき、その行の財務の値を、前期の列の内容で丸ごと置き換える。
+
+        net_sales、operating_income、ordinary_income、net_income、net_sales_label、segments、segment_adjustment、
+        accounting_standard を置き換え、行の doc_id を新しい書類にする。consolidated は置き換えない。
+        ordinary_income が新しい会計基準（ifrs、usgaap）にないときは、行から取り除く。
+        提出日時が新しい書類の値は残す（その行に、より新しい書類の値があれば、何もしない）。
+        """
+        standard, old_standard = comp["accounting_standard"], row["accounting_standard"]
+        docs = [row.get("doc_id")] + [row[i].get("doc_id") for i in REPORTED_ITEMS if isinstance(row.get(i), dict)]
+        docs += [d for s in row.get("segments", []) for _, _, d, _ in _leaves(s, "", False)]
+        if row.get("segment_adjustment"):
+            docs.append(row["segment_adjustment"].get("doc_id"))
+        if any(not self.newer_than(filing, d) for d in docs if d):
+            return
+        reason = "会計基準の切り替えによる置き換え"
+        for item in REPORTED_ITEMS:
+            path = f"{base}/{item}/value"
+            old = row.get(item)
+            if item == "ordinary_income" and standard != "jgaap":
+                if old is not None:
+                    row.pop(item)
+                    if old["value"] is not None:
+                        self.add_revision(filing, old.get("doc_id") or row["doc_id"], path, old["value"], None,
+                                          f"{path}: {old['value']} → null（{reason}。{item} を取り除いた。置き換え元 {old.get('doc_id')}）")
+                continue
+            if item not in comp:
+                continue
+            new = comp[item]
+            if old is not None and same_amount(old.get("unit"), old["value"], new["value"]) and old["value"] != new["value"]:
+                continue  # 差が1百万円未満（表示の単位の丸め）。元の精度のある値を残す
+            row[item] = _restamp(new, filing["doc_id"], self.now_text)
+            if (old["value"] if old is not None else None) != new["value"]:
+                doc = (old or {}).get("doc_id") or row["doc_id"]
+                self.add_revision(filing, doc, path, old["value"] if old is not None else None, new["value"],
+                                  f"{path}: {old['value'] if old is not None else None} → {new['value']}（{reason}。置き換え元 {doc}）")
+        if comp.get("net_sales_label"):
+            row["net_sales_label"] = comp["net_sales_label"]
+        row["accounting_standard"] = standard
+        row["doc_id"] = filing["doc_id"]
+        group_docs = [d for s in row.get("segments", []) for _, _, d, _ in _leaves(s, "", False)]
+        self.replace_segments(filing, row, base, comp.get("segments", []), comp.get("segment_adjustment"),
+                              next(iter(group_docs), None) or docs[0] or filing["doc_id"], reason)
+        _reorder(row)
+        self.changes.append({"kind": "accounting_standard_changed", "doc_id": filing["doc_id"],
+                             "message": f"会計基準が変わった（{old_standard} → {standard}）。{base} を、"
+                                        f"{filing['doc_id']} の前期の列で置き換えた"})
 
     def apply_comparative_employee(self, filing, comp):
         rows = self.data["employees"]
@@ -440,7 +556,7 @@ class _Builder:
             old = _get(row, (section, "employees"))
             if new is None or old is None:
                 continue
-            if old["value"] != new["value"] and self.newer_than(filing, old.get("doc_id")):
+            if not same_amount(old.get("unit"), old["value"], new["value"]) and self.newer_than(filing, old.get("doc_id")):
                 row[section]["employees"] = _restamp(new, filing["doc_id"], self.now_text)
                 path = f"/employees/{index}/{section}/employees/value"
                 self.add_revision(filing, old.get("doc_id") or row["doc_id"], path, old["value"], new["value"],
