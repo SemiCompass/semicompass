@@ -329,10 +329,15 @@ class WriteDataAutoTest(Base):
 
     def test_real_data_auto_is_rejected_without_flag(self):
         # 差し替えずに、リポジトリの data/auto を指定する
+        def snapshot():
+            real = ROOT / "data" / "auto"
+            return sorted((p.name, p.stat().st_mtime_ns) for p in real.iterdir()) if real.exists() else None
+
+        before = snapshot()
         with mock.patch.object(ia, "AUTO_DIR", ROOT / "data" / "auto"):
             code, _, err = self.run_all(self.two_company_router(), out_dir=ROOT / "data" / "auto")
         self.assertEqual(code, 2)
-        self.assertFalse((ROOT / "data" / "auto").exists())
+        self.assertEqual(snapshot(), before)  # data/auto は、何も変わらない
 
     def test_summary_under_data_auto_is_rejected(self):
         self.auto.mkdir()

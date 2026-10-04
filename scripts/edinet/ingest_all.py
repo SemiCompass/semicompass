@@ -160,6 +160,10 @@ def render_summary(results: list[dict], api: dict, key: str) -> str:
         if replaced:
             lines += ["**置き換えた値**", f"* 値 {len(replaced)}件（revisions に {len(replaced)}件を加えた）"]
             lines += [f"* {short(c['message'], key)}" for c in replaced] + [""]
+        segments_changed = [c for c in changes if c["kind"] == "segments_changed"]
+        if segments_changed:
+            lines.append("**セグメントの区分が変わった（前期の列による置き換え）**")
+            lines += [f"* {c['doc_id']}：{short(c['message'], key)}" for c in segments_changed] + [""]
         failed = [c for c in changes if c["kind"] == "failed"]
         if failed:
             lines.append("**failed の書類**")
