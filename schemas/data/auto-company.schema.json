@@ -1,0 +1,616 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/data/auto-company.schema.json",
+  "title": "自動取得のデータ（D06）",
+  "description": "データ定義書（第1段階）5章。data/auto/{slug}.json。J01とJ04だけが書く。ファイル名とcompanyの一致、edinet_codeと企業マスタの一致は、スキーマでは検査できない（別の検査で行う）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "company",
+    "edinet_code",
+    "updated_at",
+    "filings",
+    "financials",
+    "employees",
+    "announcements",
+    "revisions"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "company": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 3,
+      "maxLength": 60
+    },
+    "edinet_code": {
+      "type": "string",
+      "pattern": "^E[0-9]{5}$"
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\+09:00$",
+      "format": "date-time"
+    },
+    "filings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/filing"
+      }
+    },
+    "financials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/financial"
+      }
+    },
+    "employees": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/employee"
+      }
+    },
+    "announcements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/announcement"
+      }
+    },
+    "revisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/revision"
+      }
+    }
+  },
+  "$defs": {
+    "reported_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "unit",
+        "original_unit",
+        "element",
+        "context",
+        "doc_id",
+        "ingested_at"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unit": {
+          "enum": [
+            "million_yen",
+            "yen",
+            "persons",
+            "years"
+          ]
+        },
+        "original_unit": {
+          "enum": [
+            "yen",
+            "thousand_yen",
+            "million_yen",
+            "persons",
+            "years"
+          ]
+        },
+        "element": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context": {
+          "type": "string",
+          "minLength": 1
+        },
+        "doc_id": {
+          "type": "string",
+          "pattern": "^S100[0-9A-Z]{4}$"
+        },
+        "ingested_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\+09:00$",
+          "format": "date-time"
+        }
+      }
+    },
+    "filing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "doc_id",
+        "doc_type",
+        "edinet_doc_type_code",
+        "fiscal_period_end",
+        "period_type",
+        "period_start",
+        "period_end",
+        "submitted_at",
+        "url",
+        "status"
+      ],
+      "properties": {
+        "doc_id": {
+          "type": "string",
+          "pattern": "^S100[0-9A-Z]{4}$"
+        },
+        "doc_type": {
+          "enum": [
+            "annual_report",
+            "amended_annual_report",
+            "semiannual_report",
+            "amended_semiannual_report"
+          ]
+        },
+        "edinet_doc_type_code": {
+          "type": "string",
+          "pattern": "^[0-9]{3}$"
+        },
+        "fiscal_period_end": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        },
+        "period_type": {
+          "enum": [
+            "annual",
+            "half"
+          ]
+        },
+        "period_start": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "format": "date"
+        },
+        "period_end": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "format": "date"
+        },
+        "submitted_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\+09:00$",
+          "format": "date-time"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://\\S+$"
+        },
+        "status": {
+          "enum": [
+            "ingested",
+            "superseded",
+            "failed"
+          ]
+        },
+        "supersedes": {
+          "type": "string",
+          "pattern": "^S100[0-9A-Z]{4}$"
+        },
+        "ingested_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\+09:00$",
+          "format": "date-time"
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "doc_type": {
+                "enum": [
+                  "amended_annual_report",
+                  "amended_semiannual_report"
+                ]
+              }
+            },
+            "required": [
+              "doc_type"
+            ]
+          },
+          "then": {
+            "required": [
+              "supersedes"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "ingested",
+                  "superseded"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "ingested_at"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "failed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "error"
+            ]
+          }
+        }
+      ]
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "member",
+        "net_sales_external"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "member": {
+          "type": "string",
+          "minLength": 1
+        },
+        "net_sales_external": {
+          "$ref": "#/$defs/reported_value"
+        },
+        "net_sales_total": {
+          "$ref": "#/$defs/reported_value"
+        },
+        "profit": {
+          "$ref": "#/$defs/reported_value"
+        }
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "member",
+        "net_sales"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "member": {
+          "type": "string",
+          "minLength": 1
+        },
+        "net_sales": {
+          "$ref": "#/$defs/reported_value"
+        }
+      }
+    },
+    "financial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fiscal_period_end",
+        "period_type",
+        "period_start",
+        "period_end",
+        "accounting_standard",
+        "consolidated",
+        "doc_id",
+        "net_sales_label",
+        "net_sales",
+        "operating_income",
+        "net_income",
+        "segments",
+        "regions"
+      ],
+      "properties": {
+        "fiscal_period_end": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        },
+        "period_type": {
+          "enum": [
+            "annual",
+            "half"
+          ]
+        },
+        "period_start": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "format": "date"
+        },
+        "period_end": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "format": "date"
+        },
+        "accounting_standard": {
+          "enum": [
+            "jgaap",
+            "ifrs",
+            "usgaap"
+          ]
+        },
+        "consolidated": {
+          "type": "boolean"
+        },
+        "doc_id": {
+          "type": "string",
+          "pattern": "^S100[0-9A-Z]{4}$"
+        },
+        "net_sales_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "net_sales": {
+          "$ref": "#/$defs/reported_value"
+        },
+        "operating_income": {
+          "$ref": "#/$defs/reported_value"
+        },
+        "ordinary_income": {
+          "$ref": "#/$defs/reported_value"
+        },
+        "net_income": {
+          "$ref": "#/$defs/reported_value"
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/segment"
+          }
+        },
+        "segment_adjustment": {
+          "$ref": "#/$defs/reported_value"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/region"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "accounting_standard": {
+                "const": "jgaap"
+              }
+            },
+            "required": [
+              "accounting_standard"
+            ]
+          },
+          "then": {
+            "required": [
+              "ordinary_income"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "accounting_standard": {
+                "enum": [
+                  "ifrs",
+                  "usgaap"
+                ]
+              }
+            },
+            "required": [
+              "accounting_standard"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ordinary_income": false
+            }
+          }
+        }
+      ]
+    },
+    "employee": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fiscal_period_end",
+        "as_of",
+        "doc_id",
+        "non_consolidated"
+      ],
+      "properties": {
+        "fiscal_period_end": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        },
+        "as_of": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "format": "date"
+        },
+        "doc_id": {
+          "type": "string",
+          "pattern": "^S100[0-9A-Z]{4}$"
+        },
+        "consolidated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "employees"
+          ],
+          "properties": {
+            "employees": {
+              "$ref": "#/$defs/reported_value"
+            }
+          }
+        },
+        "non_consolidated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "employees",
+            "average_age",
+            "average_length_of_service",
+            "average_annual_salary"
+          ],
+          "properties": {
+            "employees": {
+              "$ref": "#/$defs/reported_value"
+            },
+            "average_age": {
+              "$ref": "#/$defs/reported_value"
+            },
+            "average_length_of_service": {
+              "$ref": "#/$defs/reported_value"
+            },
+            "average_annual_salary": {
+              "$ref": "#/$defs/reported_value"
+            }
+          }
+        }
+      }
+    },
+    "announcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fiscal_period_end",
+        "quarter",
+        "announced_on",
+        "detected_at",
+        "documents"
+      ],
+      "properties": {
+        "fiscal_period_end": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        },
+        "quarter": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "announced_on": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "format": "date"
+        },
+        "detected_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\+09:00$",
+          "format": "date-time"
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "title",
+              "url",
+              "published_at"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "tanshin",
+                  "presentation"
+                ]
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https://\\S+$"
+              },
+              "published_at": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\+09:00$",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "forecast_revised": {
+          "type": "boolean"
+        }
+      }
+    },
+    "revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "doc_id",
+        "supersedes",
+        "path",
+        "old",
+        "new"
+      ],
+      "properties": {
+        "at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\+09:00$",
+          "format": "date-time"
+        },
+        "doc_id": {
+          "type": "string",
+          "pattern": "^S100[0-9A-Z]{4}$"
+        },
+        "supersedes": {
+          "type": "string",
+          "pattern": "^S100[0-9A-Z]{4}$"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "old": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "new": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
