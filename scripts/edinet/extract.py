@@ -59,6 +59,10 @@ CONTEXTS = {  # period_type → (期間のコンテキスト、時点のコン�
     "annual": ("CurrentYearDuration", "CurrentYearInstant"),
     "half": ("InterimDuration", "InterimInstant"),
 }
+DEI_EDINET_CODE = "jpdei_cor:EDINETCodeDEI"
+# DEIの期間の種類のうち、書類の種類のコード（docTypeCode）が一致するときだけ有効な値（config/xbrl-map.yaml の先頭のコメント）
+PERIOD_TYPE_DOC_CODES = {"Q2": frozenset({"160"})}
+WILDCARD_PREFIX = re.compile(r"^jpcrp\d+-(?:asr|ssr)_E(\d{5})-\d{3}$")
 PRIOR_CONTEXTS = {  # 前期の列。period_type → (期間のコンテキスト、時点のコンテキスト)
     "annual": ("Prior1YearDuration", "Prior1YearInstant"),
     "half": ("Prior1InterimDuration", "Prior1InterimInstant"),
@@ -109,9 +113,10 @@ def json_number(value: Decimal) -> tuple[int | float, bool]:
 
 
 class _Extraction:
-    def __init__(self, doc_id: str, ingested_at: str):
+    def __init__(self, doc_id: str, ingested_at: str, company_code: str | None = None):
         self.doc_id = doc_id
         self.ingested_at = ingested_at
+        self.company_code = company_code  # DEIの EDINETCodeDEI の値。「*:」の候補を当てはめる企業
         self.anomalies: list[dict] = []
         self.notes: list[str] = []
         self.trace: list[dict] = []
@@ -122,10 +127,20 @@ class _Extraction:
             entry["item"] = item
         self.anomalies.append(entry)
 
+    def matches(self, candidate: str, element: str) -> bool:
+        """候補が、要素IDに当てはまるか。「*:名前」の候補は、会社固有の前置き（jpcrp数字-asr か ssr_E5桁-3桁）で、
+        その E コードがこの書類の企業の EDINET コードと一致する要素の、ローカル名（「:」より後）が一致するときだけ。"""
+        if not candidate.startswith("*:"):
+            return element == candidate
+        prefix, separator, local = element.partition(":")
+        match = WILDCARD_PREFIX.match(prefix)
+        return bool(separator and match and local == candidate[2:] and self.company_code is not None
+                    and f"E{match.group(1)}" == self.company_code)
+
     def find(self, rows: list[dict], elements: list[str], context: str, item: str) -> dict | None:
         """elements を先頭から順に探し、コンテキストが完全に一致する数値の行の、最初の行を返す。"""
         for element in elements:
-            hits = [r for r in rows if r["element"] == element and r["context"] == context
+            hits = [r for r in rows if self.matches(element, r["element"]) and r["context"] == context
                     and parse_decimal(r["value"]) is not None]
             if hits:
                 values = {parse_decimal(r["value"]) for r in hits}
@@ -173,7 +188,7 @@ class _Extraction:
         return number
 
 
-def read_dei(rows: list[dict], xbrl_map: dict, work: _Extraction) -> dict | None:
+def read_dei(rows: list[dict], xbrl_map: dict, work: _Extraction, doc_type_code: str | None = None) -> dict | None:
     """DEIの行から、会計基準、連結の有無、期間を読む。読めない・未知のときは、異常にして None を返す。"""
     dei = xbrl_map["dei"]
     raw: dict[str, str] = {}
@@ -196,7 +211,13 @@ def read_dei(rows: list[dict], xbrl_map: dict, work: _Extraction) -> dict | None
                      "accounting_standard")
         ok = False
     period_type = dei["period_types"].get(raw["period_type"])
-    if period_type is None:
+    allowed_codes = PERIOD_TYPE_DOC_CODES.get(raw["period_type"])
+    if period_type is not None and allowed_codes is not None and doc_type_code not in allowed_codes:
+        work.anomaly("dei_unknown_period_type", f"DEIの期間の種類の値 {raw['period_type']!r} は、書類の種類のコードが "
+                     f"{'、'.join(sorted(allowed_codes))} のときだけ有効（この書類は {doc_type_code!r}）", "period_type")
+        ok = False
+        period_type = None
+    elif period_type is None:
         work.anomaly("dei_unknown_period_type", f"DEIの期間の種類の値が未知: {raw['period_type']!r}", "period_type")
         ok = False
     consolidated = {"true": True, "false": False}.get(raw["consolidated"].lower())
@@ -249,7 +270,7 @@ def _segments(rows: list[dict], items: dict, duration: str, work: _Extraction) -
         for element in elements:
             found: dict[str, list[dict]] = {}
             for r in rows:
-                if r["element"] == element and parse_decimal(r["value"]) is not None:
+                if work.matches(element, r["element"]) and parse_decimal(r["value"]) is not None:
                     member = segment_member(r["context"], duration)
                     if member is not None:
                         found.setdefault(member, []).append(r)
@@ -257,7 +278,8 @@ def _segments(rows: list[dict], items: dict, duration: str, work: _Extraction) -
                 return found
         return {}
 
-    skipped = sorted({r["context"] for r in rows if r["element"] in external and r["context"].startswith(duration + "_")
+    skipped = sorted({r["context"] for r in rows if any(work.matches(c, r["element"]) for c in external)
+                      and r["context"].startswith(duration + "_")
                       and parse_decimal(r["value"]) is not None and segment_member(r["context"], duration) is None})
     if skipped:
         work.notes.append("セグメントとして使わなかったコンテキスト（単体、またはメンバー名を読めないもの）: "
@@ -280,11 +302,20 @@ def _segments(rows: list[dict], items: dict, duration: str, work: _Extraction) -
     return segments, adjustment
 
 
-def extract(rows: list[dict], doc_id: str, ingested_at: str, xbrl_map: dict) -> dict:
-    """書類のCSVの行から、financial、employee、異常の一覧などを取り出す。"""
-    work = _Extraction(doc_id, ingested_at)
+def company_code_of(rows: list[dict]) -> str | None:
+    """DEIの EDINETCodeDEI の値（1つに決まるときだけ）。"""
+    values = {r["value"].strip() for r in rows if r["element"] == DEI_EDINET_CODE}
+    return values.pop() if len(values) == 1 else None
+
+
+def extract(rows: list[dict], doc_id: str, ingested_at: str, xbrl_map: dict, doc_type_code: str | None = None) -> dict:
+    """書類のCSVの行から、financial、employee、異常の一覧などを取り出す。
+
+    doc_type_code は、一覧の docTypeCode。DEIの期間の種類 "Q2" は、160 のときだけ有効にするために使う。
+    """
     prepared = prepare_rows(rows)
-    dei = read_dei(prepared, xbrl_map, work)
+    work = _Extraction(doc_id, ingested_at, company_code_of(prepared))
+    dei = read_dei(prepared, xbrl_map, work, doc_type_code)
     result = {"doc_id": doc_id, "financial": None, "employee": None, "anomalies": work.anomalies, "notes": work.notes,
               "trace": work.trace, "dei": dei, "stopped": dei is None}
     if dei is None:
@@ -342,7 +373,7 @@ def _comparative(rows: list[dict], xbrl_map: dict, dei: dict, doc_id: str, inges
     duration, instant = PRIOR_CONTEXTS[period_type]
     spec = xbrl_map["standards"][standard]
     items = spec["items"]
-    work = _Extraction(doc_id, ingested_at)
+    work = _Extraction(doc_id, ingested_at, company_code_of(rows))
     prior = prior_fiscal_period_end(dei["fiscal_year_end"])
     notes: list[str] = []
 
@@ -357,13 +388,16 @@ def _comparative(rows: list[dict], xbrl_map: dict, dei: dict, doc_id: str, inges
             return None
         return value
 
-    financial: dict = {"fiscal_period_end": prior, "period_type": period_type}
+    financial: dict = {"fiscal_period_end": prior, "period_type": period_type, "accounting_standard": standard}
     for item in ("net_sales", "operating_income", "ordinary_income", "net_income"):
         if item == "ordinary_income" and standard != "jgaap":
             continue
         value = taken(item, items.get(item, []), duration, "money")
         if value is not None:
             financial[item] = value
+            if item == "net_sales":  # 前期の列の項目名（会計基準が切り替わったときに、売上高の名前に使う）
+                label_row = work.find(rows, items.get(item, []), duration, item)
+                financial["net_sales_label"] = net_sales_label(label_row["label"])
     if standard != "usgaap":
         before = len(work.anomalies)
         segments, adjustment = _segments(rows, items, duration, work)

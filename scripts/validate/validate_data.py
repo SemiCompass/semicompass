@@ -17,7 +17,9 @@
 * V-04 参照の先が存在する（data/auto の company が企業マスタにあり、edinet_code が一致する、
   selection.source・parent.source・history[].source が同じファイルの sources にある、
   categories・processes が supply-chain.yaml にある、revisions の path が実在する値を指す、
-  revisions の doc_id・supersedes が filings にある、financials・employees の doc_id が filings にある）
+  revisions の doc_id・supersedes が filings にある、financials・employees の doc_id が filings にある）。
+  ただし、取り除いた ordinary_income・segment_adjustment（会計基準の切り替え）の履歴（new が null）の path は、
+  その行が実在すれば許す
 * YAMLの落とし穴：引用符なしの日付（YAMLが日付型に変える）、yes・no・on・off など（YAML 1.1 では真偽値）
 
 実装していない規則：V-05〜V-21（本文、公開済みの識別子の削除、必須項目の充足、日付の前後、拠点、予算など）。
@@ -282,6 +284,19 @@ def resolve_pointer(data, path: str):
     return node
 
 
+def _removed_item_ok(data, path: str) -> bool:
+    """/financials/3/ordinary_income/value のように、項目ごと取り除かれた値の path か（行は実在する）。
+    会計基準の切り替えで取り除く ordinary_income と、前期の列にない segment_adjustment が対象。"""
+    parts = path.split("/")
+    if len(parts) != 5 or parts[1] != "financials" or parts[3] not in ("ordinary_income", "segment_adjustment") \
+            or parts[4] != "value":
+        return False
+    try:
+        return isinstance(resolve_pointer(data, "/".join(parts[:3])), dict)
+    except KeyError:
+        return False
+
+
 def check_auto(autos: dict[str, dict], companies: dict[str, dict]) -> list[Problem]:
     out: list[Problem] = []
     by_slug = {d["slug"]: d for d in companies.values() if isinstance(d.get("slug"), str)}
@@ -329,6 +344,8 @@ def check_auto(autos: dict[str, dict], companies: dict[str, dict]) -> list[Probl
                 try:
                     resolve_pointer(data, path)
                 except KeyError:
+                    if rev.get("new") is None and _removed_item_ok(data, path):
+                        continue  # 取り除いた項目（会計基準の切り替えで、ordinary_income を取り除いた）の履歴。new は null
                     out.append(Problem(rel, pointer(["revisions", i, "path"]), "V-04", f"path {path} が、実在する値を指していない"))
             for key in ("supersedes", "doc_id"):
                 if isinstance(rev.get(key), str) and rev[key] not in doc_ids:

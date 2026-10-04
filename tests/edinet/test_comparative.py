@@ -136,13 +136,15 @@ class ExtractComparativeTest(unittest.TestCase):
 
     def test_missing_items_are_omitted_without_anomaly(self):
         res, comp = self.comp(fin_rows("CurrentYearDuration", 9_000_000_000, 1) + fin_rows("Prior1YearDuration", 3_000_000_000, 4)[:1])
-        self.assertEqual(set(comp["financial"]), {"fiscal_period_end", "period_type", "net_sales"})
+        self.assertEqual(set(comp["financial"]), {"fiscal_period_end", "period_type", "accounting_standard", "net_sales",
+                                                  "net_sales_label"})
         self.assertIsNone(comp["employee"])
         self.assertEqual([a for a in res["anomalies"] if "前期" in a["message"]], [])
 
     def test_no_prior_columns(self):
         _, comp = self.comp(fin_rows("CurrentYearDuration", 9_000_000_000, 1))
-        self.assertEqual(comp["financial"], {"fiscal_period_end": "2025-03", "period_type": "annual"})
+        self.assertEqual(comp["financial"], {"fiscal_period_end": "2025-03", "period_type": "annual",
+                                             "accounting_standard": "jgaap"})
 
     def test_half_uses_prior_interim_contexts(self):
         rows = dei(period="HY", end="2025-09-30") + fin_rows("InterimDuration", 9_000_000_000, 1) + \
