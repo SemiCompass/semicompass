@@ -13,7 +13,9 @@ categories:
 processes: []
 listing: coming_soon
 tagline: "LSIやパワー半導体素子などの半導体を作る企業"
+website_url: "https://www.rohm.co.jp"
 ir_url: "https://www.rohm.co.jp/ir"
+recruit_url: "https://micro.rohm.com/jp/employment/"
 accounting_standard: jgaap
 fiscal_year_end_month: 3
 is_holding_company: false
@@ -44,4 +46,14 @@ sources:
     title: "株主・投資家情報"
     publisher: "ローム株式会社"
     url: "https://www.rohm.co.jp/ir"
+    accessed_on: "2026-10-05"
+  - id: S5
+    title: "ローム株式会社"
+    publisher: "ローム株式会社"
+    url: "https://www.rohm.co.jp"
+    accessed_on: "2026-10-05"
+  - id: S6
+    title: "ローム 採用情報"
+    publisher: "ローム株式会社"
+    url: "https://micro.rohm.com/jp/employment/"
     accessed_on: "2026-10-05"

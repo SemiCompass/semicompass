@@ -18,6 +18,7 @@ listing: coming_soon
 tagline: "半導体の樹脂封止に使うモールディング装置や超精密金型を作る企業"
 website_url: "https://www.towajapan.co.jp/jp/"
 ir_url: "https://www.towajapan.co.jp/jp/ir/"
+recruit_url: "https://towajapan-recruit.jp"
 accounting_standard: jgaap
 fiscal_year_end_month: 3
 is_holding_company: false
@@ -53,4 +54,9 @@ sources:
     title: "IR情報"
     publisher: "TOWA株式会社"
     url: "https://www.towajapan.co.jp/jp/ir/"
+    accessed_on: "2026-10-05"
+  - id: S6
+    title: "TOWA株式会社 新卒採用サイト"
+    publisher: "TOWA株式会社"
+    url: "https://towajapan-recruit.jp"
     accessed_on: "2026-10-05"
