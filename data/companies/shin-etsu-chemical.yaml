@@ -10,8 +10,33 @@ securities_code: "4063"
 edinet_code: E00776
 categories:
   - materials
+processes:
+  - wafer
+  - lithography
 listing: coming_soon
+tagline: "シリコンウェーハや半導体用レジストなどを手がける化学メーカー"
+accounting_standard: jgaap
+fiscal_year_end_month: 3
+is_holding_company: false
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "信越化学工業株式会社（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YE9I.pdf"
+    published_on: "2026-06-19"
+    accessed_on: "2026-10-05"
+    doc_id: S100YE9I
+  - id: S2
+    title: "信越化学、半導体用レジスト市場の拡大と進化に応える"
+    publisher: "信越化学工業株式会社"
+    url: "https://www.shinetsu.co.jp/jp/news/news-release/%E4%BF%A1%E8%B6%8A%E5%8C%96%E5%AD%A6%E3%80%81%E5%8D%8A%E5%B0%8E%E4%BD%93%E7%94%A8%E3%83%AC%E3%82%B8%E3%82%B9%E3%83%88%E5%B8%82%E5%A0%B4%E3%81%AE%E6%8B%A1%E5%A4%A7%E3%81%A8%E9%80%B2%E5%8C%96%E3%81%AB/"
+    accessed_on: "2026-10-05"
+  - id: S3
+    title: "個人投資家の皆様へ"
+    publisher: "信越化学工業株式会社"
+    url: "https://www.shinetsu.co.jp/jp/ir/individual/"
+    accessed_on: "2026-10-05"

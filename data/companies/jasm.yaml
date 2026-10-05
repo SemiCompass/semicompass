@@ -9,7 +9,10 @@ type: foreign_subsidiary
 categories:
   - devices
   - front-end
+processes: []
 listing: coming_soon
+tagline: "熊本県で半導体の受託製造工場を運営する、台湾積体電路製造の子会社"
+ir_url: "https://investor.tsmc.com/english"
 parent:
   name: "台湾積体電路製造"
   name_en: "Taiwan Semiconductor Manufacturing Company Limited"
@@ -27,3 +30,8 @@ sources:
     url: "https://pr.tsmc.com/english/news/3105"
     published_on: "2024-02-06"
     accessed_on: "2026-10-04"
+  - id: S2
+    title: "Investors（親会社 台湾積体電路製造の投資家向け情報ページ）"
+    publisher: "TSMC"
+    url: "https://investor.tsmc.com/english"
+    accessed_on: "2026-10-05"
