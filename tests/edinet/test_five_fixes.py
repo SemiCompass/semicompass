@@ -89,20 +89,22 @@ class Q2Test(unittest.TestCase):
         return dei(period=period, end="2025-09-30", code=CODE) + fin_rows(duration, 500_000_000, 100_000_000,
                                                                            ordinary=1, ni=2)
 
-    def test_q2_is_half_only_for_doc_type_160(self):
-        result = ext_with(self.rows("Q2"), "160")
-        self.assertFalse(result["stopped"])
-        self.assertEqual((result["financial"]["period_type"], result["financial"]["net_sales"]["context"]),
-                         ("half", "CurrentYTDDuration"))
-        self.assertEqual(result["anomalies"], [])
-        self.assertIsNone(result["employee"])
+    def test_q2_is_half_only_for_doc_type_160_and_170(self):
+        for code in ("160", "170"):  # 半期報告書、訂正半期報告書
+            result = ext_with(self.rows("Q2"), code)
+            self.assertFalse(result["stopped"], msg=code)
+            self.assertEqual((result["financial"]["period_type"], result["financial"]["net_sales"]["context"]),
+                             ("half", "CurrentYTDDuration"), msg=code)
+            self.assertEqual(result["anomalies"], [], msg=code)
+            self.assertIsNone(result["employee"])
 
     def test_q2_with_other_doc_type_is_anomaly(self):
-        for code in ("120", "130", "170", None):
+        # 170（訂正半期報告書）は、半期として読む（SUMCO の S100UH1H）。120、130（有価証券報告書）などは、異常のまま
+        for code in ("120", "130", "140", None):
             result = ext_with(self.rows("Q2"), code)
             self.assertTrue(result["stopped"], msg=code)
             self.assertEqual([a["code"] for a in result["anomalies"]], ["dei_unknown_period_type"], msg=code)
-            self.assertIn("160", result["anomalies"][0]["message"])
+            self.assertIn("160、170", result["anomalies"][0]["message"])
 
     def test_hy_and_fy_are_as_before(self):
         for code in ("160", "170", "120", None):
