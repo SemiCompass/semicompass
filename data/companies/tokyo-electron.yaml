@@ -17,10 +17,10 @@ processes:
   - lithography
   - etching
 listing: coming_soon
-tagline: "半導体やフラットパネルディスプレイの製造装置を作る企業"
+tagline: "半導体製造装置を開発・製造・販売する企業"
 website_url: "https://www.tel.co.jp/"
 ir_url: "https://www.tel.co.jp/ir/"
-recruit_url: "https://www.tel.co.jp/careers/"
+recruit_url: "https://tel-special.com/"
 accounting_standard: jgaap
 fiscal_year_end_month: 3
 is_holding_company: false
@@ -58,7 +58,7 @@ sources:
     url: "https://www.tel.co.jp/ir/"
     accessed_on: "2026-10-05"
   - id: S6
-    title: "【新卒採用】東京エレクトロン（TEL）グループ"
+    title: "東京エレクトロン 新卒採用サイト"
     publisher: "東京エレクトロン株式会社"
-    url: "https://www.tel.co.jp/careers/"
+    url: "https://tel-special.com/"
     accessed_on: "2026-10-05"

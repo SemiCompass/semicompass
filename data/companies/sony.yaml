@@ -12,13 +12,15 @@ categories:
   - devices
 listing: coming_soon
 tagline: "ゲーム、音楽、映画、イメージセンサーなどの事業を持つ企業グループ"
+website_url: "https://www.sony.com/ja/"
+ir_url: "https://www.sony.com/ja/SonyInfo/IR/"
+recruit_url: "https://www.sony.com/ja/SonyInfo/Jobs/"
 accounting_standard: ifrs
 fiscal_year_end_month: 3
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
-  source: S2
 sources:
   - id: S1
     title: "有価証券報告書（2026年3月期）"
@@ -28,7 +30,17 @@ sources:
     accessed_on: "2026-10-05"
     doc_id: S100YE2C
   - id: S2
-    title: "【イメージセンサー世界シェア1位】ソニー半導体、若手技術者が語る仕事のリアル"
-    publisher: "ソニーセミコンダクタソリューションズ株式会社"
-    url: "https://www.sony-semicon.com/ja/feature/2026051101.html"
+    title: "ソニーグループポータルサイト"
+    publisher: "ソニーグループ株式会社"
+    url: "https://www.sony.com/ja/"
+    accessed_on: "2026-10-05"
+  - id: S3
+    title: "ソニーグループ 投資家情報"
+    publisher: "ソニーグループ株式会社"
+    url: "https://www.sony.com/ja/SonyInfo/IR/"
+    accessed_on: "2026-10-05"
+  - id: S4
+    title: "ソニーグループ 採用情報"
+    publisher: "ソニーグループ株式会社"
+    url: "https://www.sony.com/ja/SonyInfo/Jobs/"
     accessed_on: "2026-10-05"
