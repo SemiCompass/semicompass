@@ -71,7 +71,7 @@ class Base(unittest.TestCase):
 class RealDataTest(unittest.TestCase):
     def test_repository_data_passes(self):
         problems = vd.validate()
-        self.assertEqual([str(p) for p in problems if p.severity == "error"], [])
+        self.assertEqual([str(p) for p in problems], [])  # エラーも警告もない
 
     def test_repository_has_the_expected_files(self):
         files = vd.collect_files(ROOT)
@@ -375,6 +375,26 @@ class CliTest(Base):
         code, out, _ = self.run_main([])
         self.assertEqual(code, 1)
         self.assertIn("data/auto/advantest.json: /revisions/0/path: [V-04]", out)
+
+    def test_warning_mechanism_and_strict_still_work(self):
+        # 今は、警告になる検査はない。警告の仕組みと --strict は、今後のために残してあるので、模擬の警告で確かめる
+        from unittest import mock
+        warning = vd.Problem("data/auto/advantest.json", "/x", "V-04", "模擬の警告", severity="warning")
+        with mock.patch.object(vd, "check_auto", return_value=[warning]):
+            code, out, _ = self.run_main([])
+            self.assertEqual(code, 0)
+            self.assertIn("警告 data/auto/advantest.json: /x: [V-04] 模擬の警告", out)
+            self.assertIn("エラー 0件 / 警告 1件", out)
+            self.assertEqual(self.run_main(["--strict"])[0], 1)
+
+    def test_broken_chain_is_an_error(self):
+        data = auto_data()
+        data["filings"][0]["status"] = "superseded"  # どの書類の supersedes からも指されていない
+        self.write_auto(data)
+        problems = self.check()
+        chain = [p for p in problems if "supersedes からも指されていない" in p.message]
+        self.assertEqual([(p.severity, p.rule, p.path) for p in chain], [("error", "V-04", "/filings/0/status")])
+        self.assertEqual(self.run_main([])[0], 1)
 
     def test_path_checks_one_file_only(self):
         data = auto_data()
