@@ -11,7 +11,24 @@ edinet_code: E01777
 categories:
   - devices
 listing: coming_soon
+tagline: "ゲーム、音楽、映画、イメージセンサーなどの事業を持つ企業グループ"
+accounting_standard: ifrs
+fiscal_year_end_month: 3
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S2
+sources:
+  - id: S1
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "ソニーグループ株式会社（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YE2C.pdf"
+    published_on: "2026-06-18"
+    accessed_on: "2026-10-05"
+    doc_id: S100YE2C
+  - id: S2
+    title: "【イメージセンサー世界シェア1位】ソニー半導体、若手技術者が語る仕事のリアル"
+    publisher: "ソニーセミコンダクタソリューションズ株式会社"
+    url: "https://www.sony-semicon.com/ja/feature/2026051101.html"
+    accessed_on: "2026-10-05"

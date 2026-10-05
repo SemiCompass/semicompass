@@ -11,8 +11,54 @@ edinet_code: E02652
 categories:
   - equipment
   - front-end
+processes:
+  - cleaning
+  - deposition
+  - lithography
+  - etching
 listing: coming_soon
+tagline: "半導体やフラットパネルディスプレイの製造装置を作る企業"
+website_url: "https://www.tel.co.jp/"
+ir_url: "https://www.tel.co.jp/ir/"
+recruit_url: "https://www.tel.co.jp/careers/"
+accounting_standard: jgaap
+fiscal_year_end_month: 3
+is_holding_company: false
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S1
+sources:
+  - id: S1
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "東京エレクトロン株式会社（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YEOO.pdf"
+    published_on: "2026-06-22"
+    accessed_on: "2026-10-05"
+    doc_id: S100YEOO
+  - id: S2
+    title: "会社概要"
+    publisher: "東京エレクトロン株式会社"
+    url: "https://www.tel.co.jp/about/summary/"
+    accessed_on: "2026-10-05"
+  - id: S3
+    title: "製品・サービス（すべての製品から探す）"
+    publisher: "東京エレクトロン株式会社"
+    url: "https://www.tel.co.jp/product/all/index.html"
+    accessed_on: "2026-10-05"
+  - id: S4
+    title: "東京エレクトロン株式会社"
+    publisher: "東京エレクトロン株式会社"
+    url: "https://www.tel.co.jp/"
+    accessed_on: "2026-10-05"
+  - id: S5
+    title: "投資家向け情報"
+    publisher: "東京エレクトロン株式会社"
+    url: "https://www.tel.co.jp/ir/"
+    accessed_on: "2026-10-05"
+  - id: S6
+    title: "【新卒採用】東京エレクトロン（TEL）グループ"
+    publisher: "東京エレクトロン株式会社"
+    url: "https://www.tel.co.jp/careers/"
+    accessed_on: "2026-10-05"
