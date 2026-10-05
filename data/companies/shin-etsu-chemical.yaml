@@ -15,6 +15,9 @@ processes:
   - lithography
 listing: coming_soon
 tagline: "シリコンウェーハや半導体用レジストなどを手がける化学メーカー"
+website_url: "https://www.shinetsu.co.jp/jp/"
+ir_url: "https://www.shinetsu.co.jp/jp/ir/"
+recruit_url: "https://www.shinetsu.co.jp/jp/recruit/"
 accounting_standard: jgaap
 fiscal_year_end_month: 3
 is_holding_company: false
@@ -39,4 +42,19 @@ sources:
     title: "個人投資家の皆様へ"
     publisher: "信越化学工業株式会社"
     url: "https://www.shinetsu.co.jp/jp/ir/individual/"
+    accessed_on: "2026-10-05"
+  - id: S4
+    title: "信越化学工業 公式サイト"
+    publisher: "信越化学工業株式会社"
+    url: "https://www.shinetsu.co.jp/jp/"
+    accessed_on: "2026-10-05"
+  - id: S5
+    title: "信越化学工業 財務・IR情報"
+    publisher: "信越化学工業株式会社"
+    url: "https://www.shinetsu.co.jp/jp/ir/"
+    accessed_on: "2026-10-05"
+  - id: S6
+    title: "信越化学工業 採用情報"
+    publisher: "信越化学工業株式会社"
+    url: "https://www.shinetsu.co.jp/jp/recruit/"
     accessed_on: "2026-10-05"

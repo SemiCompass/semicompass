@@ -14,6 +14,9 @@ processes:
   - final-test
 listing: coming_soon
 tagline: "半導体の電気的な検査に使う機器を製造する企業"
+website_url: "https://www.mjc.co.jp/"
+ir_url: "https://www.mjc.co.jp/ir/"
+recruit_url: "https://www.mjc.co.jp/recruit/"
 accounting_standard: jgaap
 fiscal_year_end_month: 12
 is_holding_company: false
@@ -39,4 +42,19 @@ sources:
     title: "有価証券報告書・四半期報告書｜IRライブラリ"
     publisher: "株式会社日本マイクロニクス"
     url: "https://www.mjc.co.jp/ir/result/securities/"
+    accessed_on: "2026-10-05"
+  - id: S4
+    title: "日本マイクロニクス 公式サイト"
+    publisher: "株式会社日本マイクロニクス"
+    url: "https://www.mjc.co.jp/"
+    accessed_on: "2026-10-05"
+  - id: S5
+    title: "日本マイクロニクス IR情報"
+    publisher: "株式会社日本マイクロニクス"
+    url: "https://www.mjc.co.jp/ir/"
+    accessed_on: "2026-10-05"
+  - id: S6
+    title: "日本マイクロニクス 採用情報"
+    publisher: "株式会社日本マイクロニクス"
+    url: "https://www.mjc.co.jp/recruit/"
     accessed_on: "2026-10-05"

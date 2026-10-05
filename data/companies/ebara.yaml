@@ -17,7 +17,7 @@ listing: coming_soon
 tagline: "半導体製造装置やポンプなどを手がける機械メーカー"
 website_url: "https://www.ebara.com/jp-ja/"
 ir_url: "https://www.ebara.com/jp-ja/ir/"
-recruit_url: "https://www.ebara.com/jp-ja/recruit/"
+recruit_url: "https://www.ebara.com/ed/jp-ja/recruit/new-graduate/"
 accounting_standard: ifrs
 fiscal_year_end_month: 12
 is_holding_company: false
@@ -54,7 +54,7 @@ sources:
     url: "https://www.ebara.com/jp-ja/ir/"
     accessed_on: "2026-10-05"
   - id: S6
-    title: "採用情報"
+    title: "荏原製作所 新卒採用サイト"
     publisher: "株式会社荏原製作所"
-    url: "https://www.ebara.com/jp-ja/recruit/"
+    url: "https://www.ebara.com/ed/jp-ja/recruit/new-graduate/"
     accessed_on: "2026-10-05"
