@@ -94,6 +94,8 @@ class MakeBundleTest(Base):
         self.assertEqual(data["extracted_at"], "2026-10-06T12:00:00+09:00")
         self.assertEqual([s["element_id"] for s in data["sections"]], [bf.ELEM_A, bf.ELEM_B])
         first = data["sections"][0]
+        self.assertEqual(data["schema_version"], 2)
+        self.assertEqual(first["key"], bf.ELEM_A)  # --sections では、key は要素IDのまま
         self.assertEqual(first["label"], "節A（合成）")
         self.assertEqual(first["chars"], len(first["text"]))
         self.assertIn(bf.WORD_A, first["text"])
@@ -110,7 +112,7 @@ class MakeBundleTest(Base):
         r2 = FakeR2()
         self.run_main(["--company", "testco", "--sections", f"{bf.ELEM_A},{bf.ELEM_B}"], r2=r2)
         self.assertEqual(len(json.loads(r2.puts[0]["Body"])["sections"]), 2)
-        self.config.write_text(f"sections:\n  - {bf.ELEM_A}\n", encoding="utf-8")
+        self.config.write_text(f"sections:\n  - key: alpha\n    candidates:\n      - {bf.ELEM_A}\n", encoding="utf-8")
         r2 = FakeR2()
         self.assertEqual(self.run_main(["--company", "testco"], r2=r2)[0], 0)
         self.assertEqual(len(json.loads(r2.puts[0]["Body"])["sections"]), 1)
@@ -122,14 +124,18 @@ class MakeBundleTest(Base):
         self.assertEqual(r2.puts, [])
         self.assertEqual(self.server.requests, [])
 
-    def test_shipped_default_config_is_valid_and_empty_until_confirmed(self):
-        self.assertEqual(mb.load_default_sections(), [])
+    def test_shipped_default_config(self):
+        specs = mb.load_default_sections()
+        self.assertEqual([s.key for s in specs], ["business_description", "affiliated_entities", "segment_information"])
+        self.assertEqual(specs[2].candidates, (
+            "jpcrp_cor:NotesSegmentInformationEtcConsolidatedFinancialStatementsTextBlock",
+            "jpigp_cor:NotesSegmentInformationConsolidatedFinancialStatementsIFRSTextBlock"))
 
     def test_missing_section_writes_nothing(self):
         r2 = FakeR2()
         code, _, err = self.run_main(["--company", "testco", "--sections", bf.ELEM_A, "test_cor:NoneTextBlock"], r2=r2)
         self.assertEqual(code, 1)
-        self.assertIn("test_cor:NoneTextBlock", err)
+        self.assertIn("test_cor:NoneTextBlock", err)  # --sections の key は要素IDのまま
         self.assertEqual(r2.puts, [])
 
     def test_invalid_element_id(self):
@@ -253,6 +259,121 @@ class MakeBundleTest(Base):
                                        server=bf.DocServer(b"<html>x</html>"))
         self.assertEqual(code, 1)
         self.assertNotIn(KEY, out + err)
+
+
+class ConfigSectionsTest(Base):
+    # 日本基準と IFRS で、セグメント情報の要素IDが違う場合の、候補の優先順
+    JP = "test_cor:SegmentJpTextBlock"
+    IFRS = "test_ifrs:SegmentIfrsTextBlock"
+
+    def write_config(self, text=None):
+        self.config.write_text(text or f"""sections:
+  - key: alpha_section
+    candidates:
+      - {bf.ELEM_A}
+  - key: segment_information
+    candidates:
+      - {self.JP}
+      - {self.IFRS}
+""", encoding="utf-8")
+
+    def zip_with(self, *elements):
+        rows = [bf.BASE_ROWS[0], bf.BASE_ROWS[2]] + [bf.row(e, "セグメント（合成）", "CurrentYearDuration", f"<p>{bf.WORD_B}{e}</p>") for e in elements]
+        return bf.DocServer(bf.make_zip(rows))
+
+    def bundle(self, server):
+        self.write_config()
+        r2 = FakeR2()
+        code, out, err = self.run_main(["--company", "testco"], r2=r2, server=server)
+        return code, out, err, r2
+
+    def test_first_candidate_is_used_for_japanese_standard(self):
+        code, out, err, r2 = self.bundle(self.zip_with(self.JP))
+        self.assertEqual(code, 0, err)
+        data = json.loads(r2.puts[0]["Body"])
+        self.assertEqual([(s["key"], s["element_id"]) for s in data["sections"]],
+                         [("alpha_section", bf.ELEM_A), ("segment_information", self.JP)])
+        self.assertIn("segment_information  " + self.JP, out)
+
+    def test_second_candidate_is_used_for_ifrs(self):
+        code, out, err, r2 = self.bundle(self.zip_with(self.IFRS))
+        self.assertEqual(code, 0, err)
+        data = json.loads(r2.puts[0]["Body"])
+        self.assertEqual([(s["key"], s["element_id"]) for s in data["sections"]],
+                         [("alpha_section", bf.ELEM_A), ("segment_information", self.IFRS)])
+        self.assertIn("segment_information  " + self.IFRS, out)
+
+    def test_first_found_candidate_wins_when_both_exist(self):
+        _, _, _, r2 = self.bundle(self.zip_with(self.IFRS, self.JP))
+        ids = [s["element_id"] for s in json.loads(r2.puts[0]["Body"])["sections"]]
+        self.assertEqual(ids, [bf.ELEM_A, self.JP])
+
+    def test_all_rows_of_the_chosen_element_are_kept_in_csv_order(self):
+        rows = [bf.BASE_ROWS[0], bf.BASE_ROWS[2],
+                bf.row(self.IFRS, "セグメント（合成）", "CtxTwo", "<p>二</p>"),
+                bf.row(self.IFRS, "セグメント（合成）", "CtxOne", "<p>一</p>")]
+        _, _, _, r2 = self.bundle(bf.DocServer(bf.make_zip(rows)))
+        picked = [(s["element_id"], s["context_id"]) for s in json.loads(r2.puts[0]["Body"])["sections"]]
+        self.assertEqual(picked[1:], [(self.IFRS, "CtxTwo"), (self.IFRS, "CtxOne")])
+
+    def test_section_without_any_candidate_stops_and_saves_nothing(self):
+        code, out, err, r2 = self.bundle(self.zip_with())
+        self.assertEqual(code, 1)
+        self.assertEqual(r2.puts, [])
+        self.assertIn("segment_information", err)
+        self.assertNotIn("alpha_section", err)
+        for fragment in BODY_FRAGMENTS:
+            self.assertNotIn(fragment, out + err)
+
+    def test_dry_run_shows_key_and_used_element_id_without_body(self):
+        self.write_config()
+        r2 = FakeR2()
+        code, out, err = self.run_main(["--company", "testco", "--dry-run"], r2=r2, server=self.zip_with(self.IFRS))
+        self.assertEqual(code, 0, err)
+        self.assertEqual(r2.puts, [])
+        self.assertIn("segment_information  " + self.IFRS, out)
+        self.assertNotIn(self.JP, out)
+        for fragment in BODY_FRAGMENTS:
+            self.assertNotIn(fragment, out + err)
+
+    def test_summary_shows_key_and_used_element_id_without_body(self):
+        self.write_config()
+        summary = Path(self.tmp.name) / "summary.md"
+        self.run_main(["--company", "testco", "--summary", str(summary)], r2=FakeR2(), server=self.zip_with(self.IFRS))
+        text = summary.read_text(encoding="utf-8")
+        self.assertIn(f"| segment_information | {self.IFRS} |", text)
+        self.assertNotIn(self.JP, text)
+        for fragment in BODY_FRAGMENTS:
+            self.assertNotIn(fragment, text)
+
+    def test_bad_config_is_usage_error_and_makes_no_request(self):
+        cand = f"candidates:\n      - {bf.ELEM_A}"
+        bad = {
+            "duplicate key": f"sections:\n  - key: a\n    {cand}\n  - key: a\n    {cand}\n",
+            "upper case": f"sections:\n  - key: Alpha\n    {cand}\n",
+            "digit": f"sections:\n  - key: a1\n    {cand}\n",
+            "hyphen": f"sections:\n  - key: a-b\n    {cand}\n",
+            "no candidates": "sections:\n  - key: a\n    candidates: []\n",
+            "missing candidates": "sections:\n  - key: a\n",
+            "bad element id": "sections:\n  - key: a\n    candidates:\n      - jppfs_cor:NetSales\n",
+            "duplicate candidate": f"sections:\n  - key: a\n    candidates:\n      - {bf.ELEM_A}\n      - {bf.ELEM_A}\n",
+            "extra field": f"sections:\n  - key: a\n    {cand}\n    note: x\n",
+            "old flat list": f"sections:\n  - {bf.ELEM_A}\n",
+            "not a list": "sections: {}\n",
+            "broken yaml": "sections: [\n",
+        }
+        for name, text in bad.items():
+            with self.subTest(name):
+                self.config.write_text(text, encoding="utf-8")
+                r2 = FakeR2()
+                code, _, err = self.run_main(["--company", "testco"], r2=r2)
+                self.assertEqual(code, 2, err)
+                self.assertEqual((r2.puts, self.server.requests), ([], []))
+
+    def test_sections_argument_overrides_config_even_if_config_is_bad(self):
+        self.config.write_text("sections: [\n", encoding="utf-8")
+        r2 = FakeR2()
+        self.assertEqual(self.run_main(["--company", "testco", *SECTION_ARGS], r2=r2)[0], 0)
 
 
 class R2ClientTest(unittest.TestCase):
