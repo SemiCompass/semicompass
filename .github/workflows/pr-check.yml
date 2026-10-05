@@ -39,6 +39,7 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/deploy
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/edinet
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/validate
+          "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/bundle
 
       - name: データの形式の検証
         run: '"$RUNNER_TEMP/venv/bin/python" scripts/validate/validate_data.py'
