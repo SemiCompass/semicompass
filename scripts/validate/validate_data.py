@@ -24,8 +24,9 @@
 
 実装していない規則：V-05〜V-21（本文、公開済みの識別子の削除、必須項目の充足、日付の前後、拠点、予算など）。
 
-* 警告（終了コードは変えない。--strict でエラーにする）：superseded の書類が、どの書類の supersedes からも
-  指されていない（訂正報告書の連鎖が切れている）。取り込み直すまで、既存のファイルに残りうるため、警告にしている
+* V-04 の検査のうち、superseded の書類が、failed でないどれかの書類の supersedes から指されていること
+  （訂正報告書の連鎖が切れていないこと）は、エラーにしている。警告（severity="warning"）の仕組みと --strict は、
+  今後の検査のために残している（今は、警告になる検査はない）
 
 出力は、エラーと警告の一覧（ファイル、場所、規則、内容）。終了コードは、エラーがあれば1、なければ0。
 --path が対象外のファイルのときは2。
@@ -65,7 +66,7 @@ class Problem:
     path: str
     rule: str
     message: str
-    severity: str = "error"  # "error" か "warning"。警告は、終了コードを1にしない（--strict で、エラーとして扱う）
+    severity: str = "error"  # "error" か "warning"。警告は、終了コードを1にしない（--strict で、エラーとして扱う。今は、警告になる検査はない）
 
     def __str__(self) -> str:
         mark = "警告 " if self.severity == "warning" else ""
@@ -347,7 +348,7 @@ def check_auto(autos: dict[str, dict], companies: dict[str, dict]) -> list[Probl
             if isinstance(f, dict) and f.get("status") == "superseded" and f.get("doc_id") not in pointed:
                 out.append(Problem(rel, pointer(["filings", i, "status"]), "V-04",
                                    f"superseded の書類 {f.get('doc_id')} が、どの書類の supersedes からも指されていない"
-                                   "（訂正報告書の連鎖が切れている。取り込み直すと直る）", severity="warning"))
+                                   "（訂正報告書の連鎖が切れている。取り込み直すと直る）"))
         for i, rev in enumerate(data.get("revisions") or []):
             if not isinstance(rev, dict):
                 continue

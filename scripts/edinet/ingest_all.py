@@ -128,6 +128,19 @@ def short(text: str, key: str) -> str:
     return text if len(text) <= MESSAGE_LIMIT else text[:MESSAGE_LIMIT] + "…"
 
 
+DETAIL_FIELDS = ("docTypeCode", "docDescription", "periodStart", "periodEnd", "submitDateTime", "withdrawalStatus",
+                 "parentDocID", "edinetCode")
+
+
+def not_recorded_detail(row: dict | None, key: str) -> str:
+    """not_recorded の書類の詳細を、書類の一覧の行（list_filings.py の結果）だけから1行にする（書類は取得しない）。
+    原因の調査用。一覧の項目だけで、書類の本文は含まない。"""
+    if row is None:
+        return "（一覧の行がない）"
+    parts = [f"{field}={short(row[field], key) if row.get(field) not in (None, '') else '(なし)'}" for field in DETAIL_FIELDS]
+    return "（" + "、".join(parts) + "）"
+
+
 def render_summary(results: list[dict], api: dict, key: str) -> str:
     counts = {k: sum(1 for r in results for c in r["changes"] if c["kind"] == k)
               for k in ("added", "replaced", "failed", "not_recorded")}
@@ -183,7 +196,9 @@ def render_summary(results: list[dict], api: dict, key: str) -> str:
         not_recorded = [c for c in changes if c["kind"] == "not_recorded"]
         if not_recorded:
             lines.append("**not_recorded（filings に書かなかった書類）**")
-            lines += [f"* {c['doc_id']}：{c.get('reason', '?')}" for c in not_recorded] + [""]
+            rows = {row.get("docID"): row for row in r.get("rows", [])}
+            lines += [f"* {c['doc_id']}：{c.get('reason', '?')}{not_recorded_detail(rows.get(c['doc_id']), key)}"
+                      for c in not_recorded] + [""]
         anomalies = [c for c in changes if c["kind"] == "anomaly"]
         if anomalies:
             lines.append("**異常**")

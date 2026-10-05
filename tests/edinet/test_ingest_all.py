@@ -365,6 +365,56 @@ class SummaryTest(Base):
             self.assertIn(expected, text)
         self.no_key(text)
 
+    def test_not_recorded_details_come_from_the_listing_row_only(self):
+        secret = "本文の秘密の文章"
+        no_period = entry("S100AAA1", CA, "120", periodStart=None, periodEnd="", docDescription="有価証券報告書－第1期",
+                          parentDocID=None)
+        no_original = entry("S100AAA2", CA, "130", day=DAY, parentDocID=None)  # 訂正報告書。前の書類がない
+        timeout = entry("S100BBB1", CB, "120", parentDocID="S100BBB0")
+        router = Router({DAY: ok_body([no_period, no_original, timeout])},
+                        {"S100AAA1": FakeResponse(b"PK not really"),
+                         "S100AAA2": zip_response(csv_text(rows_for(code=CA) + [
+                             ["jpcrp_cor:DescriptionOfBusiness", "事業の内容", "CurrentYearDuration", "当期", "連結", "期間",
+                              "", "", secret]])),
+                         "S100BBB1": TimeoutError("timed out")})
+        code, out, err = self.run_all(router)
+        self.assertEqual(code, 0, msg=err)
+        text = self.summary.read_text(encoding="utf-8")
+        lines = {line.split("：")[0]: line for line in text.splitlines() if line.startswith("* S100")}
+        # 期間を作れない書類（期間の情報がない）
+        self.assertEqual(lines["* S100AAA1"], "* S100AAA1：period_unknown（docTypeCode=120、docDescription=有価証券報告書－第1期、"
+                                              "periodStart=(なし)、periodEnd=(なし)、submitDateTime=2026-06-19 15:00、"
+                                              f"withdrawalStatus=0、parentDocID=(なし)、edinetCode={CA}）")
+        # 通信の一時的な失敗
+        self.assertIn("S100BBB1：transient（docTypeCode=120", lines["* S100BBB1"])
+        self.assertIn("parentDocID=S100BBB0", lines["* S100BBB1"])
+        self.assertIn(f"edinetCode={CB}", lines["* S100BBB1"])
+        self.assertIn("not_recorded の書類：3件", text)  # period_unknown、supersedes_unknown、transient
+        self.assertIn("S100AAA2：supersedes_unknown（docTypeCode=130", lines["* S100AAA2"])
+        for field in ia.DETAIL_FIELDS:
+            self.assertIn(f"{field}=", lines["* S100AAA1"])
+        self.assertEqual(sum(1 for line in text.splitlines() if "period_unknown" in line), 1)  # 書類ごとに1行
+        # 書類の本文、キーは出ない
+        for t in (text, out, err):
+            self.assertNotIn(secret, t)
+            self.assertNotIn(KEY, t)
+
+    def test_not_recorded_detail_helper(self):
+        self.assertEqual(ia.not_recorded_detail(None, KEY), "（一覧の行がない）")
+        row = {"docTypeCode": "120", "docDescription": "説明" + KEY, "periodStart": "2025-04-01", "periodEnd": None,
+               "submitDateTime": "2026-06-20 15:00", "withdrawalStatus": "0", "parentDocID": "", "edinetCode": CA}
+        detail = ia.not_recorded_detail(row, KEY)
+        self.assertNotIn(KEY, detail)
+        self.assertIn("periodStart=2025-04-01", detail)
+        self.assertIn("periodEnd=(なし)", detail)
+        self.assertIn("parentDocID=(なし)", detail)
+        long_row = {**row, "docDescription": "あ" * 500}
+        self.assertLess(len(ia.not_recorded_detail(long_row, KEY)), 450)
+
+    def test_no_not_recorded_section_without_such_documents(self):
+        code, _, _ = self.run_all(self.two_company_router())
+        self.assertNotIn("not_recorded（filings", self.summary.read_text(encoding="utf-8"))
+
     def test_replaced_values_in_summary(self):
         self.run_all(self.two_company_router())
         self.auto.mkdir()

@@ -277,7 +277,7 @@ class ChainTest(unittest.TestCase):
 
 
 class ValidatorChainTest(unittest.TestCase):
-    def test_validator_reports_a_broken_chain_as_a_warning_and_passes_after_fix(self):
+    def test_validator_reports_a_broken_chain_as_an_error_and_passes_after_fix(self):
         import contextlib
         import io
         import json
@@ -300,19 +300,19 @@ class ValidatorChainTest(unittest.TestCase):
             # 切れた連鎖（S100AAA2 が superseded なのに、どこからも指されていない）
             target.write_text(json.dumps(broken), encoding="utf-8")
             problems = validate_data.validate(root)
-            warnings = [p for p in problems if p.severity == "warning"]
-            self.assertEqual([p.path for p in warnings], ["/filings/1/status"])
-            self.assertIn("S100AAA2", warnings[0].message)
-            self.assertEqual([p for p in problems if p.severity == "error"], [])
+            errors = [p for p in problems if p.severity == "error"]
+            self.assertEqual([p.path for p in errors], ["/filings/1/status"])
+            self.assertIn("S100AAA2", errors[0].message)
+            self.assertEqual([p for p in problems if p.severity == "warning"], [])
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
-                self.assertEqual(validate_data.main([], root=root), 0)  # 警告だけなら、終了コード 0
-                self.assertEqual(validate_data.main(["--strict"], root=root), 1)  # --strict では 1
-            self.assertIn("警告 1件", out.getvalue())
-            # 直した結果は、警告も出ない
+                self.assertEqual(validate_data.main([], root=root), 1)  # エラーなので、終了コード 1
+                self.assertEqual(validate_data.main(["--strict"], root=root), 1)
+            self.assertIn("エラー 1件 / 警告 0件", out.getvalue())
+            # 直した結果は、エラーも警告も出ない
             target.write_text(json.dumps(fixed), encoding="utf-8")
             self.assertEqual(validate_data.validate(root), [])
-            # failed の書類の supersedes だけが指している superseded は、警告のまま
+            # failed の書類の supersedes だけが指している superseded は、エラーのまま
             only_failed = copy.deepcopy(fixed)
             for f in only_failed["filings"]:
                 if f["doc_id"] == "S100AAA3":
@@ -320,7 +320,7 @@ class ValidatorChainTest(unittest.TestCase):
                     f["error"] = "zip_format"
                     f.pop("ingested_at", None)
             target.write_text(json.dumps(only_failed), encoding="utf-8")
-            self.assertTrue([p for p in validate_data.validate(root) if p.severity == "warning"])
+            self.assertTrue([p for p in validate_data.validate(root) if p.severity == "error"])
 
 
 if __name__ == "__main__":
