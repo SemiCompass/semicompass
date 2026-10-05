@@ -1,0 +1,10 @@
+# 原資料束（scripts/bundle/make_bundle.py）で、有価証券報告書から取り出す節の既定（要素IDのリスト）。
+#
+# 要素IDは、実際の書類で確かめてから書く（推測で決めない）。
+#   1. edinet-inspect-sections（scripts/bundle/inspect_sections.py）で、書類の文章の行の
+#      要素ID、項目名、文字数の一覧を見る（本文は出ない）
+#   2. 「事業の内容」「セグメント情報」などに当たる要素IDを、運営者が選ぶ
+#   3. 下の sections に、要素IDを1行ずつ書く（例の形：`- 接頭辞:名前TextBlock`）
+#
+# 空のままのときは、make_bundle.py の --sections で要素IDを渡さないと、動かない。
+sections: []

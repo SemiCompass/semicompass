@@ -2,3 +2,5 @@
 # 直接の依存だけを書いている。jsonschema の依存（attrs、referencing、rpds-py、jsonschema-specifications）は固定していない。
 PyYAML==6.0.1
 jsonschema==4.26.0
+# 原資料束（scripts/bundle/make_bundle.py）のR2（S3互換API）への保存。依存（botocore、s3transfer など）は固定していない
+boto3==1.43.108
