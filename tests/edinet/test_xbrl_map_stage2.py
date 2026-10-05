@@ -118,7 +118,7 @@ class FinalXbrlMapTest(unittest.TestCase):
                 "fiscal_year_end": "jpdei_cor:CurrentFiscalYearEndDateDEI",
             },
             "accounting_standards": {"Japan GAAP": "jgaap", "IFRS": "ifrs", "US GAAP": "usgaap"},
-            "period_types": {"FY": "annual", "HY": "half", "Q2": "half"},  # Q2 は docTypeCode 160 のときだけ有効（extract.py）
+            "period_types": {"FY": "annual", "HY": "half", "Q2": "half"},  # Q2 は docTypeCode 160、170 のときだけ有効（extract.py）
         })
         # YAMLの値が、文字列として読まれる（真偽値などにならない）
         self.assertTrue(all(isinstance(k, str) for k in DATA["dei"]["period_types"]))
@@ -201,13 +201,14 @@ class FinalXbrlMapTest(unittest.TestCase):
 
     def test_header_states_the_q2_and_wildcard_rules(self):
         self.assertIn('"Q2"', HEADER)
-        self.assertIn("160（半期報告書）のときだけ", HEADER)
+        self.assertIn("160（半期報告書）または 170（訂正半期報告書）", HEADER)
+        self.assertIn("S100UH1H", HEADER)
         self.assertIn("先頭が「*:」の候補", HEADER)
         self.assertIn("EDINETCodeDEI", HEADER)
         self.assertIn("確認済み：ソニーの2024年3月期の書類", HEADER)
         for element in ("*:SalesAndFinancialServicesRevenueToCustomersIFRS", "*:SalesAndFinancialServicesRevenueIFRS"):
             self.assertIn("確認済み（ソニーの2024年3月期の書類）", next(line for line in LINES if element in line and line.lstrip().startswith("- ")))
-        self.assertIn("160（半期報告書）のときだけ有効", next(line for line in LINES if line.lstrip().startswith('"Q2": half')))
+        self.assertIn("160（半期報告書）または 170（訂正半期報告書）のときだけ有効", next(line for line in LINES if line.lstrip().startswith('"Q2": half')))
 
     def test_header_states_the_eight_documents(self):
         for company in ("東京エレクトロン", "SUMCO", "ソニー", "レゾナック", "富士電機", "京セラ", "アドバンテスト", "キヤノン"):

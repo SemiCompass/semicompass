@@ -24,11 +24,11 @@ def jg_q2(dur=YTD, ns=500_000_000, oi=100_000_000):
     return fin_rows(dur, ns, oi, ordinary=30_000_000, ni=20_000_000)
 
 
-def q2_doc(doc_id, rows, submitted="2024-11-14 15:00", start="2024-04-01", end="2024-09-30", **kw):
-    """Q2 の書類は、取り込みと同じく、docTypeCode（160）を渡して取り出す。"""
+def q2_doc(doc_id, rows, submitted="2024-11-14 15:00", start="2024-04-01", end="2024-09-30", doc_code="160", **kw):
+    """Q2 の書類は、取り込みと同じく、docTypeCode（160 か 170）を渡して取り出す。"""
     result = extract.extract([dict(zip(HEADER, x)) for x in rows], doc_id, "2026-10-04T10:00:00+09:00", XMAP,
-                             doc_type_code="160")
-    return {"filing": listing(doc_id, "160", start=start, end=end, submitted=submitted, **kw), "result": result,
+                             doc_type_code=doc_code)
+    return {"filing": listing(doc_id, doc_code, start=start, end=end, submitted=submitted, **kw), "result": result,
             "error": None}
 
 
@@ -99,7 +99,7 @@ class Q2ContextsTest(unittest.TestCase):
                           comp["segment_adjustment"]["value"]), ("AMember", 50, -5))
 
     def test_other_doc_type_codes_are_still_anomalies(self):
-        for code in ("120", "130", "170", None):
+        for code in ("120", "130", None):  # 170（訂正半期報告書）は、半期として読む（TestQ2AmendedHalf）
             res = self.run_q2(q2_dei() + jg_q2(), code)
             self.assertTrue(res["stopped"], msg=code)
             self.assertEqual(res["anomalies"][0]["code"], "dei_unknown_period_type", msg=code)
@@ -159,6 +159,107 @@ class Q2IngestTest(unittest.TestCase):
         self.assertEqual((data["filings"][0]["status"], data["filings"][0]["error"]),
                          ("failed", "anomaly:dei_unknown_period_type"))
         self.assertEqual((data["financials"], data["employees"]), ([], []))
+        check_all(self, data)
+
+
+class Q2AmendedHalfTest(unittest.TestCase):
+    """旧様式（Q2）の訂正半期報告書（docTypeCode 170）。SUMCO の S100UH1H（元の半期報告書は S100U5NK）の形。"""
+
+    def dei(self):  # 決算期が12月の会社：半期は 2024-01-01〜2024-06-30、fiscal_year_end は 2024-12-31
+        return dei("Japan GAAP", period="Q2", start="2024-01-01", end="2024-06-30", fy_end="2024-12-31", code=CODE)
+
+    def original(self, ns=500_000_000, oi=100_000_000):
+        return q2_doc("S100U5NK", self.dei() + jg_q2(YTD, ns, oi), submitted="2024-08-09 15:00",
+                      start="2024-01-01", end="2024-06-30")
+
+    def amended(self, ns=500_000_000, oi=90_000_000, doc_id="S100UH1H", **kw):
+        return q2_doc(doc_id, self.dei() + jg_q2(YTD, ns, oi), submitted="2024-09-20 10:00", start="2024-01-01",
+                      end="2024-06-30", doc_code="170", **kw)
+
+    def test_amended_half_report_is_read_as_half(self):
+        data, changes = build(None, [self.original(), self.amended(parentDocID="S100U5NK")])
+        self.assertNotIn("not_recorded", [c["kind"] for c in changes])
+        f = {x["doc_id"]: x for x in data["filings"]}["S100UH1H"]
+        self.assertEqual((f["doc_type"], f["edinet_doc_type_code"], f["period_type"], f["fiscal_period_end"],
+                          f["period_start"], f["period_end"]),
+                         ("amended_semiannual_report", "170", "half", "2024-12", "2024-01-01", "2024-06-30"))
+        self.assertEqual(data["employees"], [])
+        self.assertEqual(len(data["financials"]), 1)
+        self.assertEqual((data["financials"][0]["period_type"], data["financials"][0]["net_sales"]["context"]),
+                         ("half", YTD))
+        check_all(self, data)
+
+    def test_original_is_superseded_and_values_are_replaced_with_revisions(self):
+        first, _ = build(None, [self.original()])
+        data, changes = build(first, [self.amended(ns=500_000_000, oi=90_000_000, parentDocID="S100U5NK")], T2)
+        status = {f["doc_id"]: (f["status"], f.get("supersedes")) for f in data["filings"]}
+        self.assertEqual(status, {"S100U5NK": ("superseded", None), "S100UH1H": ("ingested", "S100U5NK")})
+        row = data["financials"][0]
+        self.assertEqual((row["doc_id"], row["operating_income"]["value"], row["net_sales"]["value"]), ("S100UH1H", 90, 500))
+        self.assertEqual([(v["path"], v["old"], v["new"], v["doc_id"], v["supersedes"]) for v in data["revisions"]],
+                         [("/financials/0/operating_income/value", 100, 90, "S100UH1H", "S100U5NK")])
+        self.assertIn("superseded", [c["kind"] for c in changes])
+        check_all(self, data)
+
+    def test_supersedes_follows_the_rule_even_without_parent_doc_id(self):
+        first, _ = build(None, [self.original()])
+        data, _ = build(first, [self.amended()], T2)  # parentDocID なし
+        self.assertEqual({f["doc_id"]: f.get("supersedes") for f in data["filings"]}["S100UH1H"], "S100U5NK")
+        self.assertEqual(data["filings"][0]["status"], "superseded")
+        # parentDocID が別の書類を指しても、前に提出された書類のうち最も新しいものが優先される
+        data, _ = build(first, [self.amended(parentDocID="S100ZZZZ")], T2)
+        self.assertEqual({f["doc_id"]: f.get("supersedes") for f in data["filings"]}["S100UH1H"], "S100U5NK")
+
+    def test_unchanged_values_add_no_revisions(self):
+        first, _ = build(None, [self.original()])
+        data, _ = build(first, [self.amended(oi=100_000_000)], T2)
+        self.assertEqual(data["revisions"], [])
+        self.assertEqual({f["doc_id"]: f["status"] for f in data["filings"]},
+                         {"S100U5NK": "superseded", "S100UH1H": "ingested"})
+        check_all(self, data)
+
+    def test_rounding_difference_is_ignored(self):
+        first, _ = build(None, [self.original(ns=90_378_818_000)])
+        data, _ = build(first, [self.amended(ns=90_378_000_000, oi=100_000_000)], T2)
+        self.assertEqual((data["financials"][0]["net_sales"]["value"], data["revisions"]), (90378.818, []))
+
+    def test_second_run_changes_nothing_and_order_does_not_matter(self):
+        docs = [self.original(), self.amended()]
+        a, _ = build(None, docs)
+        b, _ = build(None, list(reversed(docs)))
+        self.assertEqual(a, b)
+        again, changes = build(a, docs, LATER)
+        self.assertEqual((again, changes), (a, []))
+
+    def test_amended_half_without_an_original_is_not_recorded_as_a_new_kind_of_failure(self):
+        data, changes = build(None, [self.amended()])
+        self.assertEqual(data["filings"], [])
+        self.assertEqual([(c["kind"], c["reason"]) for c in changes], [("not_recorded", "supersedes_unknown")])
+
+    def test_ingest_passes_the_doc_type_code_170(self):
+        row = listing("S100UH1H", "170", start="2024-01-01", end="2024-06-30", submitted="2024-09-20 10:00")
+        got = fetch(self.dei() + jg_q2(YTD, 500_000_000, 90_000_000), row)
+        self.assertIsNone(got["error"])
+        self.assertFalse(got["result"]["stopped"])
+        self.assertEqual(got["result"]["financial"]["period_type"], "half")
+
+    def test_q2_in_annual_report_types_is_still_an_anomaly(self):
+        for code in ("120", "130"):
+            result = extract.extract([dict(zip(HEADER, x)) for x in self.dei() + jg_q2()], "S100UH1H",
+                                     "2026-10-04T10:00:00+09:00", XMAP, doc_type_code=code)
+            self.assertTrue(result["stopped"], msg=code)
+            self.assertEqual(result["anomalies"][0]["code"], "dei_unknown_period_type", msg=code)
+        # 120 は、取り込みでは failed（値は入らない）
+        row = listing("S100UH1H", "120", start="2024-01-01", end="2024-06-30", submitted="2024-09-20 10:00")
+        data, _ = build_auto.build("advantest", CODE, None, [fetch(self.dei() + jg_q2(), row)], T1, DOC_TYPES)
+        self.assertEqual((data["filings"][0]["status"], data["filings"][0]["error"]),
+                         ("failed", "anomaly:dei_unknown_period_type"))
+        self.assertEqual(data["financials"], [])
+
+    def test_q2_in_semiannual_report_160_is_as_before(self):
+        data, _ = build(None, [self.original()])
+        self.assertEqual((data["filings"][0]["doc_type"], data["filings"][0]["status"], data["filings"][0]["period_type"]),
+                         ("semiannual_report", "ingested", "half"))
         check_all(self, data)
 
 

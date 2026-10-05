@@ -33,14 +33,15 @@
 #   （jpcrp030000-asr_E01740-000 のような形）を除いた名前。数値の行に日本語のセグメント名はないため、自動取得の
 #   データの name には、この名前（前置きを除いたメンバー名）を入れる。画面の日本語の名前は、セグメント対応表
 #   （data/segments/）から表示する。
-# ・DEIの期間の種類 "Q2" は、書類の種類のコード（docTypeCode）が 160（半期報告書）のときだけ、half として扱う
-#   （2024〜2025年の半期報告書で確認）。160 以外で "Q2" が出たときは、未知の値として異常にする
+# ・DEIの期間の種類 "Q2" は、書類の種類のコード（docTypeCode）が 160（半期報告書）または 170（訂正半期報告書）の
+#   ときだけ、half として扱う（2024〜2025年の半期報告書で確認。170 は SUMCO の S100UH1H で確認）。
+#   それ以外（120、130 など）で "Q2" が出たときは、未知の値として異常にする
 #   （dei_unknown_period_type）。この条件は extract.py が持つ（スキーマは変えないため、ここには書けない）。
 # ・使うコンテキストは、DEIの期間の種類で決める。どれも、コンテキストIDの完全一致で探す
 #   （Member 付きのセグメントは、「当期の期間_」で始まるもの）。
 #     FY（有価証券報告書）  CurrentYearDuration／CurrentYearInstant、前期は Prior1YearDuration／Prior1YearInstant
 #     HY（半期報告書）      InterimDuration／InterimInstant、前期は Prior1InterimDuration／Prior1InterimInstant
-#     Q2（旧様式の半期報告書。docTypeCode が 160 のときだけ）
+#     Q2（旧様式の半期報告書と、その訂正報告書。docTypeCode が 160 または 170 のときだけ）
 #                           CurrentYTDDuration／CurrentQuarterInstant、前期は Prior1YTDDuration／Prior1QuarterInstant
 #   Q2 の書類のセグメントは、CurrentYTDDuration_{前置き}{メンバー名}、Prior1YTDDuration_{前置き}{メンバー名}。
 #   要素名は通常の書類と同じ。従業員の行はない（employees の行は作らない）。period_type は half、
@@ -161,4 +162,4 @@ dei:
   period_types:           # DEIの期間の種類の値 → period_type（データ定義書 2.4.3）
     "FY": annual
     "HY": half
-    "Q2": half            # docTypeCode が 160（半期報告書）のときだけ有効（先頭のコメント）。確認済み（2024〜2025年の半期報告書）
+    "Q2": half            # docTypeCode が 160（半期報告書）または 170（訂正半期報告書）のときだけ有効（先頭のコメント）。確認済み（2024〜2025年の半期報告書、SUMCO の S100UH1H）

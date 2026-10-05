@@ -13,7 +13,7 @@ stopped（DEIが読めず、取り出しを止めたか）。
 * DEIの値が未知（会計基準、期間の種類）、読めない（連結の有無、日付）、欠けている、食い違うときは、
   異常にして、取り出しを止める（推測で続けない）
 * 使うコンテキストは、DEIの期間の種類で決める（FY：CurrentYearDuration／Instant、HY：InterimDuration／Instant、
-  Q2（docTypeCode 160 のときだけ）：CurrentYTDDuration／CurrentQuarterInstant。前期は Prior1…）
+  Q2（docTypeCode 160 または 170 のときだけ）：CurrentYTDDuration／CurrentQuarterInstant。前期は Prior1…）
 * 売上高などの当期の値は、コンテキストIDが当期の期間（CurrentYearDuration、InterimDuration）に完全に
   一致する行から、会計基準の候補の要素を先頭から順に探して、最初の行を使う。連結か単体かは、DEIの連結の有無で決め、
   行の選び方は変えない（連結の値も、連結財務諸表がない会社の値も、Member を含まないコンテキストの行）
@@ -61,12 +61,12 @@ CONTEXTS = {  # period_type → (期間のコンテキスト、時点のコン�
     "annual": ("CurrentYearDuration", "CurrentYearInstant"),
     "half": ("InterimDuration", "InterimInstant"),
 }
-# DEIの期間の種類が Q2（旧様式の半期報告書。docTypeCode が 160 のときだけ有効）の書類のコンテキスト。
+# DEIの期間の種類が Q2（旧様式の半期報告書と、その訂正報告書。docTypeCode が 160 または 170 のときだけ有効）の書類のコンテキスト。
 # (当期の期間, 当期の時点, 前期の期間, 前期の時点)。確認済み：S100UPNV、S100URKY、S100UQ07（config/xbrl-map.yaml の先頭のコメント）
 RAW_PERIOD_CONTEXTS = {"Q2": ("CurrentYTDDuration", "CurrentQuarterInstant", "Prior1YTDDuration", "Prior1QuarterInstant")}
 DEI_EDINET_CODE = "jpdei_cor:EDINETCodeDEI"
 # DEIの期間の種類のうち、書類の種類のコード（docTypeCode）が一致するときだけ有効な値（config/xbrl-map.yaml の先頭のコメント）
-PERIOD_TYPE_DOC_CODES = {"Q2": frozenset({"160"})}
+PERIOD_TYPE_DOC_CODES = {"Q2": frozenset({"160", "170"})}  # 160 半期報告書、170 訂正半期報告書
 WILDCARD_PREFIX = re.compile(r"^jpcrp\d+-(?:asr|ssr)_E(\d{5})-\d{3}$")
 PRIOR_CONTEXTS = {  # 前期の列。period_type → (期間のコンテキスト、時点のコンテキスト)
     "annual": ("Prior1YearDuration", "Prior1YearInstant"),
@@ -325,7 +325,7 @@ def company_code_of(rows: list[dict]) -> str | None:
 def extract(rows: list[dict], doc_id: str, ingested_at: str, xbrl_map: dict, doc_type_code: str | None = None) -> dict:
     """書類のCSVの行から、financial、employee、異常の一覧などを取り出す。
 
-    doc_type_code は、一覧の docTypeCode。DEIの期間の種類 "Q2" は、160 のときだけ有効にするために使う。
+    doc_type_code は、一覧の docTypeCode。DEIの期間の種類 "Q2" は、160（半期報告書）または 170（訂正半期報告書）のときだけ有効にするために使う。
     """
     prepared = prepare_rows(rows)
     work = _Extraction(doc_id, ingested_at, company_code_of(prepared))
