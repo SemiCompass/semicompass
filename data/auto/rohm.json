@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "rohm",
   "edinet_code": "E01953",
-  "updated_at": "2026-10-04T22:42:50+09:00",
+  "updated_at": "2026-10-05T08:17:12+09:00",
   "filings": [
     {
       "doc_id": "S100LO3Z",
@@ -66,8 +66,8 @@
       "period_end": "2024-09-30",
       "submitted_at": "2024-11-08T10:10:00+09:00",
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100UN3V.pdf",
-      "status": "failed",
-      "error": "anomaly:net_sales_not_found,operating_income_not_found,ordinary_income_not_found,net_income_not_found"
+      "status": "ingested",
+      "ingested_at": "2026-10-05T08:17:12+09:00"
     },
     {
       "doc_id": "S100W2W6",
@@ -835,6 +835,95 @@
         "context": "CurrentYearDuration_ReconcilingItemsMember",
         "doc_id": "S100TS31",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2025-03",
+      "period_type": "half",
+      "period_start": "2024-04-01",
+      "period_end": "2024-09-30",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100UN3V",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 232022,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UN3V",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "operating_income": {
+        "value": -974,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UN3V",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "ordinary_income": {
+        "value": -129,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UN3V",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "net_income": {
+        "value": 2068,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UN3V",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "segments": [
+        {
+          "name": "OperatingSegmentsNotIncludedInReportableSegmentsAndOtherRevenueGeneratingBusinessActivitiesMember",
+          "member": "OperatingSegmentsNotIncludedInReportableSegmentsAndOtherRevenueGeneratingBusinessActivitiesMember",
+          "net_sales_external": {
+            "value": 12793,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpcrp_cor:RevenuesFromExternalCustomers",
+            "context": "CurrentYTDDuration_OperatingSegmentsNotIncludedInReportableSegmentsAndOtherRevenueGeneratingBusinessActivitiesMember",
+            "doc_id": "S100UN3V",
+            "ingested_at": "2026-10-05T08:17:12+09:00"
+          },
+          "net_sales_total": {
+            "value": 12826,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:NetSales",
+            "context": "CurrentYTDDuration_OperatingSegmentsNotIncludedInReportableSegmentsAndOtherRevenueGeneratingBusinessActivitiesMember",
+            "doc_id": "S100UN3V",
+            "ingested_at": "2026-10-05T08:17:12+09:00"
+          },
+          "profit": {
+            "value": 1528,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:OperatingIncome",
+            "context": "CurrentYTDDuration_OperatingSegmentsNotIncludedInReportableSegmentsAndOtherRevenueGeneratingBusinessActivitiesMember",
+            "doc_id": "S100UN3V",
+            "ingested_at": "2026-10-05T08:17:12+09:00"
+          }
+        }
+      ],
+      "segment_adjustment": {
+        "value": 234,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration_ReconcilingItemsMember",
+        "doc_id": "S100UN3V",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
       },
       "regions": []
     },

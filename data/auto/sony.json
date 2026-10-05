@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "sony",
   "edinet_code": "E01777",
-  "updated_at": "2026-10-04T22:42:50+09:00",
+  "updated_at": "2026-10-05T08:17:12+09:00",
   "filings": [
     {
       "doc_id": "S100LM4N",
@@ -66,8 +66,8 @@
       "period_end": "2024-09-30",
       "submitted_at": "2024-11-14T15:37:00+09:00",
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100URKY.pdf",
-      "status": "failed",
-      "error": "anomaly:net_sales_not_found,operating_income_not_found,net_income_not_found"
+      "status": "ingested",
+      "ingested_at": "2026-10-05T08:17:12+09:00"
     },
     {
       "doc_id": "S100W19Q",
@@ -1171,6 +1171,54 @@
         "context": "CurrentYearDuration_ReconcilingItemsMember",
         "doc_id": "S100TS7P",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2025-03",
+      "period_type": "half",
+      "period_start": "2024-04-01",
+      "period_end": "2024-09-30",
+      "accounting_standard": "ifrs",
+      "consolidated": true,
+      "doc_id": "S100URKY",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 5536585,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:NetSalesIFRS",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100URKY",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "operating_income": {
+        "value": 734183,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:OperatingProfitLossIFRS",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100URKY",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "net_income": {
+        "value": 570134,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100URKY",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "segments": [],
+      "segment_adjustment": {
+        "value": -29721,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:OperatingProfitLossIFRS",
+        "context": "CurrentYTDDuration_ReconcilingItemsMember",
+        "doc_id": "S100URKY",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
       },
       "regions": []
     },
@@ -2284,7 +2332,7 @@
       "at": "2026-10-04T22:42:50+09:00",
       "doc_id": "S100YE2C",
       "supersedes": "S100W19Q",
-      "path": "/financials/4/operating_income/value",
+      "path": "/financials/5/operating_income/value",
       "old": 1407163,
       "new": 1276635
     }

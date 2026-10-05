@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "micronics-japan",
   "edinet_code": "E02030",
-  "updated_at": "2026-10-04T22:42:50+09:00",
+  "updated_at": "2026-10-05T08:17:12+09:00",
   "filings": [
     {
       "doc_id": "S100NQOO",
@@ -53,8 +53,8 @@
       "period_end": "2024-06-30",
       "submitted_at": "2024-08-13T09:14:00+09:00",
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100U7HW.pdf",
-      "status": "failed",
-      "error": "anomaly:net_sales_not_found,operating_income_not_found,ordinary_income_not_found,net_income_not_found"
+      "status": "ingested",
+      "ingested_at": "2026-10-05T08:17:12+09:00"
     },
     {
       "doc_id": "S100VBBX",
@@ -135,8 +135,8 @@
       "period_end": "2025-06-30",
       "submitted_at": "2025-08-13T09:12:00+09:00",
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100WIMT.pdf",
-      "status": "failed",
-      "error": "anomaly:net_sales_not_found,operating_income_not_found,ordinary_income_not_found,net_income_not_found"
+      "status": "ingested",
+      "ingested_at": "2026-10-05T08:17:12+09:00"
     },
     {
       "doc_id": "S100XTD8",
@@ -648,6 +648,63 @@
     },
     {
       "fiscal_period_end": "2024-12",
+      "period_type": "half",
+      "period_start": "2024-01-01",
+      "period_end": "2024-06-30",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100U7HW",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 26171,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100U7HW",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "operating_income": {
+        "value": 5764,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100U7HW",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "ordinary_income": {
+        "value": 5806,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100U7HW",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "net_income": {
+        "value": 3685,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100U7HW",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "segments": [],
+      "segment_adjustment": {
+        "value": -1341,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration_ReconcilingItemsMember",
+        "doc_id": "S100U7HW",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2024-12",
       "period_type": "annual",
       "period_start": "2024-01-01",
       "period_end": "2024-12-31",
@@ -763,6 +820,63 @@
         "context": "CurrentYearDuration_ReconcilingItemsMember",
         "doc_id": "S100VI01",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2025-12",
+      "period_type": "half",
+      "period_start": "2025-01-01",
+      "period_end": "2025-06-30",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100WIMT",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 33120,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100WIMT",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "operating_income": {
+        "value": 7569,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100WIMT",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "ordinary_income": {
+        "value": 7394,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100WIMT",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "net_income": {
+        "value": 4774,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100WIMT",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "segments": [],
+      "segment_adjustment": {
+        "value": -1584,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration_ReconcilingItemsMember",
+        "doc_id": "S100WIMT",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
       },
       "regions": []
     },
