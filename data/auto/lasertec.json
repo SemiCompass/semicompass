@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "lasertec",
   "edinet_code": "E01991",
-  "updated_at": "2026-10-04T22:42:50+09:00",
+  "updated_at": "2026-10-05T08:17:12+09:00",
   "filings": [
     {
       "doc_id": "S100MI7Y",
@@ -66,8 +66,8 @@
       "period_end": "2024-12-31",
       "submitted_at": "2025-02-12T15:40:00+09:00",
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100V7N8.pdf",
-      "status": "failed",
-      "error": "anomaly:net_sales_not_found,operating_income_not_found,ordinary_income_not_found,net_income_not_found"
+      "status": "ingested",
+      "ingested_at": "2026-10-05T08:17:12+09:00"
     },
     {
       "doc_id": "S100WQ7F",
@@ -298,6 +298,54 @@
         "context": "CurrentYearDuration",
         "doc_id": "S100UFKD",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "segments": [],
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2025-06",
+      "period_type": "half",
+      "period_start": "2024-07-01",
+      "period_end": "2024-12-31",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100V7N8",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 128968,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100V7N8",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "operating_income": {
+        "value": 63662,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100V7N8",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "ordinary_income": {
+        "value": 62438,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100V7N8",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "net_income": {
+        "value": 43318,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100V7N8",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
       },
       "segments": [],
       "regions": []

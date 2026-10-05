@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "shin-etsu-chemical",
   "edinet_code": "E00776",
-  "updated_at": "2026-10-04T22:42:50+09:00",
+  "updated_at": "2026-10-05T08:17:12+09:00",
   "filings": [
     {
       "doc_id": "S100LV8Y",
@@ -122,8 +122,8 @@
       "period_end": "2024-09-30",
       "submitted_at": "2024-11-13T10:07:00+09:00",
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100UPNO.pdf",
-      "status": "failed",
-      "error": "anomaly:net_sales_not_found,operating_income_not_found,ordinary_income_not_found,net_income_not_found"
+      "status": "ingested",
+      "ingested_at": "2026-10-05T08:17:12+09:00"
     },
     {
       "doc_id": "S100W0RG",
@@ -1441,6 +1441,63 @@
         "context": "CurrentYearDuration_ReconcilingItemsMember",
         "doc_id": "S100TO0V",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2025-03",
+      "period_type": "half",
+      "period_start": "2024-04-01",
+      "period_end": "2024-09-30",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100UPNO",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 1266460,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UPNO",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "operating_income": {
+        "value": 405703,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UPNO",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "ordinary_income": {
+        "value": 442924,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UPNO",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "net_income": {
+        "value": 294117,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UPNO",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "segments": [],
+      "segment_adjustment": {
+        "value": -2006,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "CurrentYTDDuration_ReconcilingItemsMember",
+        "doc_id": "S100UPNO",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
       },
       "regions": []
     },

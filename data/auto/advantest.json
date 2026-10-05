@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "advantest",
   "edinet_code": "E01950",
-  "updated_at": "2026-10-04T22:42:50+09:00",
+  "updated_at": "2026-10-05T08:17:12+09:00",
   "filings": [
     {
       "doc_id": "S100LOF7",
@@ -80,8 +80,8 @@
       "period_end": "2024-09-30",
       "submitted_at": "2024-11-13T13:24:00+09:00",
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100UQ07.pdf",
-      "status": "failed",
-      "error": "anomaly:net_sales_not_found,operating_income_not_found,net_income_not_found"
+      "status": "ingested",
+      "ingested_at": "2026-10-05T08:17:12+09:00"
     },
     {
       "doc_id": "S100W4E8",
@@ -689,6 +689,54 @@
         "context": "CurrentYearDuration_ReconcilingItemsMember",
         "doc_id": "S100TTJ3",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2025-03",
+      "period_type": "half",
+      "period_start": "2024-04-01",
+      "period_end": "2024-09-30",
+      "accounting_standard": "ifrs",
+      "consolidated": true,
+      "doc_id": "S100UQ07",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 329206,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:NetSalesIFRS",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UQ07",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "operating_income": {
+        "value": 94859,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:OperatingProfitLossIFRS",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UQ07",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "net_income": {
+        "value": 69343,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS",
+        "context": "CurrentYTDDuration",
+        "doc_id": "S100UQ07",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
+      },
+      "segments": [],
+      "segment_adjustment": {
+        "value": -8976,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:SegmentProfitLossIFRS",
+        "context": "CurrentYTDDuration_ReconcilingItemsMember",
+        "doc_id": "S100UQ07",
+        "ingested_at": "2026-10-05T08:17:12+09:00"
       },
       "regions": []
     },
@@ -1358,7 +1406,7 @@
       "at": "2026-10-04T22:42:50+09:00",
       "doc_id": "S100YKTA",
       "supersedes": "S100W4E8",
-      "path": "/financials/4/segments/1/net_sales_external/value",
+      "path": "/financials/5/segments/1/net_sales_external/value",
       "old": 108399,
       "new": 96888
     },
@@ -1366,7 +1414,7 @@
       "at": "2026-10-04T22:42:50+09:00",
       "doc_id": "S100YKTA",
       "supersedes": "S100W4E8",
-      "path": "/financials/4/segments/1/net_sales_total/value",
+      "path": "/financials/5/segments/1/net_sales_total/value",
       "old": 108399,
       "new": 96888
     },
@@ -1374,7 +1422,7 @@
       "at": "2026-10-04T22:42:50+09:00",
       "doc_id": "S100YKTA",
       "supersedes": "S100W4E8",
-      "path": "/financials/4/segments/1/profit/value",
+      "path": "/financials/5/segments/1/profit/value",
       "old": -10914,
       "new": -16125
     },
@@ -1382,7 +1430,7 @@
       "at": "2026-10-04T22:42:50+09:00",
       "doc_id": "S100YKTA",
       "supersedes": "S100W4E8",
-      "path": "/financials/4/segment_adjustment/value",
+      "path": "/financials/5/segment_adjustment/value",
       "old": -18839,
       "new": -14941
     }
