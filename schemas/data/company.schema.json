@@ -259,9 +259,6 @@
           "sources"
         ],
         "properties": {
-          "processes": {
-            "minItems": 1
-          },
           "sources": {
             "minItems": 1
           },
@@ -297,6 +294,33 @@
           "fiscal_year_end_month",
           "is_holding_company"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "listing": {
+            "const": "detailed"
+          },
+          "categories": {
+            "not": {
+              "contains": {
+                "const": "devices"
+              }
+            }
+          }
+        },
+        "required": [
+          "listing",
+          "categories"
+        ]
+      },
+      "then": {
+        "properties": {
+          "processes": {
+            "minItems": 1
+          }
+        }
       }
     }
   ],
