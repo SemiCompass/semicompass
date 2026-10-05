@@ -11,8 +11,53 @@ edinet_code: E02288
 categories:
   - equipment
   - front-end
+processes:
+  - cleaning
+  - lithography
+  - inspection-metrology
 listing: coming_soon
+tagline: "半導体製造装置やディスプレイ製造装置などを手がけるグループの持株会社"
+website_url: "https://www.screen.co.jp/"
+ir_url: "https://www.screen.co.jp/ir"
+recruit_url: "https://www.screen.co.jp/recruit_info"
+accounting_standard: jgaap
+fiscal_year_end_month: 3
+is_holding_company: true
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S1
+sources:
+  - id: S1
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "株式会社SCREENホールディングス（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YK9N.pdf"
+    published_on: "2026-06-25"
+    accessed_on: "2026-10-05"
+    doc_id: S100YK9N
+  - id: S2
+    title: "グループ体制"
+    publisher: "株式会社SCREENホールディングス"
+    url: "https://www.screen.co.jp/about/organization"
+    accessed_on: "2026-10-05"
+  - id: S3
+    title: "製品情報（SCREENセミコンダクターソリューションズ）"
+    publisher: "株式会社SCREENホールディングス"
+    url: "https://www.screen.co.jp/spe/products"
+    accessed_on: "2026-10-05"
+  - id: S4
+    title: "株式会社SCREENホールディングス"
+    publisher: "株式会社SCREENホールディングス"
+    url: "https://www.screen.co.jp/"
+    accessed_on: "2026-10-05"
+  - id: S5
+    title: "IR情報"
+    publisher: "株式会社SCREENホールディングス"
+    url: "https://www.screen.co.jp/ir"
+    accessed_on: "2026-10-05"
+  - id: S6
+    title: "採用情報"
+    publisher: "株式会社SCREENホールディングス"
+    url: "https://www.screen.co.jp/recruit_info"
+    accessed_on: "2026-10-05"

@@ -11,8 +11,46 @@ edinet_code: E37488
 categories:
   - equipment
   - front-end
+processes:
+  - deposition
 listing: coming_soon
+tagline: "半導体の成膜などに使う製造装置を開発・製造・販売する企業"
+website_url: "https://www.kokusai-electric.com/index.html"
+ir_url: "https://www.kokusai-electric.com/ir"
+recruit_url: "https://www.kokusai-electric.com/recruit"
+accounting_standard: ifrs
+fiscal_year_end_month: 3
+is_holding_company: false
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S1
+sources:
+  - id: S1
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "株式会社KOKUSAI ELECTRIC（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YJUA.pdf"
+    published_on: "2026-06-25"
+    accessed_on: "2026-10-05"
+    doc_id: S100YJUA
+  - id: S2
+    title: "事業内容（Businesses）"
+    publisher: "株式会社KOKUSAI ELECTRIC"
+    url: "https://www.kokusai-electric.com/company/business"
+    accessed_on: "2026-10-05"
+  - id: S3
+    title: "KOKUSAI ELECTRIC TOP"
+    publisher: "株式会社KOKUSAI ELECTRIC"
+    url: "https://www.kokusai-electric.com/index.html"
+    accessed_on: "2026-10-05"
+  - id: S4
+    title: "株主・投資家向け情報"
+    publisher: "株式会社KOKUSAI ELECTRIC"
+    url: "https://www.kokusai-electric.com/ir"
+    accessed_on: "2026-10-05"
+  - id: S5
+    title: "採用TOP"
+    publisher: "株式会社KOKUSAI ELECTRIC"
+    url: "https://www.kokusai-electric.com/recruit"
+    accessed_on: "2026-10-05"
