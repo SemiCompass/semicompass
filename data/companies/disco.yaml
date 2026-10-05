@@ -11,8 +11,46 @@ edinet_code: E01506
 categories:
   - equipment
   - back-end
+processes:
+  - dicing
 listing: coming_soon
+tagline: "半導体の切断・研削・研磨に使う精密加工装置と工具を作る企業"
+website_url: "https://www.disco.co.jp/jp/index.html"
+ir_url: "https://www.disco.co.jp/jp/ir/"
+recruit_url: "https://www.disco.co.jp/recruit/"
+accounting_standard: jgaap
+fiscal_year_end_month: 3
+is_holding_company: false
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S1
+sources:
+  - id: S1
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "株式会社ディスコ（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YC6I.pdf"
+    published_on: "2026-06-16"
+    accessed_on: "2026-10-05"
+    doc_id: S100YC6I
+  - id: S2
+    title: "事業について"
+    publisher: "株式会社ディスコ"
+    url: "https://www.disco.co.jp/jp/ir/mginfo/bg_business.html"
+    accessed_on: "2026-10-05"
+  - id: S3
+    title: "株式会社ディスコ/DISCO CORPORATION"
+    publisher: "株式会社ディスコ"
+    url: "https://www.disco.co.jp/jp/index.html"
+    accessed_on: "2026-10-05"
+  - id: S4
+    title: "株主・投資家情報"
+    publisher: "株式会社ディスコ"
+    url: "https://www.disco.co.jp/jp/ir/"
+    accessed_on: "2026-10-05"
+  - id: S5
+    title: "株式会社ディスコ採用サイト"
+    publisher: "株式会社ディスコ"
+    url: "https://www.disco.co.jp/recruit/"
+    accessed_on: "2026-10-05"
