@@ -1,0 +1,45 @@
+name: edinet-inspect-sections
+
+# 手動で動かす。有価証券報告書の文章の行（TextBlock）の、要素ID・項目名・文字数だけを一覧にする。
+# 本文は出さない（公開リポジトリの実行のログは、誰でも読めるため）。
+on:
+  workflow_dispatch:
+    inputs:
+      doc_ids:
+        description: 書類管理番号（S100XXXX）。複数はカンマで区切る（最大10件）
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-sections:
+    runs-on: ubuntu-24.04
+    # edinet の Environment（EDINET_API_KEY）を使う。main だけに限定済み
+    environment: edinet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 文章の行の一覧を出す（本文は出さない）
+        env:
+          EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+          # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
+          INPUT_DOC_IDS: ${{ inputs.doc_ids }}
+        run: |
+          args=()
+          IFS=',' read -ra ids <<< "$INPUT_DOC_IDS"
+          if [ "${#ids[@]}" -gt 10 ]; then echo "書類の数が多すぎる（最大10件）"; exit 2; fi
+          for id in "${ids[@]}"; do
+            id="$(echo "$id" | xargs)"
+            if ! [[ "$id" =~ ^S100[0-9A-Za-z]{4}$ ]]; then echo "書類番号の形が正しくない"; exit 2; fi
+            args+=(--doc-id "$id")
+          done
+          "$RUNNER_TEMP/venv/bin/python" scripts/bundle/inspect_sections.py "${args[@]}"
