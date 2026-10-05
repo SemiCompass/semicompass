@@ -1,0 +1,59 @@
+name: edinet-bundle
+
+# 手動で動かす。企業の最新の有価証券報告書から、指定の節の本文を取り出し、Cloudflare R2 の非公開バケットに保存する。
+# 本文は、リポジトリ、ログ、概要、成果物に出さない（出るのは、要素ID・項目名・文字数・保存したキーだけ）。
+on:
+  workflow_dispatch:
+    inputs:
+      company:
+        description: 企業の slug（data/companies/{slug}.yaml）。1社だけ
+        required: true
+        type: string
+      dry_run:
+        description: R2 に書かず、取り出せる節の一覧だけを出す
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: edinet-bundle
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    # bundle-write の Environment（EDINET_API_KEY、R2_*）を使う。main だけに限定済み
+    environment: bundle-write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 原資料束を作る（本文は出さない）
+        env:
+          EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
+          INPUT_COMPANY: ${{ inputs.company }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          slug="$INPUT_COMPANY"
+          if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "slug の形が正しくない"; exit 2
+          fi
+          args=(--company "$slug" --summary "$GITHUB_STEP_SUMMARY")
+          if [ "$INPUT_DRY_RUN" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          "$RUNNER_TEMP/venv/bin/python" scripts/bundle/make_bundle.py "${args[@]}"
