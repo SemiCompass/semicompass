@@ -10,8 +10,51 @@ securities_code: "6875"
 edinet_code: E02042
 categories:
   - design
+processes:
+  - circuit-design
 listing: coming_soon
+tagline: "システムLSIの設計・開発を手がけるファブレスの半導体メーカー"
+website_url: "https://www.megachips.co.jp/"
+ir_url: "https://www.megachips.co.jp/irinfo/"
+recruit_url: "https://www.megachips.co.jp/recruit/"
+accounting_standard: jgaap
+fiscal_year_end_month: 3
+is_holding_company: false
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S1
+sources:
+  - id: S1
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "株式会社メガチップス（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YDEK.pdf"
+    published_on: "2026-06-24"
+    accessed_on: "2026-10-05"
+    doc_id: S100YDEK
+  - id: S2
+    title: "ビジネスモデル"
+    publisher: "株式会社メガチップス"
+    url: "https://www.megachips.co.jp/company/who-we-are/business-model.html"
+    accessed_on: "2026-10-05"
+  - id: S3
+    title: "会社概要"
+    publisher: "株式会社メガチップス"
+    url: "https://www.megachips.co.jp/company/outline/"
+    accessed_on: "2026-10-05"
+  - id: S4
+    title: "株式会社メガチップス"
+    publisher: "株式会社メガチップス"
+    url: "https://www.megachips.co.jp/"
+    accessed_on: "2026-10-05"
+  - id: S5
+    title: "投資家情報"
+    publisher: "株式会社メガチップス"
+    url: "https://www.megachips.co.jp/irinfo/"
+    accessed_on: "2026-10-05"
+  - id: S6
+    title: "株式会社メガチップス 採用サイト"
+    publisher: "株式会社メガチップス"
+    url: "https://www.megachips.co.jp/recruit/"
+    accessed_on: "2026-10-05"
