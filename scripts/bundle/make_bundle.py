@@ -8,12 +8,13 @@
 * --company は、data/auto/{slug}.json の filings から、最新の通期（annual_report）の ingested の書類を選ぶ。
   --doc-id を足すと、その書類を使う（その企業の filings にあるものだけ）。--doc-id だけのときは、
   data/auto/ の filings にある書類から、企業を決める
-* --sections は、取り出す要素ID。省略すると config/bundle-sections.yaml の既定を使う
+* --sections は、取り出す要素ID（候補が1つだけの節として扱う。key は要素IDのまま）。省略すると config/bundle-sections.yaml の既定を使う。
+  既定は、節ごとに key と候補の要素ID（優先順）を持つ。候補を上から順に探し、書類に最初に見つかった要素IDの行を使う
 * キーは、環境変数だけで受け取る（引数にしない）。R2 の4つの変数は、--dry-run のときは要らない
 * オブジェクトのキーは bundles/{bundle_id}.json。bundle_id は {slug}-{doc_id}。同じ書類で2回動かすと、同じキーを上書きする
 * **本文は、画面にも、--summary にも、例外のメッセージにも出さない**（リポジトリ、Actionsのログは公開。CLAUDE.md 2章10）。
   出すのは、節ごとの要素ID、項目名、文字数、保存したキー、バケット名だけ。認証情報は、例外のメッセージでも伏せ字にする
-* 指定した節が書類にないときは、何も書かずに終了コード1（一部だけの原資料束を作らない）
+* どの候補も書類にない節があるときは、その節の key を示し、何も書かずに終了コード1（一部だけの原資料束を作らない）
 
 終了コード: 0 成功 / 1 取得・解析・保存の失敗 / 2 設定・引数の誤り
 """
@@ -28,6 +29,7 @@ import re
 import sys
 import time
 from datetime import datetime
+from dataclasses import dataclass
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -45,7 +47,7 @@ from sections import TextRow, text_rows_from_zip  # noqa: E402
 
 AUTO_DIR = REPO_ROOT / "data" / "auto"
 SECTIONS_CONFIG = REPO_ROOT / "config" / "bundle-sections.yaml"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # 2: 各 section に key を加えた
 KEY_PREFIX = "bundles/"
 MAX_REQUESTS = 4  # 書類取得の呼び出し1回と、429の再試行（最大3回）
 R2_REGION = "auto"
@@ -54,8 +56,17 @@ ENV_ACCOUNT, ENV_ACCESS_KEY, ENV_SECRET_KEY, ENV_BUCKET = (
 ACCOUNT_PATTERN = re.compile(r"^[0-9a-f]{32}$")
 BUCKET_PATTERN = re.compile(r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$")
 ELEMENT_PATTERN = re.compile(r"^[A-Za-z0-9_-]+:[A-Za-z0-9_.-]*TextBlock$")
+KEY_PATTERN = re.compile(r"^[a-z_]+$")
 LABEL_MAX_LENGTH = 60
 ANNUAL_TYPES = ("annual_report", "amended_annual_report")
+
+
+@dataclass(frozen=True)
+class SectionSpec:
+    """取り出す節。key は節の名前、candidates は候補の要素ID（優先順）。"""
+
+    key: str
+    candidates: tuple[str, ...]
 
 
 class BundleError(Exception):
@@ -139,46 +150,78 @@ def resolve_target(company: str | None, doc_id: str | None, auto_dir: Path = AUT
     return slug, auto, filing
 
 
-def load_default_sections(path: Path = SECTIONS_CONFIG) -> list[str]:
+def parse_sections_config(data) -> list[SectionSpec]:
+    """設定ファイルの中身を検査して、節の一覧にする。形が違えば BundleError（使い方の誤り）。"""
+    where = "config/bundle-sections.yaml"
+    items = data.get("sections") if isinstance(data, dict) else None
+    if not isinstance(items, list):
+        raise BundleError(f"{where} の sections は、節のリストにする", EXIT_USAGE)
+    specs: list[SectionSpec] = []
+    seen: set[str] = set()
+    for index, item in enumerate(items, 1):
+        if not isinstance(item, dict) or set(item) != {"key", "candidates"}:
+            raise BundleError(f"{where} の{index}番目の節は、key と candidates だけを持つ形にする", EXIT_USAGE)
+        key, candidates = item["key"], item["candidates"]
+        if not isinstance(key, str) or not KEY_PATTERN.match(key):
+            raise BundleError(f"{where} の{index}番目の key は、英小文字と _ だけにする", EXIT_USAGE)
+        if key in seen:
+            raise BundleError(f"{where} の key が重複している: {key}", EXIT_USAGE)
+        seen.add(key)
+        if (not isinstance(candidates, list) or not candidates
+                or not all(isinstance(c, str) and ELEMENT_PATTERN.match(c) for c in candidates)):
+            raise BundleError(
+                f"{where} の {key} の candidates は、要素ID（接頭辞:名前TextBlock の形）を1件以上並べる", EXIT_USAGE)
+        if len(set(candidates)) != len(candidates):
+            raise BundleError(f"{where} の {key} の candidates に、同じ要素IDが重なっている", EXIT_USAGE)
+        specs.append(SectionSpec(key, tuple(candidates)))
+    return specs
+
+
+def load_default_sections(path: Path = SECTIONS_CONFIG) -> list[SectionSpec]:
     try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError):
         raise BundleError("config/bundle-sections.yaml を読めなかった", EXIT_USAGE) from None
-    value = data.get("sections") if isinstance(data, dict) else None
-    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
-        raise BundleError("config/bundle-sections.yaml の sections は、要素IDの文字列のリストにする", EXIT_USAGE)
-    return value
+    return parse_sections_config(data)
 
 
-def choose_sections(cli_values: list[str] | None, default_path: Path = SECTIONS_CONFIG) -> list[str]:
-    """--sections（カンマ区切りも可）か、設定ファイルの既定から、要素IDのリストを決める。重複は除く。"""
+def choose_sections(cli_values: list[str] | None, default_path: Path = SECTIONS_CONFIG) -> list[SectionSpec]:
+    """--sections（カンマ区切りも可）か、設定ファイルの既定から、節の一覧を決める。
+
+    --sections の要素IDは、候補が1つだけの節として扱う（key は要素IDのまま）。重複は除く。
+    """
     if cli_values:
-        values = [v.strip() for item in cli_values for v in item.split(",") if v.strip()]
+        values = list(dict.fromkeys(v.strip() for item in cli_values for v in item.split(",") if v.strip()))
+        for value in values:
+            if not ELEMENT_PATTERN.match(value):
+                raise BundleError(f"要素IDの形が正しくない（接頭辞:名前TextBlock の形）: {value[:60]!r}", EXIT_USAGE)
+        specs = [SectionSpec(v, (v,)) for v in values]
     else:
-        values = load_default_sections(default_path)
-    values = list(dict.fromkeys(values))
-    if not values:
+        specs = load_default_sections(default_path)
+    if not specs:
         raise BundleError(
-            "取り出す節の要素IDがない。--sections で指定するか、config/bundle-sections.yaml に書く"
+            "取り出す節がない。--sections で要素IDを指定するか、config/bundle-sections.yaml に書く"
             "（要素IDは、inspect_sections.py で確かめる）", EXIT_USAGE)
-    for value in values:
-        if not ELEMENT_PATTERN.match(value):
-            raise BundleError(f"要素IDの形が正しくない（接頭辞:名前TextBlock の形）: {value[:60]!r}", EXIT_USAGE)
-    return values
+    return specs
 
 
 # ---- 原資料束の組み立て -----------------------------------------------------------------------
 
-def select_rows(rows: list[TextRow], wanted: list[str]) -> tuple[list[TextRow], list[str]]:
-    """指定の要素IDの行を、指定の順で返す（同じ要素IDの行は、CSVの順）。返り値は (行, 見つからなかった要素ID)。"""
-    selected = []
-    missing = []
-    for element in wanted:
-        found = [r for r in rows if r.element_id == element]
-        if found:
-            selected += found
+def select_rows(rows: list[TextRow], specs: list[SectionSpec]) -> tuple[list[tuple[str, TextRow]], list[str]]:
+    """節ごとに、候補を上から順に探し、書類に最初に見つかった要素IDの行を使う。
+
+    返り値は ((節の key, 行) の並び, 見つからなかった節の key)。節は指定の順、同じ要素IDの行は CSV の順。
+    """
+    selected: list[tuple[str, TextRow]] = []
+    missing: list[str] = []
+    for spec in specs:
+        for element in spec.candidates:
+            found = [r for r in rows if r.element_id == element]
+            if found:
+                selected += [(spec.key, r) for r in found]
+                break
         else:
-            missing.append(element)
+            missing.append(spec.key)
     return selected, missing
 
 
@@ -190,7 +233,7 @@ def object_key(bundle_id: str) -> str:
     return f"{KEY_PREFIX}{bundle_id}.json"
 
 
-def build_bundle(slug: str, auto: dict, filing: dict, rows: list[TextRow], extracted_at: str) -> dict:
+def build_bundle(slug: str, auto: dict, filing: dict, picked: list[tuple[str, TextRow]], extracted_at: str) -> dict:
     """保存するJSONを作る。同じ入力（と extracted_at）には、同じ結果を返す。"""
     doc_id = filing["doc_id"]
     return {
@@ -206,9 +249,9 @@ def build_bundle(slug: str, auto: dict, filing: dict, rows: list[TextRow], extra
         },
         "extracted_at": extracted_at,
         "sections": [
-            {"element_id": r.element_id, "label": r.label, "context_id": r.context_id,
+            {"key": key, "element_id": r.element_id, "label": r.label, "context_id": r.context_id,
              "file": r.file, "chars": r.chars, "text": r.text}
-            for r in rows
+            for key, r in picked
         ],
     }
 
@@ -285,10 +328,10 @@ def describe_error(error: BaseException, secrets: list[str]) -> str:
     return text
 
 
-def describe_sections(rows: list[TextRow]) -> list[str]:
+def describe_sections(picked: list[tuple[str, TextRow]]) -> list[str]:
     return [
-        f"  {r.element_id}  {_short(r.label)}  {r.context_id}  {r.chars:,}文字"
-        for r in rows
+        f"  {key}  {r.element_id}  {_short(r.label)}  {r.context_id}  {r.chars:,}文字"
+        for key, r in picked
     ]
 
 
@@ -297,13 +340,14 @@ def _short(label: str) -> str:
     return cleaned if len(cleaned) <= LABEL_MAX_LENGTH else cleaned[:LABEL_MAX_LENGTH] + "…"
 
 
-def summary_markdown(bundle_id: str, doc_id: str, rows: list[TextRow], dry_run: bool,
+def summary_markdown(bundle_id: str, doc_id: str, picked: list[tuple[str, TextRow]], dry_run: bool,
                      bucket: str | None, key: str | None) -> str:
     lines = [f"## 原資料束 {bundle_id}", "", f"* 書類: {doc_id}", f"* 実行: {'dry-run（保存しない）' if dry_run else '保存した'}"]
     if not dry_run:
         lines += [f"* バケット: {bucket}", f"* キー: {key}"]
-    lines += ["", "| 要素ID | 項目名 | コンテキストID | 文字数 |", "| :--- | :--- | :--- | ---: |"]
-    lines += [f"| {r.element_id} | {_short(r.label).replace('|', '/')} | {r.context_id} | {r.chars:,} |" for r in rows]
+    lines += ["", "| key | 使った要素ID | 項目名 | コンテキストID | 文字数 |", "| :--- | :--- | :--- | :--- | ---: |"]
+    lines += [f"| {k} | {r.element_id} | {_short(r.label).replace('|', '/')} | {r.context_id} | {r.chars:,} |"
+              for k, r in picked]
     return "\n".join(lines) + "\n"
 
 
@@ -337,7 +381,7 @@ def main(
                for name in (ENV_KEY, ENV_ACCOUNT, ENV_ACCESS_KEY, ENV_SECRET_KEY)]
     try:
         slug, auto, filing = resolve_target(args.company, args.doc_id, auto_dir)
-        wanted = choose_sections(args.sections, sections_config)
+        specs = choose_sections(args.sections, sections_config)
         key = secrets[0]
         if not key:
             raise BundleError(f"環境変数 {ENV_KEY} が設定されていない", EXIT_USAGE)
@@ -353,17 +397,17 @@ def main(
             all_rows, problems = text_rows_from_zip(raw)
         except ValueError as error:
             raise BundleError(f"書類を読めなかった: {error}") from None
-        rows, missing = select_rows(all_rows, wanted)
+        picked, missing = select_rows(all_rows, specs)
         print(f"対象: {slug} / {doc_id}（{filing.get('doc_type')}、決算期 {filing.get('fiscal_period_end')}、"
               f"status {filing.get('status')}）")
         print(f"bundle_id: {bundle_id}")
-        print(f"節 {len(rows)}件")
-        print("\n".join(describe_sections(rows)))
+        print(f"節の行 {len(picked)}件")
+        print("\n".join(describe_sections(picked)))
         if missing:
-            raise BundleError("書類にない要素ID（何も保存しない）: " + ", ".join(missing))
+            raise BundleError("どの候補の要素IDも書類にない節（何も保存しない）: " + ", ".join(missing))
 
         moment = (now or datetime.now(ZoneInfo("Asia/Tokyo"))).astimezone(ZoneInfo("Asia/Tokyo"))
-        bundle = build_bundle(slug, auto, filing, rows, moment.replace(microsecond=0).isoformat())
+        bundle = build_bundle(slug, auto, filing, picked, moment.replace(microsecond=0).isoformat())
         body = serialize(bundle)
         object_name = object_key(bundle_id)
         bucket = None
@@ -375,7 +419,7 @@ def main(
             print(f"保存した: バケット {bucket} / キー {object_name}（{len(body):,}バイト、sha256 {hashlib.sha256(body).hexdigest()[:12]}）")
         if args.summary is not None:
             with args.summary.open("a", encoding="utf-8") as handle:
-                handle.write(summary_markdown(bundle_id, doc_id, rows, args.dry_run, bucket, object_name))
+                handle.write(summary_markdown(bundle_id, doc_id, picked, args.dry_run, bucket, object_name))
         return EXIT_OK
     except BundleError as error:
         print(f"error: {describe_error(error, secrets)}", file=sys.stderr)
