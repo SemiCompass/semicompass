@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/content/company-overview.schema.json",
+  "title": "企業の事業概要（D13）の front matter",
+  "description": "データ定義書（第1段階）6.1、6.4。content/companies/{slug}.md の先頭の項目（front matter）だけを検査する。本文の決まり（`## 事業概要`（300〜500字）と`## 工程上の位置づけ`、[S1]などの番号が sources にあること、sources の資料が本文で使われていること、元の文章を写さないこと）は、スキーマでは検査できないため、別の検査（V-12など）で行う。titleとdescriptionは企業マスタから作るため、使わない。ファイル名と company の一致も、別の検査で行う。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "company",
+    "published_at",
+    "ai_generated",
+    "sources"
+  ],
+  "properties": {
+    "company": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 3,
+      "maxLength": 60
+    },
+    "reviewed_filing": {
+      "type": "string",
+      "pattern": "^S100[0-9A-Z]{4}$"
+    },
+    "published_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date"
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date"
+    },
+    "draft": {
+      "type": "boolean"
+    },
+    "ai_generated": {
+      "type": "boolean"
+    },
+    "under_review": {
+      "type": "boolean"
+    },
+    "corrections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "date",
+          "severity",
+          "description"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "severity": {
+            "enum": [
+              "major",
+              "normal"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "issue": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "publisher",
+          "url",
+          "accessed_on"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^S[0-9]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https?://\\S+$"
+          },
+          "published_on": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "accessed_on": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "doc_id": {
+            "type": "string",
+            "pattern": "^S100[0-9A-Z]{4}$"
+          },
+          "pages": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
