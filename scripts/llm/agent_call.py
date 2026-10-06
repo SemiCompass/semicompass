@@ -294,6 +294,8 @@ def call_agent(
     subject: str | None = None,
     ledger_dir: Path,
     max_tokens: int = DEFAULT_MAX_TOKENS,
+    followup: str = "",
+    prior_cost_jpy: float = 0.0,
     now=lambda: datetime.now(JST),
     sleep=time.sleep,
     client_factory=lambda: anthropic.Anthropic(),
@@ -302,6 +304,9 @@ def call_agent(
     agents_dir: Path = AGENTS_DIR,
 ) -> AgentResult:
     """エージェントを1回呼ぶ。task は指示の区画（プログラムが作った入力）、materials は資料の区画（外から届いた文章）。
+
+    followup は、資料の区画の後ろに足す、追加の区画（書き直しの依頼など。キャッシュしない）。prior_cost_jpy は、同じ実行の
+    前の呼び出しの利用額（ledger にまだ入っていない分）で、予算の確認に足す。
 
     設定の誤りは LlmError。呼ばなかった、形式に合わなかった、通信に失敗したときは、例外にせず、status で返す
     （どの場合も、ledger の行を rows に入れる）。
@@ -326,7 +331,8 @@ def call_agent(
     task_block = {"type": "text", "text": task}
     materials_block = {"type": "text", "cache_control": {"type": "ephemeral"},
                        "text": "<資料>\n" + materials.replace("<", "＜") + "\n</資料>"}
-    input_chars = len(system) + len(task) + len(materials_block["text"]) + len(json.dumps(schema, ensure_ascii=False))
+    followup_blocks = [{"type": "text", "text": followup}] if followup else []
+    input_chars = len(system) + len(task) + len(materials_block["text"]) + len(followup) + len(json.dumps(schema, ensure_ascii=False))
     estimate = estimate_max_cost_jpy(budgets, prices, input_chars, max_tokens)
     cap = budgets["agents"][agent]["cap_jpy"]
     client = None
@@ -335,7 +341,7 @@ def call_agent(
 
     for attempt in (1, 2):
         total, per_agent = month_usage_jpy(ledger_dir, month_of(now()), agent)
-        spent_now = sum(r["cost_jpy"] for r in result.rows)  # この呼び出しの中の、まだ ledger に入っていない分
+        spent_now = prior_cost_jpy + sum(r["cost_jpy"] for r in result.rows)  # この呼び出しの中の、まだ ledger に入っていない分
         remaining = min(cap - per_agent - spent_now, budgets["monthly_cap_jpy"] - total - spent_now)
         if estimate > remaining:
             add(STATUS_SKIP_BUDGET)
@@ -347,7 +353,7 @@ def call_agent(
                 client = client_factory().with_options(max_retries=0)
             except _IDENTITY_ERRORS:
                 return _identity_failure(result, add)
-        content = [task_block, materials_block] + ([{"type": "text", "text": attempt_note}] if attempt_note else [])
+        content = [task_block, materials_block, *followup_blocks] + ([{"type": "text", "text": attempt_note}] if attempt_note else [])
         response = None
         failure = ""
         tries = 0

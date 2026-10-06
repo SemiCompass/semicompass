@@ -57,6 +57,33 @@ class ReprintTest(unittest.TestCase):
     def test_only_citation_pattern_is_removed(self):
         self.assertEqual(reprint.normalize("あ[S1]い[S12]う[Sx]え[S]お"), "あいう[Sx]え[S]お")
 
+    def test_find_matches_returns_the_matching_text_only_for_matching_fields(self):
+        shared = kanji(40, 0x5000)
+        found = reprint.find_matches([kana(50) + shared + kana(50)],
+                                     {"overview": kanji(20) + shared[:5] + "[S1]" + shared[5:] + kanji(20, 0x6000),
+                                      "process_position": kanji(60, 0x7000)}, 30)
+        self.assertEqual(found, {"overview": [shared]})  # 出典の番号は除く。一致のない項目は含まない
+
+    def test_find_matches_several_and_overlapping_spans(self):
+        a, b = kanji(35, 0x5000), kanji(32, 0x6000)
+        source = [kana(30) + a + kana(30), kana(20) + b]
+        found = reprint.find_matches(source, {"f": a + kanji(5, 0x7000) + b}, 30)
+        self.assertEqual(found, {"f": [a, b]})
+        # 原資料の別の箇所と重なる一致は、1つにまとめる
+        whole = kanji(45, 0x8000)
+        found = reprint.find_matches([whole[:35] + kana(5), whole[10:]], {"f": whole}, 30)
+        self.assertEqual(found, {"f": [whole]})
+
+    def test_find_matches_is_consistent_with_check_reprint(self):
+        shared = kanji(31, 0x5000)
+        draft = kanji(10) + shared + kanji(10, 0x6000)
+        self.assertEqual(len(reprint.find_matches([shared], {"f": draft}, 30)["f"][0]),
+                         reprint.check_reprint([shared], {"f": draft}, 30)[0].longest)
+        self.assertEqual(reprint.find_matches([shared[:29]], {"f": draft}, 30), {})
+
+    def test_run_result_is_unchanged(self):
+        self.assertEqual([f for f in reprint.RunResult.__dataclass_fields__], ["field", "longest", "failed"])
+
     def test_match_does_not_cross_section_boundaries(self):
         shared = kanji(40, 0x5000)
         results = reprint.check_reprint([kana(50) + shared[:20], shared[20:] + kana(50)], {"overview": shared}, 30)

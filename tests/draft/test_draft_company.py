@@ -207,6 +207,122 @@ class SuccessTest(Base):
         self.assertIn("V-12", (self.out / "pr-body.md").read_text(encoding="utf-8"))
 
 
+def copied_output(copied, members=(MEMBER,), start=20, length=40):
+    """overview に、資料と同じ箇所（length 字）を入れた出力。"""
+    output = fk.valid_output(members=list(members))
+    output["overview"] = fk.cjk(200) + copied[start:start + length] + fk.cjk(100, 0x5200) + "[S1]"
+    return output
+
+
+class RewriteTest(Base):
+    def setUp(self):
+        super().setUp()
+        self.copied = bundle_json(self.doc_id)["sections"][0]["text"]
+        self.same = self.copied[20:60]  # 資料と同じになる箇所（ひらがな）
+
+    def ledger_rows(self):
+        return [json.loads(l) for l in (self.out / "ledger" / "2026-10.jsonl").read_text(encoding="utf-8").splitlines()]
+
+    def test_rewrite_passes_and_reports_both_lengths(self):
+        client = fk.FakeClient(fk.reply(copied_output(self.copied)), fk.reply(fk.valid_output(members=[MEMBER])))
+        self.assertEqual(self.run_draft(client), 0, self.stderr)
+        self.assertEqual(len(client.calls), 2)
+        self.assertEqual(self.written(), ["content/companies/advantest.md", "data/segments/advantest.yaml",
+                                          "ledger/2026-10.jsonl", "pr-body.md"])
+        pr = (self.out / "pr-body.md").read_text(encoding="utf-8")
+        self.assertRegex(pr, r"1回目 40字 → 書き直し後 \d+字")
+        self.assertRegex(self.summary, r"1回目 40字 → 書き直し後 \d+字")
+        self.assertIn("overview", self.summary)
+
+    def test_rewrite_request_carries_the_matched_text_only_to_the_ai(self):
+        client = fk.FakeClient(fk.reply(copied_output(self.copied)), fk.reply(fk.valid_output(members=[MEMBER])))
+        self.run_draft(client)
+        followup = client.calls[1]["messages"][0]["content"][2]["text"]
+        self.assertIn(self.same, followup)  # AIへの入力には入る
+        self.assertIn("overview", followup)
+        self.assertIn("事実は変えずに、自分の言葉で言い換える", followup)
+        self.assertIn("固有名詞（製品名、社名）はそのままでよい", followup)
+        self.assertIn("前回の出力", followup)
+        self.assertNotIn(self.same, client.calls[0]["messages"][0]["content"][0]["text"])
+        for piece in (self.same, self.same[:25], self.same[-25:]):  # ログ、要約、変更案の説明、ledger、画面に出ない
+            self.assertNotIn(piece, self.all_text())
+            self.assertNotIn(piece, "\n".join(p.read_text(encoding="utf-8") for p in self.out.rglob("*") if p.is_file()))
+
+    def test_ledger_has_two_rows(self):
+        client = \
+            fk.FakeClient(fk.reply(copied_output(self.copied), i=1000, o=100), fk.reply(fk.valid_output(members=[MEMBER]), i=2000, o=200))
+        self.run_draft(client)
+        rows = self.ledger_rows()
+        self.assertEqual([r["status"] for r in rows], ["ok", "ok"])
+        self.assertEqual([r["input_tokens"] for r in rows], [1000, 2000])
+        self.assertIn("利用額", self.stdout)
+        self.assertAlmostEqual(float(self.stdout.split("利用額 ")[1].split("円")[0]), sum(r["cost_jpy"] for r in rows), places=2)
+
+    def test_still_failing_after_rewrite_stops_without_files(self):
+        client = fk.FakeClient(fk.reply(copied_output(self.copied)), fk.reply(copied_output(self.copied, start=100)))
+        self.assertEqual(self.run_draft(client), 1)
+        self.assertEqual(len(client.calls), 2)  # 書き直しは1回だけ
+        self.assertEqual(self.written(), ["ledger/2026-10.jsonl"])
+        self.assertEqual(len(self.ledger_rows()), 2)
+        self.assertIn("1回目 40字 → 書き直し後 40字", self.summary)
+        self.assertIn("転載の検査に不合格", self.stderr)
+        for piece in (self.same, self.copied[100:130]):
+            self.assertNotIn(piece, self.all_text())
+
+    def test_citation_failure_is_not_rewritten(self):
+        output = fk.valid_output(members=[MEMBER])
+        output["overview"] = output["overview"][:-4] + "[S2]"
+        client = fk.FakeClient(fk.reply(output), fk.reply(fk.valid_output(members=[MEMBER])))
+        self.assertEqual(self.run_draft(client), 1)
+        self.assertEqual(len(client.calls), 1)
+        self.assertEqual(len(self.ledger_rows()), 1)
+
+    def test_member_failure_is_not_rewritten(self):
+        client = fk.FakeClient(fk.reply(fk.valid_output(members=["NotGivenMember"])), fk.reply(fk.valid_output(members=[MEMBER])))
+        self.assertEqual(self.run_draft(client), 1)
+        self.assertEqual(len(client.calls), 1)
+
+    def test_reprint_together_with_another_failure_is_not_rewritten(self):
+        output = copied_output(self.copied, members=("NotGivenMember",))
+        client = fk.FakeClient(fk.reply(output), fk.reply(fk.valid_output(members=[MEMBER])))
+        self.assertEqual(self.run_draft(client), 1)
+        self.assertEqual(len(client.calls), 1)
+
+    def test_no_rewrite_when_the_first_output_passes_and_the_summary_keeps_the_old_form(self):
+        client = self.client()
+        self.assertEqual(self.run_draft(client), 0)
+        self.assertEqual(len(client.calls), 1)
+        self.assertNotIn("書き直し後", self.summary)
+        self.assertNotIn("書き直し後", (self.out / "pr-body.md").read_text(encoding="utf-8"))
+        self.assertIn("最長の一致", self.summary)
+
+    def test_rewrite_skipped_for_budget_exits_3_and_keeps_both_ledger_rows(self):
+        budgets = yaml.safe_load((ROOT / "config" / "budgets.yaml").read_text(encoding="utf-8"))
+        budgets["agents"]["AG-14"]["cap_jpy"] = 12
+        self.budgets = self.tmp / "budgets.yaml"
+        self.budgets.write_text(yaml.safe_dump(budgets), encoding="utf-8")
+        client = fk.FakeClient(fk.reply(copied_output(self.copied), i=1_000_000, o=100_000))  # 1回目で、上限を超える利用額
+        self.assertEqual(self.run_draft(client), 3)
+        self.assertEqual(len(client.calls), 1)
+        self.assertEqual([r["status"] for r in self.ledger_rows()], ["ok", "skipped_budget"])
+        self.assertEqual(self.written(), ["ledger/2026-10.jsonl"])
+
+    def test_rewrite_returning_invalid_output_exits_1(self):
+        client = fk.FakeClient(fk.reply(copied_output(self.copied)), fk.reply("JSONではない"))
+        self.assertEqual(self.run_draft(client), 1)
+        self.assertEqual(self.written(), ["ledger/2026-10.jsonl"])
+        self.assertEqual([r["status"] for r in self.ledger_rows()], ["ok", "invalid_output", "invalid_output"])
+
+    def test_rewritten_files_pass_validate_data(self):
+        client = fk.FakeClient(fk.reply(copied_output(self.copied)), fk.reply(fk.valid_output(members=[MEMBER])))
+        self.assertEqual(self.run_draft(client), 0)
+        repo2 = self.tmp / "repo2"
+        shutil.copytree(self.root, repo2)
+        shutil.copytree(self.out / "content", repo2 / "content")
+        shutil.copytree(self.out / "data" / "segments", repo2 / "data" / "segments")
+        self.assertEqual([str(p) for p in vd.validate(repo2)], [])
+
+
 class SkipTest(Base):
     def test_paused_exits_3_and_writes_only_the_ledger(self):
         self.operations.write_text("status: paused\n", encoding="utf-8")
