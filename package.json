@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "astro": "7.3.5",
+    "budoux": "0.9.3",
     "yaml": "2.9.1"
   },
   "devDependencies": {

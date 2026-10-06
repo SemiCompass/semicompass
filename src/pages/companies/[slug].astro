@@ -1,0 +1,289 @@
+---
+// 企業ページ（/companies/{slug}/。要件定義書 3.4、仕様書 9.2）。
+//   詳細掲載：見出し → この会社のポイント → 目次 → 事業概要・工程上の位置づけ → 業績 → IR重要ポイント → 働く環境 → ニュース → 資料 → 出典・関連
+//   Coming Soon：見出し、Coming Soon の表示、公開範囲と今後の予定へのリンク、同じ工程の詳細掲載の企業へのリンクだけ。検索に登録させない
+// content/companies/{slug}.md が draft: true の企業は、本番のビルドでは Coming Soon、プレビューのビルド（BUILD_ENV=preview）でだけ詳細掲載（確認のため）
+import { BUILD_ENV } from 'astro:env/server';
+import Chart from '../../components/Chart.astro';
+import ExternalLink from '../../components/ExternalLink.astro';
+import KeyPoints from '../../components/KeyPoints.astro';
+import Notice from '../../components/Notice.astro';
+import Phrase from '../../components/Phrase.astro';
+import RichText from '../../components/RichText.astro';
+import SourceLine from '../../components/SourceLine.astro';
+import SourceList from '../../components/SourceList.astro';
+import StateMessage from '../../components/StateMessage.astro';
+import Tag from '../../components/Tag.astro';
+import DataTable from '../../components/DataTable.astro';
+import Page from '../../layouts/Page.astro';
+import {
+  annualRows, barSpec, dateLabel, employeeSpec, formatNumber, formatOku, isDetailed, loadAuto, loadChartColors, loadCompanies,
+  loadOverview, loadSegmentMap, loadSupply, periodLabel, periodRange, regionSpec, segmentSpec,
+  type Company,
+} from '../../lib/companies';
+
+const preview = BUILD_ENV === 'preview';
+
+export function getStaticPaths() {
+  return loadCompanies().map((company) => ({ params: { slug: company.slug }, props: { company } }));
+}
+
+const { company } = Astro.props as { company: Company };
+const overview = loadOverview(company.slug);
+const auto = loadAuto(company.slug);
+const detailed = isDetailed(company, overview, auto, preview);
+const supply = loadSupply();
+const all = loadCompanies();
+const processName = (slug: string) => supply.processes.find((p) => p.slug === slug)?.name ?? slug;
+const categoryName = (slug: string) => supply.categories.find((c) => c.slug === slug)?.name ?? slug;
+const typeLabel: Record<string, string> = { domestic_listed: '国内上場企業', conglomerate: '総合メーカー', foreign_subsidiary: '外資系日本法人' };
+const sameProcess = all.filter(
+  (c) => c.slug !== company.slug && c.processes.some((p) => company.processes.includes(p)),
+);
+const title = `${company.name}｜SemiCompass`;
+const breadcrumbs = [{ label: 'ホーム', href: '/' }, { label: '企業', href: '/companies/' }, { label: company.name }];
+
+// ---- 詳細掲載の材料（数値はすべて data/auto などのファイルから） ----
+const colors = loadChartColors();
+const rows = auto ? annualRows(auto) : [];
+const latest = rows[rows.length - 1];
+const filing = auto && latest ? auto.filings.find((f) => f.doc_id === latest.doc_id) : undefined;
+const source = {
+  title: latest ? `有価証券報告書（${periodLabel(latest.fiscal_period_end)}）` : '有価証券報告書',
+  publisher: 'EDINET',
+  accessedOn: auto ? auto.updated_at.slice(0, 10) : '',
+};
+const sales = barSpec(rows, 'net_sales', '売上高', colors.metrics.net_sales);
+const operating = barSpec(rows, 'operating_income', '営業利益', colors.metrics.operating_income);
+const segmentMap = loadSegmentMap(company.slug);
+const segment = segmentMap && latest ? segmentSpec(rows, segmentMap, colors, periodLabel(latest.fiscal_period_end)) : null;
+const region = regionSpec(rows, colors);
+const employees = auto ? employeeSpec(auto, colors) : null;
+const standards = [...new Set(rows.map((r) => r.accounting_standard))];
+const standardName: Record<string, string> = { jgaap: '日本基準', ifrs: 'IFRS', usgaap: '米国基準' };
+const latestEmployee = employees ? employees.rows[employees.rows.length - 1] : undefined;
+const nonConsolidated = latestEmployee?.non_consolidated;
+
+const metrics = [
+  ...(latest?.net_sales.value != null ? [{ label: '売上高', value: formatOku(latest.net_sales.value) }] : []),
+  ...(latest?.operating_income.value != null ? [{ label: '営業利益', value: formatOku(latest.operating_income.value) }] : []),
+  ...(segment?.ratio ? [{ label: '半導体関連の比率', value: `${formatNumber(segment.ratio.value, 1)}%` }] : []),
+];
+
+const toc = [
+  { id: 'overview', label: '事業概要' },
+  { id: 'process-position', label: '工程上の位置づけ' },
+  { id: 'performance', label: '業績' },
+  { id: 'ir-points', label: 'IR重要ポイント' },
+  { id: 'work', label: '働く環境' },
+  { id: 'news', label: 'ニュース' },
+  { id: 'documents', label: '資料' },
+  { id: 'sources-heading', label: '出典・関連' },
+];
+
+// 出典の一覧：事業概要の sources（S1 など）に、業績の元の書類がなければ足す
+const sources = overview
+  ? overview.front.sources.map((s) => ({
+      number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on,
+      accessedOn: s.accessed_on, pages: s.pages, edinet: s.url.includes('edinet'),
+    }))
+  : [];
+if (filing && !overview?.front.sources.some((s) => s.doc_id === filing.doc_id)) {
+  sources.push({ number: Math.max(0, ...sources.map((s) => s.number)) + 1, title: source.title, publisher: 'EDINET', url: filing.url,
+    publishedOn: filing.submitted_at.slice(0, 10), accessedOn: source.accessedOn, pages: undefined, edinet: true });
+}
+const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上の位置づけ: 'process-position' };
+---
+
+{detailed && overview ? (
+  <Page
+    title={title}
+    heading={company.name}
+    description={`${company.name}の事業概要、工程上の位置づけ、業績。${company.tagline}。`}
+    breadcrumbs={breadcrumbs}
+    toc={toc}
+    publishedAt={overview.front.published_at}
+    updatedAt={overview.front.updated_at}
+    aiGenerated={overview.front.ai_generated}
+    aiDraft={overview.front.draft === true}
+    noindex={overview.front.draft === true}
+  >
+    <Fragment slot="lead">
+      <p class="company-meta">
+        {company.securities_code && <span>証券コード：<span class="nowrap">{company.securities_code}</span></span>}
+        <span>企業区分：{typeLabel[company.type] ?? company.type}</span>
+      </p>
+      <p class="company-tags">
+        {company.categories.map((c) => <Tag href={`/companies/process/${c}/`} kind="分類">{categoryName(c)}</Tag>)}
+        {company.processes.map((p) => <Tag href={`/processes/${p}/`} kind="工程">{processName(p)}</Tag>)}
+      </p>
+      {latest && metrics.length > 0 && (
+        <KeyPoints lead={company.tagline} metrics={metrics} period={periodLabel(latest.fiscal_period_end)} source="有価証券報告書、EDINET" />
+      )}
+      {overview.front.draft && (
+        <Notice kind="warning" title="下書きです（プレビューだけに表示しています）">
+          <p>この企業ページは、運営者の確認の前の下書きです。本番のサイトでは、Coming Soon として表示されます。</p>
+        </Notice>
+      )}
+    </Fragment>
+
+    {overview.sections.map((section) => (
+      <section aria-labelledby={headingIds[section.heading]}>
+        <h2 id={headingIds[section.heading] ?? section.heading}><Phrase text={section.heading} /></h2>
+        {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+      </section>
+    ))}
+
+    <section aria-labelledby="performance">
+      <h2 id="performance"><Phrase text="業績" /></h2>
+      {standards.length > 1 && (
+        <Notice kind="note" title="会計基準の切り替え">
+          <p>期によって会計基準が違います（{standards.map((s) => standardName[s] ?? s).join('、')}）。違う基準の期を、単純には比べられません。</p>
+        </Notice>
+      )}
+      {sales ? (
+        <Chart id="sales" title="売上高の推移" unit="億円" period={periodRange(rows)} spec={sales} source={source} />
+      ) : (
+        <StateMessage kind="empty" message="売上高のデータがありません。" />
+      )}
+      {operating && <Chart id="operating" title="営業利益の推移" unit="億円" period={periodRange(rows)} spec={operating} source={source} />}
+      <>
+        {segment?.spec ? (
+          <Chart id="segment" title="セグメント別の売上の推移" unit="億円" period={periodRange(rows.filter((r) => r.segments.length > 0))} spec={segment.spec} source={source} />
+        ) : segment?.single ? (
+          <>
+            <h3>セグメント別の売上</h3>
+            <p>報告セグメントは「{segment.single.name}」の1つです（全社の売上が半導体関連）。</p>
+            {segment.single.source && (
+              <SourceLine
+                title={`${segment.single.source.title}（${segment.single.source.pages}）`}
+                publisher={segment.single.source.publisher}
+                accessedOn={segment.single.source.accessedOn}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <h3>セグメント別の売上</h3>
+            <StateMessage
+              kind="empty"
+              message={segment?.reason ?? 'セグメントの区分が未確認のため、セグメント別の売上のグラフは、まだありません。'}
+              actionLabel="売上高の推移を見る"
+              actionHref="#performance"
+            />
+          </>
+        )}
+      </>
+      {region ? (
+        <Chart id="region" title="地域別の売上" unit="億円" period={region.period} spec={region.spec} source={source} />
+      ) : (
+        <>
+          <h3>地域別の売上</h3>
+          <StateMessage kind="empty" message="地域別の売上は、まだ取り込んでいません。" />
+        </>
+      )}
+    </section>
+
+    <section aria-labelledby="ir-points">
+      <h2 id="ir-points"><Phrase text="IR重要ポイント" /></h2>
+      <StateMessage kind="empty" message="IR重要ポイントは、まだありません。" actionLabel={company.ir_url ? '会社のIRページを見る' : undefined} actionHref={company.ir_url} />
+    </section>
+
+    <section aria-labelledby="work">
+      <h2 id="work"><Phrase text="働く環境" /></h2>
+      {employees && latestEmployee ? (
+        <>
+          <Chart id="employees" title="従業員数の推移" unit="人" period={periodRange(employees.rows)} spec={employees.spec} source={source} />
+          {nonConsolidated && (
+            <DataTable
+              caption="提出会社単体の従業員の状況"
+              columns={[{ key: 'item', label: `項目（${periodLabel(latestEmployee.fiscal_period_end)}、提出会社単体）` }, { key: 'value', label: '値', numeric: true }]}
+              rows={[
+                ...(nonConsolidated.employees.value != null ? [{ item: '従業員数（人）', value: formatNumber(nonConsolidated.employees.value, 0) }] : []),
+                ...(nonConsolidated.average_age?.value != null ? [{ item: '平均年齢（歳）', value: formatNumber(nonConsolidated.average_age.value, 1) }] : []),
+                ...(nonConsolidated.average_length_of_service?.value != null ? [{ item: '平均勤続年数（年）', value: formatNumber(nonConsolidated.average_length_of_service.value, 1) }] : []),
+                ...(nonConsolidated.average_annual_salary?.value != null ? [{ item: '平均年間給与（万円）', value: formatNumber(nonConsolidated.average_annual_salary.value / 10000, 1) }] : []),
+              ]}
+            />
+          )}
+          {company.is_holding_company && <Notice kind="note"><p>持株会社のため、提出会社単体の数値は、持株会社の社員だけです。</p></Notice>}
+        </>
+      ) : (
+        <StateMessage kind="empty" message="働く環境のデータは、まだありません。" />
+      )}
+      {company.recruit_url && <p><ExternalLink href={company.recruit_url}>採用ページ</ExternalLink></p>}
+    </section>
+
+    <section aria-labelledby="news">
+      <h2 id="news"><Phrase text="ニュース" /></h2>
+      <StateMessage kind="empty" message={`${company.name}に関するニュース解説は、まだありません。`} actionLabel="ニュースの一覧を見る" actionHref="/news/" />
+    </section>
+
+    <section aria-labelledby="documents">
+      <h2 id="documents"><Phrase text="資料" /></h2>
+      <ul>
+        {filing && <li><ExternalLink href={filing.url}>{source.title}（EDINET）</ExternalLink></li>}
+        {company.ir_url && <li><ExternalLink href={company.ir_url}>IRページ</ExternalLink></li>}
+        {company.website_url && <li><ExternalLink href={company.website_url}>会社の公式サイト</ExternalLink></li>}
+      </ul>
+    </section>
+
+    <section aria-labelledby="sources-heading">
+      <SourceList sources={sources} heading="出典" />
+      <h2 id="related"><Phrase text="関連するページ" /></h2>
+      {sameProcess.length > 0 ? (
+        <ul>
+          {sameProcess.slice(0, 6).map((c) => <li><a href={`/companies/${c.slug}/`}>{c.short_names[0] ?? c.name}</a>：{c.tagline}</li>)}
+        </ul>
+      ) : (
+        <StateMessage kind="empty" message="同じ工程の企業は、まだありません。" />
+      )}
+    </section>
+    <Fragment slot="aside" />
+  </Page>
+) : (
+  <Page title={title} heading={company.name} description={`${company.name}のページは、準備中です。`} breadcrumbs={breadcrumbs} noindex wide>
+    <p class="company-meta">
+      {company.securities_code && <span>証券コード：<span class="nowrap">{company.securities_code}</span></span>}
+      <span>企業区分：{typeLabel[company.type] ?? company.type}</span>
+    </p>
+    <p class="company-tags">
+      {company.processes.map((p) => <Tag href={`/processes/${p}/`} kind="工程">{processName(p)}</Tag>)}
+    </p>
+    <Notice kind="note" title="Coming Soon">
+      <p>このページは準備中です。詳しい内容は、順に公開します。<a href="/about/roadmap/">公開範囲と今後の予定</a>をご覧ください。</p>
+    </Notice>
+    <h2><Phrase text="同じ工程の企業" /></h2>
+    {(() => {
+      const links = sameProcess.filter((c) => {
+        const o = loadOverview(c.slug);
+        return isDetailed(c, o, loadAuto(c.slug), preview);
+      });
+      return links.length > 0 ? (
+        <ul>
+          {links.slice(0, 6).map((c) => <li><a href={`/companies/${c.slug}/`}>{c.short_names[0] ?? c.name}</a>：{c.tagline}</li>)}
+        </ul>
+      ) : (
+        <StateMessage kind="empty" message="同じ工程で、詳しい内容を公開している企業は、まだありません。" actionLabel="公開範囲と今後の予定を見る" actionHref="/about/roadmap/" />
+      );
+    })()}
+  </Page>
+)}
+
+<style>
+  .company-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-5);
+    margin-block: 0 var(--space-3);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+    letter-spacing: var(--text-dense-tracking);
+  }
+  .company-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block: 0 var(--space-4);
+  }
+</style>

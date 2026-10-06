@@ -4,6 +4,7 @@
 import { BUILD_ENV } from 'astro:env/server';
 import AiBadge from '../../components/AiBadge.astro';
 import Button from '../../components/Button.astro';
+import Chart from '../../components/Chart.astro';
 import Citation from '../../components/Citation.astro';
 import DataTable from '../../components/DataTable.astro';
 import ExternalLink from '../../components/ExternalLink.astro';
@@ -28,6 +29,7 @@ const toc = [
   { id: 'links', label: 'リンクとボタン' },
   { id: 'search', label: '検索欄' },
   { id: 'table', label: '表' },
+  { id: 'charts', label: 'グラフ' },
   { id: 'key-points', label: 'この会社のポイント' },
   { id: 'notices', label: '注記・表示' },
   { id: 'tags', label: 'タグ' },
@@ -48,6 +50,42 @@ const rows = [
   { name: '架空半導体製造装置販売サービスホールディングス株式会社（最も長い名前の例）', code: '5678', sales: '999,999.9', ratio: '100.0' },
   { name: '数値のない例', code: '—', sales: '—', ratio: '—' },
 ];
+// グラフの見本（サンプルの数値。実際のページでは、数値をすべて data/auto などのファイルから読む）
+const periods = ['2021-03', '2022-03', '2023-03', '2024-03', '2025-03', '2026-03'].map((fp) => {
+  const [y, m] = fp.split('-').map(Number);
+  return { label: `${y}年${m}月期`, short: `${String(y).slice(2)}/${m}`, lines: [`${y}年`, `${m}月期`] };
+});
+const demoSource = { title: 'サンプルの資料', publisher: 'サンプル', accessedOn: '2026-10-06' };
+const barDemo = { kind: 'bar' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: true, withChange: true,
+  series: [{ name: '売上高', color: '--chart-single', values: [1200.5, 1500, 1320.8, 1800.2, 2100, 2443.5] }] };
+const demoOthers = [
+  { name: 'その他事業A', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [300, 280, 260, 300, 280, 250] },
+  { name: 'その他事業B', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [100, 110, 120, 130, 140, 150] },
+];
+const demoSemi = { name: 'テスト事業', color: '--chart-highlight', note: '半導体関連', values: [500, 600, 700, 800, 900, 1100] };
+const demoPartial = { name: '部材事業', color: '--chart-cat-1', note: '一部含む', values: [200, 220, 240, 260, 300, 320] };
+const stackedDemo = { kind: 'stacked' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: false,
+  latestLabel: ['半導体関連', '1,100.0億円（52.9%）'],
+  note: 'セグメントの合計は、調整額を含まないため、連結売上高と一致しません。半導体関連以外の内訳は、「表で見る」に出ています。',
+  series: [demoSemi, demoPartial, { name: '半導体関連以外（計）', color: '--chart-other', pattern: true, values: [400, 390, 380, 430, 420, 400] }],
+  tableSeries: [demoSemi, demoPartial, ...demoOthers] };
+// 半導体関連が2つ以上のとき：--chart-cat-1〜4（濃淡ではなく）
+const multiSemiDemo = { kind: 'stacked' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: false,
+  latestLabel: ['半導体関連', '1,800.0億円（75.0%）'],
+  note: 'セグメントの合計は、調整額を含まないため、連結売上高と一致しません。半導体関連の区分ごとの数値は、「表で見る」に出ています。',
+  series: [
+    { name: '装置事業', color: '--chart-cat-1', note: '半導体関連', values: [400, 450, 500, 550, 600, 700] },
+    { name: '材料事業', color: '--chart-cat-2', note: '半導体関連', values: [300, 320, 340, 360, 400, 500] },
+    { name: '検査事業', color: '--chart-cat-3', note: '半導体関連', values: [200, 220, 240, 260, 300, 600] },
+    { name: '半導体関連以外', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [300, 280, 260, 300, 280, 600] },
+  ] };
+const hbarDemo = { kind: 'hbar' as const, unit: '億円', decimals: 1, labelLatest: false,
+  categories: ['日本', '北米', 'アジア', '欧州'].map((n) => ({ label: n, short: n, lines: [n] })),
+  series: [{ name: '売上高', color: '--chart-single', values: [900.4, 620, 410.2, 150] }] };
+const lineDemo = { kind: 'line' as const, categories: periods, unit: '人', decimals: 0, labelLatest: true, withChange: true,
+  series: [{ name: '従業員数', color: '--chart-single', values: [5200, 5900, 6500, 6700, 6900, 7241] }] };
+const zeroDemo = { kind: 'bar' as const, categories: periods.slice(0, 1), unit: '億円', decimals: 1, labelLatest: true,
+  series: [{ name: '1件の例', color: '--chart-single', values: [9999999.9] }] };
 const sources = [
   { number: 1, title: '有価証券報告書（2026年3月期）', publisher: 'サンプル電子工業（EDINET）', url: 'https://example.com/edinet', publishedOn: '2026-06-22', accessedOn: '2026-10-06', pages: '10〜12', edinet: true },
   { number: 2, title: '会社概要', publisher: 'サンプル電子工業', accessedOn: '2026-10-06' },
@@ -70,6 +108,7 @@ const sources = [
 
   <h2 id="frame">共通の枠</h2>
   <p>ヘッダー（上）、パンくず・ページの頭・目次（このページの上）、フッター（下）は、このページに出ています。ページの頭の下の1行は、公開日・更新日・作成者とAI作成の表示（単独）の例です。</p>
+  <p><AiBadge draft /></p>
   <p><AiBadge /></p>
   <PageHead title="ページの頭だけの例（日付なし）" />
 
@@ -95,6 +134,15 @@ const sources = [
   <DataTable caption="0件の例" columns={columns} rows={[]} />
   <p>1件のとき：</p>
   <DataTable caption="1件の例" columns={columns} rows={rows.slice(0, 1)} />
+
+  <h2 id="charts">グラフ</h2>
+  <p>棒や点を選ぶ（タップ、クリック、キーボード）と、数値が出ます。同じ数値の表は、「表で見る」で開けます。</p>
+  <Chart id="demo-bar" title="縦の棒（1系列）" unit="億円" period="2021年3月期〜2026年3月期" spec={barDemo} source={demoSource} />
+  <Chart id="demo-stacked" title="積み上げの縦の棒（セグメント別）" unit="億円" period="2021年3月期〜2026年3月期" spec={stackedDemo} source={demoSource} />
+  <Chart id="demo-multi" title="積み上げの縦の棒（半導体関連が2つ以上）" unit="億円" period="2021年3月期〜2026年3月期" spec={multiSemiDemo} source={demoSource} />
+  <Chart id="demo-hbar" title="横の棒（地域別）" unit="億円" period="2026年3月期" spec={hbarDemo} source={demoSource} />
+  <Chart id="demo-line" title="折れ線" unit="人" period="2021年3月期〜2026年3月期" spec={lineDemo} source={demoSource} />
+  <Chart id="demo-one" title="1件・最も大きい数値の例" unit="億円" period="2021年3月期" spec={zeroDemo} source={demoSource} />
 
   <h2 id="key-points">この会社のポイント</h2>
   <KeyPoints

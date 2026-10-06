@@ -1,0 +1,139 @@
+---
+// グラフの部品（仕様書 10章）。タイトル、単位、期間、出典と確認日を必ず受け取る。同じ数値の表を「表で見る」で開ける（DS-02、CLAUDE.md 9章）。
+// 金額の縦軸は0から（src/lib/chart.ts）。系列の色は config/chart-colors.yaml の変数の名前で渡す。2つの縦軸のグラフは作らない。
+import { buildChart, type ChartSpec } from '../lib/chart';
+import { formatNumber } from '../lib/format';
+import ChartSvg from './ChartSvg.astro';
+import DataTable from './DataTable.astro';
+import SourceLine from './SourceLine.astro';
+
+interface Props {
+  title: string; // 例：売上高の推移
+  unit: string; // 例：億円
+  period: string; // 例：2021年3月期〜2026年3月期
+  spec: ChartSpec;
+  source: { title: string; publisher: string; accessedOn: string };
+  headingLevel?: 'h3' | 'h4';
+  id: string; // ページの中で重ならない名前
+}
+const { title, unit, period, spec, source, id, headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+const compact = buildChart(spec, 'compact', `${id}-c`);
+const wide = buildChart(spec, 'wide', `${id}-w`);
+
+// 同じ数値の表（表で見る）
+const multi = spec.series.length > 1;
+const tableSeries = spec.tableSeries ?? spec.series; // まとめた系列の内訳は、表に出す
+const columns = [
+  { key: 'period', label: spec.kind === 'hbar' ? '名前' : '期' },
+  ...tableSeries.map((s, i) => ({ key: `s${i}`, label: spec.tableSeries && s.note ? `${s.name}（${s.note}、${unit}）` : `${s.name}（${unit}）`, numeric: true })),
+];
+const rows = spec.categories.map((c, i) => ({
+  period: c.label,
+  ...Object.fromEntries(tableSeries.map((s, si) => [`s${si}`, s.values[i] === null || s.values[i] === undefined ? '—' : formatNumber(s.values[i] as number, spec.decimals)])),
+}));
+const legend = multi || spec.kind === 'stacked' ? spec.series : [];
+---
+
+<figure class="chart" aria-labelledby={`${id}-title`}>
+  <Heading class="chart__title" id={`${id}-title`}>{title}</Heading>
+  <p class="chart__meta">単位：{unit}。期間：{period}。マウスを重ねなくても、棒や点を選ぶ（タップ、クリック、キーボード）と数値が出ます。</p>
+  <div class="chart__plot">
+    <ChartSvg model={compact} title={`${title}（${unit}）`} uid={`${id}-c`} />
+    <ChartSvg model={wide} title={`${title}（${unit}）`} uid={`${id}-w`} />
+  </div>
+  {spec.note && <p class="chart__note">{spec.note}</p>}
+  {legend.length > 0 && (
+    <ul class="chart__legend" aria-label="凡例">
+      {legend.map((s) => (
+        <li class="chart__legend-item">
+          <svg class="chart__swatch" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+            <defs>
+              <pattern id={`${id}-sw-${s.name}`} patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+                <rect width="7" height="7" fill="var(--chart-other)"></rect>
+                <line x1="0" y1="0" x2="0" y2="7" class="chart__hatch"></line>
+              </pattern>
+            </defs>
+            <rect width="16" height="16" fill={s.pattern ? `url(#${id}-sw-${s.name})` : `var(${s.color})`}></rect>
+          </svg>
+          <span>{s.name}{s.note ? `（${s.note}）` : ''}</span>
+        </li>
+      ))}
+    </ul>
+  )}
+  <details class="chart__table">
+    <summary><span>表で見る</span></summary>
+    <DataTable caption={`${title}（${unit}）`} columns={columns} rows={rows} />
+  </details>
+  <SourceLine title={source.title} publisher={source.publisher} accessedOn={source.accessedOn} />
+</figure>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .chart {
+    margin: var(--space-5) 0;
+  }
+  .chart__title {
+    margin-block: 0 var(--space-2);
+  }
+  .chart__meta {
+    margin-block: 0 var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .chart__plot :global(.chart-svg--wide) {
+    display: none;
+  }
+  .chart__note {
+    margin-block: var(--space-3) 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .chart__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .chart__legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .chart__hatch {
+    stroke: var(--color-surface);
+    stroke-width: var(--chart-line-width);
+  }
+  .chart__table {
+    margin-block-start: var(--space-3);
+  }
+  .chart__table > summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--target-min);
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+  }
+  @media (--tablet) {
+    .chart__plot :global(.chart-svg--compact) {
+      display: none;
+    }
+    .chart__plot :global(.chart-svg--wide) {
+      display: block;
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/chart';
+</script>

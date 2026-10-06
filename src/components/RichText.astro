@@ -1,0 +1,22 @@
+---
+// 本文の1段落：文節の切れ目（<wbr>）、数値と単位の折り返しなし、出典の番号 [S1] を上付きの番号のリンクにする。
+// 番号は、直前の1字と、直後の句読点（。、）と一続きにして、折り返さない（行の頭に「。」「、」が来ない）。
+// 番号が句点の後ろにある書き方（「〜である。[S1]」）は、句点の前（「〜である[1]。」）に移して表示する
+import { pieces } from '../lib/phrase';
+import Citation from './Citation.astro';
+
+interface Props {
+  text: string;
+}
+const parts = pieces(Astro.props.text);
+---
+
+{parts.map((piece) =>
+  piece.kind === 'cite' ? (
+    <span class="nowrap">{piece.lead}{piece.numbers.map((n) => <Citation number={n} />)}{piece.after}</span>
+  ) : piece.kind === 'number' ? (
+    <span class="nowrap">{piece.text}</span>
+  ) : (
+    piece.phrases.map((part, index) => (index > 0 ? [<wbr />, part] : part))
+  ),
+)}

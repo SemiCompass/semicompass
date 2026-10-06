@@ -212,6 +212,47 @@ class PreviewFixesTest(unittest.TestCase):
             self.assertNotRegex(text, r"(ある|いる|ない|する|した|できる|れる)。<", rel)
 
 
+class CompanyPageSourceTest(unittest.TestCase):
+    def read(self, rel):
+        return (ROOT / rel).read_text(encoding="utf-8")
+
+    def test_no_literal_amounts_in_the_page_and_chart_code(self):
+        for rel in ("src/pages/companies/[slug].astro", "src/lib/companies.ts", "src/lib/chart.ts", "src/components/Chart.astro",
+                    "src/components/ChartSvg.astro"):
+            self.assertNotRegex(self.read(rel), r"\d{1,3}(,\d{3})+", f"{rel} に、数値が直接書かれている")
+
+    def test_chart_colors_yaml_uses_existing_variables_only(self):
+        data = yaml.safe_load(self.read("config/chart-colors.yaml"))
+        names = [v["color"] for v in [*data["segment_classification"].values(), *data["metrics"].values()]]
+        for name in names:
+            self.assertIn(name, V)
+        self.assertEqual(set(data["segment_classification"]), {"semiconductor", "partial", "excluded"})
+        self.assertEqual(data["segment_classification"]["semiconductor"]["color"], "--chart-highlight")
+        self.assertEqual(data["segment_classification"]["excluded"]["color"], "--chart-other")
+        self.assertTrue(data["segment_classification"]["excluded"]["pattern"])
+
+    def test_charts_get_title_unit_period_and_source(self):
+        chart = self.read("src/components/Chart.astro")
+        for needle in ("title: string", "unit: string", "period: string", "source:", "表で見る", "SourceLine"):
+            self.assertIn(needle, chart)
+
+    def test_numbers_with_units_do_not_wrap_and_budoux_is_used(self):
+        self.assertRegex(self.read("src/lib/phrase.ts"), r"億円\|百万円")
+        self.assertIn("budoux", self.read("src/lib/phrase.ts"))
+        self.assertIn("nowrap", self.read("src/components/RichText.astro"))
+        self.assertIn("white-space: nowrap", self.read("src/components/KeyPoints.astro"))
+        self.assertIn("auto-phrase", self.read("src/styles/global.css"))  # auto-phrase は残す
+
+
+class TocScriptTest(unittest.TestCase):
+    def test_current_heading_is_the_last_one_passed(self):
+        script = (ROOT / "src" / "scripts" / "toc.ts").read_text(encoding="utf-8")
+        self.assertNotIn("IntersectionObserver", script)
+        self.assertIn("getBoundingClientRect().top <= line", script)
+        self.assertIn("scrollHeight", script)  # ページの最後では、最後の項目
+        self.assertIn('"scroll"'.replace('"', "'"), script)
+
+
 class MenuTest(unittest.TestCase):
     def test_menu_yaml(self):
         data = yaml.safe_load((ROOT / "config" / "menu.yaml").read_text(encoding="utf-8"))
@@ -258,6 +299,151 @@ class BuildTest(unittest.TestCase):
         html = (dist / "index.html").read_text(encoding="utf-8")
         self.assertEqual(html.count("<h1"), 1)
         self.assertRegex(html, r"企業</a>.*工程</a>.*ニュース</a>")
+
+
+def node_json(code: str):
+    """src/lib/phrase.ts を、Node.js（型の指定を外して実行）で動かし、結果のJSONを返す。"""
+    import json
+    script = "import('./src/lib/phrase.ts').then((m) => console.log(JSON.stringify((" + code + ")(m))))"
+    done = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    assert done.returncode == 0, done.stderr[-800:]
+    return json.loads(done.stdout.strip().splitlines()[-1])
+
+
+@unittest.skipUnless(HAS_NODE, "node_modules がない")
+class CitationPunctuationTest(unittest.TestCase):
+    """本文の出典の番号と句読点（変更案 #120 の追加の直し）。行の頭に「。」「、」が来ないことの、構造の確認。実際の折り返しは、ブラウザで確かめた。"""
+
+    def pieces(self, text):
+        return node_json(f"(m) => m.pieces({text!r})")
+
+    def test_period_after_citation_is_moved_before_it(self):
+        self.assertEqual(node_json("(m) => m.normalizeCitations('〜である。[S1]')"), "〜である[S1]。")
+        self.assertEqual(node_json("(m) => m.normalizeCitations('〜である。[S1][S2]、次')"), "〜である[S1][S2]。、次")
+
+    def test_spaces_before_citation_are_removed(self):
+        self.assertEqual(node_json("(m) => m.normalizeCitations('〜である [S1]　[S2]')"), "〜である[S1][S2]")
+
+    def test_normalization_is_idempotent(self):
+        text = "売上高は24,435.3億円である。[S1] 次の文です。[S2][S3]、続き。"
+        once = node_json(f"(m) => m.normalizeCitations({text!r})")
+        self.assertEqual(node_json(f"(m) => m.normalizeCitations({once!r})"), once)
+
+    def test_citation_is_one_unbreakable_piece_with_the_previous_char_and_the_following_punctuation(self):
+        parts = self.pieces("事業を行っている。[S1]次の文。")
+        cite = next(p for p in parts if p["kind"] == "cite")
+        self.assertEqual((cite["lead"], cite["numbers"], cite["after"]), ("る", [1], "。"))
+        for p in parts:
+            if p["kind"] == "text":
+                for phrase in p["phrases"]:
+                    self.assertNotIn(phrase[:1], "。、")  # 行の頭になりうる文節の頭に、句読点がない
+
+    def test_number_with_unit_stays_with_the_citation(self):
+        cite = next(p for p in self.pieces("売上高は24,435.3億円[S1]。") if p["kind"] == "cite")
+        self.assertEqual((cite["lead"], cite["after"]), ("24,435.3億円", "。"))
+
+    def test_no_text_piece_starts_with_a_punctuation(self):
+        for text in ("あいう。[S1]え、[S2]お。", "数は12.3%です。[S1]", "〜である。 [S1]。"):
+            for p in self.pieces(text):
+                if p["kind"] == "text":
+                    self.assertFalse(p["phrases"] and p["phrases"][0][:1] in "。、", text)
+
+
+@unittest.skipUnless(HAS_NODE, "node_modules がない")
+class CompanyPageBuildTest(BuildTest):
+    def page(self, dist, slug):
+        return (dist / "companies" / slug / "index.html").read_text(encoding="utf-8")
+
+    def test_detailed_in_preview_and_coming_soon_in_production(self):
+        preview = self.build("preview")
+        html = self.page(preview, "tokyo-electron")
+        self.assertIn('class="chart-svg', html)
+        self.assertIn("表で見る", html)
+        self.assertIn('aria-pressed="false"', html)
+        self.assertIn("<wbr>", html)  # 文節の切れ目（BudouX）
+        self.assertIn("class=\"nowrap\"", html)
+        self.assertIn("下書きです", html)
+        self.assertIn('name="robots" content="noindex, nofollow"', html)  # draft: true は、検索に登録させない
+        for needle in ("事業概要", "工程上の位置づけ", "業績", "IR重要ポイント", "働く環境", "ニュース", "資料", "出典"):
+            self.assertIn(needle, html)
+        # 数値は data/auto から（百万円 → 億円、小数第1位に四捨五入）
+        import json
+        from decimal import ROUND_HALF_UP, Decimal
+        auto = json.loads((ROOT / "data" / "auto" / "tokyo-electron.json").read_text(encoding="utf-8"))
+        latest = [r for r in auto["financials"] if r["period_type"] == "annual"][-1]
+        expected = Decimal(latest["net_sales"]["value"]) / 100
+        text = f"{expected.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP):,}億円"
+        self.assertIn(text, html)
+        self.assertRegex(html, r">0</text>")  # 金額の縦軸は0から
+        # 報告セグメントが1つ（data/segments の区分が semiconductor）：グラフではなく、説明と根拠
+        self.assertIn("報告セグメントは「半導体製造装置」の1つです", html)
+        # 外資系日本法人（事業概要も業績もない）は、プレビューでも Coming Soon
+        jasm = self.page(preview, "jasm")
+        self.assertIn("Coming Soon", jasm)
+        self.assertNotIn('class="chart-svg', jasm)
+        self.assertIn('name="robots" content="noindex, nofollow"', jasm)
+        production = self.build("production")
+        html = self.page(production, "tokyo-electron")
+        self.assertIn("Coming Soon", html)
+        self.assertNotIn('class="chart-svg', html)
+        self.assertNotIn("下書きです", html)
+        self.assertIn('name="robots" content="noindex, nofollow"', html)
+        self.assertIn('href="/about/roadmap/"', html)
+        self.assertNotIn("売上高", html.split("<main")[1])  # 業績を出さない
+        self.assertEqual(len(list((production / "companies").glob("*/index.html"))), len(list((ROOT / "data" / "companies").glob("*.yaml"))))
+
+    def test_review_fixes_on_company_pages(self):
+        import re
+        preview = self.build("preview")
+        # 1 AI作成の表示：draft: true は「運営者の確認前」
+        for slug in ("tokyo-electron", "sony", "screen"):
+            html = self.page(preview, slug)
+            self.assertIn("AIが下書きしました（運営者の確認前）", html)
+            self.assertNotIn("運営者が確認しました", html)
+            # 2 出典の番号：前に空白がなく、句点の後ろにない。句読点は、番号と同じ折り返さない一続きの中
+            self.assertNotRegex(html, r"\s<sup class=\"citation\"")
+            self.assertNotRegex(html, r"[。、]<sup class=\"citation\"")
+            self.assertRegex(html, r"</sup>[。、]?</span>")
+            self.assertNotRegex(html, r"</sup></span>[。、]")
+            # 3 目次の項目は、すべて、ページの見出しの id に当たる
+            toc = re.findall(r'<nav class="[^"]*toc--side[^"]*"[^>]*>(.*?)</nav>', html, re.S)[0]
+            for target in re.findall(r'href="#([^"]+)"', toc):
+                self.assertIn(f'id="{target}"', html, target)
+        # 4 報告セグメントが1つの会社：比率100.0%と、根拠
+        html = self.page(preview, "tokyo-electron")
+        self.assertIn("報告セグメントは「半導体製造装置」の1つです（全社の売上が半導体関連）", html)
+        self.assertIn("100.0%", html)
+        self.assertIn("セグメント情報", html)
+        self.assertNotIn("区分が未確認", html)
+        # 5 半導体関連以外が2つ以上：グラフでは1つにまとめ、内訳は表に出す
+        html = self.page(preview, "sony")
+        self.assertIn("半導体関連以外（計）", html)
+        for name in ("ゲーム＆ネットワークサービス", "音楽", "映画", "エンタテインメント・テクノロジー＆サービス", "その他"):
+            self.assertIn(f"{name}（半導体関連以外、億円）", html)  # 表の見出し（内訳）
+        legend = re.findall(r'<ul class="chart__legend"[^>]*>(.*?)</ul>', html, re.S)[0]
+        self.assertEqual(legend.count("chart__legend-item"), 2)
+        # 6 合計は出さない。半導体関連の値と比率だけをラベルにし、注記を添える
+        self.assertNotIn("合計</tspan>", html)
+        self.assertIn("半導体関連</tspan>", html)
+        self.assertRegex(html, r"\d[\d,]*\.\d億円（\d+\.\d%）</tspan>")
+        self.assertIn("セグメントの合計は、調整額を含まないため、連結売上高と一致しません。", html)
+        # 5 半導体関連（--chart-highlight）、一部含む（--chart-cat-1）、半導体関連以外（斜線）
+        html = self.page(preview, "screen")
+        for fill in ("var(--chart-highlight)", "var(--chart-cat-1)", "url(#hatch-segment-w)"):
+            self.assertIn(f'fill="{fill}"', html)
+
+    def test_component_page_shows_both_ai_states_and_multi_semiconductor_chart(self):
+        html = (self.build("preview") / "dev" / "components" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("AIが下書きしました（運営者の確認前）", html)
+        self.assertIn("AIが下書きし、運営者が確認しました", html)
+        for var in ("--chart-cat-1", "--chart-cat-2", "--chart-cat-3"):
+            self.assertIn(f'fill="var({var})"', html)
+
+    def test_component_page_has_every_chart_kind(self):
+        html = (self.build("preview") / "dev" / "components" / "index.html").read_text(encoding="utf-8")
+        self.assertGreaterEqual(html.count('class="chart-svg chart-svg--wide'), 5)
+        for needle in ("縦の棒", "積み上げの縦の棒", "横の棒", "折れ線", "url(#hatch-", "半導体関連以外"):
+            self.assertIn(needle, html)
 
 
 if __name__ == "__main__":

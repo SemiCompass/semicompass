@@ -1,0 +1,11 @@
+---
+// 見出し・導入の文字：文節の切れ目に <wbr> を入れる（BudouX。ビルドのとき）。CSSの word-break: auto-phrase と併用する
+import { phrases } from '../lib/phrase';
+
+interface Props {
+  text: string;
+}
+const parts = phrases(Astro.props.text);
+---
+
+{parts.map((part, index) => (index > 0 ? [<wbr />, part] : part))}

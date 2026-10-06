@@ -115,7 +115,8 @@
   --menu-min-width: 12rem; /* 開いたメニューの最小の幅（仕様書に値がない） */
   --search-width-min: 12rem; /* ヘッダーの検索欄の幅の範囲（仕様書に値がない） */
   --search-width-max: 18rem;
-  --key-point-min: 10rem; /* この会社のポイントの数値1つの最小の幅（仕様書に値がない） */
+  --key-point-min: 8rem; /* この会社のポイントの数値1つの基準の幅（仕様書に値がない）。数値と単位は折り返さないため、入りきらないときは、行を替える */
+  --chart-line-width: 2px; /* 10.2 折れ線の太さ。棒の間の隙間も同じ */
   --toc-sticky-top: var(--space-6);
   --table-first-column-min: 8rem; /* 8.7 左に固定する最初の列の幅の範囲。長い名前は折り返す（仕様書に値がない） */
   --table-first-column-max: 12rem;
