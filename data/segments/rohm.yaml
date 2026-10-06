@@ -1,0 +1,45 @@
+schema_version: 1
+company: rohm
+reviewed_on: '2026-10-06'
+based_on: S100YF41
+segments:
+- name: LSI
+  xbrl_members:
+  - ICsReportableSegmentMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: アナログ、ロジック、メモリ等のLSIの生産を行うセグメントである。
+- name: 半導体素子
+  xbrl_members:
+  - DiscreteSemiconductorDevicesReportableSegmentMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: パワーデバイスやトランジスタ、ダイオードのほか、発光ダイオードと半導体レーザーを製造する。
+- name: モジュール
+  xbrl_members:
+  - ModulesReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: プリントヘッドと光学モジュールの生産である。半導体との関わりを判断できないため、慎重に対象外とした。
+- name: その他
+  xbrl_members:
+  - OperatingSegmentsNotIncludedInReportableSegmentsAndOtherRevenueGeneratingBusinessActivitiesMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 報告セグメントに含まれない事業で、抵抗器事業等を含む。半導体の事業とは読み取れないため対象外とした。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: ローム株式会社（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YF41.pdf
+  published_on: '2026-06-19'
+  accessed_on: '2026-10-06'
+  doc_id: S100YF41
