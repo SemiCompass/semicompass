@@ -1,0 +1,19 @@
+schema_version: 1
+company: socionext
+reviewed_on: '2026-10-06'
+based_on: S100YHHK
+segments:
+- name: Solution SoCで開発するSoCを主とする単一セグメント
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 単一セグメントのため個別の区分名は開示されていない。事業の中心がSoCの設計開発であるため半導体関連とした。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: 株式会社ソシオネクスト（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YHHK.pdf
+  published_on: '2026-06-23'
+  accessed_on: '2026-10-06'
+  doc_id: S100YHHK
