@@ -70,8 +70,20 @@ class Base(unittest.TestCase):
 
 class RealDataTest(unittest.TestCase):
     def test_repository_data_passes(self):
+        """リポジトリのデータに、エラー（severity が error）が0件であること。
+
+        警告（severity が warning。V-12 の文字数の目安など）は、データ定義書 13章で「変更案に表示するだけ」と定めており、
+        不合格にしない。そのため、警告があっても、このテストは失敗しない。警告は、テストの出力に一覧として出す。
+        validate_data.py の終了コード（警告だけなら0、--strict で警告もエラー）は、ここでは確かめない（test_cli_on_whole_repository と、警告の終了コードのテストで確かめる）。
+        """
         problems = vd.validate()
-        self.assertEqual([str(p) for p in problems], [])  # エラーも警告もない
+        warnings = [p for p in problems if p.severity == "warning"]
+        errors = [p for p in problems if p.severity == "error"]
+        if warnings:
+            print(f"\n警告 {len(warnings)}件（失敗にしない）：", file=sys.stderr)
+            for warning in warnings:
+                print(f"  {warning}", file=sys.stderr)
+        self.assertEqual([str(p) for p in errors], [])
 
     def test_repository_has_the_expected_files(self):
         files = vd.collect_files(ROOT)
