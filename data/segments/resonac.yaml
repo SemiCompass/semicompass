@@ -1,0 +1,53 @@
+schema_version: 1
+company: resonac
+reviewed_on: '2026-10-06'
+based_on: S100XTT8
+segments:
+- name: 半導体・電子材料
+  xbrl_members:
+  - SemiconductorAndElectronicMaterialsReportableSegmentMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 前工程材料と後工程材料が中心。HDメディアも含むが、半導体材料が主軸のため半導体関連とした。
+- name: モビリティ
+  xbrl_members:
+  - MobilityReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主要製品は樹脂成形品、摩擦材、粉末冶金製品、アルミ機能部材で、半導体に関わる製品は見当たらない。
+- name: イノベーション材料
+  xbrl_members:
+  - InnovationEnablingMaterialsReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主要製品は機能性化学品、コーティング材料、セラミックス。半導体を中心とする記載はなく、慎重に対象外とした。
+- name: ケミカル
+  xbrl_members:
+  - ChemicalsReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主要製品は基礎化学品、産業ガス、黒鉛電極、カーボン負極材。半導体用ガスは半導体・電子材料に属する。
+- name: クラサスケミカル
+  xbrl_members:
+  - CrasusChemicalReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 石油化学事業であり、オレフィン、有機化学品、合成樹脂を扱う。
+sources:
+- id: S1
+  title: 有価証券報告書（2025年12月期）
+  publisher: 株式会社レゾナック・ホールディングス（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100XTT8.pdf
+  published_on: '2026-03-25'
+  accessed_on: '2026-10-06'
+  doc_id: S100XTT8
