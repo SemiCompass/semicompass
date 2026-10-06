@@ -1,0 +1,29 @@
+schema_version: 1
+company: micronics-japan
+reviewed_on: '2026-10-06'
+based_on: S100XTD8
+segments:
+- name: プローブカード事業
+  xbrl_members:
+  - ProbeCardBusinessReportableSegmentsMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主要製品は半導体計測器具であり、2025年12月期の売上高は685.3億円である。
+- name: ＴＥ事業
+  xbrl_members:
+  - TestEquipmentBusinessReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: 半導体検査機器のほかLCD検査機器も扱うため、半導体以外の事業が混ざる。
+sources:
+- id: S1
+  title: 有価証券報告書（2025年12月期）
+  publisher: 株式会社日本マイクロニクス（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100XTD8.pdf
+  published_on: '2026-03-25'
+  accessed_on: '2026-10-06'
+  doc_id: S100XTD8
