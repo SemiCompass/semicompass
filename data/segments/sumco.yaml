@@ -1,0 +1,19 @@
+schema_version: 1
+company: sumco
+reviewed_on: '2026-10-06'
+based_on: S100XRR5
+segments:
+- name: 高純度シリコン
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 単一セグメントで、事業の中心は半導体用シリコンウェーハの製造・販売。入力のXBRLメンバー名は空。
+sources:
+- id: S1
+  title: 有価証券報告書（2025年12月期）
+  publisher: 株式会社SUMCO（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100XRR5.pdf
+  published_on: '2026-03-26'
+  accessed_on: '2026-10-06'
+  doc_id: S100XRR5
