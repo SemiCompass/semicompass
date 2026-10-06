@@ -1,0 +1,113 @@
+---
+// 企業の表（仕様書 9.3、8.7）：企業名、証券コード、企業区分、工程、売上高（億円、最新の通期）、半導体関連の比率、掲載の状態。
+// 工程と企業区分の絞り込み、件数の表示、並べ替え（見出しを押す）は、スクリプトがあるときに使える（なくても、全件が表で読める）。
+// 詳細掲載でない企業（Coming Soon、本番の draft）は、「準備中」とし、売上高・比率は出さない（企業ページと同じ決まり）
+import DataTable from './DataTable.astro';
+import { formatNumber, typeLabel, type CompanyRow } from '../lib/companies';
+import { normalizeForSearch } from '../lib/normalize';
+
+interface Props {
+  rows: CompanyRow[];
+  caption: string;
+  processes: { slug: string; name: string }[]; // 工程の名前（表と絞り込みの選択肢）
+  filters?: boolean;
+  compact?: boolean; // 列を、企業名・企業区分・売上高・比率に絞る（本文の列に収める）
+}
+const { rows, caption, processes, filters = true, compact = false } = Astro.props;
+const processName = (slug: string) => processes.find((p) => p.slug === slug)?.name ?? slug;
+const types = [...new Set(rows.map((r) => r.company.type))];
+
+const allColumns = [
+  { key: 'name', label: '企業名', sort: 'none' as const, sortKey: 'name' },
+  { key: 'code', label: '証券コード', sort: 'none' as const, sortKey: 'code' },
+  { key: 'type', label: '企業区分' },
+  { key: 'processes', label: '工程', wrap: true },
+  { key: 'sales', label: '売上高（億円）', numeric: true, sort: 'none' as const, sortKey: 'sales' },
+  { key: 'ratio', label: '半導体関連の比率（%）', numeric: true, sort: 'none' as const, sortKey: 'ratio' },
+  { key: 'status', label: '掲載の状態' },
+];
+const compactKeys = ['name', 'type', 'sales', 'ratio'];
+const columns = compact ? allColumns.filter((c) => compactKeys.includes(c.key)) : allColumns;
+const tableRows = rows.map((r) => ({
+  __href: `/companies/${r.company.slug}/`,
+  name: r.company.short_names[0] ?? r.company.name,
+  code: r.company.securities_code ?? '—',
+  type: typeLabel[r.company.type] ?? r.company.type,
+  processes: r.company.processes.map(processName).join('、') || '—',
+  sales: r.sales === null ? '—' : formatNumber(r.sales, 1),
+  ratio: r.ratio === null ? '—' : formatNumber(r.ratio, 1),
+  status: r.detailed ? '詳細' : '準備中',
+}));
+const rowData = rows.map((r, i) => ({
+  'data-process': r.company.processes.join(' '),
+  'data-type': r.company.type,
+  'data-index': String(i),
+  'data-sort-name': normalizeForSearch((r.company as { name_kana?: string }).name_kana ?? r.company.name),
+  'data-sort-code': r.company.securities_code ?? '',
+  'data-sort-sales': r.sales === null ? '' : String(r.sales),
+  'data-sort-ratio': r.ratio === null ? '' : String(r.ratio),
+}));
+---
+
+<div class="company-table" data-company-table>
+  {filters && (
+    <div class="company-table__filters" data-filters hidden>
+      <label>工程
+        <select data-filter="process">
+          <option value="">すべて</option>
+          {processes.map((p) => <option value={p.slug}>{p.name}</option>)}
+        </select>
+      </label>
+      <label>企業区分
+        <select data-filter="type">
+          <option value="">すべて</option>
+          {types.map((t) => <option value={t}>{typeLabel[t] ?? t}</option>)}
+        </select>
+      </label>
+    </div>
+  )}
+  <slot />
+  <p class="company-table__count" role="status" data-count data-total={rows.length}>{rows.length}社を表示しています</p>
+  <DataTable caption={caption} columns={columns} rows={tableRows} rowData={rowData} wideFirst emptyMessage="該当する企業はありません" />
+  <p class="company-table__empty" data-empty hidden>条件に当てはまる企業は、ありません。絞り込みを変えてください。</p>
+</div>
+
+<style>
+  .company-table__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+    margin-block: var(--space-4);
+  }
+  .company-table__filters label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    max-width: 100%;
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+  }
+  .company-table__filters select {
+    max-width: 100%;
+    min-height: var(--control-height);
+    padding-inline: var(--space-3);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-normal);
+  }
+  .company-table__count,
+  .company-table__empty {
+    margin-block: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+</style>
+
+<script>
+  import '../scripts/company-table';
+</script>

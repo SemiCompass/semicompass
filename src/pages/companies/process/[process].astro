@@ -1,0 +1,25 @@
+---
+// 工程別の企業一覧（/companies/process/{工程}/。要件定義書 3.1）：その工程に当たる企業の表
+import { BUILD_ENV } from 'astro:env/server';
+import CompanyTable from '../../../components/CompanyTable.astro';
+import Page from '../../../layouts/Page.astro';
+import { companyRows, loadSupply } from '../../../lib/companies';
+
+export function getStaticPaths() {
+  return loadSupply().processes.map((p) => ({ params: { process: p.slug }, props: { process: p } }));
+}
+const { process } = Astro.props as { process: { slug: string; name: string } };
+const supply = loadSupply();
+const rows = companyRows(BUILD_ENV === 'preview').filter((r) => r.company.processes.includes(process.slug));
+---
+
+<Page
+  title={`${process.name}の企業一覧｜SemiCompass`}
+  heading={`${process.name}の企業`}
+  description={`${process.name}の工程に関わる企業の一覧。`}
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '企業', href: '/companies/' }, { label: process.name }]}
+  wide
+>
+  <p class="measure"><a href={`/processes/${process.slug}/`}>{process.name}の工程の説明</a>、<a href="/companies/">すべての企業の一覧</a></p>
+  <CompanyTable rows={rows} caption={`${process.name}の企業の一覧`} processes={supply.processes} />
+</Page>

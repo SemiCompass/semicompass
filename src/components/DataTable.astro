@@ -8,30 +8,41 @@ interface Column {
   key: string;
   label: string; // 単位を含める（例：売上高（億円））
   numeric?: boolean;
+  wrap?: boolean; // 長い文字の列：折り返す（数値の列は、折り返さない）
   sort?: 'ascending' | 'descending' | 'none'; // 並べ替えができる列。今の状態
+  sortKey?: string; // スクリプトで並べ替える列の名前（行の data-sort-{名前}）。ある列は、見出しを押して並べ替えられる
 }
 interface Props {
   caption: string;
   columns: Column[];
-  rows: Record<string, string>[];
+  rows: Record<string, string>[]; // 最初の列の値は、行の __href があれば、リンクにする
+  rowData?: Record<string, string>[]; // 行ごとの data-* 属性（絞り込みと並べ替えに使う）
   emptyMessage?: string;
+  wideFirst?: boolean; // 最初の列を、広い幅まで広げる（企業の表など）
 }
-const { caption, columns, rows, emptyMessage = '該当するデータはありません' } = Astro.props;
+const { caption, columns, rows, rowData = [], emptyMessage = '該当するデータはありません', wideFirst = false } = Astro.props;
 ---
 
 <div class="table-scroll" role="region" aria-label={`${caption}（横にスクロールできます）`} tabindex="0">
-  <table class="data-table">
+  <table class:list={['data-table', wideFirst && 'data-table--wide-first']}>
     <caption class="visually-hidden">{caption}</caption>
     <thead>
       <tr>
         {columns.map((c, i) => (
           <th
             scope="col"
-            class:list={[c.numeric ? 'is-numeric' : 'is-text', i === 0 ? 'is-first' : undefined]}
+            class:list={[c.numeric ? 'is-numeric' : 'is-text', i === 0 ? 'is-first' : undefined, c.wrap && 'is-wrap']}
             aria-sort={c.sort}
+            data-sort-key={c.sortKey}
           >
-            {c.label}
-            {c.sort && <Icon class="data-table__sort" name={c.sort === 'ascending' ? 'sort-up' : c.sort === 'descending' ? 'sort-down' : 'sort'} />}
+            <span class="data-table__label">{c.label}</span>
+            {c.sort && (
+              <>
+                <Icon class="data-table__sort data-table__sort--none" name="sort" />
+                <Icon class="data-table__sort data-table__sort--ascending" name="sort-up" />
+                <Icon class="data-table__sort data-table__sort--descending" name="sort-down" />
+              </>
+            )}
           </th>
         ))}
       </tr>
@@ -40,12 +51,12 @@ const { caption, columns, rows, emptyMessage = '該当するデータはあり�
       {rows.length === 0 && (
         <tr><td colspan={columns.length} class="data-table__empty">{emptyMessage}</td></tr>
       )}
-      {rows.map((row) => (
-        <tr>
+      {rows.map((row, rowIndex) => (
+        <tr {...(rowData[rowIndex] ?? {})}>
           {columns.map((c, i) => (
             i === 0
-              ? <th scope="row" class="is-first is-text">{row[c.key]}</th>
-              : <td class={c.numeric ? 'is-numeric' : 'is-text'}>{row[c.key]}</td>
+              ? <th scope="row" class="is-first is-text">{row.__href ? <a href={row.__href}>{row[c.key]}</a> : row[c.key]}</th>
+              : <td class:list={[c.numeric ? 'is-numeric' : 'is-text', c.wrap && 'is-wrap']}>{row[c.key]}</td>
           ))}
         </tr>
       ))}
@@ -98,6 +109,14 @@ const { caption, columns, rows, emptyMessage = '該当するデータはあり�
   .data-table thead .is-first {
     background: var(--color-surface-sunken);
   }
+  .data-table--wide-first .is-first {
+    max-width: var(--table-first-column-wide);
+  }
+  .data-table .is-wrap {
+    min-width: var(--table-wrap-column-min);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .data-table .is-text {
     text-align: left;
   }
@@ -114,6 +133,26 @@ const { caption, columns, rows, emptyMessage = '該当するデータはあり�
     margin-inline-start: var(--space-1);
     color: var(--color-text-muted);
     vertical-align: var(--icon-inline-offset);
+  }
+  /* 並べ替えの記号：今の状態（aria-sort）の1つだけを見せる */
+  .data-table th[aria-sort="none"] :global(.data-table__sort--ascending),
+  .data-table th[aria-sort="none"] :global(.data-table__sort--descending),
+  .data-table th[aria-sort="ascending"] :global(.data-table__sort--none),
+  .data-table th[aria-sort="ascending"] :global(.data-table__sort--descending),
+  .data-table th[aria-sort="descending"] :global(.data-table__sort--none),
+  .data-table th[aria-sort="descending"] :global(.data-table__sort--ascending) {
+    display: none;
+  }
+  .data-table :global(.data-table__sort-button) {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
   }
   .data-table__empty {
     color: var(--color-text-muted);

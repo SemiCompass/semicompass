@@ -1,21 +1,35 @@
 ---
-// 検索欄（8.6）。見た目と置き場所だけ。候補の表示と検索の機能は、後の変更案で作る（FR-701）
+// 検索欄（8.6）：入力欄（高さ44px、左に虫めがね）と、候補の一覧（入力欄の直下。上下の矢印のキーで選ぶ）。
+// 候補は、src/scripts/search.ts が、検索用データ（/search-index.json）から、入力のたびに出す。
+// スクリプトがなくても、Enterで /search/?q=… へ移る（検索の結果のページ）
 import Icon from './Icon.astro';
+
+interface Props {
+  id?: string; // ページの中で重ならない名前
+  value?: string;
+}
+const { id = 'site-search', value = '' } = Astro.props;
 ---
 
-<div class="search" role="search">
-  <label class="visually-hidden" for="site-search">サイト内を検索する</label>
+<form class="search" role="search" action="/search/" method="get" data-search>
+  <label class="visually-hidden" for={id}>サイト内を検索する</label>
   <span class="search__icon"><Icon name="search" /></span>
   <input
     class="search__input"
-    id="site-search"
+    id={id}
     type="search"
     name="q"
+    value={value}
     placeholder="企業名・証券コード・用語"
     autocomplete="off"
     enterkeyhint="search"
+    role="combobox"
+    aria-autocomplete="list"
+    aria-expanded="false"
+    aria-controls={`${id}-list`}
   />
-</div>
+  <ul class="search__list" id={`${id}-list`} role="listbox" aria-label="検索の候補" hidden></ul>
+</form>
 
 <style>
   .search {
@@ -25,7 +39,7 @@ import Icon from './Icon.astro';
   }
   .search__icon {
     position: absolute;
-    top: 50%;
+    top: calc(var(--control-height) / 2);
     left: var(--space-3);
     display: inline-flex;
     transform: translateY(-50%);
@@ -50,4 +64,55 @@ import Icon from './Icon.astro';
     color: var(--color-text-muted);
     opacity: 1;
   }
+  .search__list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    max-height: var(--suggest-max-height);
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    overflow-y: auto;
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
+    list-style: none;
+  }
+  .search__list :global(li) {
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .search__list :global(li:last-child) {
+    border-bottom: 0;
+  }
+  .search__list :global(a) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    min-height: var(--target-min);
+    padding: var(--space-2) var(--space-3);
+    color: var(--color-text);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+    letter-spacing: var(--text-dense-tracking);
+    text-decoration: none;
+  }
+  .search__list :global(a:visited) {
+    color: var(--color-text);
+  }
+  .search__list :global([aria-selected="true"]) a,
+  .search__list :global(a:hover) {
+    background: var(--color-primary-tint);
+  }
+  .search__list :global(.suggest__name) {
+    font-weight: var(--font-weight-bold);
+  }
+  .search__list :global(.suggest__meta) {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+  }
 </style>
+
+<script>
+  import '../scripts/search';
+</script>

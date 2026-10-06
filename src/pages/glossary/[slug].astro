@@ -1,0 +1,80 @@
+---
+// 用語ページ（/glossary/{slug}/。仕様書 9.5）：見出し（用語、読み）→ 短い定義（text-lead）→ 解説 → 関係する工程と企業 → 出典。
+// content/glossary/{slug}.md（データ定義書 6.6）から作る。draft: true は、プレビューのビルドだけ
+import { BUILD_ENV } from 'astro:env/server';
+import Phrase from '../../components/Phrase.astro';
+import RichText from '../../components/RichText.astro';
+import SourceList from '../../components/SourceList.astro';
+import Tag from '../../components/Tag.astro';
+import Page from '../../layouts/Page.astro';
+import { loadCompanies, loadSupply } from '../../lib/companies';
+import { loadTerms } from '../../lib/content';
+
+export function getStaticPaths() {
+  return loadTerms(BUILD_ENV === 'preview').map((t) => ({ params: { slug: t.slug }, props: { term: t } }));
+}
+const { term } = Astro.props as { term: ReturnType<typeof loadTerms>[number] };
+const f = term.front;
+const supply = loadSupply();
+const companies = loadCompanies();
+const processName = (slug: string) => supply.processes.find((p) => p.slug === slug)?.name ?? slug;
+const related = loadTerms(BUILD_ENV === 'preview').filter((t) => (f.related_terms ?? []).includes(t.slug));
+const sources = f.sources.map((s) => ({
+  number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on, accessedOn: s.accessed_on, pages: s.pages,
+}));
+const toc = [
+  ...term.sections.filter((s) => s.heading).map((s, i) => ({ id: `s${i}`, label: s.heading })),
+  { id: 'related', label: '関係する工程と企業' },
+  { id: 'sources-heading', label: '出典' },
+];
+---
+
+<Page
+  title={`${f.term}｜用語集｜SemiCompass`}
+  heading={f.term}
+  description={f.description ?? f.short_definition}
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '用語集', href: '/glossary/' }, { label: f.term }]}
+  toc={toc}
+  publishedAt={f.published_at}
+  updatedAt={f.updated_at}
+  aiGenerated={f.ai_generated}
+  aiDraft={f.draft === true}
+  noindex={f.draft === true}
+>
+  <Fragment slot="lead">
+    <p class="term-reading">読み：{f.reading}{f.name_en && <>　英語：{f.name_en}</>}{(f.aliases ?? []).length > 0 && <>　別の表記：{(f.aliases ?? []).join('、')}</>}</p>
+    <p class="lead measure"><Phrase text={f.short_definition} /></p>
+  </Fragment>
+  {term.sections.map((section, i) => (
+    <section>
+      {section.heading && <h2 id={`s${term.sections.filter((s) => s.heading).indexOf(section)}`}>{section.heading}</h2>}
+      {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+    </section>
+  ))}
+  <section aria-labelledby="related">
+    <h2 id="related">関係する工程と企業</h2>
+    {f.processes.length > 0 && <p class="term-tags">{f.processes.map((p) => <Tag href={`/processes/${p}/`} kind="工程">{processName(p)}</Tag>)}</p>}
+    {(f.companies ?? []).length > 0 && (
+      <ul>{(f.companies ?? []).map((slug) => {
+        const c = companies.find((x) => x.slug === slug);
+        return c ? <li><a href={`/companies/${c.slug}/`}>{c.short_names[0] ?? c.name}</a></li> : null;
+      })}</ul>
+    )}
+    {related.length > 0 && <p>関係する用語：{related.map((t, i) => <>{i > 0 && '、'}<a href={`/glossary/${t.slug}/`}>{t.front.term}</a></>)}</p>}
+  </section>
+  <SourceList sources={sources} heading="出典" />
+</Page>
+
+<style>
+  .term-reading {
+    margin-block: 0 var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .term-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+</style>

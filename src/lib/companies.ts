@@ -269,4 +269,37 @@ export function employeeSpec(auto: Auto, colors: ChartColors): { spec: ChartSpec
     series: [{ name: '従業員数', color: colors.metrics.employees.color, values: rows.map((r) => employeeValue(r)) }] } };
 }
 
+export const typeLabel: Record<string, string> = {
+  domestic_listed: '国内上場企業',
+  conglomerate: '総合メーカー',
+  foreign_subsidiary: '外資系日本法人',
+};
+
+export interface CompanyRow {
+  company: Company;
+  detailed: boolean; // 詳細掲載として出すか（本番：listing が detailed で、事業概要が公開のとき。プレビュー：draft の事業概要も）
+  sales: number | null; // 売上高（億円。最新の通期）。詳細掲載でなければ null
+  ratio: number | null; // 半導体関連の比率（%）。詳細掲載でなければ null
+  period: string;
+}
+
+/** 企業一覧の行。企業は、証券コードの順（外資系日本法人など、コードのない企業は末尾） */
+export function companyRows(preview: boolean): CompanyRow[] {
+  const colors = loadChartColors();
+  const rows = loadCompanies().map((company): CompanyRow => {
+    const overview = loadOverview(company.slug);
+    const auto = loadAuto(company.slug);
+    const detailed = isDetailed(company, overview, auto, preview);
+    if (!detailed || !auto) return { company, detailed, sales: null, ratio: null, period: '' };
+    const annual = annualRows(auto);
+    const latest = annual[annual.length - 1];
+    if (!latest) return { company, detailed, sales: null, ratio: null, period: '' };
+    const map = loadSegmentMap(company.slug);
+    const segment = map ? segmentSpec(annual, map, colors, periodLabel(latest.fiscal_period_end)) : null;
+    return { company, detailed, period: periodLabel(latest.fiscal_period_end),
+      sales: latest.net_sales.value === null ? null : millionToOku(latest.net_sales.value), ratio: segment?.ratio?.value ?? null };
+  });
+  return rows.sort((a, b) => (a.company.securities_code ?? '99999').localeCompare(b.company.securities_code ?? '99999') || a.company.slug.localeCompare(b.company.slug));
+}
+
 export { dateLabel, formatNumber, formatOku, periodLabel };

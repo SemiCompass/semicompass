@@ -1,0 +1,32 @@
+---
+// 検索の結果（/search/。仕様書 9.7）：検索欄を上に置き、結果を種類（企業、工程、用語、ニュース）ごとの見出しで分ける。
+// 検索に登録させない指定（SE-01）。結果は、画面上で（src/scripts/search.ts）、検索用データから作る
+import SearchBox from '../components/SearchBox.astro';
+import Page from '../layouts/Page.astro';
+---
+
+<Page
+  title="検索｜SemiCompass"
+  heading="検索"
+  description="サイト内の検索。企業名、証券コード、用語から探せます。"
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '検索' }]}
+  noindex
+  wide
+>
+  <div class="measure"><SearchBox id="search-page" /></div>
+  <p class="measure search-hint">入力の例：企業名（東京エレクトロン）、証券コード（8035）、用語（CMP）。全角と半角、ひらがなとカタカナ、大文字と小文字は、区別しません。</p>
+  <div data-search-results>
+    <p role="status" data-search-status>検索しています</p>
+    <div data-search-groups></div>
+    <noscript><p>検索には、JavaScriptが必要です。<a href="/companies/">企業の一覧</a>、<a href="/processes/">工程の一覧</a>、<a href="/glossary/">用語集</a>から探せます。</p></noscript>
+  </div>
+</Page>
+
+<style>
+  .search-hint {
+    margin-block: var(--space-3) var(--space-5);
+    color: var(--color-text-muted);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+</style>

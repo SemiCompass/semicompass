@@ -1,0 +1,27 @@
+---
+// 企業一覧（/companies/。仕様書 9.3）：表（8.7）。絞り込み（工程、企業区分）、件数、並べ替え。カードの格子にしない
+import { BUILD_ENV } from 'astro:env/server';
+import CompanyTable from '../../components/CompanyTable.astro';
+import Page from '../../layouts/Page.astro';
+import { companyRows, loadSupply } from '../../lib/companies';
+
+const supply = loadSupply();
+const rows = companyRows(BUILD_ENV === 'preview');
+const detailedCount = rows.filter((r) => r.detailed).length;
+---
+
+<Page
+  title="企業一覧｜SemiCompass"
+  heading="企業一覧"
+  description="半導体に関わる企業の一覧。企業名、証券コード、企業区分、工程、売上高、半導体関連の比率を、表で比べられます。"
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '企業' }]}
+  wide
+>
+  <p class="measure">
+    半導体に関わる企業を、証券コードの順に並べています（証券コードのない企業は末尾）。詳しい内容を公開している企業は{detailedCount}社で、そのほかは準備中です。
+    売上高は、最新の通期の連結の値です。
+  </p>
+  <CompanyTable rows={rows} caption="企業の一覧" processes={supply.processes}>
+    <p class="measure"><a href="/processes/">工程ごとの一覧のページ</a>から、工程を選んで企業を見ることもできます。</p>
+  </CompanyTable>
+</Page>
