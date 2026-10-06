@@ -186,6 +186,11 @@ details[open] > summary .icon-flip {
   }
 }
 
+/* 数値と単位は、折り返さない */
+.nowrap {
+  white-space: nowrap;
+}
+
 /* 読み上げ用の文字（見た目には出さない） */
 .visually-hidden {
   position: absolute;

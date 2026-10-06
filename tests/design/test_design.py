@@ -212,6 +212,38 @@ class PreviewFixesTest(unittest.TestCase):
             self.assertNotRegex(text, r"(ある|いる|ない|する|した|できる|れる)。<", rel)
 
 
+class CompanyPageSourceTest(unittest.TestCase):
+    def read(self, rel):
+        return (ROOT / rel).read_text(encoding="utf-8")
+
+    def test_no_literal_amounts_in_the_page_and_chart_code(self):
+        for rel in ("src/pages/companies/[slug].astro", "src/lib/companies.ts", "src/lib/chart.ts", "src/components/Chart.astro",
+                    "src/components/ChartSvg.astro"):
+            self.assertNotRegex(self.read(rel), r"\d{1,3}(,\d{3})+", f"{rel} に、数値が直接書かれている")
+
+    def test_chart_colors_yaml_uses_existing_variables_only(self):
+        data = yaml.safe_load(self.read("config/chart-colors.yaml"))
+        names = [v["color"] for v in [*data["segment_classification"].values(), *data["metrics"].values()]]
+        for name in names:
+            self.assertIn(name, V)
+        self.assertEqual(set(data["segment_classification"]), {"semiconductor", "partial", "excluded"})
+        self.assertEqual(data["segment_classification"]["semiconductor"]["color"], "--chart-highlight")
+        self.assertEqual(data["segment_classification"]["excluded"]["color"], "--chart-other")
+        self.assertTrue(data["segment_classification"]["excluded"]["pattern"])
+
+    def test_charts_get_title_unit_period_and_source(self):
+        chart = self.read("src/components/Chart.astro")
+        for needle in ("title: string", "unit: string", "period: string", "source:", "表で見る", "SourceLine"):
+            self.assertIn(needle, chart)
+
+    def test_numbers_with_units_do_not_wrap_and_budoux_is_used(self):
+        self.assertRegex(self.read("src/lib/phrase.ts"), r"億円\|百万円")
+        self.assertIn("budoux", self.read("src/lib/phrase.ts"))
+        self.assertIn("nowrap", self.read("src/components/RichText.astro"))
+        self.assertIn("white-space: nowrap", self.read("src/components/KeyPoints.astro"))
+        self.assertIn("auto-phrase", self.read("src/styles/global.css"))  # auto-phrase は残す
+
+
 class MenuTest(unittest.TestCase):
     def test_menu_yaml(self):
         data = yaml.safe_load((ROOT / "config" / "menu.yaml").read_text(encoding="utf-8"))
@@ -258,6 +290,56 @@ class BuildTest(unittest.TestCase):
         html = (dist / "index.html").read_text(encoding="utf-8")
         self.assertEqual(html.count("<h1"), 1)
         self.assertRegex(html, r"企業</a>.*工程</a>.*ニュース</a>")
+
+
+@unittest.skipUnless(HAS_NODE, "node_modules がない")
+class CompanyPageBuildTest(BuildTest):
+    def page(self, dist, slug):
+        return (dist / "companies" / slug / "index.html").read_text(encoding="utf-8")
+
+    def test_detailed_in_preview_and_coming_soon_in_production(self):
+        preview = self.build("preview")
+        html = self.page(preview, "tokyo-electron")
+        self.assertIn('class="chart-svg', html)
+        self.assertIn("表で見る", html)
+        self.assertIn('aria-pressed="false"', html)
+        self.assertIn("<wbr>", html)  # 文節の切れ目（BudouX）
+        self.assertIn("class=\"nowrap\"", html)
+        self.assertIn("下書きです", html)
+        self.assertIn('name="robots" content="noindex, nofollow"', html)  # draft: true は、検索に登録させない
+        for needle in ("事業概要", "工程上の位置づけ", "業績", "IR重要ポイント", "働く環境", "ニュース", "資料", "出典"):
+            self.assertIn(needle, html)
+        # 数値は data/auto から（百万円 → 億円、小数第1位に四捨五入）
+        import json
+        from decimal import ROUND_HALF_UP, Decimal
+        auto = json.loads((ROOT / "data" / "auto" / "tokyo-electron.json").read_text(encoding="utf-8"))
+        latest = [r for r in auto["financials"] if r["period_type"] == "annual"][-1]
+        expected = Decimal(latest["net_sales"]["value"]) / 100
+        text = f"{expected.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP):,}億円"
+        self.assertIn(text, html)
+        self.assertRegex(html, r">0</text>")  # 金額の縦軸は0から
+        # セグメントの対応表がない企業は、状態の表示
+        self.assertIn("セグメント別の売上のグラフは、まだありません", html)
+        # 外資系日本法人（事業概要も業績もない）は、プレビューでも Coming Soon
+        jasm = self.page(preview, "jasm")
+        self.assertIn("Coming Soon", jasm)
+        self.assertNotIn('class="chart-svg', jasm)
+        self.assertIn('name="robots" content="noindex, nofollow"', jasm)
+        production = self.build("production")
+        html = self.page(production, "tokyo-electron")
+        self.assertIn("Coming Soon", html)
+        self.assertNotIn('class="chart-svg', html)
+        self.assertNotIn("下書きです", html)
+        self.assertIn('name="robots" content="noindex, nofollow"', html)
+        self.assertIn('href="/about/roadmap/"', html)
+        self.assertNotIn("売上高", html.split("<main")[1])  # 業績を出さない
+        self.assertEqual(len(list((production / "companies").glob("*/index.html"))), len(list((ROOT / "data" / "companies").glob("*.yaml"))))
+
+    def test_component_page_has_every_chart_kind(self):
+        html = (self.build("preview") / "dev" / "components" / "index.html").read_text(encoding="utf-8")
+        self.assertGreaterEqual(html.count('class="chart-svg chart-svg--wide'), 5)
+        for needle in ("縦の棒", "積み上げの縦の棒", "横の棒", "折れ線", "url(#hatch-", "半導体関連以外"):
+            self.assertIn(needle, html)
 
 
 if __name__ == "__main__":

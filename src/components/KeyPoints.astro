@@ -1,5 +1,7 @@
 ---
 // この会社のポイント（8.8）：一言での説明（text-lead）と、主要な数値のラベル・数値の組。数値の下に期と出典。企業ページに1つだけ置く
+import Phrase from './Phrase.astro';
+
 interface Metric {
   label: string;
   value: string; // 表示する数値（単位を含む。例：8,325.5億円）
@@ -15,7 +17,7 @@ const { lead, metrics, period, source } = Astro.props;
 
 <section class="key-points" aria-labelledby="key-points-heading">
   <h2 class="visually-hidden" id="key-points-heading">この会社のポイント</h2>
-  <p class="key-points__lead lead">{lead}</p>
+  <p class="key-points__lead lead"><Phrase text={lead} /></p>
   <dl class="key-points__list">
     {metrics.map((m) => (
       <div class="key-points__metric">
@@ -40,13 +42,13 @@ const { lead, metrics, period, source } = Astro.props;
     margin-block: 0 var(--space-4);
   }
   .key-points__list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-4);
     margin: 0;
   }
   .key-points__metric {
-    min-width: 0;
+    flex: 1 1 var(--key-point-min);
   }
   .key-points__metric dt {
     color: var(--color-text-muted);
@@ -56,6 +58,7 @@ const { lead, metrics, period, source } = Astro.props;
   }
   .key-points__metric dd {
     margin: 0;
+    white-space: nowrap; /* 数値と単位は、折り返さない */
     font-size: var(--text-h3);
     font-weight: var(--font-weight-bold);
     line-height: var(--text-h3-leading);
@@ -67,11 +70,5 @@ const { lead, metrics, period, source } = Astro.props;
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
     letter-spacing: var(--text-small-tracking);
-  }
-
-  @media (--tablet) {
-    .key-points__list {
-      grid-template-columns: repeat(auto-fit, minmax(var(--key-point-min), 1fr));
-    }
   }
 </style>

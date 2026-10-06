@@ -1,6 +1,7 @@
 ---
 // ページの頭（8.3）：大見出し（1ページに1つ）と、その下の、公開日・更新日・作成者の1行。AIが書いた本文のページは「AI作成」の表示（8.9）を置く
 import AiBadge from './AiBadge.astro';
+import Phrase from './Phrase.astro';
 
 interface Props {
   title: string;
@@ -19,7 +20,7 @@ function label(date: string): string {
 ---
 
 <header class="page-head">
-  <h1 class="page-head__title">{title}</h1>
+  <h1 class="page-head__title"><Phrase text={title} /></h1>
   {(publishedAt || updatedAt || author || aiGenerated) && (
     <p class="page-head__meta">
       {publishedAt && <span>公開日：<time datetime={publishedAt}>{label(publishedAt)}</time></span>}

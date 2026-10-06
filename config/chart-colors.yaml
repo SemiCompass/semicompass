@@ -1,0 +1,24 @@
+# グラフの色の割り当て（データ定義書 7.10、仕様書 4.3、DS-02）。
+# 色の値は書かず、CSSの変数の名前（src/styles/tokens.css）を書く（CLAUDE.md 9章）。企業やセグメントの色は、サイト全体で同じにする。
+schema_version: 1
+# セグメントの区分（data/segments/{slug}.yaml の classification）ごとの色。積み上げの順は、semiconductor を下に置く
+segment_classification:
+  semiconductor:
+    color: --chart-highlight
+    pattern: false
+    legend: 半導体関連
+  partial:
+    color: --chart-cat-1 # 仕様書に「一部含む」の色の指定がないため、グラフの色の1番目を使う（運営者が確かめる）
+    pattern: false
+    legend: 一部含む
+  excluded:
+    color: --chart-other
+    pattern: true # 斜線の模様を重ねる
+    legend: 半導体関連以外
+# 指標ごとの色と線の種類
+metrics:
+  net_sales: { color: --chart-single, line: solid }
+  operating_income: { color: --chart-single, line: solid }
+  net_income: { color: --chart-single, line: solid }
+  region_sales: { color: --chart-single, line: solid }
+  employees: { color: --chart-single, line: solid }

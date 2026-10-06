@@ -1,0 +1,156 @@
+---
+// グラフのSVG（ビルドのときに作る。仕様書 10.2）。図形の位置は src/lib/chart.ts で計算する。
+// 棒と点は、タップ・クリック・キーボードで選べ、選ぶとその近くに数値を出す（src/scripts/chart.ts。スクリプトがなくても、フォーカスで出る）。
+// 色は、SVGの属性の fill="var(--…)" で、CSSの変数を使う（インラインの style は使わない：CSP）。
+import type { Model } from '../lib/chart';
+
+interface Props {
+  model: Model;
+  title: string;
+  uid: string;
+  patternColor?: string;
+}
+const { model, title, uid } = Astro.props;
+const patternId = `hatch-${uid}`;
+const fill = (d: { color: string; pattern: boolean }) => (d.pattern ? `url(#${patternId})` : `var(${d.color})`);
+const m = model;
+---
+
+<svg
+  class:list={['chart-svg', `chart-svg--${m.layout}`]}
+  viewBox={`0 0 ${m.width} ${m.height}`}
+  width={m.width}
+  height={m.height}
+  role="group"
+  aria-label={title}
+  focusable="false"
+>
+  <defs>
+    <pattern id={patternId} patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+      <rect width="7" height="7" fill="var(--chart-other)"></rect>
+      <line x1="0" y1="0" x2="0" y2="7" class="chart-svg__hatch"></line>
+    </pattern>
+  </defs>
+
+  {m.yTicks.map((t) => (
+    <g>
+      <line class="chart-svg__grid" x1={m.plot.l} x2={m.plot.r} y1={t.y} y2={t.y}></line>
+      <text class="chart-svg__text" x={m.plot.l - 6} y={t.y + 5} text-anchor="end">{t.text}</text>
+    </g>
+  ))}
+  {m.hTicks.map((t) => (
+    <g>
+      <line class="chart-svg__grid chart-svg__grid--v" x1={t.x} x2={t.x} y1={m.plot.t} y2={m.plot.b}></line>
+      <text class="chart-svg__text" x={t.x} y={m.plot.b + 18} text-anchor="middle">{t.text}</text>
+    </g>
+  ))}
+  <line class="chart-svg__axis" x1={m.baseline.x1} y1={m.baseline.y1} x2={m.baseline.x2} y2={m.baseline.y2}></line>
+  {m.xTicks.map((t) => (
+    <text class="chart-svg__text" x={t.x} y={t.y + 14} text-anchor="middle">
+      {t.text.map((line, i) => <tspan x={t.x} dy={i === 0 ? 0 : 16}>{line}</tspan>)}
+    </text>
+  ))}
+  {m.labels.map((l) => (
+    <text class:list={['chart-svg__text', l.value && 'chart-svg__value']} x={l.x} y={l.y} text-anchor={l.x < m.plot.l ? 'end' : 'middle'}>{l.text}</text>
+  ))}
+
+  {m.polylines.map((p) => (
+    <polyline class="chart-svg__line" points={p.points} fill="none" stroke={`var(${p.color})`}></polyline>
+  ))}
+
+  {m.data.map((d) => (
+    <g class="chart-datum" tabindex="0" role="button" aria-pressed="false" aria-label={d.aria}>
+      {d.shape === 'rect' ? (
+        <rect class:list={['chart-datum__shape', d.pattern && 'chart-datum__shape--gap']} x={d.x} y={d.y} width={d.w} height={d.h} fill={fill(d)}></rect>
+      ) : (
+        <circle class="chart-datum__shape chart-datum__point" cx={d.x} cy={d.y} r={d.r} fill={`var(${d.color})`}></circle>
+      )}
+      {/* 押せる範囲を広げる透明な範囲 */}
+      {d.shape === 'circle' && <circle class="chart-datum__hit" cx={d.x} cy={d.y} r="14"></circle>}
+      <g class="chart-tip" aria-hidden="true">
+        <rect class="chart-tip__box" x={d.tip.x} y={d.tip.y} width={d.tip.w} height={d.tip.h}></rect>
+        {d.tip.lines.map((line, i) => <text class="chart-tip__text" x={d.tip.x + 12} y={d.tip.y + 22 + i * 20}>{line}</text>)}
+      </g>
+    </g>
+  ))}
+</svg>
+
+<style>
+  .chart-svg {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    overflow: visible;
+  }
+  .chart-svg__grid {
+    stroke: var(--chart-grid);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .chart-svg__axis {
+    stroke: var(--chart-axis);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .chart-svg__hatch {
+    stroke: var(--color-surface);
+    stroke-width: var(--chart-line-width);
+  }
+  .chart-svg__text {
+    fill: var(--color-text-muted);
+    font-family: var(--font-family-base);
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .chart-svg__value {
+    fill: var(--color-text);
+    font-weight: var(--font-weight-bold);
+  }
+  .chart-svg__line {
+    stroke-width: var(--chart-line-width);
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .chart-datum {
+    cursor: pointer;
+    outline: none;
+  }
+  .chart-datum__shape--gap,
+  .chart-datum__shape {
+    stroke: var(--color-bg);
+    stroke-width: var(--chart-line-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .chart-datum__point {
+    stroke: var(--color-surface);
+  }
+  .chart-datum__hit {
+    fill: transparent;
+  }
+  /* キーボードで選んだとき（フォーカス）と、選んでいるとき：枠を付け、数値を出す */
+  .chart-datum:focus-visible .chart-datum__shape,
+  .chart-datum.is-selected .chart-datum__shape {
+    stroke: var(--color-focus);
+    stroke-width: var(--border-width-focus);
+  }
+  .chart-tip {
+    display: none;
+    pointer-events: none;
+  }
+  .chart-datum:focus-visible .chart-tip,
+  .chart-datum.is-selected .chart-tip {
+    display: block;
+  }
+  .chart-tip__box {
+    fill: var(--color-surface);
+    stroke: var(--color-border-strong);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .chart-tip__text {
+    fill: var(--color-text);
+    font-family: var(--font-family-base);
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+</style>
