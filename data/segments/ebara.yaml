@@ -1,0 +1,53 @@
+schema_version: 1
+company: ebara
+reviewed_on: '2026-10-06'
+based_on: S100XS6E
+segments:
+- name: 建築・産業
+  xbrl_members:
+  - BuildingServiceAndIndustrialReportableSegmentMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: 主力は建築設備・産業設備向けのポンプや冷熱機械。研究開発で先端エッチング装置向け製品の開発が記載されている。
+- name: エネルギー
+  xbrl_members:
+  - EnergyReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 対面市場は石油・ガス、電力、新エネルギー。半導体との関わりは記載がない。
+- name: インフラ
+  xbrl_members:
+  - WaterAndInfrastractureReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 対面市場は水インフラ。半導体との関わりは記載がない。
+- name: 環境
+  xbrl_members:
+  - EnvironmentalReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 対面市場は固形廃棄物処理。半導体との関わりは記載がない。
+- name: 精密・電子
+  xbrl_members:
+  - PrecisionMachineryReportableSegmentMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 対面市場が半導体製造で、製品は真空ポンプ、CMP装置、めっき装置、排ガス処理装置。
+sources:
+- id: S1
+  title: 有価証券報告書（2025年12月期）
+  publisher: 株式会社荏原製作所（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100XS6E.pdf
+  published_on: '2026-03-23'
+  accessed_on: '2026-10-06'
+  doc_id: S100XS6E
