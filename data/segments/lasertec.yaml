@@ -1,0 +1,19 @@
+schema_version: 1
+company: lasertec
+reviewed_on: '2026-10-06'
+based_on: S100Z32V
+segments:
+- name: 検査・測定装置事業
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 単一セグメントのため注記は省略され、主要な顧客の関連セグメント名として記載。2026年6月期は半導体関連装置が売上高の72.9%。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年6月期）
+  publisher: レーザーテック株式会社（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100Z32V.pdf
+  published_on: '2026-09-24'
+  accessed_on: '2026-10-06'
+  doc_id: S100Z32V
