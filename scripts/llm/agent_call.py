@@ -54,6 +54,12 @@ _RETRYABLE = (anthropic.APIConnectionError, anthropic.APITimeoutError, anthropic
               anthropic.InternalServerError)
 
 
+# ID連携（Workload Identity Federation）の失敗。WorkloadIdentityError はトークンの交換の失敗、
+# CredentialsError（IdentityTokenFileError を含む）はトークンファイルなどの読み込みの失敗。どちらも、メッセージを出さない
+_IDENTITY_ERRORS = (anthropic.WorkloadIdentityError, anthropic.CredentialsError)
+IDENTITY_FAILURE_REASON = "ID連携の認証に失敗した（Claude Console の認証イベントを確かめる）"
+
+
 class LlmError(Exception):
     """設定の誤りなど。メッセージは、本文を含まない。"""
 
@@ -174,6 +180,13 @@ def make_row(moment: datetime, run_id: str, agent: str, model: str, status: str,
     if subject:
         row["subject"] = subject
     return row
+
+
+def _identity_failure(result: "AgentResult", add) -> "AgentResult":
+    """ID連携の失敗を、status failed として、ledger の行を残して返す。エラーのメッセージの中身は使わない。"""
+    add(STATUS_FAILED)
+    result.status, result.reason = STATUS_FAILED, IDENTITY_FAILURE_REASON
+    return result
 
 
 # ---- 出力の取り出しと検証 ---------------------------------------------------------------
@@ -330,7 +343,10 @@ def call_agent(
             result.reason = (f"見積もりの最大 {estimate:.1f}円が、残りの予算 {max(remaining, 0):.1f}円を超えるため、呼ばなかった")
             return result
         if client is None:
-            client = client_factory().with_options(max_retries=0)
+            try:
+                client = client_factory().with_options(max_retries=0)
+            except _IDENTITY_ERRORS:
+                return _identity_failure(result, add)
         content = [task_block, materials_block] + ([{"type": "text", "text": attempt_note}] if attempt_note else [])
         response = None
         failure = ""
@@ -356,6 +372,8 @@ def call_agent(
                     break
                 sleep(RETRY_WAITS[tries])
                 tries += 1
+            except _IDENTITY_ERRORS:  # ID連携の失敗（トークンの交換、トークンファイル）。再試行しない
+                return _identity_failure(result, add)
             except anthropic.APIError as error:  # 認証の失敗など。再試行しない
                 failure = type(error).__name__
                 break

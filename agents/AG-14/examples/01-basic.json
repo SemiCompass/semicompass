@@ -3,15 +3,17 @@
   "input": {
     "task": {
       "company_name": "架空エレクトロニクス",
+      "fiscal_period": "2026年3月期",
       "categories": ["製造装置"],
       "processes": ["成膜", "洗浄"],
       "xbrl_members": ["AlphaEquipmentReportableSegmentsMember", "BetaServicesReportableSegmentsMember"],
-      "sections": ["business_description", "segment_information", "affiliated_entities"]
+      "sections": ["business_description", "segment_information", "affiliated_entities", "research_and_development"]
     },
     "materials": {
       "business_description": "当社グループは、半導体製造装置を製造し、半導体メーカーへ販売している。（架空）",
       "segment_information": "報告セグメントは、装置事業とサービス事業の2つである。（架空）",
-      "affiliated_entities": "主要な関係会社は、装置の保守を行う国内子会社である。（架空）"
+      "affiliated_entities": "主要な関係会社は、装置の保守を行う国内子会社である。（架空）",
+      "research_and_development": "当社は、成膜装置の改良を研究している。（架空）"
     }
   },
   "expect": {
@@ -23,6 +25,9 @@
     "xbrl_members_subset_of_input": true,
     "classification_allowed": ["semiconductor", "partial", "excluded"],
     "no_prohibited_words": true,
+    "no_disclaimers_about_the_source": true,
+    "no_internal_category_wording": true,
+    "amounts_state_period_and_unit": true,
     "reprint_check_max_run_below": 30
   }
 }

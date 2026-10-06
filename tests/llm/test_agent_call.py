@@ -216,6 +216,38 @@ class CallTest(Base):
         self.assertEqual([r["status"] for r in result.rows], ["failed"])
         self.assertIn("APIConnectionError", result.reason)
 
+    def test_identity_failure_is_failed_with_a_ledger_row_and_no_message(self):
+        sleeps = []
+        for error in (ac.anthropic.WorkloadIdentityError(f"token exchange {fk.SOURCE_WORD}", status_code=401, request_id="req_x"),
+                      ac.anthropic.CredentialsError(f"token file {fk.SOURCE_WORD}"),
+                      ac.anthropic.IdentityTokenFileError(f"token file {fk.SOURCE_WORD}")):
+            with self.subTest(type(error).__name__):
+                client = fk.FakeClient(error)
+                result = self.call(client, sleeps=sleeps)
+                self.assertEqual(result.status, "failed")
+                self.assertEqual(result.reason, ac.IDENTITY_FAILURE_REASON)
+                self.assertIn("Claude Console の認証イベント", result.reason)
+                self.assertNotIn(fk.SOURCE_WORD, result.reason)
+                self.assertEqual(len(client.calls), 1)  # 再試行しない
+                self.assertEqual([r["status"] for r in result.rows], ["failed"])
+                self.assertEqual(result.rows[0]["cost_jpy"], 0)
+        self.assertEqual(sleeps, [])
+
+    def test_identity_failure_when_creating_the_client(self):
+        def factory():
+            raise ac.anthropic.WorkloadIdentityError("x " + fk.SOURCE_WORD)
+        result = ac.call_agent("AG-14", "t", "m", run_id="r", subject="s", ledger_dir=self.ledger, now=lambda: fk.NOW,
+                               sleep=lambda s: None, client_factory=factory, budgets_path=self.budgets_path,
+                               operations_path=self.operations)
+        self.assertEqual((result.status, result.reason), ("failed", ac.IDENTITY_FAILURE_REASON))
+        self.assertEqual([r["status"] for r in result.rows], ["failed"])
+
+    def test_identity_failure_on_the_retry_keeps_both_rows(self):
+        client = fk.FakeClient(fk.reply({"bad": 1}), ac.anthropic.WorkloadIdentityError("x"))
+        result = self.call(client)
+        self.assertEqual(result.status, "failed")
+        self.assertEqual([r["status"] for r in result.rows], ["invalid_output", "failed"])
+
     def test_network_failure_then_success(self):
         sleeps = []
         result = self.call(fk.FakeClient(fk.conn_error(), fk.reply(fk.valid_output())), sleeps=sleeps)
@@ -290,6 +322,12 @@ class CallTest(Base):
         # 「短い」は、元のスキーマの minLength（200字）に合わない。API に渡した写しでは検出できないが、元のスキーマで不合格になる
         self.assertEqual([r["status"] for r in result.rows], ["invalid_output", "ok"])
         self.assertIn("overview", client.calls[1]["messages"][0]["content"][-1]["text"])
+
+    def test_ag14_prompt_has_the_quality_rules(self):
+        prompt, _ = ac.load_agent("AG-14")
+        for expected in ("research_and_development", "断り書きを書かない", "本サイトでは", "「カテゴリが〜であり」",
+                         "決算期", "億円で、小数第1位まで", "8,325.5億円", "読み取れない工程には触れない"):
+            self.assertIn(expected, prompt)
 
     def test_extract_json(self):
         self.assertEqual(ac.extract_json('{"a": 1}'), {"a": 1})

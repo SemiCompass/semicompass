@@ -39,9 +39,9 @@ import reprint  # noqa: E402
 import validate_data  # noqa: E402
 
 AGENT = "AG-14"
-SECTION_KEYS = ("business_description", "segment_information", "affiliated_entities")
+SECTION_KEYS = ("business_description", "segment_information", "affiliated_entities", "research_and_development")
 SECTION_NAMES = {"business_description": "事業の内容", "segment_information": "セグメント情報",
-                 "affiliated_entities": "関係会社の状況"}
+                 "affiliated_entities": "関係会社の状況", "research_and_development": "研究開発活動"}
 BUNDLE_SCHEMA_VERSION = 2
 OVERVIEW_RANGE = validate_data.OVERVIEW_LENGTH
 CITATION = re.compile(r"\[S[^\]]*\]")
@@ -105,7 +105,7 @@ def group_sections(bundle: dict) -> dict[str, list[dict]]:
             groups[section["key"]].append(section)
     missing = [k for k, v in groups.items() if not v]
     if missing:
-        raise DraftError("原資料束に、次の節がない: " + ", ".join(missing))
+        raise DraftError("原資料束に、次の節がない: " + ", ".join(missing) + "。先に edinet-bundle を動かし直す")
     return groups
 
 
@@ -122,9 +122,16 @@ def names_of(supply: dict, key: str, slugs: list[str]) -> list[dict]:
     return [{"slug": s, "name": table.get(s, s)} for s in slugs]
 
 
-def build_task(master: dict, supply: dict, members: list[str], groups: dict[str, list[dict]]) -> str:
+def fiscal_period_label(filing: dict) -> str:
+    """決算期（"2026-03"）を「2026年3月期」の形にする。読めなければ空。"""
+    match = re.fullmatch(r"(\d{4})-(\d{2})", filing.get("fiscal_period_end") or "")
+    return f"{match.group(1)}年{int(match.group(2))}月期" if match else ""
+
+
+def build_task(master: dict, supply: dict, members: list[str], groups: dict[str, list[dict]], filing: dict) -> str:
     task = {
         "company_name": master["name"],
+        "fiscal_period": fiscal_period_label(filing),
         "categories": names_of(supply, "categories", master.get("categories") or []),
         "processes": names_of(supply, "processes", master.get("processes") or []),
         "xbrl_members": members,
@@ -307,7 +314,7 @@ def run(args, env, *, now, r2_factory, client_factory, sleep, root: Path, budget
     summary += [f"| {k} | {sum(s.get('chars') or 0 for s in groups[k]):,} |" for k in SECTION_KEYS]
 
     result = agent_call.call_agent(
-        AGENT, build_task(master, supply, members, groups), build_materials(groups), run_id=args.run_id, subject=slug,
+        AGENT, build_task(master, supply, members, groups, filing), build_materials(groups), run_id=args.run_id, subject=slug,
         ledger_dir=args.ledger_dir, now=now, sleep=sleep, client_factory=client_factory,
         budgets_path=budgets_path, operations_path=operations_path, agents_dir=agents_dir)
     write_ledger(args.out_dir, result.rows)
