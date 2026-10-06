@@ -1,0 +1,103 @@
+---
+// 工程ページ（/processes/{slug}/。仕様書 9.4）：この工程の要点 → 解説 → この工程の企業（表）→ 関係する用語 → 前後の工程 → 出典。
+// 解説の本文（content/processes/{slug}.md）がない工程は、要点と企業の表だけを出し、解説は準備中の表示にする
+import { BUILD_ENV } from 'astro:env/server';
+import CompanyTable from '../../components/CompanyTable.astro';
+import Phrase from '../../components/Phrase.astro';
+import RichText from '../../components/RichText.astro';
+import SourceList from '../../components/SourceList.astro';
+import StateMessage from '../../components/StateMessage.astro';
+import Tag from '../../components/Tag.astro';
+import Page from '../../layouts/Page.astro';
+import { companyRows, loadSupply } from '../../lib/companies';
+import { loadProcessContent, loadTerms } from '../../lib/content';
+
+type P = { slug: string; name: string; stage: string; order: number; short_description?: string };
+export function getStaticPaths() {
+  return (loadSupply().processes as P[]).map((p) => ({ params: { slug: p.slug }, props: { process: p } }));
+}
+const { process } = Astro.props as { process: P };
+const preview = BUILD_ENV === 'preview';
+const supply = loadSupply() as ReturnType<typeof loadSupply> & { processes: P[]; flow?: { from: string; to: string }[] };
+const nameOf = (slug: string) => supply.processes.find((p) => p.slug === slug)?.name ?? slug;
+const stageName = supply.categories.find((c) => c.slug === process.stage)?.name ?? process.stage;
+const content = loadProcessContent(process.slug, preview);
+const rows = companyRows(preview).filter((r) => r.company.processes.includes(process.slug));
+const terms = loadTerms(preview).filter((t) => t.front.processes.includes(process.slug));
+const previous = (supply.flow ?? []).filter((f) => f.to === process.slug).map((f) => f.from);
+const next = (supply.flow ?? []).filter((f) => f.from === process.slug).map((f) => f.to);
+const sources = (content?.front.sources ?? []).map((s) => ({
+  number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on, accessedOn: s.accessed_on, pages: s.pages,
+}));
+const toc = [
+  { id: 'point', label: 'この工程の要点' },
+  { id: 'explanation', label: '解説' },
+  { id: 'companies', label: 'この工程の企業' },
+  { id: 'terms', label: '関係する用語' },
+  { id: 'neighbors', label: '前後の工程' },
+  ...(sources.length > 0 ? [{ id: 'sources-heading', label: '出典' }] : []),
+];
+---
+
+<Page
+  title={`${process.name}｜SemiCompass`}
+  heading={process.name}
+  description={process.short_description ?? `${process.name}の工程の説明と、関わる企業。`}
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '工程', href: '/processes/' }, { label: process.name }]}
+  toc={toc}
+  publishedAt={content?.front.published_at}
+  updatedAt={content?.front.updated_at}
+  aiGenerated={content?.front.ai_generated}
+  aiDraft={content?.front.draft === true}
+  noindex={content?.front.draft === true}
+>
+  <section aria-labelledby="point">
+    <h2 id="point">この工程の要点</h2>
+    <p class="lead"><Phrase text={process.short_description ?? ''} /></p>
+    <p><Tag href="/processes/" kind="段階">{stageName}</Tag></p>
+  </section>
+
+  <section aria-labelledby="explanation">
+    <h2 id="explanation">解説</h2>
+    {content ? (
+      content.sections.map((section) => (
+        <>
+          {section.heading && <h3>{section.heading}</h3>}
+          {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+        </>
+      ))
+    ) : (
+      <StateMessage kind="empty" message="この工程の解説は、準備中です。" actionLabel="工程の一覧を見る" actionHref="/processes/" />
+    )}
+  </section>
+
+  <section aria-labelledby="companies">
+    <h2 id="companies">この工程の企業</h2>
+    {rows.length > 0 ? (
+      <CompanyTable rows={rows} caption={`${process.name}の企業の一覧`} processes={supply.processes} filters={false} />
+    ) : (
+      <StateMessage kind="empty" message="この工程に当たる企業は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
+    )}
+    <p><a href={`/companies/process/${process.slug}/`}>この工程の企業を、一覧のページで見る</a></p>
+  </section>
+
+  <section aria-labelledby="terms">
+    <h2 id="terms">関係する用語</h2>
+    {terms.length > 0 ? (
+      <ul>{terms.map((t) => <li><a href={`/glossary/${t.slug}/`}>{t.front.term}</a>：{t.front.short_definition}</li>)}</ul>
+    ) : (
+      <StateMessage kind="empty" message="この工程に関係する用語は、まだありません。" actionLabel="用語集を見る" actionHref="/glossary/" />
+    )}
+  </section>
+
+  <section aria-labelledby="neighbors">
+    <h2 id="neighbors">前後の工程</h2>
+    <ul>
+      {previous.map((slug) => <li>前の工程：<a href={`/processes/${slug}/`}>{nameOf(slug)}</a></li>)}
+      {next.map((slug) => <li>次の工程：<a href={`/processes/${slug}/`}>{nameOf(slug)}</a></li>)}
+    </ul>
+    {previous.length === 0 && next.length === 0 && <p>前後の工程は、まだ設定されていません。</p>}
+  </section>
+
+  {sources.length > 0 && <SourceList sources={sources} heading="出典" />}
+</Page>

@@ -186,6 +186,11 @@ details[open] > summary .icon-flip {
   }
 }
 
+/* hidden は、他の指定より優先する（スクリプトがあるときだけ見せる部品など） */
+[hidden] {
+  display: none !important;
+}
+
 /* 数値と単位は、折り返さない */
 .nowrap {
   white-space: nowrap;

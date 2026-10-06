@@ -1,14 +1,111 @@
 ---
-import Notice from '../components/Notice.astro';
+// トップページ（/。要件定義書 3.3、仕様書 9.1）：説明の一文（h1）→ サイトの説明 → 3つの入口 → 新着のニュース解説。
+// 最初の画面（幅360px、高さ約640px）に、説明と3つの入口が収まる。同じ形のカードを3つ並べない（定義の一覧）
+import SearchBox from '../components/SearchBox.astro';
 import Phrase from '../components/Phrase.astro';
-import Page from '../layouts/Page.astro';
+import StateMessage from '../components/StateMessage.astro';
+import Base from '../layouts/Base.astro';
+import { loadSupply } from '../lib/companies';
+
+const supply = loadSupply();
+const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.categories.find((c) => c.slug === slug)?.name ?? slug }));
 ---
 
-<Page
-  title="SemiCompass（セミコンパス）"
-  description="日本の半導体業界を、企業・工程・ニュースでつなげて理解する情報サイト。準備中。"
-  wide
->
-  <p class="lead measure"><Phrase text="日本の半導体業界を、企業・工程・ニュースでつなげて理解する" /></p>
-  <Notice kind="note"><p>このページは仮のページです。サイトは準備中で、公開していません。</p></Notice>
-</Page>
+<Base title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="日本の半導体業界を、企業・工程・ニュースでつなげて理解する情報サイト。数値には出典を付け、広告主の意向で内容を変えません。">
+  <div class="container home">
+    <h1 class="home__title"><Phrase text="日本の半導体業界を、企業・工程・ニュースでつなげて理解する" /></h1>
+    <p class="lead measure home__lead">
+      半導体業界の情報サイトです。企業・工程・ニュースを行き来して理解できます。数値には出典を付け、広告主の意向で内容を変えません。
+    </p>
+
+    <dl class="entries">
+      <div class="entries__item">
+        <dt><a href="/processes/">工程から探す</a></dt>
+        <dd>
+          <ul class="entries__links">
+            {stages.map((s) => <li><a href={`/processes/#stage-${s.slug}`}>{s.name}</a></li>)}
+            <li><a href="/processes/">すべての工程</a></li>
+          </ul>
+        </dd>
+      </div>
+      <div class="entries__item">
+        <dt><a href="/news/">ニュース・テーマから探す</a></dt>
+        <dd>ニュース解説の一覧を見ます。</dd>
+      </div>
+      <div class="entries__item">
+        <dt>企業名・証券コードで探す</dt>
+        <dd><SearchBox id="home-search" /></dd>
+      </div>
+    </dl>
+
+    <section aria-labelledby="latest-news" class="home__news">
+      <h2 id="latest-news">新着のニュース解説</h2>
+      <StateMessage kind="empty" message="ニュース解説は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
+    </section>
+  </div>
+</Base>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .home {
+    padding-block: var(--space-3) var(--space-6);
+  }
+  .home__title {
+    margin-block-end: var(--space-2);
+  }
+  .home__lead {
+    margin-block-end: var(--space-2);
+  }
+  .entries {
+    margin: 0;
+    padding: 0;
+  }
+  @media (--tablet) {
+    .home {
+      padding-block-start: var(--space-5);
+    }
+  }
+  .entries__item {
+    padding-block: var(--space-1);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+  .entries dt {
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-lead-leading);
+    letter-spacing: var(--text-lead-tracking);
+  }
+  .entries dd {
+    margin: 0;
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .entries__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .entries__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .home__news h2 {
+    margin-block-start: var(--space-6);
+  }
+
+  @media (--pc) {
+    .entries {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+    .entries__item {
+      padding-block: var(--space-4) 0;
+    }
+  }
+</style>

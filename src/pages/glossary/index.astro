@@ -1,0 +1,78 @@
+---
+// 用語集（/glossary/。仕様書 9.5）：五十音とアルファベットの見出しで区切った一覧（用語、読み、短い定義）。用語がまだないときは、準備中の表示
+import { BUILD_ENV } from 'astro:env/server';
+import StateMessage from '../../components/StateMessage.astro';
+import Page from '../../layouts/Page.astro';
+import { GLOSSARY_HEADING_ORDER, glossaryHeading, loadTerms } from '../../lib/content';
+
+const terms = loadTerms(BUILD_ENV === 'preview');
+const groups = GLOSSARY_HEADING_ORDER.map((heading) => ({
+  heading,
+  items: terms.filter((t) => glossaryHeading(t.front.reading) === heading).sort((a, b) => a.front.reading.localeCompare(b.front.reading, 'ja')),
+})).filter((g) => g.items.length > 0);
+---
+
+<Page
+  title="用語集｜SemiCompass"
+  heading="用語集"
+  description="半導体に関わる用語の解説。読みと短い定義、関係する工程を確かめられます。"
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '用語集' }]}
+  wide
+>
+  {terms.length === 0 ? (
+    <StateMessage kind="empty" message="用語集は、準備中です。用語は、順に公開します。" actionLabel="工程の一覧を見る" actionHref="/processes/" />
+  ) : (
+    <>
+      <p class="measure">用語を、読みの順に並べています。</p>
+      <nav aria-label="用語集の見出し"><ul class="glossary-index">{groups.map((g) => <li><a href={`#g-${g.heading}`}>{g.heading}</a></li>)}</ul></nav>
+      {groups.map((g) => (
+        <section aria-labelledby={`g-${g.heading}`}>
+          <h2 id={`g-${g.heading}`}>{g.heading}</h2>
+          <dl class="glossary-list">
+            {g.items.map((t) => (
+              <>
+                <dt><a href={`/glossary/${t.slug}/`}>{t.front.term}</a><span class="glossary-list__reading">（{t.front.reading}）</span></dt>
+                <dd>{t.front.short_definition}</dd>
+              </>
+            ))}
+          </dl>
+        </section>
+      ))}
+    </>
+  )}
+</Page>
+
+<style>
+  .glossary-index {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: 0 0 var(--space-5);
+    padding: 0;
+    list-style: none;
+  }
+  .glossary-index a {
+    display: inline-flex;
+    align-items: center;
+    min-width: var(--target-min);
+    min-height: var(--target-min);
+  }
+  .glossary-list {
+    max-width: var(--content-max-width);
+    margin: 0;
+  }
+  .glossary-list dt {
+    margin-block-start: var(--space-4);
+    font-weight: var(--font-weight-bold);
+  }
+  .glossary-list__reading {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-normal);
+  }
+  .glossary-list dd {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+</style>
