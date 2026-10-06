@@ -18,3 +18,6 @@ sections:
     candidates:
       - jpcrp_cor:NotesSegmentInformationEtcConsolidatedFinancialStatementsTextBlock   # 日本基準
       - jpigp_cor:NotesSegmentInformationConsolidatedFinancialStatementsIFRSTextBlock  # IFRS
+  - key: research_and_development  # 研究開発活動（確認済み：東京エレクトロン S100YEOO 1,617字、ソニー S100YE2C 4,501字）
+    candidates:
+      - jpcrp_cor:ResearchAndDevelopmentActivitiesTextBlock

@@ -126,7 +126,9 @@ class MakeBundleTest(Base):
 
     def test_shipped_default_config(self):
         specs = mb.load_default_sections()
-        self.assertEqual([s.key for s in specs], ["business_description", "affiliated_entities", "segment_information"])
+        self.assertEqual([s.key for s in specs], ["business_description", "affiliated_entities", "segment_information",
+                                              "research_and_development"])
+        self.assertEqual(specs[3].candidates, ("jpcrp_cor:ResearchAndDevelopmentActivitiesTextBlock",))
         self.assertEqual(specs[2].candidates, (
             "jpcrp_cor:NotesSegmentInformationEtcConsolidatedFinancialStatementsTextBlock",
             "jpigp_cor:NotesSegmentInformationConsolidatedFinancialStatementsIFRSTextBlock"))

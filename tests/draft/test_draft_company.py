@@ -41,6 +41,7 @@ def bundle_json(doc_id):
         section("business_description", "test_cor:BusinessTextBlock", f"{fk.SOURCE_WORD}。" + kana(900)),
         section("affiliated_entities", "test_cor:AffiliatedTextBlock", kana(300)),
         section("segment_information", "test_cor:SegmentTextBlock", kana(600)),
+        section("research_and_development", "test_cor:RdTextBlock", kana(400)),
     ]}
 
 
@@ -181,7 +182,10 @@ class SuccessTest(Base):
         task = json.loads(blocks[0]["text"].split("\n", 1)[1])
         self.assertEqual(task["xbrl_members"], [MEMBER])
         self.assertEqual([s["key"] for s in task["sections"]],
-                         ["business_description", "segment_information", "affiliated_entities"])
+                         ["business_description", "segment_information", "affiliated_entities", "research_and_development"])
+        self.assertEqual(task["fiscal_period"], dc.fiscal_period_label(next(f for f in self.auto["filings"] if f["doc_id"] == self.doc_id)))
+        self.assertRegex(task["fiscal_period"], r"^\d{4}年\d{1,2}月期$")
+        self.assertIn("test_cor:RdTextBlock", blocks[1]["text"])
         self.assertTrue(all("name" in p for p in task["processes"]))  # 工程の名前が付く
         self.assertIn(fk.SOURCE_WORD, blocks[1]["text"])
         self.assertNotIn(fk.SOURCE_WORD, blocks[0]["text"])  # 資料は、指示の区画に入れない
@@ -293,6 +297,27 @@ class FailureTest(Base):
         bundle["sections"] = [s for s in bundle["sections"] if s["key"] != "affiliated_entities"]
         self.assertEqual(self.run_draft(self.client(), r2=FakeR2(bundle)), 1)
         self.assertIn("affiliated_entities", self.stderr)
+
+    def test_bundle_without_research_and_development_stops_with_a_hint(self):
+        bundle = bundle_json(self.doc_id)
+        bundle["sections"] = [s for s in bundle["sections"] if s["key"] != "research_and_development"]
+        client = self.client()
+        self.assertEqual(self.run_draft(client, r2=FakeR2(bundle)), 1)
+        self.assertIn("research_and_development", self.stderr)
+        self.assertIn("edinet-bundle を動かし直す", self.stderr)
+        self.assertEqual(client.calls, [])
+        self.assertEqual(self.written(), [])
+
+    def test_identity_failure_exits_1_and_keeps_a_ledger_row_without_the_message(self):
+        error = fk.agent_call.anthropic.WorkloadIdentityError(f"exchange failed {fk.SOURCE_WORD} " + " ".join(SECRETS))
+        self.assertEqual(self.run_draft(fk.FakeClient(error)), 1)
+        self.assertIn("ID連携の認証に失敗した", self.stderr)
+        self.assertNotIn("想定外", self.stderr)
+        self.assertEqual(self.written(), ["ledger/2026-10.jsonl"])
+        row = json.loads((self.out / "ledger" / "2026-10.jsonl").read_text(encoding="utf-8"))
+        self.assertEqual((row["status"], row["agent"], row["cost_jpy"]), ("failed", "AG-14", 0))
+        for forbidden in (fk.SOURCE_WORD, *SECRETS):
+            self.assertNotIn(forbidden, self.all_text())
 
     def test_old_bundle_schema_version_stops(self):
         bundle = bundle_json(self.doc_id)
