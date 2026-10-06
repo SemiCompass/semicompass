@@ -323,6 +323,28 @@ class CallTest(Base):
         self.assertEqual([r["status"] for r in result.rows], ["invalid_output", "ok"])
         self.assertIn("overview", client.calls[1]["messages"][0]["content"][-1]["text"])
 
+    def test_with_options_keeps_the_credentials_and_the_token_cache(self):
+        """with_options は、認証の情報とトークンの保管を引き継ぐ。同じクライアントからの呼び出しで、トークンの交換は1回だけ。"""
+        import time
+        import httpx2 as httpx
+        from anthropic.lib.credentials import AccessToken
+        exchanges = []
+
+        def provider(*args, **kwargs):
+            exchanges.append(1)
+            return AccessToken(token="tok", expires_at=time.time() + 3600)
+        message = {"id": "m", "type": "message", "role": "assistant", "model": "x", "stop_reason": "end_turn",
+                   "stop_sequence": None, "content": [{"type": "text", "text": "{}"}],
+                   "usage": {"input_tokens": 1, "output_tokens": 1}}
+        base = ac.anthropic.Anthropic(credentials=provider, http_client=httpx.Client(
+            transport=httpx.MockTransport(lambda request: httpx.Response(200, json=message))))
+        for _ in range(3):
+            copy = base.with_options(max_retries=0)
+            copy.messages.create(model="x", max_tokens=5, messages=[{"role": "user", "content": "a"}], timeout=10)
+            self.assertIs(copy.credentials, base.credentials)
+            self.assertIs(copy._token_cache, base._token_cache)
+        self.assertEqual(len(exchanges), 1)
+
     def test_followup_block_comes_after_materials_and_is_not_cached(self):
         client = fk.FakeClient(fk.reply(fk.valid_output()))
         self.call(client, followup="FOLLOWUP")
