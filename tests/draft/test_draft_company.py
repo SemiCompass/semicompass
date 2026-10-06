@@ -307,6 +307,46 @@ class RewriteTest(Base):
         self.assertEqual([r["status"] for r in self.ledger_rows()], ["ok", "skipped_budget"])
         self.assertEqual(self.written(), ["ledger/2026-10.jsonl"])
 
+    def test_first_call_and_rewrite_share_one_client(self):
+        made = []
+        client = fk.FakeClient(fk.reply(copied_output(self.copied)), fk.reply(fk.valid_output(members=[MEMBER])))
+
+        def factory():
+            made.append(1)
+            return client
+        self.assertEqual(self.run_with_factory(factory), 0)
+        self.assertEqual(len(client.calls), 2)  # 最初と書き直し
+        self.assertEqual(len(made), 1)  # クライアントは、1回しか作らない
+
+    def test_client_is_created_lazily_and_not_at_all_when_paused(self):
+        self.operations.write_text("status: paused\n", encoding="utf-8")
+        made = []
+        self.assertEqual(self.run_with_factory(lambda: made.append(1)), 3)
+        self.assertEqual(made, [])
+
+    def test_failed_creation_is_not_cached(self):
+        calls = []
+
+        def factory():
+            calls.append(1)
+            if len(calls) == 1:
+                raise fk.agent_call.anthropic.WorkloadIdentityError("x")
+            return fk.FakeClient(fk.reply(fk.valid_output(members=[MEMBER])))
+        factory_get = dc.shared_client_factory(factory)
+        with self.assertRaises(fk.agent_call.anthropic.WorkloadIdentityError):
+            factory_get()
+        self.assertIsNotNone(factory_get())
+        self.assertIs(factory_get(), factory_get())
+        self.assertEqual(len(calls), 2)
+
+    def run_with_factory(self, factory):
+        summary = self.tmp / "summary.md"
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return dc.main(["--company", SLUG, "--out-dir", str(self.out), "--ledger-dir", str(self.ledger),
+                            "--run-id", "run42", "--summary", str(summary)],
+                           env=ENV, now=lambda: fk.NOW, r2_factory=lambda creds: self.r2, client_factory=factory,
+                           sleep=lambda s: None, root=self.root, budgets_path=self.budgets, operations_path=self.operations)
+
     def test_rewrite_returning_invalid_output_exits_1(self):
         client = fk.FakeClient(fk.reply(copied_output(self.copied)), fk.reply("JSONではない"))
         self.assertEqual(self.run_draft(client), 1)

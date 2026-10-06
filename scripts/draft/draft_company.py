@@ -308,6 +308,22 @@ def write_summary(path: Path | None, lines: list[str]) -> None:
             handle.write("\n".join(lines) + "\n")
 
 
+def shared_client_factory(factory):
+    """最初に呼ばれたときだけ factory でクライアントを作り、以後は同じものを返す（遅延して作る）。
+
+    呼び出しのたびに anthropic.Anthropic() を作り直すと、同じ GitHub の ID トークンを何度も交換しようとして、
+    2回目以降が断られる。SDK は、1つのクライアントの中では、交換した鍵を使い回し、期限の前に更新する。
+    作れなかったとき（例外）は、保存しない。
+    """
+    holder: list = []
+
+    def get():
+        if not holder:
+            holder.append(factory())
+        return holder[0]
+    return get
+
+
 def run(args, env, *, now, r2_factory, client_factory, sleep, root: Path, budgets_path, operations_path, agents_dir,
         textcheck_path, summary: list[str]) -> int:
     slug = args.company
@@ -337,6 +353,7 @@ def run(args, env, *, now, r2_factory, client_factory, sleep, root: Path, budget
     summary += [f"| {k} | {sum(s.get('chars') or 0 for s in groups[k]):,} |" for k in SECTION_KEYS]
 
     all_rows: list[dict] = []
+    client_factory = shared_client_factory(client_factory)  # 最初の呼び出しと書き直しで、同じクライアントを使う
     calls = dict(run_id=args.run_id, subject=slug, ledger_dir=args.ledger_dir, now=now, sleep=sleep,
                  client_factory=client_factory, budgets_path=budgets_path, operations_path=operations_path,
                  agents_dir=agents_dir)
