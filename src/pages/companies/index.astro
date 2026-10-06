@@ -21,9 +21,7 @@ const detailedCount = rows.filter((r) => r.detailed).length;
     半導体に関わる企業を、証券コードの順に並べています（証券コードのない企業は末尾）。詳しい内容を公開している企業は{detailedCount}社で、そのほかは準備中です。
     売上高は、最新の通期の連結の値です。
   </p>
-  <p class="measure">
-    工程ごとの一覧：
-    {supply.processes.map((p, i) => <>{i > 0 && '、'}<a href={`/companies/process/${p.slug}/`}>{p.name}</a></>)}
-  </p>
-  <CompanyTable rows={rows} caption="企業の一覧" processes={supply.processes} />
+  <CompanyTable rows={rows} caption="企業の一覧" processes={supply.processes}>
+    <p class="measure"><a href="/processes/">工程ごとの一覧のページ</a>から、工程を選んで企業を見ることもできます。</p>
+  </CompanyTable>
 </Page>

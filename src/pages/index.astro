@@ -48,6 +48,8 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
 <style>
   @import "../styles/breakpoints.css";
 
+  /* まとまりは余白で示す（仕様書 6.1）。スマートフォンは、最初の画面（360×640）に説明と3つの入口が収まる範囲に抑え、
+     タブレット以上で、--space-7〜--space-8 を取る */
   .home {
     padding-block: var(--space-3) var(--space-6);
   }
@@ -55,7 +57,7 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
     margin-block-end: var(--space-2);
   }
   .home__lead {
-    margin-block-end: var(--space-2);
+    margin-block-end: var(--space-4);
   }
   .entries {
     margin: 0;
@@ -63,7 +65,10 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
   }
   @media (--tablet) {
     .home {
-      padding-block-start: var(--space-5);
+      padding-block: var(--space-7) var(--space-8);
+    }
+    .home__lead {
+      margin-block-end: var(--space-7);
     }
   }
   .entries__item {
@@ -94,8 +99,16 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
     align-items: center;
     min-height: var(--target-min);
   }
+  .home__news {
+    margin-block-start: var(--space-7);
+  }
   .home__news h2 {
-    margin-block-start: var(--space-6);
+    margin-block-start: 0;
+  }
+  @media (--tablet) {
+    .home__news {
+      margin-block-start: var(--space-8);
+    }
   }
 
   @media (--pc) {

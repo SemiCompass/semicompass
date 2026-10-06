@@ -122,7 +122,7 @@
   --table-first-column-min: 8rem; /* 8.7 左に固定する最初の列の幅の範囲。長い名前は折り返す（仕様書に値がない） */
   --table-first-column-max: 12rem;
   --table-first-column-wide: 20rem; /* 企業の表など、最初の列を広げる表（仕様書に値がない） */
-  --table-wrap-column-min: 14rem; /* 折り返す列（工程の名前の並びなど）の最小の幅（仕様書に値がない） */
+  --table-wrap-column-min: 10rem; /* 折り返す列（工程の名前の並びなど）の最小の幅（仕様書に値がない） */
   --aside-max-height: calc(100vh - var(--toc-sticky-top) * 2); /* 右の列の張り付く部分が、画面に収まる高さ */
 }
 

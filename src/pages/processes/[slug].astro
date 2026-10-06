@@ -74,11 +74,11 @@ const toc = [
   <section aria-labelledby="companies">
     <h2 id="companies">この工程の企業</h2>
     {rows.length > 0 ? (
-      <CompanyTable rows={rows} caption={`${process.name}の企業の一覧`} processes={supply.processes} filters={false} />
+      <CompanyTable rows={rows} caption={`${process.name}の企業の一覧`} processes={supply.processes} filters={false} compact />
     ) : (
       <StateMessage kind="empty" message="この工程に当たる企業は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
     )}
-    <p><a href={`/companies/process/${process.slug}/`}>この工程の企業を、一覧のページで見る</a></p>
+    <p><a href={`/companies/process/${process.slug}/`}>証券コード・工程・掲載の状態も含めて、一覧のページで見る</a></p>
   </section>
 
   <section aria-labelledby="terms">

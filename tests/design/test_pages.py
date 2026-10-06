@@ -76,6 +76,8 @@ class PagesBuildTest(unittest.TestCase):
             self.assertIn('aria-sort="none"', html)
             self.assertNotIn("card", html.lower().replace("discard", ""))
             self.assertIn('role="status"', html)
+            self.assertEqual(html.count('href="/companies/process/'), 0 if env else 0)  # 工程ごとの長いリンクの並びは、置かない
+            self.assertIn('href="/processes/"', html.split("<main")[1])
             # 工程ごとの一覧
             self.assertTrue(list((dist / "companies" / "process").glob("*/index.html")))
 
@@ -95,6 +97,10 @@ class PagesBuildTest(unittest.TestCase):
             self.assertEqual(html.count("<h1"), 1, slug)
             self.assertIn("この工程の企業", html)
             self.assertIn("準備中", html)  # content/processes に本文がない間
+            heads = re.findall(r'<span class="data-table__label"[^>]*>(.*?)</span>', html)
+            if "data-table--wide-first" in html:  # 企業がない工程は、表でなく空の表示
+                self.assertEqual(heads, ["企業名", "企業区分", "売上高（億円）", "半導体関連の比率（%）"], slug)  # 本文の列に収める
+            self.assertIn(f'href="/companies/process/{slug}/"', html)
 
     def test_empty_glossary_and_search(self):
         dist = self.build("preview")

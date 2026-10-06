@@ -11,12 +11,13 @@ interface Props {
   caption: string;
   processes: { slug: string; name: string }[]; // 工程の名前（表と絞り込みの選択肢）
   filters?: boolean;
+  compact?: boolean; // 列を、企業名・企業区分・売上高・比率に絞る（本文の列に収める）
 }
-const { rows, caption, processes, filters = true } = Astro.props;
+const { rows, caption, processes, filters = true, compact = false } = Astro.props;
 const processName = (slug: string) => processes.find((p) => p.slug === slug)?.name ?? slug;
 const types = [...new Set(rows.map((r) => r.company.type))];
 
-const columns = [
+const allColumns = [
   { key: 'name', label: '企業名', sort: 'none' as const, sortKey: 'name' },
   { key: 'code', label: '証券コード', sort: 'none' as const, sortKey: 'code' },
   { key: 'type', label: '企業区分' },
@@ -25,6 +26,8 @@ const columns = [
   { key: 'ratio', label: '半導体関連の比率（%）', numeric: true, sort: 'none' as const, sortKey: 'ratio' },
   { key: 'status', label: '掲載の状態' },
 ];
+const compactKeys = ['name', 'type', 'sales', 'ratio'];
+const columns = compact ? allColumns.filter((c) => compactKeys.includes(c.key)) : allColumns;
 const tableRows = rows.map((r) => ({
   __href: `/companies/${r.company.slug}/`,
   name: r.company.short_names[0] ?? r.company.name,
@@ -63,6 +66,7 @@ const rowData = rows.map((r, i) => ({
       </label>
     </div>
   )}
+  <slot />
   <p class="company-table__count" role="status" data-count data-total={rows.length}>{rows.length}社を表示しています</p>
   <DataTable caption={caption} columns={columns} rows={tableRows} rowData={rowData} wideFirst emptyMessage="該当する企業はありません" />
   <p class="company-table__empty" data-empty hidden>条件に当てはまる企業は、ありません。絞り込みを変えてください。</p>
