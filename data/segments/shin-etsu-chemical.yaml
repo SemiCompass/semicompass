@@ -1,0 +1,45 @@
+schema_version: 1
+company: shin-etsu-chemical
+reviewed_on: '2026-10-06'
+based_on: S100YE9I
+segments:
+- name: 電子材料事業
+  xbrl_members:
+  - ElectronicsMaterialsReportableSegmentsMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 半導体シリコン、フォトレジスト、マスクブランクスが中心。希土類磁石やLED用材料も含む。
+- name: 生活環境基盤材料事業
+  xbrl_members:
+  - InfrastructureMaterialsReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 塩化ビニル樹脂、か性ソーダなどが主で、半導体に関わる製品の記載がない。
+- name: 機能材料事業
+  xbrl_members:
+  - FunctionalMaterialsReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主力はシリコーンやセルロース誘導体。製品にペリクルを含むが中心ではない。
+- name: 加工・商事・技術サービス事業
+  xbrl_members:
+  - DiversifiedBusinessReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 樹脂加工製品、輸出入、エンジニアリングが主で、半導体との関わりを判断できないため慎重に区分した。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: 信越化学工業株式会社（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YE9I.pdf
+  published_on: '2026-06-19'
+  accessed_on: '2026-10-06'
+  doc_id: S100YE9I
