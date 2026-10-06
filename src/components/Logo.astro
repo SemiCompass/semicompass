@@ -1,17 +1,27 @@
 ---
-// 仮のロゴ。方位磁針の針とチップの組み合わせ（DS-01）の案は、仕様書14章の未決事項2で、運営者が選ぶ。SVGで作る
+// 仮のロゴ。方位磁針の針とチップの組み合わせ（DS-01）の案は、仕様書14章の未決事項2で、運営者が選ぶ。SVGで作る。
+// 図形の左端の線は、図形の枠の左端に置く（外枠の左端にそろえるため。仕様書 6.3）
 ---
 
 <svg class="logo" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-linejoin="round" aria-hidden="true" focusable="false">
-  <rect x="5" y="5" width="22" height="22" vector-effect="non-scaling-stroke"></rect>
-  <path d="M16 8l4 8-4 8-4-8 4-8Z" vector-effect="non-scaling-stroke"></path>
+  <rect x="1" y="1" width="30" height="30" vector-effect="non-scaling-stroke"></rect>
+  <path d="M16 7l5 9-5 9-5-9 5-9Z" vector-effect="non-scaling-stroke"></path>
 </svg>
 
 <style>
+  @import "../styles/breakpoints.css";
+
   .logo {
     flex: none;
-    width: var(--target-min);
-    height: var(--target-min);
+    width: var(--logo-size-sp);
+    height: var(--logo-size-sp);
     stroke-width: var(--icon-stroke);
+  }
+
+  @media (--tablet) {
+    .logo {
+      width: var(--logo-size);
+      height: var(--logo-size);
+    }
   }
 </style>

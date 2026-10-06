@@ -15,7 +15,7 @@ const { lead, metrics, period, source } = Astro.props;
 
 <section class="key-points" aria-labelledby="key-points-heading">
   <h2 class="visually-hidden" id="key-points-heading">この会社のポイント</h2>
-  <p class="key-points__lead">{lead}</p>
+  <p class="key-points__lead lead">{lead}</p>
   <dl class="key-points__list">
     {metrics.map((m) => (
       <div class="key-points__metric">
@@ -38,9 +38,6 @@ const { lead, metrics, period, source } = Astro.props;
   }
   .key-points__lead {
     margin-block: 0 var(--space-4);
-    font-size: var(--text-lead);
-    line-height: var(--text-lead-leading);
-    letter-spacing: var(--text-lead-tracking);
   }
   .key-points__list {
     display: grid;

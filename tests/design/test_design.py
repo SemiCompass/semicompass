@@ -158,6 +158,60 @@ class StylelintTest(unittest.TestCase):
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
 
+class PreviewFixesTest(unittest.TestCase):
+    """プレビューの確認で見つかった点の直し（変更案 #112 の追加のコミット）。見た目そのものは、ブラウザで確かめる。"""
+
+    def read(self, rel):
+        return (ROOT / rel).read_text(encoding="utf-8")
+
+    def test_lead_text_uses_the_heading_wrapping_rule(self):
+        css = self.read("src/styles/global.css")
+        block = re.search(r"\.lead \{(.*?)\}", css, re.S).group(1)
+        self.assertIn("word-break: auto-phrase", block)
+        self.assertIn("text-wrap: balance", block)
+        self.assertIn("lead", self.read("src/pages/index.astro"))
+        self.assertIn("lead", self.read("src/components/KeyPoints.astro"))
+
+    def test_table_first_column_has_a_width_range_and_wraps(self):
+        self.assertIn("--table-first-column-min", V)
+        self.assertIn("--table-first-column-max", V)
+        css = self.read("src/components/DataTable.astro")
+        first = re.search(r"\.data-table \.is-first \{(.*?)\}", css, re.S).group(1)
+        for needle in ("min-width: var(--table-first-column-min)", "max-width: var(--table-first-column-max)", "white-space: normal"):
+            self.assertIn(needle, first)
+
+    def test_menu_button_is_an_opening_mark_with_aria_expanded(self):
+        header = self.read("src/components/Header.astro")
+        self.assertIn('aria-expanded="false"', header)
+        self.assertIn('name="chevron-down"', header)
+        self.assertNotIn('name="chevron" ', header)
+        self.assertIn("scripts/menu", header)
+        self.assertIn("aria-expanded", self.read("src/scripts/menu.ts"))
+
+    def test_header_height_and_logo_sizes_are_tokens(self):
+        for name in ("--header-height-sp", "--logo-size", "--logo-size-sp"):
+            self.assertIn(name, V)
+
+    def test_aside_has_one_sticky_group_and_no_sticky_toc(self):
+        page = self.read("src/layouts/Page.astro")
+        self.assertIn("page__aside-sticky", page)
+        self.assertEqual(page.count("position: sticky"), 1)
+        toc = re.sub(r"/\*.*?\*/|//[^\n]*|<!--.*?-->", "", self.read("src/components/Toc.astro"), flags=re.S)
+        self.assertNotIn("sticky", toc)
+
+    def test_hit_areas_are_taken_by_a_transparent_after_not_by_row_spacing(self):
+        for rel in ("src/components/Footer.astro", "src/components/Toc.astro"):
+            css = self.read(rel)
+            self.assertRegex(css, r"a::after \{[^}]*height: var\(--target-min\)")
+            self.assertNotRegex(css, r"a \{[^}]*min-height: var\(--target-min\)")
+
+    def test_screen_guidance_is_in_polite_form(self):
+        for rel in ("src/pages/404.astro", "src/pages/index.astro", "src/components/StateMessage.astro",
+                    "src/components/PendingNotice.astro", "src/components/Button.astro", "src/components/Notice.astro"):
+            text = re.sub(r"<!--.*?-->|/\*.*?\*/|^\s*//.*$", "", self.read(rel), flags=re.S | re.M)
+            self.assertNotRegex(text, r"(ある|いる|ない|する|した|できる|れる)。<", rel)
+
+
 class MenuTest(unittest.TestCase):
     def test_menu_yaml(self):
         data = yaml.safe_load((ROOT / "config" / "menu.yaml").read_text(encoding="utf-8"))

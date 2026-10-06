@@ -44,13 +44,21 @@ const { items, variant } = Astro.props;
     line-height: var(--text-dense-leading);
     letter-spacing: var(--text-dense-tracking);
   }
+  /* 押せる範囲44pxは、::after の透明な範囲で取る。見た目の行の間隔は、詰める（8.4、DS-07） */
   .toc__list a {
-    display: flex;
-    align-items: center;
-    min-height: var(--target-min);
-    padding-inline: var(--space-3);
+    position: relative;
+    display: block;
+    padding: var(--space-1) var(--space-3);
     border-left: var(--border-width-accent) solid transparent;
     text-decoration: none;
+  }
+  .toc__list a::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: var(--target-min);
+    transform: translateY(-50%);
   }
   .toc--fold {
     max-width: var(--content-max-width);
@@ -93,8 +101,7 @@ const { items, variant } = Astro.props;
     }
     .toc--side {
       display: block;
-      position: sticky;
-      top: var(--toc-sticky-top);
+      margin-block-end: var(--space-5);
     }
   }
 </style>

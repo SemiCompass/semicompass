@@ -1,6 +1,6 @@
 ---
 // 意味のある図と記号だけ（仕様書 7章）。線の太さは --icon-stroke にそろえ、文字と同じ色にする。装飾だけのアイコンは作らない
-type Name = 'search' | 'external' | 'chevron' | 'warning' | 'error' | 'note' | 'ai' | 'sort' | 'sort-up' | 'sort-down';
+type Name = 'search' | 'external' | 'chevron' | 'chevron-down' | 'warning' | 'error' | 'note' | 'ai' | 'sort' | 'sort-up' | 'sort-down';
 interface Props {
   name: Name;
   class?: string;
@@ -10,6 +10,7 @@ const paths: Record<Name, string> = {
   search: 'M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm4.8 11.3L20 20',
   external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
   chevron: 'M9 5l7 7-7 7',
+  'chevron-down': 'M5 9l7 7 7-7',
   warning: 'M12 4l9 16H3L12 4Zm0 6v5m0 3v.01',
   error: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 5v5m0 3v.01',
   note: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 8v6m0-9v.01',
@@ -18,7 +19,7 @@ const paths: Record<Name, string> = {
   'sort-up': 'M8 15l4-4 4 4',
   'sort-down': 'M8 9l4 4 4-4',
 };
-const turn = name === 'chevron' ? 'icon-turn' : '';
+const turn = name === 'chevron' ? 'icon-turn' : name === 'chevron-down' ? 'icon-flip' : '';
 ---
 
 <svg

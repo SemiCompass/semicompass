@@ -84,10 +84,14 @@ const { caption, columns, rows, emptyMessage = '該当するデータはあり�
     background: var(--color-surface-sunken);
     font-feature-settings: "palt";
   }
+  /* 最初の列（企業名など）：幅の範囲を持ち、長い名前は折り返す。数値の列は、折り返さない */
   .data-table .is-first {
     position: sticky;
     left: 0;
     min-width: var(--table-first-column-min);
+    max-width: var(--table-first-column-max);
+    white-space: normal;
+    overflow-wrap: anywhere;
     background: var(--color-surface);
     text-align: left;
   }

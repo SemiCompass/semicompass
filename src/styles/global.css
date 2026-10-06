@@ -100,6 +100,15 @@ hr {
   border-top: var(--border-width) solid var(--color-border);
 }
 
+/* 導入の文字（5.2 text-lead）：見出しと同じ折り返しの規則（5.3。語の途中で折り返さない） */
+.lead {
+  font-size: var(--text-lead);
+  line-height: var(--text-lead-leading);
+  letter-spacing: var(--text-lead-tracking);
+  word-break: auto-phrase;
+  text-wrap: balance;
+}
+
 /* 5.3 数字：桁がそろう数字。表の数値は右に揃える（表の部品で指定） */
 table,
 .numeric {
@@ -160,12 +169,19 @@ details[open] > summary .icon-turn {
   transform: rotate(90deg);
 }
 
-.icon-turn {
+/* 下向きの開閉の記号（メニュー）：開いたときは、上向きにする */
+details[open] > summary .icon-flip {
+  transform: rotate(180deg);
+}
+
+.icon-turn,
+.icon-flip {
   transition: transform var(--motion-duration);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .icon-turn {
+  .icon-turn,
+  .icon-flip {
     transition: none;
   }
 }

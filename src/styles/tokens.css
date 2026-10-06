@@ -101,7 +101,10 @@
   --icon-stroke: 1.5px; /* 図と記号の線の太さ */
 
   /* ---- 構造の寸法（仕様書に値がある：8.1、8.5、8.6、8.11、DS-07） ---- */
-  --header-height: 4rem;
+  --header-height: 4rem; /* タブレット以上。スマートフォンは --header-height-sp */
+  --header-height-sp: 3.5rem;
+  --logo-size: 2.5rem; /* ロゴの図形の大きさ（仕様書に値がない） */
+  --logo-size-sp: 2rem;
   --target-min: 2.75rem; /* 押せる範囲 一辺44px */
   --control-height: 2.75rem; /* ボタン、検索の入力欄 */
   --tag-height: 2rem;
@@ -114,7 +117,9 @@
   --search-width-max: 18rem;
   --key-point-min: 10rem; /* この会社のポイントの数値1つの最小の幅（仕様書に値がない） */
   --toc-sticky-top: var(--space-6);
-  --table-first-column-min: 8rem; /* 8.7 左に固定する最初の列（仕様書に値がない） */
+  --table-first-column-min: 8rem; /* 8.7 左に固定する最初の列の幅の範囲。長い名前は折り返す（仕様書に値がない） */
+  --table-first-column-max: 12rem;
+  --aside-max-height: calc(100vh - var(--toc-sticky-top) * 2); /* 右の列の張り付く部分が、画面に収まる高さ */
 }
 
 @media (--tablet) {

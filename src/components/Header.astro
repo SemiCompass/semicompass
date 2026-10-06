@@ -18,9 +18,9 @@ const pathname = Astro.url.pathname;
     </a>
 
     <details class="site-header__fold">
-      <summary class="site-header__toggle">
-        <Icon name="chevron" />
+      <summary class="site-header__toggle" aria-expanded="false">
         <span>メニュー</span>
+        <Icon name="chevron-down" />
       </summary>
       <ul class="site-menu site-menu--fold" aria-label="主要メニュー">
         {main.map((item) => (
@@ -68,18 +68,19 @@ const pathname = Astro.url.pathname;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    min-height: var(--header-height);
+    min-height: var(--header-height-sp);
     color: var(--color-primary);
     text-decoration: none;
   }
   .site-header__brand:visited {
     color: var(--color-primary);
   }
+  /* スマートフォン（幅360pxでも、サイト名が切れずに収まる）：文字を、導入の大きさにする */
   .site-header__name {
     white-space: nowrap;
-    font-size: var(--text-h3);
+    font-size: var(--text-lead);
     font-weight: var(--font-weight-bold);
-    letter-spacing: var(--text-h3-tracking);
+    letter-spacing: var(--text-lead-tracking);
   }
   .site-header__fold {
     grid-area: fold;
@@ -96,6 +97,7 @@ const pathname = Astro.url.pathname;
     border-radius: var(--radius-control);
     background: var(--color-surface);
     color: var(--color-primary);
+    white-space: nowrap;
     font-size: var(--text-dense);
     font-weight: var(--font-weight-bold);
     font-feature-settings: "palt";
@@ -159,6 +161,13 @@ const pathname = Astro.url.pathname;
       grid-template-areas: "brand nav search";
       padding-block: 0;
     }
+    .site-header__brand {
+      min-height: var(--header-height);
+    }
+    .site-header__name {
+      font-size: var(--text-h3);
+      letter-spacing: var(--text-h3-tracking);
+    }
     .site-header__fold {
       display: none;
     }
@@ -175,3 +184,7 @@ const pathname = Astro.url.pathname;
     }
   }
 </style>
+
+<script>
+  import '../scripts/menu';
+</script>

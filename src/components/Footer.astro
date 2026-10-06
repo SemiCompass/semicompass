@@ -55,10 +55,19 @@ const { footer } = loadMenu();
     line-height: var(--text-dense-leading);
     letter-spacing: var(--text-dense-tracking);
   }
+  /* 押せる範囲44pxは、::after の透明な範囲で取る。見た目の行の間隔は、詰める（DS-07） */
   .site-footer__links a {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--target-min);
+    position: relative;
+    display: inline-block;
+    padding-block: var(--space-1);
+  }
+  .site-footer__links a::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: var(--target-min);
+    transform: translateY(-50%);
   }
   .site-footer__bottom {
     margin-block-start: var(--space-6);
