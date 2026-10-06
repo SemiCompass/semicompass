@@ -1,0 +1,19 @@
+schema_version: 1
+company: tokyo-ohka-kogyo
+reviewed_on: '2026-10-06'
+based_on: S100XT0N
+segments:
+- name: 材料事業
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 単一セグメント。半導体のほかディスプレイ材料なども扱い、半導体向けの比率が読み取れないため一部含むとする。
+sources:
+- id: S1
+  title: 有価証券報告書（2025年12月期）
+  publisher: 東京応化工業株式会社（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100XT0N.pdf
+  published_on: '2026-03-24'
+  accessed_on: '2026-10-06'
+  doc_id: S100XT0N
