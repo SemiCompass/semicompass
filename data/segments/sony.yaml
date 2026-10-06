@@ -1,0 +1,61 @@
+schema_version: 1
+company: sony
+reviewed_on: '2026-10-06'
+based_on: S100YE2C
+segments:
+- name: ゲーム＆ネットワークサービス
+  xbrl_members:
+  - GameAndNetworkServicesReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: ソフトウェア販売、ネットワークサービス、家庭用ゲーム機の製造・販売が中心である。
+- name: 音楽
+  xbrl_members:
+  - MusicReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: 音楽制作、音楽出版、映像メディア・プラットフォーム事業で構成される。
+- name: 映画
+  xbrl_members:
+  - PicturesReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: 映画製作、テレビ番組制作、メディアネットワーク事業で構成される。
+- name: エンタテインメント・テクノロジー＆サービス
+  xbrl_members:
+  - EntertainmentTechnologyAndServicesReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: カメラ、ヘッドホン、テレビなどの完成品が中心で、半導体事業は主体でない。
+- name: イメージング＆センシング・ソリューション
+  xbrl_members:
+  - ImagingAndSensingSolutionsReportableSegmentMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: 主にイメージセンサー事業で構成される。
+- name: その他
+  xbrl_members:
+  - OtherReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: ディスク製造事業、記録メディア事業などで構成される。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: ソニーグループ株式会社（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YE2C.pdf
+  published_on: '2026-06-18'
+  accessed_on: '2026-10-06'
+  doc_id: S100YE2C
