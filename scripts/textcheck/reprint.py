@@ -92,6 +92,47 @@ class _Automaton:
         return best
 
 
+    def matching_spans(self, text: str, min_run: int) -> list[tuple[int, int]]:
+        """text の中で、原資料と同じになった箇所（min_run 字以上。それ以上は延ばせないもの）の (開始, 終了) を、重なりをまとめて返す。"""
+        state = length = 0
+        lengths = []
+        for ch in text:
+            while state and ch not in self.next[state]:
+                state = self.link[state]
+                length = self.length[state]
+            if ch in self.next[state]:
+                state = self.next[state][ch]
+                length += 1
+            else:
+                state = length = 0
+            lengths.append(length)
+        spans: list[tuple[int, int]] = []
+        for i, n in enumerate(lengths):
+            if n >= min_run and (i + 1 == len(lengths) or lengths[i + 1] != n + 1):
+                start, end = i + 1 - n, i + 1
+                if spans and start <= spans[-1][1]:
+                    spans[-1] = (spans[-1][0], max(spans[-1][1], end))
+                else:
+                    spans.append((start, end))
+        return spans
+
+
+def find_matches(sources: list[str], fields: dict[str, str], min_run: int) -> dict[str, list[str]]:
+    """fields（場所 → 下書きの文字列）それぞれについて、原資料と同じになった箇所の文字列（正規化した形：NFKC、出典の番号と空白を除く）を返す。
+
+    **文章を返す。AIへの書き直しの依頼の入力にだけ使い、ログ、要約、例外のメッセージ、変更案の説明に出さない。**
+    同じになった箇所のない項目は、結果に含めない。
+    """
+    automaton = _Automaton(_SEPARATOR.join(normalize(s) for s in sources))
+    found: dict[str, list[str]] = {}
+    for name, text in fields.items():
+        normalized = normalize(text)
+        spans = automaton.matching_spans(normalized, min_run)
+        if spans:
+            found[name] = [normalized[a:b] for a, b in spans]
+    return found
+
+
 def check_reprint(sources: list[str], fields: dict[str, str], min_run: int) -> list[RunResult]:
     """fields（場所 → 下書きの文字列）それぞれについて、sources との最長の連続一致を返す。"""
     automaton = _Automaton(_SEPARATOR.join(normalize(s) for s in sources))

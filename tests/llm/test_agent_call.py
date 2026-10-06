@@ -323,6 +323,22 @@ class CallTest(Base):
         self.assertEqual([r["status"] for r in result.rows], ["invalid_output", "ok"])
         self.assertIn("overview", client.calls[1]["messages"][0]["content"][-1]["text"])
 
+    def test_followup_block_comes_after_materials_and_is_not_cached(self):
+        client = fk.FakeClient(fk.reply(fk.valid_output()))
+        self.call(client, followup="FOLLOWUP")
+        blocks = client.calls[0]["messages"][0]["content"]
+        self.assertEqual([b["text"] for b in blocks][-1], "FOLLOWUP")
+        self.assertTrue(blocks[1]["text"].startswith("<資料>"))
+        self.assertIn("cache_control", blocks[1])
+        self.assertNotIn("cache_control", blocks[2])
+        self.assertEqual(len(self.call(fk.FakeClient(fk.reply(fk.valid_output()))).rows), 1)
+
+    def test_prior_cost_counts_against_the_budget(self):
+        client = fk.FakeClient(fk.reply(fk.valid_output()))
+        self.assertEqual(self.call(client, prior_cost_jpy=1499.0).status, "skipped_budget")
+        self.assertEqual(client.calls, [])
+        self.assertEqual(self.call(fk.FakeClient(fk.reply(fk.valid_output())), prior_cost_jpy=1.0).status, "ok")
+
     def test_ag14_prompt_has_the_quality_rules(self):
         prompt, _ = ac.load_agent("AG-14")
         for expected in ("research_and_development", "断り書きを書かない", "本サイトでは", "「カテゴリが〜であり」",
