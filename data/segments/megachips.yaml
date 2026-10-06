@@ -1,0 +1,19 @@
+schema_version: 1
+company: megachips
+reviewed_on: '2026-10-06'
+based_on: S100YDEK
+segments:
+- name: 単一の事業セグメント
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 報告セグメントは分かれておらず、LSIの設計・開発から生産までの提供を主たる業務とする単一セグメントである。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: 株式会社メガチップス（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YDEK.pdf
+  published_on: '2026-06-24'
+  accessed_on: '2026-10-06'
+  doc_id: S100YDEK
