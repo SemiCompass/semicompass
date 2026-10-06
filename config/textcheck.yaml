@@ -1,0 +1,4 @@
+# 転載の検査（scripts/textcheck/）の設定。
+# 下書きの文字列と、原資料束の本文で、空白を除いて、この文字数以上、連続して同じ箇所があれば不合格にする（CLAUDE.md 2章の4）。
+schema_version: 1
+min_run_chars: 30

@@ -1,0 +1,28 @@
+{
+  "description": "指示文を変えたときの確認に使う見本。資料は架空の短い文章（実在の企業・書類ではない）。期待する出力は、本文ではなく、満たすべき条件で書く",
+  "input": {
+    "task": {
+      "company_name": "架空エレクトロニクス",
+      "categories": ["製造装置"],
+      "processes": ["成膜", "洗浄"],
+      "xbrl_members": ["AlphaEquipmentReportableSegmentsMember", "BetaServicesReportableSegmentsMember"],
+      "sections": ["business_description", "segment_information", "affiliated_entities"]
+    },
+    "materials": {
+      "business_description": "当社グループは、半導体製造装置を製造し、半導体メーカーへ販売している。（架空）",
+      "segment_information": "報告セグメントは、装置事業とサービス事業の2つである。（架空）",
+      "affiliated_entities": "主要な関係会社は、装置の保守を行う国内子会社である。（架空）"
+    }
+  },
+  "expect": {
+    "schema_valid": true,
+    "overview_chars": [200, 700],
+    "overview_chars_note": "架空の資料が短いため、スキーマの範囲。実際の書類では300〜500字が目安（外れたら警告）",
+    "citations_only": ["[S1]"],
+    "segments_count": 2,
+    "xbrl_members_subset_of_input": true,
+    "classification_allowed": ["semiconductor", "partial", "excluded"],
+    "no_prohibited_words": true,
+    "reprint_check_max_run_below": 30
+  }
+}

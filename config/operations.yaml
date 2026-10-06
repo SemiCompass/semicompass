@@ -1,0 +1,15 @@
+# 運用の状態と期限（データ定義書 7.5）。
+# status を paused にすると、AIの呼び出し層（scripts/llm/）は、AIを呼ばない（CT-05）。
+schema_version: 1
+status: active                   # active／paused（CT-05）
+paused_since: null               # 休止の開始日（date）
+planned_resume: null             # 再開の予定日（任意）
+deadlines:                       # 期限（運用ルール書、要求定義書6.10）
+  ir_business_days: 5            # IR重要ポイント（NF-09、CT-03）
+  news_stale_business_days: 3    # 「更新を休止中」（CT-02）
+  review_hold_days: 7            # 保留（CT-04）
+  correction_major_first_response_business_days: 1
+  correction_major_business_days: 5
+  correction_normal_days: 14
+factcheck_paths:                 # 事実確認の対象（要件4.16。content/essays/を含む）
+  - content/
