@@ -1,0 +1,45 @@
+schema_version: 1
+company: screen
+reviewed_on: '2026-10-06'
+based_on: S100YK9N
+segments:
+- name: 半導体製造装置事業（ＳＰＥ）
+  xbrl_members:
+  - SpeReportableSegmentsMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 半導体製造装置の開発・製造・販売・保守が事業の中心である。
+- name: グラフィックアーツ機器事業（ＧＡ）
+  xbrl_members:
+  - GaReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 印刷関連機器の事業であり、半導体の製造には関わらない。
+- name: ディスプレー製造装置および成膜装置事業（ＦＴ）
+  xbrl_members:
+  - FtReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: 中心はディスプレー製造装置と成膜装置。半導体先端パッケージ向けの塗布乾燥装置も開発している。
+- name: プリント基板関連機器事業（ＰＥ）
+  xbrl_members:
+  - PeReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: プリント基板関連機器が事業の内容で、半導体との直接の関わりは読み取れないため慎重に区分した。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: 株式会社SCREENホールディングス（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YK9N.pdf
+  published_on: '2026-06-25'
+  accessed_on: '2026-10-06'
+  doc_id: S100YK9N
