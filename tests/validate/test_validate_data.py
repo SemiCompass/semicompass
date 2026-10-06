@@ -436,5 +436,292 @@ class CliTest(Base):
             os.chdir(previous)
 
 
+MEMBER_A, MEMBER_B = "TestAlphaReportableSegmentsMember", "TestBetaReportableSegmentsMember"
+
+
+def segment_row(member, doc_id="S100AAA1"):
+    """data/auto の financials のセグメントの行（合成）。形は auto-company.schema.json に合わせる。"""
+    def value(element, number):
+        return {"value": number, "unit": "million_yen", "original_unit": "yen", "element": element,
+                "context": f"CurrentYearDuration_jpcrp030000-asr_E01950-000{member}", "doc_id": doc_id,
+                "ingested_at": "2026-10-04T22:42:50+09:00"}
+    return {"name": member, "member": member,
+            "net_sales_external": value("jpcrp_cor:RevenuesFromExternalCustomers", 100),
+            "net_sales_total": value("jppfs_cor:NetSales", 110),
+            "profit": value("jppfs_cor:OperatingIncome", 10)}
+
+
+def overview_body(length=350, extra="", cites="[S1]"):
+    """合成の本文。「事業概要」は、全角の文字を length 字にする（出典の番号は数えない）。"""
+    text = "あ" * (length - 1) + "。"
+    return f"## 事業概要\n\n{text}{cites}\n\n## 工程上の位置づけ\n\n工程の説明（合成）。[S2]\n{extra}"
+
+
+SOURCES = [{"id": f"S{n}", "title": f"資料{n}", "publisher": "発行元", "url": f"https://example.com/{n}",
+            "accessed_on": "2026-10-06"} for n in (1, 2)]
+
+
+class SegmentsOverviewBase(Base):
+    def setUp(self):
+        super().setUp()
+        auto = auto_data()
+        for row, member in zip(auto["financials"][-2:], (MEMBER_A, MEMBER_B)):
+            row["segments"] = [segment_row(member, row["doc_id"])]
+        self.write_auto(auto)
+        self.doc_id = auto["filings"][0]["doc_id"]
+        self.segment_map = {
+            "schema_version": 1, "company": "advantest", "reviewed_on": "2026-10-06", "based_on": self.doc_id,
+            "segments": [
+                {"name": "セグメントA（合成）", "xbrl_members": [MEMBER_A], "classification": "semiconductor",
+                 "rationale": {"source": "S1", "pages": "10"}},
+                {"name": "セグメントB（合成）", "xbrl_members": [MEMBER_B], "classification": "excluded",
+                 "rationale": {"source": "S1", "pages": "11"}},
+            ],
+            "reference_values": [{"fiscal_period_end": "2026-03", "period_type": "annual", "value_mjpy": 100,
+                                  "label": "合成の売上", "source": "S2"}],
+            "sources": copy.deepcopy(SOURCES),
+        }
+        self.front = {"company": "advantest", "published_at": "2026-10-06", "ai_generated": True,
+                      "sources": copy.deepcopy(SOURCES)}
+
+    def write_segments(self, data=None, name="advantest"):
+        directory = self.root / "data" / "segments"
+        directory.mkdir(exist_ok=True)
+        (directory / f"{name}.yaml").write_text(
+            yaml.safe_dump(self.segment_map if data is None else data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+    def write_overview(self, body=None, front=None, name="advantest", raw=None):
+        directory = self.root / "content" / "companies"
+        directory.mkdir(parents=True, exist_ok=True)
+        text = raw if raw is not None else (
+            "---\n" + yaml.safe_dump(self.front if front is None else front, allow_unicode=True, sort_keys=False)
+            + "---\n\n" + (overview_body() if body is None else body))
+        (directory / f"{name}.md").write_text(text, encoding="utf-8")
+
+
+class NoFilesTest(Base):
+    def test_no_segments_or_overviews_passes(self):
+        self.assertFalse((self.root / "data" / "segments").exists())
+        self.assertEqual([str(p) for p in self.check()], [])
+        kinds = [k for k, _ in vd.collect_files(self.root)]
+        self.assertNotIn("segment-map", kinds)
+        self.assertNotIn("overview", kinds)
+
+    def test_empty_directories_pass(self):
+        (self.root / "data" / "segments").mkdir()
+        (self.root / "content" / "companies").mkdir(parents=True)
+        self.assertEqual([str(p) for p in self.check()], [])
+
+
+class SegmentMapTest(SegmentsOverviewBase):
+    FILE = "data/segments/advantest.yaml"
+
+    def test_valid_passes(self):
+        self.write_segments()
+        self.assertEqual([str(p) for p in self.check()], [])
+
+    def test_schema_violation(self):
+        bad = copy.deepcopy(self.segment_map)
+        bad["segments"][0]["classification"] = "unknown"
+        bad["unknown_key"] = 1
+        self.write_segments(bad)
+        self.has(self.check(), "V-01", file=self.FILE)
+
+    def test_file_name_and_company_must_match(self):
+        self.write_segments(name="other")
+        self.has(self.check(), "V-02", "一致しない", file="data/segments/other.yaml")
+
+    def test_company_must_exist_in_master(self):
+        bad = copy.deepcopy(self.segment_map)
+        bad["company"] = "nosuchco"
+        self.write_segments(bad, name="nosuchco")
+        problems = self.check()
+        self.has(problems, "V-04", "data/companies にない", file="data/segments/nosuchco.yaml")
+        self.has(problems, "V-04", "data/auto/nosuchco.json がない", file="data/segments/nosuchco.yaml")
+
+    def test_based_on_must_be_in_filings(self):
+        bad = copy.deepcopy(self.segment_map)
+        bad["based_on"] = "S100ZZZZ"
+        self.write_segments(bad)
+        self.has(self.check(), "V-04", "S100ZZZZ", file=self.FILE, path="/based_on")
+
+    def test_xbrl_member_must_exist_in_auto_segments(self):
+        bad = copy.deepcopy(self.segment_map)
+        bad["segments"][1]["xbrl_members"] = [MEMBER_B, "NoSuchMember"]
+        self.write_segments(bad)
+        problems = self.check()
+        self.has(problems, "V-04", "NoSuchMember", file=self.FILE, path="/segments/1/xbrl_members/1")
+        self.assertEqual(len([p for p in problems if "xbrl_members" in p.path]), 1)
+
+    def test_members_from_any_period_are_accepted(self):
+        # MEMBER_A は前の期、MEMBER_B は後の期の financials にだけある
+        self.write_segments()
+        auto = json.loads((self.root / "data" / "auto" / "advantest.json").read_text(encoding="utf-8"))
+        self.assertNotEqual(auto["financials"][-2]["segments"], auto["financials"][-1]["segments"])
+        self.assertEqual([str(p) for p in self.check()], [])
+
+    def test_segments_without_xbrl_members_are_allowed(self):
+        data = copy.deepcopy(self.segment_map)
+        del data["segments"][0]["xbrl_members"]
+        self.write_segments(data)
+        self.assertEqual([str(p) for p in self.check()], [])
+
+    def test_rationale_source_must_be_in_sources(self):
+        bad = copy.deepcopy(self.segment_map)
+        bad["segments"][0]["rationale"]["source"] = "S9"
+        self.write_segments(bad)
+        self.has(self.check(), "V-04", "S9", file=self.FILE, path="/segments/0/rationale/source")
+
+    def test_reference_value_source_must_be_in_sources(self):
+        bad = copy.deepcopy(self.segment_map)
+        bad["reference_values"][0]["source"] = "S9"
+        self.write_segments(bad)
+        self.has(self.check(), "V-04", "S9", file=self.FILE, path="/reference_values/0/source")
+
+    def test_duplicate_source_ids(self):
+        bad = copy.deepcopy(self.segment_map)
+        bad["sources"].append(copy.deepcopy(bad["sources"][0]))
+        self.write_segments(bad)
+        self.has(self.check(), "V-03", "S1", file=self.FILE)
+
+    def test_missing_auto_file_is_an_error(self):
+        self.write_segments()
+        (self.root / "data" / "auto" / "advantest.json").unlink()
+        self.has(self.check(), "V-04", "data/auto/advantest.json がない", file=self.FILE)
+
+    def test_path_option_checks_one_segment_file(self):
+        self.write_segments()
+        bad = copy.deepcopy(self.segment_map)
+        bad["company"] = "nosuchco"
+        self.write_segments(bad, name="nosuchco")
+        self.assertEqual(vd.kind_of(self.root / "data" / "segments" / "advantest.yaml", self.root), "segment-map")
+        problems = self.check(only=self.root / "data" / "segments" / "advantest.yaml")
+        self.assertEqual(problems, [])
+
+
+class OverviewTest(SegmentsOverviewBase):
+    FILE = "content/companies/advantest.md"
+
+    def only(self, problems, rule):
+        return [p for p in problems if p.rule == rule]
+
+    def test_valid_passes_without_warnings(self):
+        self.write_overview()
+        self.assertEqual([str(p) for p in self.check()], [])
+
+    def test_front_matter_schema_violation(self):
+        bad = dict(self.front, unknown_key=1)
+        del bad["ai_generated"]
+        self.write_overview(front=bad)
+        self.has(self.check(), "V-01", file=self.FILE)
+
+    def test_missing_or_unclosed_front_matter(self):
+        self.write_overview(raw="## 事業概要\n本文\n")
+        self.has(self.check(), "V-01", "front matter", file=self.FILE)
+        self.write_overview(raw="---\ncompany: advantest\n本文\n")
+        self.has(self.check(), "V-01", "閉じる", file=self.FILE)
+
+    def test_unquoted_date_in_front_matter_is_caught(self):
+        text = ("---\ncompany: advantest\npublished_at: 2026-10-06\nai_generated: true\nsources:\n"
+                "  - {id: S1, title: t, publisher: p, url: 'https://example.com/1', accessed_on: '2026-10-06'}\n"
+                "  - {id: S2, title: t, publisher: p, url: 'https://example.com/2', accessed_on: '2026-10-06'}\n---\n"
+                + overview_body())
+        self.write_overview(raw=text)
+        problems = self.check()
+        self.has(problems, "YAML", "引用符なしの日付", file=self.FILE)
+        self.assertIn("3行目", [p for p in problems if p.rule == "YAML"][0].message)  # ファイルの行と合う
+
+    def test_file_name_and_company_must_match(self):
+        self.write_overview(name="other")
+        self.has(self.check(), "V-02", "一致しない", file="content/companies/other.md")
+
+    def test_company_must_exist_in_master(self):
+        self.write_overview(front=dict(self.front, company="nosuchco"), name="nosuchco")
+        self.has(self.check(), "V-04", "data/companies にない", file="content/companies/nosuchco.md")
+
+    def test_h1_is_an_error(self):
+        self.write_overview(body="# 大見出し\n\n" + overview_body())
+        self.has(self.check(), "V-10", "`#`", file=self.FILE)
+
+    def test_wrong_headings(self):
+        cases = {
+            "only one": "## 事業概要\n\n" + "あ" * 350 + "[S1][S2]\n",
+            "reversed": "## 工程上の位置づけ\n\n説明[S2]\n\n## 事業概要\n\n" + "あ" * 350 + "[S1]\n",
+            "extra": overview_body(extra="\n## 追加の見出し\n\n本文\n"),
+            "level jump": overview_body(extra="\n#### 段の飛び\n\n本文\n"),
+            "renamed": overview_body().replace("## 工程上の位置づけ", "## 工程"),
+            "level 3": overview_body().replace("## 工程上の位置づけ", "### 工程上の位置づけ"),
+            "no headings": "本文だけ[S1][S2]\n",
+        }
+        for name, body in cases.items():
+            with self.subTest(name):
+                self.write_overview(body=body)
+                self.has(self.check(), "V-10", "2つだけ", file=self.FILE)
+
+    def test_headings_inside_code_fences_are_ignored(self):
+        self.write_overview(body=overview_body(extra="\n```\n# 例\n## 例2\n```\n"))
+        self.assertEqual([str(p) for p in self.check()], [])
+
+    def test_unknown_citation_is_an_error(self):
+        self.write_overview(body=overview_body(cites="[S1][S3]"))
+        problems = self.check()
+        self.has(problems, "V-07", "[S3]", file=self.FILE)
+        self.assertEqual(len(self.only(problems, "V-07")), 1)
+
+    def test_unused_source_is_a_warning(self):
+        sources = self.front["sources"] + [dict(SOURCES[0], id="S3")]
+        self.write_overview(front=dict(self.front, sources=sources))
+        problems = self.check()
+        self.has(problems, "V-08", "S3", file=self.FILE)
+        self.assertEqual([p.severity for p in self.only(problems, "V-08")], ["warning"])
+        self.assertEqual([p for p in problems if p.severity == "error"], [])
+
+    def test_duplicate_source_ids(self):
+        self.write_overview(front=dict(self.front, sources=self.front["sources"] + [SOURCES[0]]))
+        self.has(self.check(), "V-03", "S1", file=self.FILE)
+
+    def test_length_boundaries(self):
+        for length, expected in ((299, 1), (300, 0), (500, 0), (501, 1)):
+            with self.subTest(length=length):
+                self.write_overview(body=overview_body(length))
+                found = self.only(self.check(), "V-12")
+                self.assertEqual(len(found), expected)
+                for p in found:
+                    self.assertEqual(p.severity, "warning")
+                    self.assertIn(f"{length}字", p.message)
+
+    def test_length_warning_does_not_fail_but_strict_does(self):
+        self.write_overview(body=overview_body(100))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(vd.main([], root=self.root), 0)
+            self.assertEqual(vd.main(["--strict"], root=self.root), 1)
+        self.assertIn("警告 1件", out.getvalue())
+
+    def test_character_count_follows_data_definition_2_6(self):
+        # 出典の番号、改行、行頭と行末の空白、Markdownの記法は数えない。NFKCの後の文字を1字と数える
+        lines = ["  **あいう**[S1]  ", "- え[S2]お", "[リンク](https://example.com/x)", "ＡＢＣ１２３", "", "> 引用"]
+        self.assertEqual(vd.count_characters(lines), 3 + 2 + 3 + 6 + 2)
+        self.assertEqual(vd.count_characters(["`コード`と_強調_と snake_case"]), 3 + 1 + 2 + 1 + 1 + 10)
+
+    def test_count_uses_only_the_overview_section(self):
+        self.write_overview(body=overview_body(350, extra="あ" * 1000 + "\n"))  # 工程の節が長くても、事業概要は350字
+        self.assertEqual(self.only(self.check(), "V-12"), [])
+
+    def test_messages_do_not_contain_body_text(self):
+        self.write_overview(body="# 見出し\n\n合成の本文の語イプシロン[S9]\n")
+        text = "\n".join(str(p) for p in self.check())
+        self.assertNotIn("イプシロン", text)
+
+    def test_path_option_and_cli_output(self):
+        self.write_overview(body=overview_body(100))
+        self.assertEqual(vd.kind_of(self.root / "content" / "companies" / "advantest.md", self.root), "overview")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = vd.main(["--path", str(self.root / "content" / "companies" / "advantest.md")], root=self.root)
+        self.assertEqual(code, 0)
+        self.assertIn("V-12", out.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

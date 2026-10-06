@@ -7,6 +7,9 @@
 * data/auto/*.json             schemas/data/auto-company.schema.json
 * data/supply-chain.yaml       schemas/data/supply-chain.schema.json
 * config/xbrl-map.yaml         schemas/config/xbrl-map.schema.json
+* data/segments/*.yaml         schemas/data/segment-map.schema.json
+* content/companies/*.md       schemas/content/company-overview.schema.json（先頭の項目 front matter だけ）
+  ファイルがなければ、何もせずに合格にする
 
 スキーマで確かめられない整合（データ定義書 13章の検証規則）：
 * V-01 スキーマに合う（format の date、date-time の検査を含む）
@@ -20,13 +23,22 @@
   revisions の doc_id・supersedes が filings にある、financials・employees の doc_id が filings にある）。
   ただし、取り除いた ordinary_income・segment_adjustment（会計基準の切り替え）の履歴（new が null）の path は、
   その行が実在すれば許す
+* セグメント対応表（D02、データ定義書 4.2）：ファイル名と company が同じ（V-02）。company が企業マスタにある、
+  based_on が data/auto/{slug}.json の filings にある、xbrl_members が data/auto の financials のセグメントの
+  member にある、rationale.source と reference_values の source が sources の id にある、sources の id が重複しない
+  （V-04、V-03）。data/auto/{slug}.json がなければ、突き合わせられないためエラー
+* 企業の事業概要（D13、6.4）：ファイル名と company が同じ（V-02）。company が企業マスタにある（V-04）。
+  本文の見出しが「## 事業概要」「## 工程上の位置づけ」の2つだけで、この順。`#` がない（V-10）。
+  本文の [S1] などの番号がすべて sources の id にある（V-07）。sources の資料で本文に出てこないものは警告（V-08）。
+  「事業概要」の文字数が300〜500字（データ定義書 2.6 の数え方）を外れたら警告（V-12）
 * YAMLの落とし穴：引用符なしの日付（YAMLが日付型に変える）、yes・no・on・off など（YAML 1.1 では真偽値）
 
-実装していない規則：V-05〜V-21（本文、公開済みの識別子の削除、必須項目の充足、日付の前後、拠点、予算など）。
+実装していない規則：V-05、V-06、V-09、V-11、V-13〜V-21（公開済みの識別子の削除、必須項目の充足、日付の前後、拠点、予算など）。
+V-07、V-08、V-10、V-12 は、事業概要（content/companies）だけに実装している。
 
 * V-04 の検査のうち、superseded の書類が、failed でないどれかの書類の supersedes から指されていること
   （訂正報告書の連鎖が切れていないこと）は、エラーにしている。警告（severity="warning"）の仕組みと --strict は、
-  今後の検査のために残している（今は、警告になる検査はない）
+  V-08、V-12 の警告に使う
 
 出力は、エラーと警告の一覧（ファイル、場所、規則、内容）。終了コードは、エラーがあれば1、なければ0。
 --path が対象外のファイルのときは2。
@@ -37,7 +49,9 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import re
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -54,7 +68,12 @@ SCHEMAS = {
     "auto": "schemas/data/auto-company.schema.json",
     "supply-chain": "schemas/data/supply-chain.schema.json",
     "xbrl-map": "schemas/config/xbrl-map.schema.json",
+    "segment-map": "schemas/data/segment-map.schema.json",
+    "overview": "schemas/content/company-overview.schema.json",
 }
+OVERVIEW_HEADINGS = ["事業概要", "工程上の位置づけ"]  # データ定義書 6.4
+OVERVIEW_LENGTH = (300, 500)  # 「事業概要」の文字数の目安（V-12）
+FRONT_MATTER_FENCE = "---"
 PLAIN_NON_STANDARD_BOOL = {"yes", "no", "on", "off", "y", "n"}
 BOOL_TAG = "tag:yaml.org,2002:bool"
 TIMESTAMP_TAG = "tag:yaml.org,2002:timestamp"
@@ -66,7 +85,7 @@ class Problem:
     path: str
     rule: str
     message: str
-    severity: str = "error"  # "error" か "warning"。警告は、終了コードを1にしない（--strict で、エラーとして扱う。今は、警告になる検査はない）
+    severity: str = "error"  # "error" か "warning"。警告は、終了コードを1にしない（--strict で、エラーとして扱う）
 
     def __str__(self) -> str:
         mark = "警告 " if self.severity == "warning" else ""
@@ -81,7 +100,10 @@ def pointer(parts) -> str:
 
 def load_yaml(path: Path) -> tuple[object, list[tuple[str, str, str]]]:
     """YAMLを読む。(内容、YAMLの落とし穴の一覧 [(path, rule, message)])。読めなければ ValueError。"""
-    text = path.read_text(encoding="utf-8")
+    return parse_yaml(path.read_text(encoding="utf-8"))
+
+
+def parse_yaml(text: str) -> tuple[object, list[tuple[str, str, str]]]:
     try:
         node = yaml.compose(text)
         data = yaml.safe_load(text)
@@ -109,6 +131,26 @@ def _scan_nodes(node, parts: list, out: list) -> None:
         elif node.tag == BOOL_TAG and node.value.lower() in PLAIN_NON_STANDARD_BOOL:
             out.append((pointer(parts), "YAML", f"{line}行目: 引用符なしの {node.value} は、YAML 1.1 では真偽値になる。"
                         "文字列なら引用符で囲み、真偽値なら true／false と書く"))
+
+
+def load_markdown(path: Path) -> tuple[object, list[tuple[str, str, str]], str]:
+    """Markdownを、先頭の項目（front matter）と本文に分けて読む。(front matter の内容、YAMLの落とし穴、本文)。
+
+    先頭の行が `---` で、閉じる `---` の行がなければ ValueError。行番号を、ファイルの行と合わせるため、
+    開く `---` の行は、コメントの行に置き換えてから読む。
+    """
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        raise ValueError("UTF-8として読めない") from None
+    lines = text.split("\n")
+    if not lines or lines[0].rstrip() != FRONT_MATTER_FENCE:
+        raise ValueError("先頭に front matter（`---` で囲んだ項目）がない")
+    end = next((i for i in range(1, len(lines)) if lines[i].rstrip() == FRONT_MATTER_FENCE), None)
+    if end is None:
+        raise ValueError("front matter を閉じる `---` の行がない")
+    data, pitfalls = parse_yaml("#\n" + "\n".join(lines[1:end]))
+    return data, pitfalls, "\n".join(lines[end + 1:])
 
 
 def load_json(path: Path) -> object:
@@ -146,6 +188,10 @@ def kind_of(path: Path, root: Path) -> str | None:
         return "company"
     if rel.startswith("data/auto/") and rel.endswith(".json") and rel.count("/") == 2:
         return "auto"
+    if rel.startswith("data/segments/") and rel.endswith(".yaml") and rel.count("/") == 2:
+        return "segment-map"
+    if rel.startswith("content/companies/") and rel.endswith(".md") and rel.count("/") == 2:
+        return "overview"
     if rel == "data/supply-chain.yaml":
         return "supply-chain"
     if rel == "config/xbrl-map.yaml":
@@ -157,6 +203,8 @@ def collect_files(root: Path) -> list[tuple[str, Path]]:
     files: list[tuple[str, Path]] = []
     files += [("company", p) for p in sorted((root / "data" / "companies").glob("*.yaml"))]
     files += [("auto", p) for p in sorted((root / "data" / "auto").glob("*.json"))]
+    files += [("segment-map", p) for p in sorted((root / "data" / "segments").glob("*.yaml"))]
+    files += [("overview", p) for p in sorted((root / "content" / "companies").glob("*.md"))]
     for kind, rel in (("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml")):
         if (root / rel).is_file():
             files.append((kind, root / rel))
@@ -168,11 +216,14 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     schemas = SchemaSet(schema_root)
     problems: list[Problem] = []
     loaded: dict[str, tuple[str, Path, object]] = {}
+    bodies: dict[str, str] = {}
     for kind, path in collect_files(root):
         rel = path.relative_to(root).as_posix()
         try:
             if kind == "auto":
                 data, pitfalls = load_json(path), []
+            elif kind == "overview":
+                data, pitfalls, bodies[rel] = load_markdown(path)
             else:
                 data, pitfalls = load_yaml(path)
         except ValueError as error:
@@ -186,7 +237,12 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     problems += check_supply_chain(loaded, supply, schemas)
     companies = {rel: d for rel, (k, _, d) in loaded.items() if k == "company" and isinstance(d, dict)}
     problems += check_companies(companies, supply)
-    problems += check_auto({rel: d for rel, (k, _, d) in loaded.items() if k == "auto" and isinstance(d, dict)}, companies)
+    autos = {rel: d for rel, (k, _, d) in loaded.items() if k == "auto" and isinstance(d, dict)}
+    problems += check_auto(autos, companies)
+    problems += check_segment_maps({rel: d for rel, (k, _, d) in loaded.items() if k == "segment-map" and isinstance(d, dict)},
+                                   companies, autos)
+    problems += check_overviews({rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items()
+                                 if k == "overview" and isinstance(d, dict)}, companies)
     if only is not None:
         target = only.resolve().relative_to(root.resolve()).as_posix()
         problems = [p for p in problems if p.file == target]
@@ -363,6 +419,143 @@ def check_auto(autos: dict[str, dict], companies: dict[str, dict]) -> list[Probl
             for key in ("supersedes", "doc_id"):
                 if isinstance(rev.get(key), str) and rev[key] not in doc_ids:
                     out.append(Problem(rel, pointer(["revisions", i, key]), "V-04", f"{key} {rev[key]} が filings にない"))
+    return out
+
+
+def _source_ids(data: dict, rel: str, out: list[Problem]) -> set[str]:
+    """sources の id の集まりを返す。重複は V-03。"""
+    ids: set[str] = set()
+    for i, source in enumerate(data.get("sources") or []):
+        if isinstance(source, dict) and isinstance(source.get("id"), str):
+            if source["id"] in ids:
+                out.append(Problem(rel, pointer(["sources", i, "id"]), "V-03", f"sources の id {source['id']} が重複している"))
+            ids.add(source["id"])
+    return ids
+
+
+def _check_slug_file(rel: str, data: dict, companies: dict[str, dict], out: list[Problem]) -> str | None:
+    """ファイル名と company の一致（V-02）、company が企業マスタにあること（V-04）を確かめる。"""
+    company = data.get("company")
+    if not isinstance(company, str):
+        return None
+    if Path(rel).stem != company:
+        out.append(Problem(rel, "/company", "V-02", f"ファイル名（{Path(rel).stem}）と company（{company}）が一致しない"))
+    if company not in {d.get("slug") for d in companies.values()}:
+        out.append(Problem(rel, "/company", "V-04", f"company {company} が data/companies にない"))
+    return company
+
+
+def check_segment_maps(maps: dict[str, dict], companies: dict[str, dict], autos: dict[str, dict]) -> list[Problem]:
+    out: list[Problem] = []
+    auto_by_slug = {Path(rel).stem: d for rel, d in autos.items()}
+    for rel, data in maps.items():
+        company = _check_slug_file(rel, data, companies, out)
+        source_ids = _source_ids(data, rel, out)
+        for i, segment in enumerate(data.get("segments") or []):
+            ref = (segment.get("rationale") or {}).get("source") if isinstance(segment, dict) \
+                and isinstance(segment.get("rationale"), dict) else None
+            if isinstance(ref, str) and ref not in source_ids:
+                out.append(Problem(rel, pointer(["segments", i, "rationale", "source"]), "V-04",
+                                   f"出典 {ref} が、同じファイルの sources にない"))
+        for i, value in enumerate(data.get("reference_values") or []):
+            if isinstance(value, dict) and isinstance(value.get("source"), str) and value["source"] not in source_ids:
+                out.append(Problem(rel, pointer(["reference_values", i, "source"]), "V-04",
+                                   f"出典 {value['source']} が、同じファイルの sources にない"))
+        if company is None:
+            continue
+        auto = auto_by_slug.get(company)
+        if auto is None:
+            out.append(Problem(rel, "/company", "V-04",
+                               f"data/auto/{company}.json がない（based_on と xbrl_members を突き合わせられない）"))
+            continue
+        doc_ids = {f.get("doc_id") for f in auto.get("filings") or [] if isinstance(f, dict)}
+        if isinstance(data.get("based_on"), str) and data["based_on"] not in doc_ids:
+            out.append(Problem(rel, "/based_on", "V-04", f"based_on {data['based_on']} が data/auto/{company}.json の filings にない"))
+        members = {s.get("member") for r in auto.get("financials") or [] if isinstance(r, dict)
+                   for s in r.get("segments") or [] if isinstance(s, dict)}
+        for i, segment in enumerate(data.get("segments") or []):
+            if not isinstance(segment, dict):
+                continue
+            for j, member in enumerate(segment.get("xbrl_members") or []):
+                if isinstance(member, str) and member not in members:
+                    out.append(Problem(rel, pointer(["segments", i, "xbrl_members", j]), "V-04",
+                                       f"xbrl_members の {member} が、data/auto/{company}.json の financials のセグメントの member にない"))
+    return out
+
+
+_HEADING = re.compile(r"^(#{1,6})[ \t]+(.*?)[ \t]*#*[ \t]*$")
+_CITATION = re.compile(r"\[(S[0-9]+)\]")
+_FENCE = re.compile(r"^[ \t]{0,3}(```|~~~)")
+
+
+def split_body(body: str) -> tuple[list[tuple[int, str, list[str]]], list[str]]:
+    """本文を、コードブロックの外の見出しで分ける。
+
+    返り値は ([(見出しの段、見出しの文字列、その見出しの下の行)], 本文のすべての行（コードブロックの外）)。
+    最初の見出しより前の行は、段 0・空の見出しの区分に入れる。
+    """
+    sections: list[tuple[int, str, list[str]]] = [(0, "", [])]
+    outside: list[str] = []
+    in_fence = False
+    for line in body.split("\n"):
+        if _FENCE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        outside.append(line)
+        match = _HEADING.match(line)
+        if match:
+            sections.append((len(match.group(1)), match.group(2).strip(), []))
+        else:
+            sections[-1][2].append(line)
+    return sections, outside
+
+
+def count_characters(lines: list[str]) -> int:
+    """文字数（データ定義書 2.6）：Markdownの記法、出典の番号、改行、行頭と行末の空白を除き、NFKCの後の文字を1字と数える。"""
+    cleaned = []
+    for line in lines:
+        line = _CITATION.sub("", line)
+        line = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", line)  # 画像・リンクは、表示される文字だけ
+        line = re.sub(r"^[ \t]*(?:>+[ \t]*|[-*+][ \t]+|[0-9]+[.)][ \t]+)", "", line)  # 引用、箇条書きの記号
+        line = re.sub(r"(\*\*|__|~~|\*|`)", "", line)
+        line = re.sub(r"(?<![A-Za-z0-9])_([^_]+)_(?![A-Za-z0-9])", r"\1", line)
+        line = line.replace("|", "")
+        line = line.strip()
+        if line and not re.fullmatch(r"[-: ]+", line):  # 表の区切り行などは除く
+            cleaned.append(line)
+    return len(unicodedata.normalize("NFKC", "".join(cleaned)))
+
+
+def check_overviews(overviews: dict[str, tuple[dict, str]], companies: dict[str, dict]) -> list[Problem]:
+    out: list[Problem] = []
+    for rel, (data, body) in overviews.items():
+        _check_slug_file(rel, data, companies, out)
+        source_ids = _source_ids(data, rel, out)
+        sections, outside = split_body(body)
+        headings = [(level, text) for level, text, _ in sections[1:]]
+        if any(level == 1 for level, _ in headings):
+            out.append(Problem(rel, "(本文)", "V-10", "`#`（大見出し）がある。本文は `##` から始める"))
+        if [t for _, t in headings] != OVERVIEW_HEADINGS or any(level != 2 for level, _ in headings):
+            found = " / ".join("#" * level + " " + text for level, text in headings) or "なし"
+            out.append(Problem(rel, "(本文)", "V-10",
+                               "本文の見出しは「## 事業概要」「## 工程上の位置づけ」の2つだけで、この順にする"
+                               f"（実際：{found[:200]}）"))
+        cited = set(_CITATION.findall("\n".join(outside)))
+        for number in sorted(cited - source_ids, key=lambda n: int(n[1:])):
+            out.append(Problem(rel, "(本文)", "V-07", f"本文の [{number}] が、sources にない"))
+        for i, source in enumerate(data.get("sources") or []):
+            if isinstance(source, dict) and isinstance(source.get("id"), str) and source["id"] not in cited:
+                out.append(Problem(rel, pointer(["sources", i, "id"]), "V-08",
+                                   f"sources の {source['id']} が、本文で使われていない", "warning"))
+        overview = next((lines for level, text, lines in sections[1:] if text == OVERVIEW_HEADINGS[0] and level == 2), None)
+        if overview is not None:
+            count = count_characters(overview)
+            low, high = OVERVIEW_LENGTH
+            if not low <= count <= high:
+                out.append(Problem(rel, "(本文)", "V-12", f"「事業概要」が {count}字で、目安（{low}〜{high}字）を外れている",
+                                   "warning"))
     return out
 
 
