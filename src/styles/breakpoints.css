@@ -1,0 +1,9 @@
+/*
+ * 画面の幅の区切り（画面とデザインの仕様書 6.2）。
+ * CSSの変数は @media の中で使えないため、postcss-custom-media の @custom-media で、区切りの幅を1か所に持つ。
+ * 部品とページは、@media (--tablet)、@media (--pc) と書く（幅の数値を直接書かない。CLAUDE.md 9章）。
+ * 値は tokens.css の --bp-tablet、--bp-pc と同じにする（tests/design が確かめる）。
+ * 各CSSの先頭で @import して使う。
+ */
+@custom-media --tablet (min-width: 768px);
+@custom-media --pc (min-width: 1024px);

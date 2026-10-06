@@ -1,0 +1,67 @@
+---
+// 出典の一覧（8.10）：番号、資料の名前、発行元、公表日、確認日、該当のページを1行ずつ並べる。
+// EDINETの資料（edinet）は、出典の表示（LG-04）を自動で付ける
+import ExternalLink from './ExternalLink.astro';
+
+interface Source {
+  number: number;
+  title: string;
+  publisher: string;
+  url?: string;
+  publishedOn?: string; // YYYY-MM-DD
+  accessedOn: string;
+  pages?: string;
+  edinet?: boolean;
+}
+interface Props {
+  sources: Source[];
+  heading?: string;
+}
+const { sources, heading = '出典' } = Astro.props;
+
+function label(value: string): string {
+  const [y, m, d] = value.split('-').map(Number);
+  return `${y}年${m}月${d}日`;
+}
+---
+
+<section class="sources" aria-labelledby="sources-heading">
+  <h2 id="sources-heading">{heading}</h2>
+  <ol class="sources__list">
+    {sources.map((s) => (
+      <li class="sources__item" id={`source-${s.number}`} value={s.number}>
+        <span class="sources__title">
+          {s.url ? <ExternalLink href={s.url}>{s.title}</ExternalLink> : s.title}
+        </span>
+        <span>{s.publisher}</span>
+        {s.publishedOn && <span>公表日：<time datetime={s.publishedOn}>{label(s.publishedOn)}</time></span>}
+        <span>確認日：<time datetime={s.accessedOn}>{label(s.accessedOn)}</time></span>
+        {s.pages && <span>該当のページ：{s.pages}</span>}
+        {s.edinet && <span>出典：EDINET（金融庁）</span>}
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .sources__list {
+    margin: 0;
+    padding-inline-start: var(--space-6);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .sources__item {
+    padding-block: var(--space-2);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .sources__item > span:not(:last-child)::after {
+    content: "、";
+  }
+  .sources__item:target {
+    background: var(--color-primary-tint);
+  }
+  .sources__title {
+    font-weight: var(--font-weight-bold);
+  }
+</style>

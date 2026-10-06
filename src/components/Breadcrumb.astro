@@ -1,0 +1,56 @@
+---
+// パンくずリスト（8.2）。大見出しの上に置く。最後の項目（現在のページ）はリンクにしない。長いときは折り返す
+interface Item {
+  label: string;
+  href?: string;
+}
+interface Props {
+  items: Item[];
+}
+const { items } = Astro.props;
+---
+
+<nav class="breadcrumb" aria-label="パンくずリスト">
+  <ol class="breadcrumb__list">
+    {items.map((item, index) => (
+      <li class="breadcrumb__item">
+        {index > 0 && <span class="breadcrumb__sep" aria-hidden="true">›</span>}
+        {index < items.length - 1 && item.href ? (
+          <a href={item.href}>{item.label}</a>
+        ) : (
+          <span aria-current="page">{item.label}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<style>
+  .breadcrumb {
+    margin-block: var(--space-4) var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .breadcrumb__list {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .breadcrumb__item {
+    display: inline-flex;
+    align-items: center;
+  }
+  .breadcrumb__item a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    color: var(--color-text-muted);
+  }
+  .breadcrumb__sep {
+    padding-inline: var(--space-2);
+  }
+</style>

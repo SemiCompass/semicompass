@@ -1,0 +1,170 @@
+---
+// 部品の一覧（仕様書 13章の3）：すべての部品の、すべての状態を並べて確かめるページ。
+// プレビューのビルド（BUILD_ENV=preview）でだけ出力する。本番のビルドでは、ページを作らない。検索に登録させない指定を付ける
+import { BUILD_ENV } from 'astro:env/server';
+import AiBadge from '../../components/AiBadge.astro';
+import Button from '../../components/Button.astro';
+import Citation from '../../components/Citation.astro';
+import DataTable from '../../components/DataTable.astro';
+import ExternalLink from '../../components/ExternalLink.astro';
+import Icon from '../../components/Icon.astro';
+import KeyPoints from '../../components/KeyPoints.astro';
+import Notice from '../../components/Notice.astro';
+import PageHead from '../../components/PageHead.astro';
+import PendingNotice from '../../components/PendingNotice.astro';
+import SearchBox from '../../components/SearchBox.astro';
+import SourceLine from '../../components/SourceLine.astro';
+import SourceList from '../../components/SourceList.astro';
+import StateMessage from '../../components/StateMessage.astro';
+import Tag from '../../components/Tag.astro';
+import Page from '../../layouts/Page.astro';
+
+export function getStaticPaths() {
+  return BUILD_ENV === 'preview' ? [{ params: { page: 'components' } }] : [];
+}
+
+const toc = [
+  { id: 'frame', label: '共通の枠' },
+  { id: 'links', label: 'リンクとボタン' },
+  { id: 'search', label: '検索欄' },
+  { id: 'table', label: '表' },
+  { id: 'key-points', label: 'この会社のポイント' },
+  { id: 'notices', label: '注記・表示' },
+  { id: 'tags', label: 'タグ' },
+  { id: 'states', label: '状態の表示' },
+  { id: 'sources', label: '出典' },
+  { id: 'icons', label: '図と記号' },
+];
+
+const columns = [
+  { key: 'name', label: '企業名', sort: 'none' as const },
+  { key: 'code', label: '証券コード' },
+  { key: 'sales', label: '売上高（億円）', numeric: true, sort: 'descending' as const },
+  { key: 'ratio', label: '半導体関連の比率（%）', numeric: true, sort: 'ascending' as const },
+];
+// 崩れの確認に使う内容（仕様書 12章）：最も長い企業名、最も大きい数値（9桁の百万円）
+const rows = [
+  { name: 'サンプル電子工業', code: '1234', sales: '8,325.5', ratio: '12.3' },
+  { name: '架空半導体製造装置販売サービスホールディングス株式会社（最も長い名前の例）', code: '5678', sales: '999,999.9', ratio: '100.0' },
+  { name: '数値のない例', code: '—', sales: '—', ratio: '—' },
+];
+const sources = [
+  { number: 1, title: '有価証券報告書（2026年3月期）', publisher: 'サンプル電子工業（EDINET）', url: 'https://example.com/edinet', publishedOn: '2026-06-22', accessedOn: '2026-10-06', pages: '10〜12', edinet: true },
+  { number: 2, title: '会社概要', publisher: 'サンプル電子工業', accessedOn: '2026-10-06' },
+];
+---
+
+<Page
+  title="部品の一覧（プレビュー専用）｜SemiCompass"
+  heading="部品の一覧"
+  description="部品のすべての状態を並べて確かめるページ。プレビューのビルドだけで出力する。"
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '部品の一覧' }]}
+  toc={toc}
+  publishedAt="2026-10-06"
+  updatedAt="2026-10-06"
+  author="運営者"
+  aiGenerated
+  noindex
+>
+  <p>このページは、プレビューのビルドだけに出力されます。ヘッダー、パンくず、ページの頭、フッター、目次は、このページ自体で確かめられます。</p>
+
+  <h2 id="frame">共通の枠</h2>
+  <p>ヘッダー（上）、パンくず・ページの頭・目次（このページの上）、フッター（下）は、このページに出ています。ページの頭の下の1行は、公開日・更新日・作成者とAI作成の表示（単独）の例です。</p>
+  <p><AiBadge /></p>
+  <PageHead title="ページの頭だけの例（日付なし）" />
+
+  <h2 id="links">リンクとボタン</h2>
+  <p>本文のリンク：<a href="/dev/components/">通常のリンク</a>。外部のサイトへのリンク：<ExternalLink href="https://example.com/">外部サイトの例</ExternalLink>。出典の番号：本文の数値<Citation number={1} />。</p>
+  <p class="demo-row">
+    <Button variant="primary" href="/dev/components/">主ボタン</Button>
+    <Button variant="secondary" href="/dev/components/">副ボタン</Button>
+    <Button variant="secondary" disabled reason="この期のデータがないため、使えません" id="demo-disabled">使えない状態</Button>
+    <Button variant="primary" type="button">ボタン要素</Button>
+  </p>
+  <p>状態の確認：キーボードで選ぶ（フォーカス）、ポインターを重ねる、押す、訪問済み（<a href="https://example.com/visited-demo">訪問済みの例</a>）。</p>
+
+  <h2 id="search">検索欄</h2>
+  <p>見た目と置き場所だけです。候補の機能は、後で作ります。</p>
+  <SearchBox />
+
+  <h2 id="table">表</h2>
+  <p>数値は右揃え・等幅の数字です。最初の列は左に固定され、長い名前は折り返します。並べ替えの記号は、列の見出しに付きます。</p>
+  <DataTable caption="企業の一覧（例）" columns={columns} rows={rows} />
+  <SourceLine title="有価証券報告書（2026年3月期）" publisher="EDINET" accessedOn="2026-10-06" />
+  <p>0件のとき：</p>
+  <DataTable caption="0件の例" columns={columns} rows={[]} />
+  <p>1件のとき：</p>
+  <DataTable caption="1件の例" columns={columns} rows={rows.slice(0, 1)} />
+
+  <h2 id="key-points">この会社のポイント</h2>
+  <KeyPoints
+    lead="半導体を作る装置を、国内外の半導体メーカーに販売する企業（例）。"
+    metrics={[
+      { label: '売上高', value: '8,325.5億円' },
+      { label: '営業利益', value: '1,234.5億円' },
+      { label: '半導体関連の比率', value: '12.3%' },
+      { label: '最も大きい数値の例', value: '9,999,999.9億円' },
+    ]}
+    period="2026年3月期"
+    source="有価証券報告書、EDINET"
+  />
+
+  <h2 id="notices">注記・表示</h2>
+  <Notice kind="note" title="注記"><p>会計基準を日本基準からIFRSに切り替えたため、前の期と単純には比べられません。</p></Notice>
+  <PendingNotice kind="unreflected" date="2026-11-12" />
+  <PendingNotice kind="reviewing" />
+  <PendingNotice kind="paused" date="2026-10-20" />
+  <Notice kind="error" title="入力に誤りがあります"><p>証券コードは、4桁の数字で入力してください。</p></Notice>
+
+  <h2 id="tags">タグ</h2>
+  <p class="demo-row">
+    <Tag href="/processes/etching/" kind="工程">エッチング</Tag>
+    <Tag href="/companies/process/etching/" kind="分類">製造装置</Tag>
+    <Tag href="/companies/sample/" kind="企業">サンプル電子工業</Tag>
+    <Tag href="/companies/long/" kind="企業">架空半導体製造装置販売サービスホールディングス株式会社（最も長い名前の例）</Tag>
+  </p>
+
+  <h2 id="states">状態の表示</h2>
+  <StateMessage kind="loading" />
+  <StateMessage kind="empty" message="この期のセグメント情報は開示されていません。" actionLabel="全社の業績を見る" actionHref="/dev/components/" />
+  <StateMessage kind="error" message="データを読み込めませんでした" actionLabel="トップページへ戻る" actionHref="/">
+    <p>通信の状態を確かめて、しばらくしてからもう一度開いてください。</p>
+  </StateMessage>
+  <PendingNotice kind="paused" date="2026-10-20" />
+
+  <SourceList sources={sources} />
+
+  <h2 id="icons">図と記号</h2>
+  <p class="demo-row">
+    <span><Icon name="search" />検索</span>
+    <span><Icon name="external" />外部リンク</span>
+    <span><Icon name="chevron" />開閉</span>
+    <span><Icon name="sort" />並べ替え</span>
+    <span><Icon name="warning" />注意</span>
+    <span><Icon name="error" />誤り</span>
+    <span><Icon name="note" />注記</span>
+    <span><Icon name="ai" />AI作成</span>
+  </p>
+
+  <Fragment slot="aside">
+    <p class="aside-note">右の列：目次の下に、正式公開で広告の枠を置きます（仕様書 6.2）。</p>
+  </Fragment>
+</Page>
+
+<style>
+  .demo-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-3) var(--space-5);
+  }
+  .demo-row :global(.icon) {
+    margin-inline-end: var(--space-1);
+    vertical-align: var(--icon-inline-offset);
+  }
+  .aside-note {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+</style>

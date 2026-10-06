@@ -1,0 +1,27 @@
+# 主要メニューと、フッターのリンクの項目と順番（要件定義書 3.2、FR-515）。
+# 第2段階で、「ニュース」の次に「論考」を入れられる。URLは、要件定義書 3.1。
+schema_version: 1
+main:
+  - label: 企業
+    path: /companies/
+  - label: 工程
+    path: /processes/
+  - label: ニュース
+    path: /news/
+footer:
+  - title: サイトについて
+    links:
+      - { label: このサイトについて, path: /about/ }
+      - { label: 編集方針, path: /editorial-policy/ }
+      - { label: 運営方針, path: /policy/ }
+      - { label: 公開範囲と今後の予定, path: /about/roadmap/ }
+  - title: ご利用にあたって
+    links:
+      - { label: 免責事項, path: /disclaimer/ }
+      - { label: プライバシーポリシー, path: /privacy/ }
+      - { label: 外部送信について, path: /external-transmission/ }
+  - title: 質問・訂正
+    links:
+      - { label: よくある質問, path: /faq/ }
+      - { label: 訂正一覧, path: /corrections/ }
+      - { label: お問い合わせ, path: /contact/ }

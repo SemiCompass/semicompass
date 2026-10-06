@@ -1,13 +1,17 @@
 ---
+// すべてのページの共通の枠（要件定義書 3.2）：ヘッダー、本文（<main>）、フッター
 import '../styles/global.css';
 import { BUILD_ENV } from 'astro:env/server';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
 
 interface Props {
   title: string;
   description: string;
+  noindex?: boolean; // 検索に登録させない指定（プレビューのビルドでは、常に付く）
 }
 
-const { title, description } = Astro.props;
+const { title, description, noindex = false } = Astro.props;
 
 // 正規のURL：site とそのページのパスから作る。末尾はスラッシュに統一する（要件定義書3.1）
 if (!Astro.site) {
@@ -25,17 +29,14 @@ const canonicalUrl = new URL(canonicalPath, Astro.site).href;
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
-    {BUILD_ENV === 'preview' && <meta name="robots" content="noindex, nofollow" />}
+    {(BUILD_ENV === 'preview' || noindex) && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
-    <header class="site-header">
-      <a class="site-header__name" href="/">SemiCompass</a>
-    </header>
-    <main class="site-main">
+    <a class="skip-link" href="#main">本文へ移動</a>
+    <Header />
+    <main id="main">
       <slot />
     </main>
-    <footer class="site-footer">
-      <small>SemiCompass</small>
-    </footer>
+    <Footer />
   </body>
 </html>

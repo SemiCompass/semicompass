@@ -1,0 +1,22 @@
+---
+// 未反映の表示・確認中の表示・休止中の表示（8.9、8.12。CT-03、CT-05、要件定義書 5.4）。見た目は、注意（warning）の注記
+import Notice from './Notice.astro';
+
+interface Props {
+  kind: 'unreflected' | 'reviewing' | 'paused';
+  date?: string; // 未反映：決算発表の日。休止中：休止の開始日（YYYY-MM-DD）
+}
+const { kind, date } = Astro.props;
+
+function label(value: string): string {
+  const [y, m, d] = value.split('-').map(Number);
+  return `${y}年${m}月${d}日`;
+}
+const message = {
+  unreflected: `最新の決算は未反映です${date ? `（決算発表：${label(date)}）` : ''}`,
+  reviewing: 'この情報は確認中です',
+  paused: `更新を休止しています${date ? `（${label(date)}から）` : ''}`,
+}[kind];
+---
+
+<Notice kind="warning"><p>{message}</p></Notice>

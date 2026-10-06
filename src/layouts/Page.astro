@@ -1,0 +1,76 @@
+---
+// ページの共通の並び（要件定義書 3.2、仕様書 6.2、8.1〜8.4）：パンくず → ページの頭 → （目次）→ 本文
+// PC（1024px以上）：本文（最大40rem）と右の列（16rem）の2列。右の列に、ページ内の目次を置く
+// スマートフォンとタブレット：1列。目次は、大見出しの後に、開閉式で置く
+// aside スロット：右の列に、目次の下に置くもの（正式公開で、広告の枠を置く）。目次と同じ流れの中に置き、目次と一緒に張り付く
+import Breadcrumb from '../components/Breadcrumb.astro';
+import PageHead from '../components/PageHead.astro';
+import Toc from '../components/Toc.astro';
+import Base from './Base.astro';
+
+interface Props {
+  title: string; // <title> に使う（例：「企業一覧｜SemiCompass」）
+  heading?: string; // 大見出し。省略すると title
+  description: string;
+  breadcrumbs?: { label: string; href?: string }[];
+  toc?: { id: string; label: string }[];
+  publishedAt?: string;
+  updatedAt?: string;
+  author?: string;
+  aiGenerated?: boolean;
+  noindex?: boolean;
+  wide?: boolean; // 右の列を持たないページ（トップ、一覧、検索）：外枠の幅いっぱいを使う
+}
+const { title, heading, description, breadcrumbs = [], toc = [], publishedAt, updatedAt, author, aiGenerated, noindex, wide = false } =
+  Astro.props;
+const hasAside = !wide;
+---
+
+<Base title={title} description={description} noindex={noindex}>
+  <div class="container page">
+    {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
+    <PageHead title={heading ?? title} publishedAt={publishedAt} updatedAt={updatedAt} author={author} aiGenerated={aiGenerated} />
+    {toc.length > 0 && <Toc items={toc} variant="fold" />}
+    <div class:list={['page__grid', { 'page__grid--two': hasAside }]}>
+      <div class="page__body"><slot /></div>
+      {hasAside && (
+        <aside class="page__aside" aria-label="補足">
+          <div class="page__aside-sticky">
+            {toc.length > 0 && <Toc items={toc} variant="side" />}
+            <slot name="aside" />
+          </div>
+        </aside>
+      )}
+    </div>
+  </div>
+</Base>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .page {
+    padding-block: var(--space-5) var(--space-6);
+  }
+  .page__body {
+    min-width: 0;
+    max-width: var(--content-max-width);
+  }
+  .page__grid:not(.page__grid--two) .page__body {
+    max-width: none;
+  }
+  @media (--pc) {
+    .page__grid--two {
+      display: grid;
+      grid-template-columns: minmax(0, var(--content-max-width)) var(--aside-width);
+      column-gap: var(--aside-gap);
+    }
+    /* 右の列は、本文と同じ高さに伸ばし、その中の1つのまとまり（目次と、その下の要素）を張り付ける。
+       まとまりは、画面に収まる高さにし、収まらないときは、その中だけでスクロールする（下の要素と重ならない） */
+    .page__aside-sticky {
+      position: sticky;
+      top: var(--toc-sticky-top);
+      max-height: var(--aside-max-height);
+      overflow-y: auto;
+    }
+  }
+</style>

@@ -1,0 +1,53 @@
+---
+// 検索欄（8.6）。見た目と置き場所だけ。候補の表示と検索の機能は、後の変更案で作る（FR-701）
+import Icon from './Icon.astro';
+---
+
+<div class="search" role="search">
+  <label class="visually-hidden" for="site-search">サイト内を検索する</label>
+  <span class="search__icon"><Icon name="search" /></span>
+  <input
+    class="search__input"
+    id="site-search"
+    type="search"
+    name="q"
+    placeholder="企業名・証券コード・用語"
+    autocomplete="off"
+    enterkeyhint="search"
+  />
+</div>
+
+<style>
+  .search {
+    position: relative;
+    display: block;
+    width: 100%;
+  }
+  .search__icon {
+    position: absolute;
+    top: 50%;
+    left: var(--space-3);
+    display: inline-flex;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+  .search__input {
+    width: 100%;
+    height: var(--control-height);
+    padding-block: 0;
+    padding-inline: calc(var(--space-3) + var(--icon-size) + var(--space-2)) var(--space-3);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+    letter-spacing: var(--text-dense-tracking);
+  }
+  .search__input::placeholder {
+    color: var(--color-text-muted);
+    opacity: 1;
+  }
+</style>

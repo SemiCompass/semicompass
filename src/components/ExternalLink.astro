@@ -1,0 +1,21 @@
+---
+// 外部のサイトへのリンク（8.5）：後ろに外部リンクの記号と、読み上げ用の「（外部サイト）」を付ける
+import Icon from './Icon.astro';
+
+interface Props {
+  href: string;
+}
+const { href } = Astro.props;
+---
+
+<a class="external-link" href={href} rel="noopener noreferrer"><slot /><Icon name="external" /><span class="visually-hidden">（外部サイト）</span></a>
+
+<style>
+  .external-link :global(.icon) {
+    display: inline-block;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    margin-inline-start: var(--space-1);
+    vertical-align: var(--icon-inline-offset);
+  }
+</style>
