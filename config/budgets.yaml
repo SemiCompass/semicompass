@@ -1,0 +1,28 @@
+# AIの予算と単価（データ定義書 7.2、運用ルール書 6.2、要件定義書 6.6）。
+# 運営者だけが変更する（CLAUDE.md 2章の7）。コードはこのファイルを読むだけで、値をコードに書かない。
+# 単価は、Anthropicの料金表（https://platform.claude.com/docs/en/about-claude/pricing）の Claude Sonnet 5.5。
+# 2026年10月6日に確認。cache_write は5分のキャッシュへの書き込みの単価。
+schema_version: 1
+usd_jpy: 150                    # 為替（運用ルール書6.2）
+monthly_target_jpy: 3000        # 目安
+monthly_cap_jpy: 10000          # 上限
+alert_ratio: 0.8                # 上限に対して知らせる割合
+models:                         # モデルの名前と単価（USD／100万トークン）
+  - id: "claude-sonnet-5-5"
+    input: 2.0
+    output: 10.0
+    cache_write: 2.5
+    cache_read: 0.2
+agents:                         # エージェントごと（運用ルール書6.2）
+  AG-10: { model: "claude-sonnet-5-5", target_jpy: 300, cap_jpy: 800 }
+  AG-11: { model: "claude-sonnet-5-5", target_jpy: 600, cap_jpy: 1500 }
+  AG-12: { model: "claude-sonnet-5-5", target_jpy: 500, cap_jpy: 2000, busy_month_target_jpy: 1500 }
+  AG-13: { model: "claude-sonnet-5-5", target_jpy: 300, cap_jpy: 800 }
+  AG-14: { model: "claude-sonnet-5-5", target_jpy: 400, cap_jpy: 1500 }
+  AG-20: { model: "claude-sonnet-5-5", target_jpy: 0, cap_jpy: 500 }
+claude:                         # Claudeへの指示（運用ルール書6.2、7.3）
+  target_jpy: 800
+  cap_jpy: 2500
+  max_turns: 30
+  review_cost_per_run_jpy: 150  # これを超えた実行は月次の報告で理由を確かめる
+reserve_jpy: 400

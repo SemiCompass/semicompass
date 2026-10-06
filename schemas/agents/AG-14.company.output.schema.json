@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-14.company.output.schema.json",
+  "title": "AG-14 解説作成エージェントの出力（企業の事業概要とセグメント対応表の下書き）",
+  "description": "データ定義書（第1段階）9.1、9.6。AG-14が企業1社について返す出力。プログラム（scripts/draft/）が、この出力から content/companies/{slug}.md（schemas/content/company-overview）と data/segments/{slug}.yaml（schemas/data/segment-map）を組み立てる。title、description、sources、company、日付、ai_generated、xbrl_members 以外の出典の番号は、プログラムが書くため、ここには持たない。本文の出典の番号は [S1]（原資料束の有価証券報告書）だけを使う。文字数の目安（事業概要300〜500字）は、ここでは広めに取り、目安を外れたら警告にする（V-12）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "overview",
+    "process_position",
+    "segments"
+  ],
+  "properties": {
+    "overview": {
+      "description": "「## 事業概要」の本文（見出しは含めない）。何を作っているか、誰に売っているか、サプライチェーン上のどこにいるか。事実の後に [S1]",
+      "type": "string",
+      "minLength": 200,
+      "maxLength": 700
+    },
+    "process_position": {
+      "description": "「## 工程上の位置づけ」の本文（見出しは含めない）",
+      "type": "string",
+      "minLength": 50,
+      "maxLength": 400
+    },
+    "segments": {
+      "description": "報告セグメントごとの区分。セグメント情報の注記に出てくる順",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "xbrl_members",
+          "classification",
+          "basis"
+        ],
+        "properties": {
+          "name": {
+            "description": "セグメントの名前。企業の開示のまま",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "xbrl_members": {
+            "description": "入力で渡したXBRLのメンバー名の一覧から選ぶ。当たるものがなければ空",
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9]+$"
+            }
+          },
+          "classification": {
+            "enum": [
+              "semiconductor",
+              "partial",
+              "excluded"
+            ]
+          },
+          "basis": {
+            "description": "判断の根拠にした原資料束の節の key",
+            "enum": [
+              "business_description",
+              "segment_information",
+              "affiliated_entities"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
+      }
+    }
+  }
+}
