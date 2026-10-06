@@ -1,0 +1,19 @@
+schema_version: 1
+company: kokusai-electric
+reviewed_on: '2026-10-06'
+based_on: S100YJUA
+segments:
+- name: 半導体製造装置事業
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 単一セグメントで、事業の中心は半導体製造装置の開発、製造、販売、保守である。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: 株式会社KOKUSAI ELECTRIC（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YJUA.pdf
+  published_on: '2026-06-25'
+  accessed_on: '2026-10-06'
+  doc_id: S100YJUA
