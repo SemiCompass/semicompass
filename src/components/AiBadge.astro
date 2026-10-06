@@ -1,11 +1,18 @@
 ---
-// AI作成の表示（8.9、UI-06）：記号＋「AIが下書きし、運営者が確認しました」。説明のページ（/editorial-policy/）へのリンク
+// AI作成の表示（8.9、UI-06）：記号＋文言。説明のページ（/editorial-policy/）へのリンク
+//   運営者が確認したあと（draft でない）：「AIが下書きし、運営者が確認しました」
+//   確認の前（draft: true）：「AIが下書きしました（運営者の確認前）」
 import Icon from './Icon.astro';
+
+interface Props {
+  draft?: boolean;
+}
+const { draft = false } = Astro.props;
 ---
 
 <span class="ai-badge">
   <Icon name="ai" />
-  <span>AIが下書きし、運営者が確認しました（<a href="/editorial-policy/">編集方針</a>）</span>
+  <span>{draft ? 'AIが下書きしました（運営者の確認前）' : 'AIが下書きし、運営者が確認しました'}（<a href="/editorial-policy/">編集方針</a>）</span>
 </span>
 
 <style>

@@ -10,6 +10,7 @@ import KeyPoints from '../../components/KeyPoints.astro';
 import Notice from '../../components/Notice.astro';
 import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
+import SourceLine from '../../components/SourceLine.astro';
 import SourceList from '../../components/SourceList.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import Tag from '../../components/Tag.astro';
@@ -54,7 +55,8 @@ const source = {
 };
 const sales = barSpec(rows, 'net_sales', '売上高', colors.metrics.net_sales);
 const operating = barSpec(rows, 'operating_income', '営業利益', colors.metrics.operating_income);
-const segment = segmentSpec(rows, loadSegmentMap(company.slug), colors);
+const segmentMap = loadSegmentMap(company.slug);
+const segment = segmentMap && latest ? segmentSpec(rows, segmentMap, colors, periodLabel(latest.fiscal_period_end)) : null;
 const region = regionSpec(rows, colors);
 const employees = auto ? employeeSpec(auto, colors) : null;
 const standards = [...new Set(rows.map((r) => r.accounting_standard))];
@@ -76,7 +78,7 @@ const toc = [
   { id: 'work', label: '働く環境' },
   { id: 'news', label: 'ニュース' },
   { id: 'documents', label: '資料' },
-  { id: 'sources', label: '出典・関連' },
+  { id: 'sources-heading', label: '出典・関連' },
 ];
 
 // 出典の一覧：事業概要の sources（S1 など）に、業績の元の書類がなければ足す
@@ -103,6 +105,7 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
     publishedAt={overview.front.published_at}
     updatedAt={overview.front.updated_at}
     aiGenerated={overview.front.ai_generated}
+    aiDraft={overview.front.draft === true}
     noindex={overview.front.draft === true}
   >
     <Fragment slot="lead">
@@ -144,14 +147,33 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
         <StateMessage kind="empty" message="売上高のデータがありません。" />
       )}
       {operating && <Chart id="operating" title="営業利益の推移" unit="億円" period={periodRange(rows)} spec={operating} source={source} />}
-      {segment ? (
-        <Chart id="segment" title="セグメント別の売上の推移" unit="億円" period={periodRange(rows.filter((r) => r.segments.length > 0))} spec={segment.spec} source={source} />
-      ) : (
-        <>
-          <h3>セグメント別の売上</h3>
-          <StateMessage kind="empty" message="セグメント別の売上のグラフは、まだありません（セグメントの区分が未確認、または開示がありません）。" actionLabel="売上高の推移を見る" actionHref="#performance" />
-        </>
-      )}
+      <>
+        {segment?.spec ? (
+          <Chart id="segment" title="セグメント別の売上の推移" unit="億円" period={periodRange(rows.filter((r) => r.segments.length > 0))} spec={segment.spec} source={source} />
+        ) : segment?.single ? (
+          <>
+            <h3>セグメント別の売上</h3>
+            <p>報告セグメントは「{segment.single.name}」の1つです（全社の売上が半導体関連）。</p>
+            {segment.single.source && (
+              <SourceLine
+                title={`${segment.single.source.title}（${segment.single.source.pages}）`}
+                publisher={segment.single.source.publisher}
+                accessedOn={segment.single.source.accessedOn}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <h3>セグメント別の売上</h3>
+            <StateMessage
+              kind="empty"
+              message={segment?.reason ?? 'セグメントの区分が未確認のため、セグメント別の売上のグラフは、まだありません。'}
+              actionLabel="売上高の推移を見る"
+              actionHref="#performance"
+            />
+          </>
+        )}
+      </>
       {region ? (
         <Chart id="region" title="地域別の売上" unit="億円" period={region.period} spec={region.spec} source={source} />
       ) : (

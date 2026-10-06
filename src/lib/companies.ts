@@ -66,7 +66,14 @@ export interface Company {
   is_holding_company?: boolean;
 }
 export interface SegmentMap {
-  segments: { name: string; xbrl_members?: string[]; classification: 'semiconductor' | 'partial' | 'excluded'; note?: string }[];
+  segments: {
+    name: string;
+    xbrl_members?: string[];
+    classification: 'semiconductor' | 'partial' | 'excluded';
+    note?: string;
+    rationale?: { source: string; pages: string };
+  }[];
+  sources?: Source[];
 }
 export interface Overview {
   front: { company: string; published_at: string; updated_at?: string; draft?: boolean; ai_generated: boolean; reviewed_filing?: string; sources: Source[] };
@@ -149,27 +156,96 @@ export function loadChartColors(): ChartColors {
   return parse(read('config/chart-colors.yaml')) as ChartColors;
 }
 
-/** セグメント別の売上の積み上げ。区分は data/segments の classification。対応表がないときは null */
-export function segmentSpec(rows: FinancialRow[], map: SegmentMap | null, colors: ChartColors): { spec: ChartSpec; ratio: { value: number; period: string } | null } | null {
+const CATEGORY_COLORS = ['--chart-cat-1', '--chart-cat-2', '--chart-cat-3', '--chart-cat-4']; // 仕様書 4.3
+
+export interface SegmentSource {
+  title: string;
+  publisher: string;
+  accessedOn: string;
+  pages: string;
+}
+export interface SegmentResult {
+  /** 積み上げのグラフ。区分のあるセグメントの値がないときは null */
+  spec: ChartSpec | null;
+  /** 半導体関連の比率（%）と、その期。算出できないときは null */
+  ratio: { value: number; period: string } | null;
+  /** 報告セグメントが1つで、半導体関連の区分のとき（全社の売上が半導体関連）：セグメントの名前と、根拠（データ定義書 4.2 の rationale と sources） */
+  single: { name: string; source: SegmentSource | null } | null;
+  /** 対応表のファイルはあるが、グラフにできないときの理由 */
+  reason: string | null;
+}
+
+/**
+ * セグメント別の売上を作る。区分は data/segments の classification。
+ * ・報告セグメントが1つで、semiconductor のとき：比率は100.0%、グラフは作らず、根拠を示す
+ * ・半導体関連以外が2つ以上のとき：グラフでは「半導体関連以外（計）」の1つにまとめ、内訳は表に出す
+ * ・半導体関連が2つ以上のとき：--chart-cat-1〜4 で分け、表を添える
+ * ・積み上げの上に、セグメントの合計は出さない（連結売上高と合わないため）。最新の期の半導体関連の値と比率だけをラベルにする
+ */
+export function segmentSpec(rows: FinancialRow[], map: SegmentMap, colors: ChartColors, latestPeriod: string): SegmentResult {
+  const reasonNone: SegmentResult = { spec: null, ratio: null, single: null, reason: 'この期のセグメント別の売上は、開示から取り込めていません。' };
+  if (map.segments.length === 1 && map.segments[0].classification === 'semiconductor') {
+    const only = map.segments[0];
+    const src = map.sources?.find((x) => x.id === only.rationale?.source);
+    return {
+      spec: null, ratio: { value: 100, period: latestPeriod }, reason: null,
+      single: { name: only.name, source: src ? { title: src.title, publisher: src.publisher, accessedOn: src.accessed_on, pages: only.rationale?.pages ?? '' } : null },
+    };
+  }
   const withSeg = rows.filter((r) => r.segments.length > 0);
-  if (!map || withSeg.length === 0) return null;
+  if (withSeg.length === 0) return reasonNone;
   const lookup = new Map<string, { name: string; classification: (typeof ORDER)[number] }>();
   for (const s of map.segments) for (const m of s.xbrl_members ?? []) lookup.set(m, { name: s.name, classification: s.classification });
   const latest = withSeg[withSeg.length - 1];
   const members = latest.segments.map((s) => s.member).filter((m) => lookup.has(m));
-  if (members.length === 0) return null;
-  const ordered = [...members].sort((a, b) => ORDER.indexOf(lookup.get(a)!.classification) - ORDER.indexOf(lookup.get(b)!.classification));
-  const series: Series[] = ordered.map((member) => {
-    const info = lookup.get(member)!;
-    const c = colors.segment_classification[info.classification];
-    return { name: info.name, color: c.color, pattern: c.pattern, note: c.legend,
-      values: withSeg.map((r) => oku(r.segments.find((s) => s.member === member)?.net_sales_external)) };
-  });
-  // 半導体関連の比率：「半導体関連」の区分のセグメントの外部顧客への売上 ÷ 全セグメントの合計（最新の通期）
-  const total = latest.segments.reduce((a, s) => a + (s.net_sales_external.value ?? 0), 0);
-  const semi = latest.segments.filter((s) => lookup.get(s.member)?.classification === 'semiconductor').reduce((a, s) => a + (s.net_sales_external.value ?? 0), 0);
-  const ratio = total > 0 ? { value: Math.round((semi / total) * 1000) / 10, period: periodLabel(latest.fiscal_period_end) } : null;
-  return { spec: { kind: 'stacked', categories: withSeg.map((r) => category(r.fiscal_period_end)), series, unit: '億円', decimals: 1, labelLatest: true }, ratio };
+  if (members.length === 0) return reasonNone;
+  const byClass = (c: (typeof ORDER)[number]) => members.filter((m) => lookup.get(m)!.classification === c);
+  const valuesOf = (member: string) => withSeg.map((r) => oku(r.segments.find((s) => s.member === member)?.net_sales_external));
+
+  const semis = byClass('semiconductor');
+  const partials = byClass('partial');
+  const others = byClass('excluded');
+  let nextCategory = 0;
+  const takeCategory = () => CATEGORY_COLORS[Math.min(nextCategory++, CATEGORY_COLORS.length - 1)];
+  const series: Series[] = [];
+  const detail: Series[] = [];
+  const cls = (c: string) => colors.segment_classification[c];
+  for (const m of semis) {
+    const color = semis.length === 1 ? cls('semiconductor').color : takeCategory(); // 2つ以上：濃淡ではなく --chart-cat-1〜4
+    const item = { name: lookup.get(m)!.name, color, note: cls('semiconductor').legend, values: valuesOf(m) };
+    series.push(item);
+    detail.push(item);
+  }
+  for (const m of partials) {
+    const color = semis.length > 1 || nextCategory > 0 ? takeCategory() : cls('partial').color;
+    const item = { name: lookup.get(m)!.name, color, note: cls('partial').legend, values: valuesOf(m) };
+    series.push(item);
+    detail.push(item);
+  }
+  const otherItems = others.map((m) => ({ name: lookup.get(m)!.name, color: cls('excluded').color, pattern: cls('excluded').pattern, note: cls('excluded').legend, values: valuesOf(m) }));
+  detail.push(...otherItems);
+  if (otherItems.length === 1) series.push(otherItems[0]);
+  else if (otherItems.length >= 2) {
+    series.push({ name: '半導体関連以外（計）', color: cls('excluded').color, pattern: cls('excluded').pattern,
+      values: withSeg.map((_, i) => (otherItems.every((o) => o.values[i] === null) ? null : otherItems.reduce((a, o) => a + (o.values[i] ?? 0), 0))) });
+  }
+
+  // 半導体関連の比率：「半導体関連」の区分のセグメントの外部顧客への売上 ÷ 区分のあるセグメントの合計（最新の通期）。計算は百万円の値で行う
+  const mappedTotal = members.reduce((a, m) => a + (latest.segments.find((s) => s.member === m)?.net_sales_external.value ?? 0), 0);
+  const semiValue = semis.reduce((a, m) => a + (latest.segments.find((s) => s.member === m)?.net_sales_external.value ?? 0), 0);
+  const ratioValue = mappedTotal > 0 && semis.length > 0 ? Math.round((semiValue / mappedTotal) * 1000) / 10 : null;
+  const period = periodLabel(latest.fiscal_period_end);
+  const unmapped = latest.segments.length > members.length;
+  const note = `セグメントの合計は、調整額を含まないため、連結売上高と一致しません。${unmapped ? '区分の対応表にない項目は、含みません。' : ''}${others.length >= 2 ? '半導体関連以外の内訳は、「表で見る」に出ています。' : ''}${semis.length > 1 ? '半導体関連の区分ごとの数値は、「表で見る」に出ています。' : ''}`;
+  const latestLabel = ratioValue !== null && semis.length > 0
+    ? ['半導体関連', `${formatNumber(millionToOku(semiValue), 1)}億円（${formatNumber(ratioValue, 1)}%）`]
+    : undefined;
+  return {
+    reason: null, single: null,
+    ratio: ratioValue !== null ? { value: ratioValue, period } : null,
+    spec: { kind: 'stacked', categories: withSeg.map((r) => category(r.fiscal_period_end)), series, tableSeries: detail, unit: '億円', decimals: 1,
+      labelLatest: false, latestLabel, note },
+  };
 }
 
 export function regionSpec(rows: FinancialRow[], colors: ChartColors): { spec: ChartSpec; period: string } | null {

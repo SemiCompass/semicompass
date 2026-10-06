@@ -58,11 +58,26 @@ const periods = ['2021-03', '2022-03', '2023-03', '2024-03', '2025-03', '2026-03
 const demoSource = { title: 'サンプルの資料', publisher: 'サンプル', accessedOn: '2026-10-06' };
 const barDemo = { kind: 'bar' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: true, withChange: true,
   series: [{ name: '売上高', color: '--chart-single', values: [1200.5, 1500, 1320.8, 1800.2, 2100, 2443.5] }] };
-const stackedDemo = { kind: 'stacked' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: true,
+const demoOthers = [
+  { name: 'その他事業A', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [300, 280, 260, 300, 280, 250] },
+  { name: 'その他事業B', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [100, 110, 120, 130, 140, 150] },
+];
+const demoSemi = { name: 'テスト事業', color: '--chart-highlight', note: '半導体関連', values: [500, 600, 700, 800, 900, 1100] };
+const demoPartial = { name: '部材事業', color: '--chart-cat-1', note: '一部含む', values: [200, 220, 240, 260, 300, 320] };
+const stackedDemo = { kind: 'stacked' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: false,
+  latestLabel: ['半導体関連', '1,100.0億円（52.9%）'],
+  note: 'セグメントの合計は、調整額を含まないため、連結売上高と一致しません。半導体関連以外の内訳は、「表で見る」に出ています。',
+  series: [demoSemi, demoPartial, { name: '半導体関連以外（計）', color: '--chart-other', pattern: true, values: [400, 390, 380, 430, 420, 400] }],
+  tableSeries: [demoSemi, demoPartial, ...demoOthers] };
+// 半導体関連が2つ以上のとき：--chart-cat-1〜4（濃淡ではなく）
+const multiSemiDemo = { kind: 'stacked' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: false,
+  latestLabel: ['半導体関連', '1,800.0億円（75.0%）'],
+  note: 'セグメントの合計は、調整額を含まないため、連結売上高と一致しません。半導体関連の区分ごとの数値は、「表で見る」に出ています。',
   series: [
-    { name: 'テスト事業', color: '--chart-highlight', note: '半導体関連', values: [500, 600, 700, 800, 900, 1100] },
-    { name: '部材事業', color: '--chart-cat-1', note: '一部含む', values: [200, 220, 240, 260, 300, 320] },
-    { name: 'その他事業', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [300, 280, 260, 300, 280, 250] },
+    { name: '装置事業', color: '--chart-cat-1', note: '半導体関連', values: [400, 450, 500, 550, 600, 700] },
+    { name: '材料事業', color: '--chart-cat-2', note: '半導体関連', values: [300, 320, 340, 360, 400, 500] },
+    { name: '検査事業', color: '--chart-cat-3', note: '半導体関連', values: [200, 220, 240, 260, 300, 600] },
+    { name: '半導体関連以外', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [300, 280, 260, 300, 280, 600] },
   ] };
 const hbarDemo = { kind: 'hbar' as const, unit: '億円', decimals: 1, labelLatest: false,
   categories: ['日本', '北米', 'アジア', '欧州'].map((n) => ({ label: n, short: n, lines: [n] })),
@@ -93,6 +108,7 @@ const sources = [
 
   <h2 id="frame">共通の枠</h2>
   <p>ヘッダー（上）、パンくず・ページの頭・目次（このページの上）、フッター（下）は、このページに出ています。ページの頭の下の1行は、公開日・更新日・作成者とAI作成の表示（単独）の例です。</p>
+  <p><AiBadge draft /></p>
   <p><AiBadge /></p>
   <PageHead title="ページの頭だけの例（日付なし）" />
 
@@ -123,6 +139,7 @@ const sources = [
   <p>棒や点を選ぶ（タップ、クリック、キーボード）と、数値が出ます。同じ数値の表は、「表で見る」で開けます。</p>
   <Chart id="demo-bar" title="縦の棒（1系列）" unit="億円" period="2021年3月期〜2026年3月期" spec={barDemo} source={demoSource} />
   <Chart id="demo-stacked" title="積み上げの縦の棒（セグメント別）" unit="億円" period="2021年3月期〜2026年3月期" spec={stackedDemo} source={demoSource} />
+  <Chart id="demo-multi" title="積み上げの縦の棒（半導体関連が2つ以上）" unit="億円" period="2021年3月期〜2026年3月期" spec={multiSemiDemo} source={demoSource} />
   <Chart id="demo-hbar" title="横の棒（地域別）" unit="億円" period="2026年3月期" spec={hbarDemo} source={demoSource} />
   <Chart id="demo-line" title="折れ線" unit="人" period="2021年3月期〜2026年3月期" spec={lineDemo} source={demoSource} />
   <Chart id="demo-one" title="1件・最も大きい数値の例" unit="億円" period="2021年3月期" spec={zeroDemo} source={demoSource} />

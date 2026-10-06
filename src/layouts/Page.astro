@@ -19,10 +19,11 @@ interface Props {
   updatedAt?: string;
   author?: string;
   aiGenerated?: boolean;
+  aiDraft?: boolean;
   noindex?: boolean;
   wide?: boolean; // 右の列を持たないページ（トップ、一覧、検索）：外枠の幅いっぱいを使う
 }
-const { title, heading, description, breadcrumbs = [], toc = [], publishedAt, updatedAt, author, aiGenerated, noindex, wide = false } =
+const { title, heading, description, breadcrumbs = [], toc = [], publishedAt, updatedAt, author, aiGenerated, aiDraft, noindex, wide = false } =
   Astro.props;
 const hasAside = !wide;
 ---
@@ -30,7 +31,7 @@ const hasAside = !wide;
 <Base title={title} description={description} noindex={noindex}>
   <div class="container page">
     {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
-    <PageHead title={heading ?? title} publishedAt={publishedAt} updatedAt={updatedAt} author={author} aiGenerated={aiGenerated} />
+    <PageHead title={heading ?? title} publishedAt={publishedAt} updatedAt={updatedAt} author={author} aiGenerated={aiGenerated} aiDraft={aiDraft} />
     <slot name="lead" />
     {toc.length > 0 && <Toc items={toc} variant="fold" />}
     <div class:list={['page__grid', { 'page__grid--two': hasAside }]}>

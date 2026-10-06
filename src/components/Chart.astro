@@ -23,13 +23,14 @@ const wide = buildChart(spec, 'wide', `${id}-w`);
 
 // 同じ数値の表（表で見る）
 const multi = spec.series.length > 1;
+const tableSeries = spec.tableSeries ?? spec.series; // まとめた系列の内訳は、表に出す
 const columns = [
   { key: 'period', label: spec.kind === 'hbar' ? '名前' : '期' },
-  ...spec.series.map((s, i) => ({ key: `s${i}`, label: `${s.name}（${unit}）`, numeric: true })),
+  ...tableSeries.map((s, i) => ({ key: `s${i}`, label: spec.tableSeries && s.note ? `${s.name}（${s.note}、${unit}）` : `${s.name}（${unit}）`, numeric: true })),
 ];
 const rows = spec.categories.map((c, i) => ({
   period: c.label,
-  ...Object.fromEntries(spec.series.map((s, si) => [`s${si}`, s.values[i] === null || s.values[i] === undefined ? '—' : formatNumber(s.values[i] as number, spec.decimals)])),
+  ...Object.fromEntries(tableSeries.map((s, si) => [`s${si}`, s.values[i] === null || s.values[i] === undefined ? '—' : formatNumber(s.values[i] as number, spec.decimals)])),
 }));
 const legend = multi || spec.kind === 'stacked' ? spec.series : [];
 ---
@@ -41,6 +42,7 @@ const legend = multi || spec.kind === 'stacked' ? spec.series : [];
     <ChartSvg model={compact} title={`${title}（${unit}）`} uid={`${id}-c`} />
     <ChartSvg model={wide} title={`${title}（${unit}）`} uid={`${id}-w`} />
   </div>
+  {spec.note && <p class="chart__note">{spec.note}</p>}
   {legend.length > 0 && (
     <ul class="chart__legend" aria-label="凡例">
       {legend.map((s) => (
@@ -84,6 +86,13 @@ const legend = multi || spec.kind === 'stacked' ? spec.series : [];
   }
   .chart__plot :global(.chart-svg--wide) {
     display: none;
+  }
+  .chart__note {
+    margin-block: var(--space-3) 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
   }
   .chart__legend {
     display: flex;

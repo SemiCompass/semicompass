@@ -51,7 +51,9 @@ const m = model;
     </text>
   ))}
   {m.labels.map((l) => (
-    <text class:list={['chart-svg__text', l.value && 'chart-svg__value']} x={l.x} y={l.y} text-anchor={l.x < m.plot.l ? 'end' : 'middle'}>{l.text}</text>
+    <text class:list={['chart-svg__text', l.value && 'chart-svg__value']} x={l.x} y={l.y} text-anchor={l.anchor}>
+      {l.lines.map((line, i) => <tspan x={l.x} dy={i === 0 ? 0 : 20}>{line}</tspan>)}
+    </text>
   ))}
 
   {m.polylines.map((p) => (

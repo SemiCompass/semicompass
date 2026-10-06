@@ -26,6 +26,9 @@ export interface ChartSpec {
   decimals: number;
   labelLatest: boolean; // 最新の期の数値のラベルを付ける
   withChange?: boolean; // 前期比（＋／−と矢印）を吹き出しに付ける
+  tableSeries?: Series[]; // 「表で見る」の表に出す系列（グラフの系列を、まとめているときの内訳）
+  latestLabel?: string[]; // 積み上げ：最新の期の棒に付けるラベル（行ごと。合計は出さない）
+  note?: string; // グラフの注記（です・ます調）
 }
 
 export interface Tip {
@@ -59,13 +62,14 @@ export interface Model {
   hTicks: { x: number; text: string }[]; // 横の棒の値の目盛り
   baseline: { x1: number; y1: number; x2: number; y2: number };
   data: Datum[];
-  labels: { x: number; y: number; text: string; value: boolean }[];
+  labels: { x: number; y: number; lines: string[]; anchor: 'start' | 'middle' | 'end'; value: boolean }[];
   polylines: { color: string; points: string; id: string }[];
   barWidth: number;
 }
 
 const SIZE = { compact: { w: 288, h: 300 }, wide: { w: 640, h: 340 } } as const;
 const TOP = 28;
+const TOP_STACKED_LABEL = 52; // 積み上げのラベル（2行）を置く上の余白
 const CHAR_W = 9.2; // 半角の文字の幅の概算（14px。等幅の数字は広め）
 const CJK_W = 14;
 export function textWidth(text: string): number {
@@ -119,7 +123,7 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
   const catW = horizontal ? Math.max(...spec.categories.map((c) => textWidth(c.short))) + 10 : 0;
   const plot = horizontal
     ? { l: Math.min(catW, layout === 'compact' ? 120 : 160), t: TOP, r: width - 12, b: height - 28 }
-    : { l: labelW + 6, t: TOP, r: width - 12, b: height - (layout === 'compact' ? 30 : 48) };
+    : { l: labelW + 6, t: stacked && spec.latestLabel ? TOP_STACKED_LABEL : TOP, r: width - 12, b: height - (layout === 'compact' ? 30 : 48) };
 
   const model: Model = {
     kind: spec.kind, layout, width, height, plot, yTicks: [], xTicks: [], hTicks: [], baseline: { x1: 0, y1: 0, x2: 0, y2: 0 },
@@ -153,7 +157,7 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
       const text = `${formatNumber(v, spec.decimals)}${spec.unit}`;
       model.data.push({ id: `${uid}-${i}`, shape: 'rect', x: x0, y, w, h: bar, r: 0, color: spec.series[0].color, pattern: false,
         aria: `${c.label} ${text}`, tip: tip(x0 + w, y, [c.label, text], width, height) });
-      model.labels.push({ x: plot.l - 6, y: y + bar / 2 + 5, text: c.short, value: false });
+      model.labels.push({ x: plot.l - 6, y: y + bar / 2 + 5, lines: [c.short], anchor: 'end', value: false });
     });
     return model;
   }
@@ -182,7 +186,7 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
         model.data.push({ id: `${uid}-${si}-${i}`, shape: 'circle', x: cx, y: cy, w: 0, h: 0, r: 5, color: s.color, pattern: false,
           aria: `${spec.categories[i].label} ${s.name} ${text}`,
           tip: tip(cx, cy - 5, [spec.categories[i].label, ...(spec.series.length > 1 ? [s.name] : []), text, ...(change ? [change] : [])], width, height) });
-        if (spec.labelLatest && i === n - 1) model.labels.push({ x: Math.min(cx, plot.r - textWidth(text) / 2), y: cy - 12, text, value: true });
+        if (spec.labelLatest && i === n - 1) model.labels.push({ x: Math.min(cx, plot.r - textWidth(text) / 2), y: cy - 12, lines: [text], anchor: 'middle', value: true });
       });
       model.polylines.push({ color: s.color, points: pts.join(' '), id: `${uid}-line-${si}` });
     });
@@ -212,10 +216,18 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
       model.data.push({ id: `${uid}-${si}-${i}`, shape: 'rect', x, y: yTop, w: barW, h, r: 0, color: s.color, pattern: !!s.pattern,
         aria: `${c.label} ${stacked ? `${s.name} ` : ''}${text}`, tip: tip(x + barW / 2, yTop, lines, width, height) });
     });
-    if (spec.labelLatest && i === n - 1) {
-      const text = formatNumber(stacked ? totals[i] : (spec.series[0].values[i] ?? 0), spec.decimals);
-      const top = yOf(Math.max(stacked ? totals[i] : (spec.series[0].values[i] ?? 0), 0));
-      model.labels.push({ x: Math.min(x + barW / 2, plot.r - textWidth(text) / 2), y: top - 6, text, value: true });
+    if (i === n - 1) {
+      if (stacked) {
+        // 積み上げ：セグメントの合計は出さない（連結売上高と合わないため）。最新の期の半導体関連の値と比率だけをラベルにする
+        if (spec.latestLabel) {
+          const top = yOf(Math.max(totals[i], 0));
+          model.labels.push({ x: plot.r, y: top - 6 - (spec.latestLabel.length - 1) * 20, lines: spec.latestLabel, anchor: 'end', value: true });
+        }
+      } else if (spec.labelLatest) {
+        const v = spec.series[0].values[i] ?? 0;
+        const text = formatNumber(v, spec.decimals);
+        model.labels.push({ x: Math.min(x + barW / 2, plot.r - textWidth(text) / 2), y: yOf(Math.max(v, 0)) - 6, lines: [text], anchor: 'middle', value: true });
+      }
     }
   });
   return model;
