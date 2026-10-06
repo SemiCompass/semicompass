@@ -1,0 +1,22 @@
+---
+// グラフと表の下の、出典の1行（8.10）：「出典：有価証券報告書（2026年3月期）、EDINET。2026年10月6日確認」
+interface Props {
+  title: string; // 資料の名前（例：有価証券報告書（2026年3月期））
+  publisher: string; // 発行元・配信元（例：EDINET）
+  accessedOn: string; // 確認日（YYYY-MM-DD）
+}
+const { title, publisher, accessedOn } = Astro.props;
+const [y, m, d] = accessedOn.split('-').map(Number);
+---
+
+<p class="source-line">出典：{title}、{publisher}。<time datetime={accessedOn}>{y}年{m}月{d}日</time>確認</p>
+
+<style>
+  .source-line {
+    margin-block: var(--space-2) var(--space-5);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+</style>

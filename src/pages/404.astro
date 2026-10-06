@@ -1,9 +1,14 @@
 ---
-import Base from '../layouts/Base.astro';
+import Page from '../layouts/Page.astro';
 ---
 
-<Base title="ページが見つかりません｜SemiCompass" description="指定されたページは見つかりませんでした。">
-  <h1>ページが見つかりません</h1>
-  <p>指定されたページは、存在しないか、移動した可能性がある。</p>
-  <p><a href="/">トップページへ戻る</a></p>
-</Base>
+<Page
+  title="ページが見つかりません｜SemiCompass"
+  heading="ページが見つかりません"
+  description="指定されたページは見つかりませんでした。"
+  wide
+  noindex
+>
+  <p class="measure">指定されたページは、存在しないか、移動した可能性がある。</p>
+  <p class="measure"><a href="/">トップページへ戻る</a></p>
+</Page>

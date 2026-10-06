@@ -1,0 +1,80 @@
+---
+// この会社のポイント（8.8）：一言での説明（text-lead）と、主要な数値のラベル・数値の組。数値の下に期と出典。企業ページに1つだけ置く
+interface Metric {
+  label: string;
+  value: string; // 表示する数値（単位を含む。例：8,325.5億円）
+}
+interface Props {
+  lead: string;
+  metrics: Metric[];
+  period: string; // 期（例：2026年3月期）
+  source: string; // 出典（例：有価証券報告書、EDINET）
+}
+const { lead, metrics, period, source } = Astro.props;
+---
+
+<section class="key-points" aria-labelledby="key-points-heading">
+  <h2 class="visually-hidden" id="key-points-heading">この会社のポイント</h2>
+  <p class="key-points__lead">{lead}</p>
+  <dl class="key-points__list">
+    {metrics.map((m) => (
+      <div class="key-points__metric">
+        <dt>{m.label}</dt>
+        <dd class="numeric">{m.value}</dd>
+      </div>
+    ))}
+  </dl>
+  <p class="key-points__source">{period}、出典：{source}</p>
+</section>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .key-points {
+    margin-block: var(--space-6);
+    padding: var(--space-5);
+    border-left: var(--border-width-accent) solid var(--color-primary);
+    background: var(--color-primary-tint);
+  }
+  .key-points__lead {
+    margin-block: 0 var(--space-4);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead-leading);
+    letter-spacing: var(--text-lead-tracking);
+  }
+  .key-points__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin: 0;
+  }
+  .key-points__metric {
+    min-width: 0;
+  }
+  .key-points__metric dt {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .key-points__metric dd {
+    margin: 0;
+    font-size: var(--text-h3);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-h3-leading);
+    letter-spacing: var(--text-h3-tracking);
+  }
+  .key-points__source {
+    margin: var(--space-4) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+
+  @media (--tablet) {
+    .key-points__list {
+      grid-template-columns: repeat(auto-fit, minmax(var(--key-point-min), 1fr));
+    }
+  }
+</style>

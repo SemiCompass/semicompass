@@ -1,0 +1,62 @@
+---
+// 注記・未反映の表示・誤り（8.9）。記号と言葉を必ず添える（色だけで伝えない）。
+//   note    注記：背景 surface、枠 border、左に border-strong の4pxの線
+//   warning 未反映・確認中・休止中：背景 warning-bg、左に accent の4pxの線、注意の記号
+//   error   誤り：背景 error-bg、文字 error、誤りの記号
+import Icon from './Icon.astro';
+
+interface Props {
+  kind?: 'note' | 'warning' | 'error';
+  title?: string; // 太字の1行目（任意）
+}
+const { kind = 'note', title } = Astro.props;
+const icon = kind === 'warning' ? 'warning' : kind === 'error' ? 'error' : 'note';
+const role = kind === 'error' ? 'alert' : undefined;
+---
+
+<div class:list={['notice', `notice--${kind}`]} role={role}>
+  <Icon name={icon} />
+  <div class="notice__body">
+    {title && <p class="notice__title">{title}</p>}
+    <slot />
+  </div>
+</div>
+
+<style>
+  .notice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-block: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-left: var(--border-width-accent) solid var(--color-border-strong);
+    border-radius: var(--radius-none);
+    background: var(--color-surface);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+    letter-spacing: var(--text-dense-tracking);
+  }
+  .notice :global(.icon) {
+    margin-block-start: var(--space-1);
+  }
+  .notice__body > :global(:last-child) {
+    margin-block-end: 0;
+  }
+  .notice__body :global(p) {
+    margin-block: 0 var(--space-2);
+  }
+  .notice__title {
+    font-weight: var(--font-weight-bold);
+  }
+  .notice--warning {
+    border-color: var(--color-border);
+    border-left-color: var(--color-accent);
+    background: var(--color-warning-bg);
+  }
+  .notice--error {
+    border-color: var(--color-error);
+    background: var(--color-error-bg);
+    color: var(--color-error);
+  }
+</style>

@@ -1,0 +1,21 @@
+---
+// AI作成の表示（8.9、UI-06）：記号＋「AIが下書きし、運営者が確認しました」。説明のページ（/editorial-policy/）へのリンク
+import Icon from './Icon.astro';
+---
+
+<span class="ai-badge">
+  <Icon name="ai" />
+  <span>AIが下書きし、運営者が確認しました（<a href="/editorial-policy/">編集方針</a>）</span>
+</span>
+
+<style>
+  .ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+</style>

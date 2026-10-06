@@ -1,54 +1,125 @@
 /*
- * デザインの設定（CSSの変数）を、このファイル1か所にまとめる（要件定義書3.5、4.10 UI-17、4.11 DS-01）。
- * 他のCSSは、値を直接書かず、ここの変数だけを使う（CLAUDE.md 9章）。
- * 値は暫定である。画面とデザインの仕様書で確定したら、このファイルだけを直す。
+ * デザインの設定（CSSの変数）を、このファイル1か所にまとめる（画面とデザインの仕様書 1.1、要件定義書 4.11 DS-01）。
+ * 他のCSSは、値を直接書かず、ここの変数だけを使う（CLAUDE.md 9章。stylelint が確かめる）。
+ * 値は、画面とデザインの仕様書（第1.0版）の4〜7章のとおり。変えるときは、仕様書の改訂と一緒に行う。
+ * 「仕様書に値がない」と書いた変数は、仕様書の値から導いた構造の寸法である。
  */
+@import "./breakpoints.css";
+
 :root {
-  /* 色：深い青緑を基本とし、琥珀色は要点と現在地にだけ使う（DS-01）。紫系は使わない（DS-09） */
+  /* ---- 4.1 基本の色（背景 #FBFAF6 に対するコントラスト比は、仕様書の表） ---- */
   --color-bg: #fbfaf6;
   --color-surface: #ffffff;
+  --color-surface-sunken: #f2f4f2;
   --color-text: #1b2a2c;
   --color-text-muted: #4a5b5e;
   --color-primary: #0b4f54;
-  --color-primary-contrast: #ffffff;
-  --color-accent: #b7791f;
+  --color-primary-hover: #083b3f;
+  --color-primary-tint: #e8f1f0;
+  --color-visited: #3d5f61;
+  --color-accent: #b7791f; /* 要点と現在地の印だけ。文字には使わない */
+  --color-accent-text: #8a5a12;
   --color-border: #c9d3d3;
+  --color-border-strong: #6b7c7e;
   --color-focus: #0b4f54;
+  --color-primary-contrast: #ffffff; /* 白い文字（主ボタン。コントラスト比9.3） */
 
-  /* 文字：Webフォントは使わず、端末の文字を使う（NF-01）。大きさは相対単位（UI-08） */
+  /* ---- 4.2 状態の色（状態の表示と注記だけ。記号と言葉を必ず添える） ---- */
+  --color-warning-bg: #fff4e0;
+  --color-error: #b42318;
+  --color-error-bg: #fdecea;
+  --color-success: #1e6b3a;
+
+  /* ---- 4.3 グラフの色（基本の色とは別） ---- */
+  --chart-single: #0b4f54;
+  --chart-highlight: #0b4f54;
+  --chart-other: #9aa7a8;
+  --chart-cat-1: #008c7a;
+  --chart-cat-2: #c2550a;
+  --chart-cat-3: #4a7bd0;
+  --chart-cat-4: #c2a000;
+  --chart-grid: #e3e8e8;
+  --chart-axis: #6b7c7e;
+
+  /* ---- 5.1 書体（Webフォントは使わない。斜体は使わない。太さは400と700だけ） ---- */
   --font-family-base: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
-  --font-size-base: 1rem;
-  --font-size-small: 0.875rem;
-  --font-size-h1: 1.75rem;
-  --font-size-h2: 1.375rem;
+  --font-family-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Noto Sans Mono", monospace;
   --font-weight-normal: 400;
   --font-weight-bold: 700;
-  --line-height-base: 1.8;
-  --line-height-heading: 1.4;
 
-  /* 余白 */
+  /* ---- 5.2 文字の段階（大きさ、行間、字間）。大見出しだけ、スマートフォンで小さい ---- */
+  --text-h1: 1.75rem;
+  --text-h1-leading: 1.4;
+  --text-h1-tracking: 0.01em;
+  --text-h2: 1.5rem;
+  --text-h2-leading: 1.5;
+  --text-h2-tracking: 0.01em;
+  --text-h3: 1.25rem;
+  --text-h3-leading: 1.5;
+  --text-h3-tracking: 0.02em;
+  --text-lead: 1.125rem;
+  --text-lead-leading: 1.8;
+  --text-lead-tracking: 0.02em;
+  --text-body: 1.0625rem;
+  --text-body-leading: 1.85;
+  --text-body-tracking: 0.02em;
+  --text-dense: 0.9375rem;
+  --text-dense-leading: 1.5;
+  --text-dense-tracking: 0;
+  --text-small: 0.875rem;
+  --text-small-leading: 1.6;
+  --text-small-tracking: 0.02em;
+  --leading-reset: 1; /* 記号など、行間を持たない要素（仕様書に値がない） */
+
+  /* ---- 6.1 余白の段階（4pxを基にした8段階） ---- */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
-  --space-3: 1rem;
-  --space-4: 1.5rem;
-  --space-5: 2.5rem;
-  --space-6: 4rem;
-  --page-gutter: var(--space-3);
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
 
-  /* 罫線（影の代わりに罫線と余白で構造を示す。DS-09） */
+  /* ---- 6.2 画面の幅、外枠、列（区切りの幅は breakpoints.css と同じにする） ---- */
+  --bp-tablet: 768px;
+  --bp-pc: 1024px;
+  --page-gutter: var(--space-4); /* スマートフォン。タブレット以上は --space-6 */
+  --layout-max-width: 68rem;
+  --content-max-width: 40rem;
+  --aside-width: 16rem;
+  --aside-gap: var(--space-7);
+
+  /* ---- 7 罫線と角 ---- */
   --border-width: 1px;
   --border-width-accent: 4px;
   --border-width-focus: 3px;
+  --border-width-current: 3px; /* 8.1 現在のメニューの項目の線 */
   --focus-offset: 2px;
+  --radius-control: 2px;
+  --radius-none: 0;
+  --icon-stroke: 1.5px; /* 図と記号の線の太さ */
 
-  /* 押せる範囲：一辺44px程度以上（DS-07）。16pxを基準とした相対値 */
-  --target-min: 2.75rem;
+  /* ---- 構造の寸法（仕様書に値がある：8.1、8.5、8.6、8.11、DS-07） ---- */
+  --header-height: 4rem;
+  --target-min: 2.75rem; /* 押せる範囲 一辺44px */
+  --control-height: 2.75rem; /* ボタン、検索の入力欄 */
+  --tag-height: 2rem;
+  --icon-size: 1.25rem; /* 図と記号の大きさ（仕様書に値がない） */
+  --link-underline-offset: 0.2em; /* 8.5 */
+  --motion-duration: 0.15s; /* 11 開閉の動き */
+  --icon-inline-offset: -0.125em; /* 文章の中の記号の縦の位置（仕様書に値がない） */
+  --menu-min-width: 12rem; /* 開いたメニューの最小の幅（仕様書に値がない） */
+  --search-width-min: 12rem; /* ヘッダーの検索欄の幅の範囲（仕様書に値がない） */
+  --search-width-max: 18rem;
+  --key-point-min: 10rem; /* この会社のポイントの数値1つの最小の幅（仕様書に値がない） */
+  --toc-sticky-top: var(--space-6);
+  --table-first-column-min: 8rem; /* 8.7 左に固定する最初の列（仕様書に値がない） */
+}
 
-  /*
-   * 画面の幅の区切り（3.5、UI-17。暫定）
-   * 本文の最大幅は、全角で約35〜45字に収まる値にする（1字を1emとして40em）
-   */
-  --bp-tablet: 768px;
-  --bp-pc: 1024px;
-  --content-max-width: 40em;
+@media (--tablet) {
+  :root {
+    --text-h1: 2rem;
+    --page-gutter: var(--space-6);
+  }
 }

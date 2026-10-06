@@ -1,0 +1,21 @@
+---
+// 本文の出典の番号（8.10）：上付きの小さな番号のリンク（[1] の形）。ページの下の出典の一覧（SourceList）の該当行へ移動する
+interface Props {
+  number: number;
+}
+const { number } = Astro.props;
+---
+
+<sup class="citation"><a href={`#source-${number}`} aria-label={`出典 ${number}`}>[{number}]</a></sup>
+
+<style>
+  .citation {
+    font-size: var(--text-small);
+    line-height: var(--leading-reset);
+  }
+  .citation a {
+    display: inline-block;
+    padding-inline: var(--space-1);
+    text-decoration: none;
+  }
+</style>

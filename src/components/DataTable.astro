@@ -1,0 +1,130 @@
+---
+// 表（8.7）：上下の罫線だけ（縦の罫線なし）。見出し行は surface-sunken、その下は border-strong の罫線。
+// 数値の列は右揃え・等幅の数字、文字の列は左揃え。列の見出しに単位を書く。表の下の出典は、SourceLine を続けて置く。
+// 幅が足りないときは、表を囲む枠の中だけで横にスクロールし、最初の列を左に固定する。並べ替えの列は、記号と aria-sort で状態を示す
+import Icon from './Icon.astro';
+
+interface Column {
+  key: string;
+  label: string; // 単位を含める（例：売上高（億円））
+  numeric?: boolean;
+  sort?: 'ascending' | 'descending' | 'none'; // 並べ替えができる列。今の状態
+}
+interface Props {
+  caption: string;
+  columns: Column[];
+  rows: Record<string, string>[];
+  emptyMessage?: string;
+}
+const { caption, columns, rows, emptyMessage = '該当するデータはありません' } = Astro.props;
+---
+
+<div class="table-scroll" role="region" aria-label={`${caption}（横にスクロールできます）`} tabindex="0">
+  <table class="data-table">
+    <caption class="visually-hidden">{caption}</caption>
+    <thead>
+      <tr>
+        {columns.map((c, i) => (
+          <th
+            scope="col"
+            class:list={[c.numeric ? 'is-numeric' : 'is-text', i === 0 ? 'is-first' : undefined]}
+            aria-sort={c.sort}
+          >
+            {c.label}
+            {c.sort && <Icon class="data-table__sort" name={c.sort === 'ascending' ? 'sort-up' : c.sort === 'descending' ? 'sort-down' : 'sort'} />}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.length === 0 && (
+        <tr><td colspan={columns.length} class="data-table__empty">{emptyMessage}</td></tr>
+      )}
+      {rows.map((row) => (
+        <tr>
+          {columns.map((c, i) => (
+            i === 0
+              ? <th scope="row" class="is-first is-text">{row[c.key]}</th>
+              : <td class={c.numeric ? 'is-numeric' : 'is-text'}>{row[c.key]}</td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+<p class="table-scroll-note" aria-hidden="true">横にスクロールできます</p>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .table-scroll {
+    overflow-x: auto;
+    border-right: var(--border-width) solid var(--color-border);
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: var(--border-width) solid var(--color-border-strong);
+    border-bottom: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+    letter-spacing: var(--text-dense-tracking);
+    font-variant-numeric: tabular-nums;
+  }
+  .data-table th,
+  .data-table td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+    font-feature-settings: normal;
+    white-space: nowrap;
+  }
+  .data-table thead th {
+    border-bottom: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface-sunken);
+    font-feature-settings: "palt";
+  }
+  .data-table .is-first {
+    position: sticky;
+    left: 0;
+    min-width: var(--table-first-column-min);
+    background: var(--color-surface);
+    text-align: left;
+  }
+  .data-table thead .is-first {
+    background: var(--color-surface-sunken);
+  }
+  .data-table .is-text {
+    text-align: left;
+  }
+  .data-table .is-numeric {
+    text-align: right;
+  }
+  .data-table tbody tr:hover > * {
+    background: var(--color-surface-sunken);
+  }
+  .data-table tbody th {
+    font-weight: var(--font-weight-normal);
+  }
+  .data-table :global(.data-table__sort) {
+    margin-inline-start: var(--space-1);
+    color: var(--color-text-muted);
+    vertical-align: var(--icon-inline-offset);
+  }
+  .data-table__empty {
+    color: var(--color-text-muted);
+    text-align: left;
+  }
+  .table-scroll-note {
+    margin-block: var(--space-2) 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  @media (--pc) {
+    .table-scroll-note {
+      display: none;
+    }
+  }
+</style>

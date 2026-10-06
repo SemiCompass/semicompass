@@ -10,12 +10,18 @@
     "build": "astro build",
     "build:preview": "BUILD_ENV=preview astro build",
     "build:production": "BUILD_ENV=production astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "lint:css": "stylelint \"src/**/*.{css,astro}\""
   },
   "dependencies": {
-    "astro": "7.3.5"
+    "astro": "7.3.5",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
+    "postcss": "8.5.29",
+    "postcss-custom-media": "12.0.3",
+    "postcss-html": "2.0.0",
+    "stylelint": "17.16.0",
     "wrangler": "4.147.0"
   }
 }

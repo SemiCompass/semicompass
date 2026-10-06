@@ -1,0 +1,39 @@
+---
+// タグ（8.11）：工程、分類、企業。リンクにし、色で種類を分けない（種類は前の文字「工程：」などで示す）
+interface Props {
+  href: string;
+  kind: string; // 種類の名前（例：工程、分類、企業）
+}
+const { href, kind } = Astro.props;
+---
+
+<a class="tag" href={href}><span class="tag__kind">{kind}：</span><span class="tag__name"><slot /></span></a>
+
+<style>
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tag-height);
+    padding-inline: var(--space-2);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+    letter-spacing: var(--text-dense-tracking);
+    text-decoration: none;
+  }
+  .tag__kind {
+    color: var(--color-text-muted);
+  }
+  .tag:hover,
+  .tag:active {
+    background: var(--color-surface-sunken);
+  }
+  /* タッチの画面では、押せる範囲を44px以上に広げる（8.11） */
+  @media (pointer: coarse) {
+    .tag {
+      min-height: var(--target-min);
+    }
+  }
+</style>

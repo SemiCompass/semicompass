@@ -1,0 +1,177 @@
+---
+// ヘッダー（8.1）。左にロゴとサイト名、右に主要メニュー（config/menu.yaml の順）と検索欄。
+// スマートフォン：主要メニューは「メニュー」で開閉し、検索欄は2段目に常に出す。ヘッダーは画面に張り付けない
+import { loadMenu, isCurrent } from '../lib/menu';
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import SearchBox from './SearchBox.astro';
+
+const { main } = loadMenu();
+const pathname = Astro.url.pathname;
+---
+
+<header class="site-header">
+  <div class="container site-header__bar">
+    <a class="site-header__brand" href="/">
+      <Logo />
+      <span class="site-header__name">SemiCompass</span>
+    </a>
+
+    <details class="site-header__fold">
+      <summary class="site-header__toggle">
+        <Icon name="chevron" />
+        <span>メニュー</span>
+      </summary>
+      <ul class="site-menu site-menu--fold" aria-label="主要メニュー">
+        {main.map((item) => (
+          <li>
+            <a href={item.path} aria-current={isCurrent(item.path, pathname) ? 'page' : undefined}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </details>
+
+    <nav class="site-header__nav" aria-label="主要メニュー">
+      <ul class="site-menu">
+        {main.map((item) => (
+          <li>
+            <a href={item.path} aria-current={isCurrent(item.path, pathname) ? 'page' : undefined}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="site-header__search">
+      <SearchBox />
+    </div>
+  </div>
+</header>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .site-header {
+    border-bottom: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .site-header__bar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "brand fold" "search search";
+    align-items: center;
+    column-gap: var(--space-4);
+    padding-block: 0 var(--space-3);
+  }
+  .site-header__brand {
+    grid-area: brand;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--header-height);
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+  .site-header__brand:visited {
+    color: var(--color-primary);
+  }
+  .site-header__name {
+    white-space: nowrap;
+    font-size: var(--text-h3);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--text-h3-tracking);
+  }
+  .site-header__fold {
+    grid-area: fold;
+    justify-self: end;
+    position: relative;
+  }
+  .site-header__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--target-min);
+    padding-inline: var(--space-3);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    font-feature-settings: "palt";
+    list-style: none;
+  }
+  .site-header__toggle::-webkit-details-marker {
+    display: none;
+  }
+  .site-header__fold[open] > .site-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1;
+    min-width: var(--menu-min-width);
+    margin-block-start: var(--space-1);
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
+  }
+  .site-header__nav {
+    display: none;
+    grid-area: nav;
+  }
+  .site-header__search {
+    grid-area: search;
+  }
+  .site-menu {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .site-menu a {
+    display: flex;
+    align-items: center;
+    min-height: var(--target-min);
+    padding-inline: var(--space-4);
+    border-bottom: var(--border-width-current) solid transparent;
+    color: var(--color-text);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    font-feature-settings: "palt";
+    text-decoration: none;
+  }
+  .site-menu a:visited {
+    color: var(--color-text);
+  }
+  .site-menu a:hover,
+  .site-menu a:active {
+    background: var(--color-surface-sunken);
+    color: var(--color-primary-hover);
+  }
+  .site-menu a[aria-current="page"] {
+    border-bottom-color: var(--color-accent);
+    background: var(--color-primary-tint);
+  }
+
+  @media (--tablet) {
+    .site-header__bar {
+      grid-template-columns: auto 1fr minmax(var(--search-width-min), var(--search-width-max));
+      grid-template-areas: "brand nav search";
+      padding-block: 0;
+    }
+    .site-header__fold {
+      display: none;
+    }
+    .site-header__nav {
+      display: block;
+      justify-self: end;
+    }
+    .site-menu {
+      flex-direction: row;
+    }
+    .site-menu a {
+      min-height: var(--header-height);
+      padding-inline: var(--space-4);
+    }
+  }
+</style>

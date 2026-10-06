@@ -13,6 +13,10 @@ export default defineConfig({
     // CSSをファイルとして出力し、CSP（public/_headers）で style-src の 'unsafe-inline' を使わないようにする
     inlineStylesheets: 'never',
   },
+  vite: {
+    // スクリプトを、ページに埋め込まず、ファイルとして出力する（CSPで 'unsafe-inline' を使わないため）
+    build: { assetsInlineLimit: 0 },
+  },
   env: {
     schema: {
       // 環境（アーキテクチャ設計書6.2）。値が違えばビルドを失敗させる。

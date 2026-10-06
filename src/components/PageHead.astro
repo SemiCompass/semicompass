@@ -1,0 +1,47 @@
+---
+// ページの頭（8.3）：大見出し（1ページに1つ）と、その下の、公開日・更新日・作成者の1行。AIが書いた本文のページは「AI作成」の表示（8.9）を置く
+import AiBadge from './AiBadge.astro';
+
+interface Props {
+  title: string;
+  publishedAt?: string; // YYYY-MM-DD
+  updatedAt?: string;
+  author?: string;
+  aiGenerated?: boolean;
+}
+const { title, publishedAt, updatedAt, author, aiGenerated = false } = Astro.props;
+
+// 表示は「2026年10月6日」の形（日付の計算はしない。入力の文字列を直すだけ）
+function label(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return `${y}年${m}月${d}日`;
+}
+---
+
+<header class="page-head">
+  <h1 class="page-head__title">{title}</h1>
+  {(publishedAt || updatedAt || author || aiGenerated) && (
+    <p class="page-head__meta">
+      {publishedAt && <span>公開日：<time datetime={publishedAt}>{label(publishedAt)}</time></span>}
+      {updatedAt && <span>更新日：<time datetime={updatedAt}>{label(updatedAt)}</time></span>}
+      {author && <span>作成者：{author}</span>}
+      {aiGenerated && <AiBadge />}
+    </p>
+  )}
+</header>
+
+<style>
+  .page-head {
+    margin-block-end: var(--space-6);
+  }
+  .page-head__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-3) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+</style>

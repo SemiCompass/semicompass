@@ -1,4 +1,8 @@
-@import './tokens.css';
+/*
+ * 全ページの共通のCSS（画面とデザインの仕様書 5.3 文字組みの規則、11章 状態と操作）。
+ * 値は、tokens.css の変数だけを使う。部品ごとの見た目は、各部品（src/components/）に置く。
+ */
+@import "./tokens.css";
 
 *,
 *::before,
@@ -6,82 +10,201 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-family-base);
-  font-size: var(--font-size-base);
+  font-size: var(--text-body);
   font-weight: var(--font-weight-normal);
-  line-height: var(--line-height-base);
-  overflow-wrap: anywhere;
+  line-height: var(--text-body-leading);
+  letter-spacing: var(--text-body-tracking);
+  overflow-wrap: anywhere; /* 5.3 長い語：枠からはみ出す場合だけ折り返す */
 }
 
 img,
 svg {
   max-width: 100%;
+}
+
+img {
   height: auto;
 }
 
+/* 5.3 強調は太字だけ。斜体は使わない */
+b,
+strong,
+th {
+  font-weight: var(--font-weight-bold);
+}
+
+em,
+i,
+cite,
+address {
+  font-style: normal;
+}
+
+/* 5.2 見出しと段落。見出しの上の余白は、下の余白の2倍以上 */
 h1,
-h2 {
-  line-height: var(--line-height-heading);
+h2,
+h3 {
+  margin-block: 0;
+  font-weight: var(--font-weight-bold);
+  /* 5.3 見出しの折り返し：文節の切れ目、行の長さをそろえる。約物を詰める */
+  word-break: auto-phrase;
+  text-wrap: balance;
+  font-feature-settings: "palt";
 }
 
 h1 {
-  font-size: var(--font-size-h1);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1-leading);
+  letter-spacing: var(--text-h1-tracking);
 }
 
 h2 {
-  font-size: var(--font-size-h2);
+  margin-block: var(--space-7) var(--space-4);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2-leading);
+  letter-spacing: var(--text-h2-tracking);
 }
 
+h3 {
+  margin-block: var(--space-6) var(--space-3);
+  font-size: var(--text-h3);
+  line-height: var(--text-h3-leading);
+  letter-spacing: var(--text-h3-tracking);
+}
+
+p,
+ul,
+ol,
+dl {
+  margin-block: 0 var(--space-5);
+}
+
+ul,
+ol {
+  padding-inline-start: var(--space-5);
+}
+
+hr {
+  margin-block: var(--space-6);
+  border: 0;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+/* 5.3 数字：桁がそろう数字。表の数値は右に揃える（表の部品で指定） */
+table,
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+code,
+kbd,
+samp {
+  padding-inline: var(--space-1);
+  background: var(--color-surface-sunken);
+  font-family: var(--font-family-mono);
+  font-size: var(--text-dense);
+}
+
+/* 8.5 本文のリンク：下線あり。訪問済みは別の色（紫は使わない）。重ねたとき、押したときは色を変える（動きは付けない） */
 a {
   color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: var(--link-underline-offset);
 }
 
+a:visited {
+  color: var(--color-visited);
+}
+
+a:hover,
+a:active {
+  color: var(--color-primary-hover);
+}
+
+/* 11 フォーカス：すべての操作できる要素に付ける */
 :focus-visible {
   outline: var(--border-width-focus) solid var(--color-focus);
   outline-offset: var(--focus-offset);
 }
 
-.site-header,
-.site-main,
-.site-footer {
-  max-width: var(--content-max-width);
+/* 11 使えない：文字は薄く、枠は破線。理由は、近くに書く */
+[aria-disabled="true"],
+:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* 11 選んでいる：背景と太字 */
+[aria-selected="true"],
+[aria-current="true"] {
+  background: var(--color-primary-tint);
+  font-weight: var(--font-weight-bold);
+}
+
+/* 11 開閉：記号を90度回す。動きは0.15秒以内。「視差効果を減らす」では動かさない */
+details > summary {
+  cursor: pointer;
+}
+
+details[open] > summary .icon-turn {
+  transform: rotate(90deg);
+}
+
+.icon-turn {
+  transition: transform var(--motion-duration);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-turn {
+    transition: none;
+  }
+}
+
+/* 読み上げ用の文字（見た目には出さない） */
+.visually-hidden {
+  position: absolute;
+  width: var(--border-width);
+  height: var(--border-width);
+  margin: calc(var(--border-width) * -1);
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* キーボードで、本文へ移動するリンク。選んだときだけ見える */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  transform: translateY(-100%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* 6.2 外枠：最大幅を持ち、中央に置く。左端は、ヘッダーのロゴ、本文、フッターでそろう */
+.container {
+  max-width: var(--layout-max-width);
   margin-inline: auto;
   padding-inline: var(--page-gutter);
 }
 
-.site-header {
-  padding-block: var(--space-3);
-  border-bottom: var(--border-width) solid var(--color-border);
-}
-
-.site-header__name {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--target-min);
-  color: var(--color-primary);
-  font-weight: var(--font-weight-bold);
-  text-decoration: none;
-}
-
-.site-main {
-  padding-block: var(--space-5);
-}
-
-.site-footer {
-  padding-block: var(--space-4);
-  border-top: var(--border-width) solid var(--color-border);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-small);
-}
-
-.notice {
-  margin-block: var(--space-4);
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--color-border);
-  border-left: var(--border-width-accent) solid var(--color-accent);
-  background: var(--color-surface);
+/* 本文の段落は、最大幅を超えない */
+.measure {
+  max-width: var(--content-max-width);
 }
