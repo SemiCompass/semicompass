@@ -1,0 +1,19 @@
+schema_version: 1
+company: disco
+reviewed_on: '2026-10-06'
+based_on: S100YC6I
+segments:
+- name: 単一セグメント
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 単一セグメントのため報告セグメントの記載は省略されている。事業の中心は半導体製造装置と精密加工ツールである。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: 株式会社ディスコ（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YC6I.pdf
+  published_on: '2026-06-16'
+  accessed_on: '2026-10-06'
+  doc_id: S100YC6I
