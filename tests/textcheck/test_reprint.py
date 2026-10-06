@@ -41,6 +41,22 @@ class ReprintTest(unittest.TestCase):
         self.assertTrue(failed)
         self.assertGreaterEqual(results[0].longest, 30)
 
+    def test_citation_numbers_inserted_mid_sentence_do_not_hide_a_match(self):
+        shared = kanji(40, 0x5000)
+        draft = kanji(20) + shared[:15] + "[S1]" + shared[15:] + kanji(20, 0x6000)
+        results, failed = self.check(kana(50) + shared + kana(50), draft)
+        self.assertEqual(results[0].longest, 40)
+        self.assertTrue(failed)
+        spread = kanji(20) + shared[:10] + "[S1]" + shared[10:20] + "[S12]" + shared[20:30] + "［Ｓ３］" + shared[30:] + kanji(20, 0x6000)
+        self.assertTrue(self.check(kana(50) + shared + kana(50), spread)[1])
+
+    def test_citation_numbers_in_the_source_are_ignored_too(self):
+        shared = kanji(40, 0x5000)
+        self.assertTrue(self.check(shared[:15] + "[S1]" + shared[15:], shared)[1])
+
+    def test_only_citation_pattern_is_removed(self):
+        self.assertEqual(reprint.normalize("あ[S1]い[S12]う[Sx]え[S]お"), "あいう[Sx]え[S]お")
+
     def test_match_does_not_cross_section_boundaries(self):
         shared = kanji(40, 0x5000)
         results = reprint.check_reprint([kana(50) + shared[:20], shared[20:] + kana(50)], {"overview": shared}, 30)

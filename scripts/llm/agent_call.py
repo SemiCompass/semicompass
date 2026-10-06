@@ -10,6 +10,7 @@
   6. 呼び出しごとに ledger の行（データ定義書 10.3）を作る。ops-log には書かない（呼び出し側が行う）
 
 * モデルと単価は config/budgets.yaml から読む（コードに書かない）
+* 構造化出力に渡すスキーマは、API が対応していない制約を取り除いた写し（api_schema）。検証は元のスキーマで行う
 * 認証は Workload Identity Federation。anthropic.Anthropic() を引数なしで作り、環境変数
   （ANTHROPIC_IDENTITY_TOKEN_FILE、ANTHROPIC_FEDERATION_RULE_ID など）はSDKが読む。APIキーは使わない
 * 資料（原資料束の本文）は、指示の区画と分けた「資料」の区画に入れる（アーキテクチャ設計書 8.4）
@@ -18,6 +19,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import math
 import re
@@ -195,6 +197,58 @@ def extract_json(text: str) -> object | None:
     return None
 
 
+# Claude API の構造化出力が対応していない制約。api_schema() が取り除き、説明（description）に書き足す
+_SCHEMA_MAPS = ("properties", "patternProperties", "$defs", "definitions", "dependentSchemas")
+_SCHEMA_VALUES = ("items", "additionalProperties", "contains", "not", "if", "then", "else", "propertyNames",
+                  "unevaluatedItems", "unevaluatedProperties")
+_SCHEMA_LISTS = ("allOf", "anyOf", "oneOf", "prefixItems")
+_NOTES = {
+    "minLength": lambda v: f"{v}字以上", "maxLength": lambda v: f"{v}字以内",
+    "minimum": lambda v: f"{v}以上", "maximum": lambda v: f"{v}以下",
+    "multipleOf": lambda v: f"{v}の倍数", "maxItems": lambda v: f"{v}件以内",
+}
+
+
+def _strip_node(node: dict) -> None:
+    notes = []
+    for key, note in _NOTES.items():
+        if key in node:
+            notes.append(note(node.pop(key)))
+    if node.get("uniqueItems") is not None:
+        if node.pop("uniqueItems"):
+            notes.append("重複なし")
+    if isinstance(node.get("minItems"), int) and node["minItems"] >= 2:  # 0と1は、対応している
+        notes.append(f"{node.pop('minItems')}件以上")
+    if notes:
+        text = "（" + "、".join(notes) + "）"
+        node["description"] = f"{node['description']}{text}" if isinstance(node.get("description"), str) else text
+    for key in _SCHEMA_MAPS:
+        if isinstance(node.get(key), dict):
+            for child in node[key].values():
+                if isinstance(child, dict):
+                    _strip_node(child)
+    for key in _SCHEMA_VALUES:
+        if isinstance(node.get(key), dict):
+            _strip_node(node[key])
+    for key in _SCHEMA_LISTS:
+        if isinstance(node.get(key), list):
+            for child in node[key]:
+                if isinstance(child, dict):
+                    _strip_node(child)
+
+
+def api_schema(schema: dict) -> dict:
+    """構造化出力（output_config.format）に渡す、API が対応していない制約を取り除いた写しを返す。
+
+    取り除く制約：minLength、maxLength、minimum、maximum、multipleOf、uniqueItems、minItems（2以上）、maxItems。
+    取り除いた制約は、その項目の description に「（○字以内）」などの形で書き足す。元のスキーマは変えない
+    （出力の検証は、元のスキーマで行う）。
+    """
+    copied = copy.deepcopy(schema)
+    _strip_node(copied)
+    return copied
+
+
 def schema_problems(schema: dict, output: object) -> list[str]:
     """形式の不合格を、場所と規則の名前だけで返す（メッセージには、出力の文字が入りうるため、使わない）。"""
     validator = Draft202012Validator(schema)
@@ -254,6 +308,7 @@ def call_agent(
         return result
 
     prompt, schema = load_agent(agent, agents_dir)
+    structured_schema = api_schema(schema)
     system = prompt
     task_block = {"type": "text", "text": task}
     materials_block = {"type": "text", "cache_control": {"type": "ephemeral"},
@@ -284,7 +339,7 @@ def call_agent(
             kwargs = dict(model=model, max_tokens=max_tokens, system=system, timeout=TIMEOUT_SECONDS,
                           messages=[{"role": "user", "content": content}])
             if use_structured:
-                kwargs["output_config"] = {"format": {"type": "json_schema", "schema": schema}}
+                kwargs["output_config"] = {"format": {"type": "json_schema", "schema": structured_schema}}
             try:
                 response = client.messages.create(**kwargs)
                 break

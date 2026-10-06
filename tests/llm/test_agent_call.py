@@ -232,6 +232,65 @@ class CallTest(Base):
         self.assertIn("資料の中に", prompt)
         self.assertEqual(set(schema["required"]), {"overview", "process_position", "segments"})
 
+    REMOVED = ("minLength", "maxLength", "minimum", "maximum", "multipleOf", "uniqueItems", "maxItems")
+
+    def keywords(self, node):
+        """スキーマの中の、制約の語の一覧（properties の項目名は、制約の語として数えない）。"""
+        found = []
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in ("properties", "$defs"):
+                    for child in value.values():
+                        found += self.keywords(child)
+                else:
+                    found.append(key)
+                    found += self.keywords(value)
+        elif isinstance(node, list):
+            for child in node:
+                found += self.keywords(child)
+        return found
+
+    def test_api_schema_has_no_unsupported_constraints_and_notes_them(self):
+        _, schema = ac.load_agent("AG-14")
+        original = json.dumps(schema, sort_keys=True)
+        sent = ac.api_schema(schema)
+        found = self.keywords(sent)
+        for key in self.REMOVED:
+            self.assertNotIn(key, found)
+        props = sent["properties"]
+        self.assertIn("（200字以上、700字以内）", props["overview"]["description"])
+        self.assertIn("（50字以上、400字以内）", props["process_position"]["description"])
+        self.assertTrue(props["overview"]["description"].startswith("「## 事業概要」"))  # 元の説明は残る
+        self.assertIn("20件以内", props["segments"]["description"])
+        member = props["segments"]["items"]["properties"]["xbrl_members"]
+        self.assertIn("重複なし", member["description"])
+        self.assertEqual(props["segments"]["minItems"], 1)  # 1は、対応している
+        self.assertIn("pattern", member["items"])
+        self.assertEqual(json.dumps(schema, sort_keys=True), original)  # 元のスキーマは変わらない
+
+    def test_api_schema_removes_min_items_of_two_or_more_only(self):
+        sent = ac.api_schema({"type": "array", "minItems": 2, "items": {"type": "number", "minimum": 1, "maximum": 9, "multipleOf": 2}})
+        self.assertNotIn("minItems", sent)
+        self.assertEqual(sent["description"], "（2件以上）")
+        self.assertEqual(sent["items"]["description"], "（1以上、9以下、2の倍数）")
+        self.assertEqual(ac.api_schema({"type": "array", "minItems": 1})["minItems"], 1)
+        self.assertEqual(ac.api_schema({"type": "array", "minItems": 0})["minItems"], 0)
+
+    def test_property_named_like_a_constraint_is_kept(self):
+        sent = ac.api_schema({"type": "object", "properties": {"maxLength": {"type": "string", "maxLength": 5}}})
+        self.assertIn("maxLength", sent["properties"])
+        self.assertNotIn("maxLength", sent["properties"]["maxLength"])
+
+    def test_request_gets_the_stripped_copy_and_validation_uses_the_original(self):
+        client = fk.FakeClient(fk.reply({**fk.valid_output(), "overview": "短い"}), fk.reply(fk.valid_output()))
+        result = self.call(client)
+        sent = client.calls[0]["output_config"]["format"]["schema"]
+        for key in self.REMOVED:
+            self.assertNotIn(key, self.keywords(sent))
+        # 「短い」は、元のスキーマの minLength（200字）に合わない。API に渡した写しでは検出できないが、元のスキーマで不合格になる
+        self.assertEqual([r["status"] for r in result.rows], ["invalid_output", "ok"])
+        self.assertIn("overview", client.calls[1]["messages"][0]["content"][-1]["text"])
+
     def test_extract_json(self):
         self.assertEqual(ac.extract_json('{"a": 1}'), {"a": 1})
         self.assertEqual(ac.extract_json('前置き {"a": 1} 後'), {"a": 1})

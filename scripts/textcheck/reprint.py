@@ -1,7 +1,7 @@
 """転載の検査（CLAUDE.md 2章の4）。
 
 下書きの文字列と、原資料束の各節の本文を比べ、空白を除いて、min_run_chars（config/textcheck.yaml。既定は30）字以上、
-連続して同じ箇所があれば不合格にする。比べる前に、NFKCで正規化し、空白（全角を含む）を除く。
+連続して同じ箇所があれば不合格にする。比べる前に、NFKCで正規化し、出典の番号（[S1] など）と空白（全角を含む）を除く。
 
 結果には、一致した長さと、場所の種類（下書きのどの項目か）だけを持たせる。**文章は、結果にも例外にも入れない**。
 """
@@ -36,8 +36,13 @@ def load_min_run(path: Path = CONFIG_PATH) -> int:
     return value
 
 
+_CITATION = re.compile(r"\[S[0-9]+\]")
+
+
 def normalize(text: str) -> str:
-    return re.sub(r"\s+", "", unicodedata.normalize("NFKC", text)).replace(_SEPARATOR, "")
+    """NFKCで正規化し、出典の番号（[S1] など）と空白（全角を含む）を除く。出典の番号を挟んで、一致を逃れられないようにする。"""
+    text = _CITATION.sub("", unicodedata.normalize("NFKC", text))
+    return re.sub(r"\s+", "", text).replace(_SEPARATOR, "")
 
 
 class _Automaton:
