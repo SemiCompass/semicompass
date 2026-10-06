@@ -4,3 +4,5 @@ PyYAML==6.0.1
 jsonschema==4.26.0
 # 原資料束（scripts/bundle/make_bundle.py）のR2（S3互換API）への保存。依存（botocore、s3transfer など）は固定していない
 boto3==1.43.108
+# AIの呼び出し層（scripts/llm/）。ID連携（Workload Identity Federation）に対応した版。依存（httpx2 など）は固定していない
+anthropic==1.11.0
