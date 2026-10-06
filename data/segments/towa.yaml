@@ -1,0 +1,37 @@
+schema_version: 1
+company: towa
+reviewed_on: '2026-10-06'
+based_on: S100YERT
+segments:
+- name: 半導体製造装置事業
+  xbrl_members:
+  - SemiconductorEquipmentReportableSegmentsMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 精密金型と、モールディング・シンギュレーションの各装置を扱い、半導体の製造に直結する事業である。
+- name: メディカルデバイス事業
+  xbrl_members:
+  - MedicalDeviceReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 医療機器等の製造販売であり、半導体に関わる記載がない。
+- name: レーザ加工装置事業
+  xbrl_members:
+  - LaserProcessingMachinesMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: レーザ加工装置の製造販売であり、半導体向けと判断できる記載がないため対象外とした。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: TOWA株式会社（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YERT.pdf
+  published_on: '2026-06-19'
+  accessed_on: '2026-10-06'
+  doc_id: S100YERT
