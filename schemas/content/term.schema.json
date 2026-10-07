@@ -147,9 +147,7 @@
         "required": [
           "id",
           "title",
-          "publisher",
-          "url",
-          "accessed_on"
+          "publisher"
         ],
         "properties": {
           "id": {
@@ -185,9 +183,104 @@
           "pages": {
             "type": "string",
             "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "web",
+              "government",
+              "association",
+              "book"
+            ],
+            "description": "出典の種類。book は書籍（url と accessed_on は不要。author と pages が必要）。省略したときは、url と accessed_on が必要。"
+          },
+          "author": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "isbn": {
+            "type": "string",
+            "pattern": "^(97[89])?[0-9]{9}[0-9Xx]$|^97[89]-?[0-9-]{10,14}$"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "book"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "author",
+                "pages"
+              ]
+            },
+            "else": {
+              "required": [
+                "url",
+                "accessed_on"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "basis": {
+      "type": "string",
+      "enum": [
+        "sources",
+        "textbook"
+      ],
+      "description": "解説の根拠。sources：公的機関などの公開資料から書く（既定）。textbook：公的な出典がない用語で、AIが一般的な技術の説明を書き、運営者が書籍と見比べて確かめた。textbook のときは、reviewed_on が必要で、sources はすべて書籍（kind: book）にする。"
+    },
+    "reviewed_on": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date",
+      "description": "運営者が書籍と見比べて確かめた日（basis: textbook のとき必須）。"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "basis": {
+            "const": "textbook"
+          }
+        },
+        "required": [
+          "basis"
+        ]
+      },
+      "then": {
+        "required": [
+          "reviewed_on"
+        ],
+        "properties": {
+          "sources": {
+            "items": {
+              "properties": {
+                "kind": {
+                  "const": "book"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
           }
         }
       }
     }
-  }
+  ]
 }
