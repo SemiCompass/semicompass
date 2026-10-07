@@ -583,6 +583,8 @@ def main(argv: list[str] | None = None, *, env=None, transport=urllib_transport,
                 creds = make_bundle.read_r2_env(env)
             except make_bundle.BundleError as error:
                 raise ExplainerError(str(error), error.exit_code) from None
+        if entry.get("basis") == "reviewed":
+            raise ExplainerError("basis: reviewed（運営者が確かめる方式）の対象は、公開資料の原資料束を使わない。取得しない", EXIT_USAGE)
         sources = approved_sources(entry)
         if not sources:
             raise ExplainerError("承認済み（approved）の資料がない", EXIT_USAGE)

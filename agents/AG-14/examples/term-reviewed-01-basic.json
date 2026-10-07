@@ -1,0 +1,26 @@
+{
+  "description": "用語（運営者が確かめる方式）の指示文（prompt.term-reviewed.md）を変えたときの確認に使う見本。資料の区画はない。期待する出力は、本文ではなく、満たすべき条件で書く",
+  "input": {
+    "task": {
+      "kind": "term",
+      "name": "架空研磨",
+      "basis": "reviewed",
+      "selectable_processes": [{"slug": "deposition", "name": "成膜"}, {"slug": "cmp", "name": "CMP"}],
+      "selectable_terms": [{"slug": "fictional-slurry", "term": "架空スラリー"}]
+    },
+    "materials": null
+  },
+  "expect": {
+    "schema_valid": true,
+    "no_citation_markers": true,
+    "no_digits_in_body": true,
+    "no_company_names_in_body": true,
+    "no_superlatives": true,
+    "processes_subset_of_input": true,
+    "related_terms_subset_of_input": true,
+    "check_points_count": [1, 10],
+    "check_points_high_risk_first": true,
+    "check_points_match_body_claims": true,
+    "no_prohibited_words": true
+  }
+}

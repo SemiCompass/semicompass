@@ -11,6 +11,9 @@
 * --ledger-dir：今月の利用額を数えるための、既存の ledger（ops/ledger など）。ここには書かない
 * --dry-run：原資料束を読み、AIへの入力の大きさ（資料の数、段落の数、文字数）だけを出す。AIを呼ばず、何も書かない
 * content/glossary/{slug}.md か content/processes/{slug}.md が、もうリポジトリにあるときは、上書きせずに止まる
+* 対象が config/explainer-sources.yaml で basis: reviewed（運営者が確かめる方式。CLAUDE.md 6.4 の例外）のときは、引数を増やさず、設定から判定する。
+  R2 の原資料束を読まず、AG-14 の term-reviewed／process-reviewed を呼ぶ。転載の検査はしない。ファイルは basis: reviewed、draft: true、
+  ai_generated: true、sources: []（reviewed_on と review_methods は書かない）。確かめる観点（check_points）は pr-body.md に表で書く
 * 原資料束の本文と、AIの出力の生の文字列を、画面、要約、例外のメッセージに出さない（リポジトリ、Actionsのログは公開）。AIの note は、ファイルに入れず、pr-body.md に書く
 
 終了コード: 0 下書きを作った（--dry-run の成功を含む）/ 3 休止中か予算の上限で呼ばなかった / 2 使い方の誤り / 1 それ以外の失敗
@@ -207,6 +210,20 @@ def cited_sources_front(body: str, sources: list[dict], fetched_on: str) -> list
     return [source_front(s, fetched_on) for s in sources if s["id"] in cited]
 
 
+def load_company_names(root: Path) -> set[str]:
+    """data/companies/ の企業名（basis: reviewed の本文に企業名がないかの検査に使う）。"""
+    companies = {}
+    directory = root / "data" / "companies"
+    for path in sorted(directory.glob("*.yaml")) if directory.is_dir() else []:
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError):
+            continue
+        if isinstance(data, dict):
+            companies[path.name] = data
+    return validate_data.company_names(companies)
+
+
 def validate_file(kind: str, slug: str, front: dict, body: str, root: Path, schema_root: Path,
                   supply: dict, config: dict) -> tuple[list[str], list[validate_data.Problem]]:
     """生成するファイルを、スキーマと validate_data.py の検査にかける。用語の重複（V-16）は、既にある用語集と突き合わせる。"""
@@ -223,9 +240,9 @@ def validate_file(kind: str, slug: str, front: dict, body: str, root: Path, sche
         if isinstance(data, dict):
             existing[path.relative_to(root).as_posix()] = (data, text)
     if kind == "term":
-        problems += validate_data.check_terms({**existing, rel: (front, body)}, supply, config)
+        problems += validate_data.check_terms({**existing, rel: (front, body)}, supply, config, load_company_names(root))
     else:
-        problems += validate_data.check_process_pages({rel: (front, body)}, supply, config, existing)
+        problems += validate_data.check_process_pages({rel: (front, body)}, supply, config, existing, load_company_names(root))
     problems = [p for p in problems if p.file == rel]
     errors = [f"{p.file}: {p.path or '(全体)'}: [{p.rule}]" for p in problems if p.severity == "error"]
     return errors, [p for p in problems if p.severity == "warning"]
@@ -297,6 +314,139 @@ def pr_body(kind: str, slug: str, name: str, bundle: dict, sources: list[dict], 
 """
 
 
+# ---- 運営者が確かめる方式（basis: reviewed） --------------------------------------------------
+
+REVIEW_STEPS = """1. 下の「確かめる観点」を、risk が high のものから、書籍・論文・Webサイトなどで確かめる（運営者の知識だけで確かめてもよい）
+2. 本文に誤りや言い過ぎがあれば、直す。迷う内容は、消す
+3. 確かめに使った資料を `sources` に書く（AIは出典を作らない）。書籍は `kind: book`、`author`、`pages`、論文は `kind: paper`、`author` が必要
+4. 確かめた方法を `review_methods`（`book`、`paper`、`web`、`operator_knowledge`）に書く。運営者の知識だけのときは `operator_knowledge` だけにして、`sources` は空のままでよい
+5. `reviewed_on` に、確かめた日を書く
+6. `draft: true` を外す（公開する時期は運営者が決める）。`published_at` も、確認した日に直す"""
+
+
+def reviewed_text_fields(kind: str, output: dict) -> dict[str, str]:
+    names = ("body", "short_definition", "description") if kind == "term" else ("body", "title", "description")
+    fields = {name: output[name] for name in names}
+    if output.get("note"):
+        fields["note"] = output["note"]
+    return fields
+
+
+def check_reviewed_output(kind: str, slug: str, output: dict, supply: dict, config: dict) -> list[str]:
+    """出力の検査（本文を含まない理由の一覧）。出典の番号は付けない。参照は、渡した一覧から選ぶ。"""
+    errors = [f"{name} に、出典の番号がある（この方式では付けない）" for name, text in reviewed_text_fields(kind, output).items()
+              if CITATION.search(text)]
+    if kind == "term":
+        if [p for p in output["processes"] if p not in {x["slug"] for x in mvp_processes(supply)}]:
+            errors.append("processes に、渡した一覧にない slug がある")
+        related = output.get("related_terms") or []
+        if [r for r in related if r not in config["terms"]] or slug in related:
+            errors.append("related_terms に、渡した一覧にない slug（か自分自身）がある")
+    elif [t for t in output["terms"] if t not in config["terms"]]:
+        errors.append("terms に、渡した一覧にない slug がある")
+    if not output["check_points"]:
+        errors.append("check_points がない")
+    return errors
+
+
+def build_reviewed_front(kind: str, slug: str, name: str, today: str, output: dict) -> dict:
+    """front matter。basis: reviewed、draft: true、ai_generated: true、sources: []。reviewed_on と review_methods は、運営者が書く。"""
+    front = build_front(kind, slug, name, today, output, [])
+    items = list(front.items())
+    index = next(i for i, (k, _) in enumerate(items) if k == "published_at")
+    items.insert(index, ("basis", "reviewed"))
+    return dict(items)
+
+
+def sorted_check_points(points: list[dict]) -> list[dict]:
+    return sorted(points, key=lambda p: 0 if p["risk"] == "high" else 1)  # 安定な並べ替え（high を先に。同じ risk は、出力の順）
+
+
+def pr_body_reviewed(kind: str, slug: str, name: str, output: dict, body_chars: int, warnings: list, cost_jpy: float,
+                     run_id: str) -> str:
+    path = f"content/{'glossary' if kind == 'term' else 'processes'}/{slug}.md"
+    rows = "\n".join(f"| {i} | {'**high**' if p['risk'] == 'high' else 'low'} | {p['claim'].replace('|', '／')} |"
+                     for i, p in enumerate(sorted_check_points(output["check_points"]), start=1))
+    warning_lines = "\n".join(f"* [{w.rule}] {w.file}: {w.path or '(全体)'}: {w.message}" for w in warnings) or "* なし"
+    note = f"\n## AG-14 からの連絡（note）\n{output['note']}\n" if output.get("note") else ""
+    return f"""## 変更の種類
+コンテンツの追加（AG-14 の下書き。運営者が確かめる方式）：`{path}`（{'用語' if kind == 'term' else '工程'}「{name}」）
+
+## 概要
+{name} の解説（`basis: reviewed`、`draft: true`）を、AG-14 が一般的な説明として下書きした。**公開資料の原資料束は使っていない**（CLAUDE.md 6.4 の例外。`config/explainer-sources.yaml` で `basis: reviewed` と指定されたもの）。
+本文に出典の番号はなく、`sources` は空である。運営者が確かめるまで、公開されない。実行番号：{run_id}
+
+## 原資料束
+使わない（運営者が確かめる方式）。出典は、運営者が確かめに使った資料を、運営者が `sources` に書く。AI は、出典を作らない。
+
+## 確かめる観点（check_points）
+risk が high（誤りやすい、または言い方が分かれる）を先に並べている。サイトには出さない。
+
+| 番号 | risk | 本文の主張 |
+| ---: | :--- | :--- |
+{rows}
+
+## 検査の結果
+* 本文の文字数：{body_chars}字（用語の目安 {validate_data.TERM_LENGTH[0]}〜{validate_data.TERM_LENGTH[1]}字。工程には目安がない）
+* 転載の検査：しない（原資料束がないため）
+* 出典の番号：なし／スキーマと validate_data.py：エラーなし
+* 警告：
+{warning_lines}
+* AIの利用額：{cost_jpy:.2f}円
+{note}
+## 運営者の確認項目（確かめて、公開するまでの手順）
+{REVIEW_STEPS}
+
+外部送信の追加：なし／訂正の表示：不要（新規）
+"""
+
+
+def run_reviewed(args, *, now, client_factory, sleep, root: Path, budgets_path, operations_path, agents_dir, name: str,
+                 config: dict, supply: dict, today: str, summary: list[str]) -> int:
+    kind, slug = args.kind, args.slug
+    summary += [f"## 下書き {kind}-{slug}（basis: reviewed。原資料束は使わない）", ""]
+    if args.dry_run:
+        print(f"dry-run: {kind}-{slug}：basis: reviewed（原資料束は使わない）。AIは呼ばない")
+        return EXIT_OK
+    task_input = {"kind": kind, "name": name, "basis": "reviewed", "selectable_terms": selectable_terms(config, slug if kind == "term" else None)}
+    if kind == "term":
+        task_input["selectable_processes"] = mvp_processes(supply)
+    task = "## 入力（プログラムが渡す値）\n" + json.dumps(task_input, ensure_ascii=False, indent=1)
+    all_rows: list[dict] = []
+    get_client = dc.shared_client_factory(client_factory)
+
+    def cost_of(rows: list[dict]) -> float:
+        return round(sum(r["cost_jpy"] for r in rows), 4)
+
+    result = agent_call.call_agent(AGENT, task, "", run_id=args.run_id, subject=f"{kind}-{slug}", ledger_dir=args.ledger_dir, now=now,
+                                   sleep=sleep, client_factory=get_client, budgets_path=budgets_path,
+                                   operations_path=operations_path, agents_dir=agents_dir, variant=f"{kind}-reviewed")
+    all_rows.extend(result.rows)
+    dc.write_ledger(args.out_dir, all_rows)
+    summary.append(f"* AIの利用額: {cost_of(all_rows):.2f}円（呼び出し {len(all_rows)}回、状態: {result.status}）")
+    if result.status in (agent_call.STATUS_SKIP_PAUSED, agent_call.STATUS_SKIP_BUDGET):
+        summary.append(f"* {result.reason}")
+        print(result.reason, file=sys.stderr)
+        return EXIT_SKIPPED
+    if result.status != agent_call.STATUS_OK:
+        raise DraftError(result.reason)
+    output = result.output
+    front = build_reviewed_front(kind, slug, name, today, output)
+    errors = check_reviewed_output(kind, slug, output, supply, config)
+    file_errors, warnings = validate_file(kind, slug, front, output["body"], root, REPO_ROOT, supply, config)
+    errors += file_errors
+    summary.append("* 転載の検査: しない（原資料束がない）")
+    if errors:
+        summary += ["* 検査に不合格（ファイルは書かない）："] + [f"  * {e}" for e in errors]
+        raise DraftError("検査に不合格のため、ファイルを書かない: " + " / ".join(errors))
+    body_chars = validate_data.count_characters(output["body"].split("\n"))
+    summary += [f"* 本文: {body_chars}字", f"* 警告: {len(warnings)}件", f"* check_points: {len(output['check_points'])}件"]
+    dc.write_text(args.out_dir.joinpath(*OUT_DIRS[kind], f"{slug}.md"), render(front, output["body"]))
+    dc.write_text(args.out_dir / "pr-body.md", pr_body_reviewed(kind, slug, name, output, body_chars, warnings, cost_of(all_rows), args.run_id))
+    print(f"下書きを作った: {kind}-{slug}（basis: reviewed、本文 {body_chars}字、警告 {len(warnings)}件、利用額 {cost_of(all_rows):.2f}円）")
+    return EXIT_OK
+
+
 # ---- 本体 ---------------------------------------------------------------------------------
 
 def run(args, env, *, now, r2_factory, client_factory, sleep, root: Path, budgets_path, operations_path, agents_dir,
@@ -315,6 +465,10 @@ def run(args, env, *, now, r2_factory, client_factory, sleep, root: Path, budget
         raise DraftError(str(error), error.exit_code) from None
     supply = dc.load_yaml(supply_path, "data/supply-chain.yaml") or {}
     name = meb.entry_name(kind, entry)
+    if entry.get("basis") == "reviewed":
+        return run_reviewed(args, now=now, client_factory=client_factory, sleep=sleep, root=root, budgets_path=budgets_path,
+                            operations_path=operations_path, agents_dir=agents_dir, name=name, config=config, supply=supply,
+                            today=today, summary=summary)
     try:
         creds = make_bundle.read_r2_env(env)
     except make_bundle.BundleError as error:

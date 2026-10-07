@@ -149,7 +149,7 @@ class TermCheckTest(unittest.TestCase):
         config = copy.deepcopy(CONFIG)
         url = config["terms"]["coater-developer"]["sources"][0]["url"]  # この用語の出典は、補助だけ
         data = fm(term="コータ・デベロッパ", sources=[{"id": "S1", "title": "t", "publisher": "p", "url": url, "accessed_on": "2026-10-07"}])
-        problems = self.run_check({"coater-developer": (data, body())}, config)
+        problems = [p for p in self.run_check({"coater-developer": (data, body())}, config) if p.rule == "V-08"]
         self.assertEqual([(p.rule, p.severity) for p in problems], [("V-08", "warning")])
         self.assertIn("補助", problems[0].message)
         primary = fm(term="EDA(設計ツール)", sources=[{"id": "S1", "title": "t", "publisher": "p",
@@ -259,3 +259,158 @@ class WholeRepositoryTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReviewedConfigTest(unittest.TestCase):
+    def check(self, mutate):
+        config = copy.deepcopy(CONFIG)
+        mutate(config)
+        return vd.check_explainer_sources(config, SUPPLY)
+
+    def test_the_designated_targets_have_basis_reviewed(self):
+        terms = sorted(k for k, v in CONFIG["terms"].items() if v.get("basis") == "reviewed")
+        self.assertEqual(terms, sorted(["ald", "coater-developer", "hbm", "osat", "mold-compound", "power-semiconductor", "process-node"]))
+        self.assertEqual([k for k, v in CONFIG["processes"].items() if v.get("basis") == "reviewed"], ["etching"])
+
+    def test_reviewed_with_empty_or_missing_sources_is_not_a_warning(self):
+        problems = self.check(lambda c: c["terms"]["ald"].__setitem__("sources", []))
+        self.assertEqual([p for p in problems if p.path.startswith("/terms/ald")], [])
+        problems = self.check(lambda c: c["terms"]["ald"].pop("sources", None))
+        self.assertEqual([p for p in problems if p.path.startswith("/terms/ald")], [])
+        problems = self.check(lambda c: c["processes"]["etching"].__setitem__("sources", []))
+        self.assertEqual([p for p in problems if p.path.startswith("/processes/etching")], [])
+
+    def test_reviewed_may_keep_sources_and_they_are_still_checked(self):
+        def add(c):
+            c["terms"]["ald"]["sources"] = [fk.source("https://a.example.org/x"), {**fk.source("ftp://bad"), "status": "weird"}]
+        problems = self.check(add)
+        self.assertEqual({p.path for p in problems if p.severity == "error" and p.path.startswith("/terms/ald")},
+                         {"/terms/ald/sources/1/status", "/terms/ald/sources/1/url"})
+
+    def test_basis_value_must_be_reviewed(self):
+        for value in ("sources", "other", True):
+            problems = self.check(lambda c: c["terms"]["ald"].__setitem__("basis", value))
+            self.assertIn("/terms/ald/basis", [p.path for p in problems if p.severity == "error"], value)
+
+    def test_without_basis_an_empty_sources_is_still_a_warning(self):
+        def drop(c):
+            del c["terms"]["ald"]["basis"]
+        problems = self.check(drop)
+        self.assertEqual([(p.path, p.severity) for p in problems if p.path.startswith("/terms/ald")], [("/terms/ald/sources", "warning")])
+
+    def test_the_repository_config_has_only_the_http_warning_left(self):
+        warnings = [(p.path, p.severity) for p in vd.check_explainer_sources(CONFIG, SUPPLY) if p.severity == "warning"]
+        self.assertEqual([w for w in warnings if "sources" in w[0] and w[0].endswith("/sources")], [])
+
+
+class ReviewedFileTest(unittest.TestCase):
+    NAMES = {"東京エレクトロン", "SUMCO"}
+    REVIEWED_CFG = copy.deepcopy(CONFIG)
+
+    def term(self, **kw):
+        data = fm(term="ALD", basis="reviewed", sources=[], **kw)
+        return data
+
+    def run_check(self, data, text, config=None, slug="ald", names=None):
+        return vd.check_terms({f"content/glossary/{slug}.md": (data, text)}, SUPPLY, config or self.REVIEWED_CFG,
+                              self.NAMES if names is None else names)
+
+    def test_a_clean_draft_has_no_problems(self):
+        self.assertEqual(self.run_check(self.term(), "あ" * 300 + "。\n"), [])
+
+    def test_unpublished_needs_no_review_fields_but_published_does(self):
+        self.assertEqual(self.run_check(self.term(draft=True), body(300, cite="")), [])
+        data = self.term()
+        data["draft"] = False
+        problems = [p for p in self.run_check(data, body(300, cite="")) if p.severity == "error"]
+        self.assertEqual(sorted(p.path for p in problems), ["/review_methods", "/reviewed_on"])
+        data.pop("draft")  # draft の省略も、公開として扱う
+        self.assertEqual(sorted(p.path for p in self.run_check(data, body(300, cite="")) if p.severity == "error"), ["/review_methods", "/reviewed_on"])
+        data.update({"draft": False, "reviewed_on": "2026-10-07", "review_methods": ["operator_knowledge"]})
+        self.assertEqual(self.run_check(data, body(300, cite="")), [])
+
+    def test_empty_review_methods_is_an_error_when_published(self):
+        data = self.term(draft=False, reviewed_on="2026-10-07", review_methods=[])
+        self.assertEqual([p.path for p in self.run_check(data, body(300, cite="")) if p.severity == "error"], ["/review_methods"])
+
+    def test_citation_digits_and_company_names_are_warnings(self):
+        problems = self.run_check(self.term(draft=True), "あ" * 300 + "。[S1]\n")
+        self.assertEqual([(p.rule, p.severity) for p in problems], [("V-07", "warning"), ("V-07", "error")])  # sources が空なので、[S1] は V-07 のエラーでもある
+        problems = self.run_check(self.term(draft=True), "あ" * 300 + "。2020年である。\n")
+        self.assertEqual([(p.rule, p.severity, "数字" in p.message) for p in problems], [("V-12", "warning", True)])
+        problems = self.run_check(self.term(draft=True), "あ" * 300 + "。東京エレクトロンの装置である。\n")
+        self.assertEqual([(p.rule, p.severity) for p in problems], [("V-12", "warning")])
+        self.assertIn("東京エレクトロン", problems[0].message)
+        problems = self.run_check(self.term(draft=True), "あ" * 300 + "。２０２０年である。\n")  # 全角の数字も
+        self.assertEqual([p.rule for p in problems], ["V-12"])
+
+    def test_company_names_come_from_the_master(self):
+        companies = {"a.yaml": {"name": "架空エレクトロニクス", "short_names": ["架空電子", "Ｋ"], "name_en": "Fictional Electronics Co."},
+                     "b.yaml": "not a dict"}
+        names = vd.company_names(companies)
+        self.assertEqual(names, {"架空エレクトロニクス", "架空電子", "Fictional Electronics Co."})  # 1字は除く
+        problems = self.run_check(self.term(draft=True), "あ" * 300 + "。fictional electronics co.の装置である。\n", names=names)
+        self.assertEqual([p.rule for p in problems], ["V-12"])
+
+    def test_sources_may_be_empty_and_unused_sources_are_not_warned(self):
+        source = {"id": "S1", "kind": "book", "title": "入門書", "publisher": "出版社", "author": "著者", "pages": "10"}
+        self.assertEqual(self.run_check(self.term(draft=True, sources=[source]) if False else {**self.term(draft=True), "sources": [source]},
+                                        "あ" * 300 + "。\n"), [])
+
+    def test_basis_reviewed_must_be_designated_in_the_config(self):
+        problems = self.run_check(self.term(draft=True), "あ" * 300 + "。\n", slug="eda")
+        self.assertIn(("V-04", "error", "/basis"), [(p.rule, p.severity, p.path) for p in problems])
+        config = copy.deepcopy(CONFIG)
+        del config["terms"]["ald"]["basis"]
+        problems = self.run_check(self.term(draft=True), "あ" * 300 + "。\n", config=config)
+        self.assertIn(("V-04", "error", "/basis"), [(p.rule, p.severity, p.path) for p in problems])
+
+    def test_a_sources_file_for_a_reviewed_target_is_a_warning(self):
+        data = fm(term="ALD")
+        problems = self.run_check(data, body(300, cite="[S1]"))
+        self.assertIn(("V-04", "warning", "/basis"), [(p.rule, p.severity, p.path) for p in problems])
+
+    def test_process_pages(self):
+        data = {"process": "etching", "title": "エッチング", "description": "あ" * 60, "basis": "reviewed", "published_at": "2026-10-07",
+                "draft": True, "ai_generated": True, "sources": []}
+        run = lambda d, t, **kw: vd.check_process_pages({"content/processes/etching.md": (d, t)}, SUPPLY, kw.get("config", CONFIG), {}, self.NAMES)
+        self.assertEqual(run(data, "あ" * 400 + "。\n"), [])
+        self.assertEqual([p.severity for p in run(data, "あ" * 400 + "。3回行う\n")], ["warning"])
+        published = {**data, "draft": False}
+        self.assertEqual(sorted(p.path for p in run(published, "あ" * 400 + "。\n") if p.severity == "error"), ["/review_methods", "/reviewed_on"])
+        config = copy.deepcopy(CONFIG)
+        del config["processes"]["etching"]["basis"]
+        self.assertIn("/basis", [p.path for p in run(data, "あ" * 400 + "。\n", config=config) if p.severity == "error"])
+
+
+class ReviewedRepositoryTest(unittest.TestCase):
+    def test_a_reviewed_file_goes_through_the_whole_validation(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        repo = Path(directory.name)
+        shutil.copytree(ROOT / "data", repo / "data")
+        shutil.copytree(ROOT / "config", repo / "config")
+        (repo / "content" / "glossary").mkdir(parents=True)
+        (repo / "content" / "processes").mkdir(parents=True)
+
+        def write(rel, data, text):
+            (repo / rel).write_text("---\n" + yaml.safe_dump(data, allow_unicode=True, sort_keys=False) + "---\n\n" + text, encoding="utf-8")
+        term = {"term": "ALD", "reading": "エーエルディー", "short_definition": "短い説明である。", "processes": ["deposition"],
+                "description": "あ" * 60, "basis": "reviewed", "published_at": "2026-10-07", "draft": True, "ai_generated": True, "sources": []}
+        write("content/glossary/ald.md", term, "あ" * 300 + "。\n")
+        errors = lambda: [str(p) for p in vd.validate(repo, ROOT) if p.severity == "error"]
+        self.assertEqual(errors(), [])
+        term["draft"] = False  # reviewed_on と review_methods がなく、スキーマにも、検査にも、引っかかる
+        write("content/glossary/ald.md", term, "あ" * 300 + "。\n")
+        found = errors()
+        self.assertTrue(any("/reviewed_on" in e for e in found), found)
+        self.assertTrue(any("/review_methods" in e for e in found), found)
+        term.update({"reviewed_on": "2026-10-07", "review_methods": ["operator_knowledge"]})
+        write("content/glossary/ald.md", term, "あ" * 300 + "。\n")
+        self.assertEqual(errors(), [])
+        term["review_methods"] = ["book"]  # 書籍で確かめたのに、sources がない
+        write("content/glossary/ald.md", term, "あ" * 300 + "。\n")
+        self.assertTrue(errors())
+        term["sources"] = [{"id": "S1", "kind": "book", "title": "入門書", "publisher": "出版社", "author": "著者", "pages": "10-12"}]
+        write("content/glossary/ald.md", term, "あ" * 300 + "。\n")
+        self.assertEqual(errors(), [])

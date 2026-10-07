@@ -1,0 +1,24 @@
+{
+  "description": "工程（運営者が確かめる方式）の指示文（prompt.process-reviewed.md）を変えたときの確認に使う見本。資料の区画はない。期待する出力は、本文ではなく、満たすべき条件で書く",
+  "input": {
+    "task": {
+      "kind": "process",
+      "name": "架空洗浄",
+      "basis": "reviewed",
+      "selectable_terms": [{"slug": "fictional-slurry", "term": "架空スラリー"}, {"slug": "fictional-rinse", "term": "架空すすぎ"}]
+    },
+    "materials": null
+  },
+  "expect": {
+    "schema_valid": true,
+    "no_citation_markers": true,
+    "no_headings_in_body": true,
+    "no_digits_in_body": true,
+    "no_company_names_in_body": true,
+    "no_company_lists_in_body": true,
+    "terms_subset_of_input": true,
+    "check_points_count": [1, 10],
+    "check_points_high_risk_first": true,
+    "no_prohibited_words": true
+  }
+}

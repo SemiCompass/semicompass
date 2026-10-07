@@ -261,8 +261,9 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
                      for p in check_explainer_sources(explainer, supply)]
     terms = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "term" and isinstance(d, dict)}
     processes = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "process" and isinstance(d, dict)}
-    problems += check_terms(terms, supply, explainer)
-    problems += check_process_pages(processes, supply, explainer, terms)
+    names = company_names(companies)
+    problems += check_terms(terms, supply, explainer, names)
+    problems += check_process_pages(processes, supply, explainer, terms, names)
     if only is not None:
         target = only.resolve().relative_to(root.resolve()).as_posix()
         problems = [p for p in problems if p.file == target]
@@ -615,14 +616,19 @@ def check_explainer_sources(config, supply) -> list[Problem]:
                 continue
             if not isinstance(entry.get(name_key), str) or not entry[name_key].strip():
                 out.append(Problem(rel, pointer(base + [name_key]), "V-01", f"{name_key}（名前）がない"))
+            if "basis" in entry and entry["basis"] != "reviewed":  # 運営者が確かめる方式（CLAUDE.md 6.4 の例外）だけ。ほかの値は、ない
+                out.append(Problem(rel, pointer(base + ["basis"]), "V-01", "basis は reviewed だけ（省略すると、出典から書く）"))
+            reviewed = entry.get("basis") == "reviewed"
             for key in ("aliases", "keywords"):
                 if key in entry and not (isinstance(entry[key], list) and all(isinstance(w, str) and w.strip() for w in entry[key])):
                     out.append(Problem(rel, pointer(base + [key]), "V-01", "文字列の一覧ではない"))
             if section == "processes" and supply_slugs is not None and slug not in supply_slugs:
                 out.append(Problem(rel, pointer(base), "V-04", f"工程 {slug} が data/supply-chain.yaml にない"))
-            sources = entry.get("sources")
+            sources = entry.get("sources", [] if reviewed else None)
             if not isinstance(sources, list):
                 out.append(Problem(rel, pointer(base + ["sources"]), "V-01", "sources が一覧ではない"))
+                continue
+            if not sources and reviewed:  # 運営者が確かめる方式は、公開資料の原資料束を使わない。sources が空でよい
                 continue
             if not sources:  # 「公式の出典が未確認」の対象。下書きは作れない（承認済みの資料がない）。形の誤りではないため、警告
                 out.append(Problem(rel, pointer(base + ["sources"]), "V-01", "sources が空（承認済みの出典がないため、下書きは作れない）",
@@ -666,7 +672,7 @@ def _source_roles(config, section: str, slug: str) -> dict[str, str]:
             if isinstance(s, dict) and isinstance(s.get("url"), str) and s.get("role") in EXPLAINER_ROLES}
 
 
-def _body_checks(rel: str, data: dict, body: str, roles: dict[str, str], out: list[Problem]) -> list[str]:
+def _body_checks(rel: str, data: dict, body: str, roles: dict[str, str], out: list[Problem], reviewed: bool = False) -> list[str]:
     """工程・用語の本文の共通の検査（V-07、V-08、V-10、補助の出典だけを引いていないか）。本文の行（コードブロックの外）を返す。"""
     source_ids = _source_ids(data, rel, out)
     sections, outside = split_body(body)
@@ -682,6 +688,8 @@ def _body_checks(rel: str, data: dict, body: str, roles: dict[str, str], out: li
     cited = set(_CITATION.findall("\n".join(outside)))
     for number in sorted(cited - source_ids, key=lambda n: int(n[1:])):
         out.append(Problem(rel, "(本文)", "V-07", f"本文の [{number}] が、sources にない"))
+    if reviewed:  # 運営者が確かめる方式：本文に出典の番号は付けない。sources は、運営者が確かめに使った資料（本文では引かない）
+        return outside
     for i, source in enumerate(data.get("sources") or []):
         if isinstance(source, dict) and isinstance(source.get("id"), str) and source["id"] not in cited:
             out.append(Problem(rel, pointer(["sources", i, "id"]), "V-08", f"sources の {source['id']} が、本文で使われていない",
@@ -699,11 +707,45 @@ def _length_warning(rel: str, path: str, label: str, count: int, low: int, high:
         out.append(Problem(rel, path, "V-12", f"{label}が {count}字で、目安（{low}〜{high}字）を外れている", "warning"))
 
 
+def company_names(companies: dict[str, dict]) -> set[str]:
+    """企業マスタの名前（正式名称、略称、英語表記）。2字以上のものだけ。"""
+    names: set[str] = set()
+    for data in companies.values():
+        if isinstance(data, dict):
+            for value in [data.get("name"), data.get("name_en"), *(data.get("short_names") or [])]:
+                if isinstance(value, str) and len(value.strip()) >= 2:
+                    names.add(value.strip())
+    return names
+
+
+def _reviewed_checks(rel: str, section: str, slug: str, data: dict, body: str, config, names: set[str], out: list[Problem]) -> None:
+    """basis: reviewed（運営者が確かめる方式。CLAUDE.md 6.4 の例外）の用語・工程の検査。"""
+    entry = ((config or {}).get(section) or {}).get(slug) if isinstance(config, dict) else None
+    if isinstance(config, dict):
+        if not isinstance(entry, dict) or entry.get("basis") != "reviewed":  # 運営者が指定したものだけ（自分の判断でこの方式にしない）
+            out.append(Problem(rel, "/basis", "V-04", "basis: reviewed だが、config/explainer-sources.yaml で basis: reviewed と指定されていない"))
+    if data.get("draft") is not True:
+        for key in ("reviewed_on", "review_methods"):
+            if not data.get(key):
+                out.append(Problem(rel, f"/{key}", "V-01", f"basis: reviewed で公開する（draft: true でない）には、{key} が必要"))
+    _, outside = split_body(body)
+    text = "\n".join(outside)
+    if _CITATION.search(text):
+        out.append(Problem(rel, "(本文)", "V-07", "basis: reviewed の本文に、出典の番号 [S1] などがある（付けない。出典は、運営者が sources に書く）",
+                           "warning"))
+    flat = unicodedata.normalize("NFKC", _CITATION.sub("", text))  # 出典の番号 [S1] の数字は、数値ではない
+    if re.search(r"[0-9]", flat):
+        out.append(Problem(rel, "(本文)", "V-12", "basis: reviewed の本文に、半角の数字（年・数値）がある（書かない決まり）", "warning"))
+    found = sorted(n for n in names if unicodedata.normalize("NFKC", n).casefold() in flat.casefold())
+    if found:
+        out.append(Problem(rel, "(本文)", "V-12", f"basis: reviewed の本文に、企業名がある（書かない決まり）：{'、'.join(found[:5])}", "warning"))
+
+
 def _name_key(text: str) -> str:
     return unicodedata.normalize("NFKC", text).casefold().strip()
 
 
-def check_terms(terms: dict[str, tuple[dict, str]], supply, config) -> list[Problem]:
+def check_terms(terms: dict[str, tuple[dict, str]], supply, config, names: set[str] | None = None) -> list[Problem]:
     out: list[Problem] = []
     config_terms = (config or {}).get("terms") if isinstance(config, dict) else None
     known = set(config_terms) if isinstance(config_terms, dict) else None
@@ -733,7 +775,12 @@ def check_terms(terms: dict[str, tuple[dict, str]], supply, config) -> list[Prob
                 out.append(Problem(rel, pointer(["related_terms", i]), "V-04", f"用語 {ref} は、まだ原稿（content/glossary/）がない。公開の前にそろえる",
                                    "warning"))
         roles = _source_roles(config, "terms", slug)
-        outside = _body_checks(rel, data, body, roles, out)
+        reviewed = data.get("basis") == "reviewed"
+        if reviewed:
+            _reviewed_checks(rel, "terms", slug, data, body, config, names or set(), out)
+        elif isinstance(config, dict) and ((config.get("terms") or {}).get(slug) or {}).get("basis") == "reviewed":
+            out.append(Problem(rel, "/basis", "V-04", "config/explainer-sources.yaml では basis: reviewed だが、ファイルは basis: reviewed でない", "warning"))
+        outside = _body_checks(rel, data, body, roles, out, reviewed)
         _length_warning(rel, "(本文)", "本文", count_characters(outside), *TERM_LENGTH, out)
         if isinstance(data.get("description"), str):
             _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
@@ -744,7 +791,8 @@ def check_terms(terms: dict[str, tuple[dict, str]], supply, config) -> list[Prob
     return out
 
 
-def check_process_pages(pages: dict[str, tuple[dict, str]], supply, config, terms: dict[str, tuple[dict, str]]) -> list[Problem]:
+def check_process_pages(pages: dict[str, tuple[dict, str]], supply, config, terms: dict[str, tuple[dict, str]],
+                        names: set[str] | None = None) -> list[Problem]:
     out: list[Problem] = []
     process_slugs = _slugs(supply, "processes")
     config_terms = (config or {}).get("terms") if isinstance(config, dict) else None
@@ -762,7 +810,12 @@ def check_process_pages(pages: dict[str, tuple[dict, str]], supply, config, term
             elif ref not in term_files:
                 out.append(Problem(rel, pointer(["terms", i]), "V-04", f"用語 {ref} は、まだ原稿（content/glossary/）がない。公開の前にそろえる",
                                    "warning"))
-        _body_checks(rel, data, body, _source_roles(config, "processes", slug), out)
+        reviewed = data.get("basis") == "reviewed"
+        if reviewed:
+            _reviewed_checks(rel, "processes", slug, data, body, config, names or set(), out)
+        elif isinstance(config, dict) and ((config.get("processes") or {}).get(slug) or {}).get("basis") == "reviewed":
+            out.append(Problem(rel, "/basis", "V-04", "config/explainer-sources.yaml では basis: reviewed だが、ファイルは basis: reviewed でない", "warning"))
+        _body_checks(rel, data, body, _source_roles(config, "processes", slug), out, reviewed)
         if isinstance(data.get("title"), str) and len(data["title"]) > TITLE_MAX:
             out.append(Problem(rel, "/title", "V-12", f"title が {len(data['title'])}字で、目安（{TITLE_MAX}字以内）を外れている", "warning"))
         if isinstance(data.get("description"), str):
