@@ -1,0 +1,25 @@
+{
+  "description": "AG-23 reference の指示文（prompt.reference.md）を変えたときの確認に使う見本。入力は名前と関係する工程の名前だけ（架空の用語）。期待する出力は、満たすべき条件で書く",
+  "input": {
+    "task": {
+      "kind": "term",
+      "name": "架空研磨",
+      "related_processes": [
+        "成膜",
+        "平坦化"
+      ]
+    },
+    "materials": null
+  },
+  "expect": {
+    "schema_valid": true,
+    "points_count": [
+      3,
+      12
+    ],
+    "no_digits": true,
+    "no_company_names": true,
+    "low_confidence_points_also_in_uncertain": true,
+    "no_draft_is_given": true
+  }
+}

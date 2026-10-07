@@ -181,7 +181,8 @@ class TermReviewedTest(Base):
     def test_ledger_row_and_budget_are_ag14(self):
         self.run_draft(self.client())
         rows = [json.loads(l) for l in (self.out / "ledger" / "2026-10.jsonl").read_text(encoding="utf-8").splitlines()]
-        self.assertEqual([(r["agent"], r["subject"], r["status"]) for r in rows], [("AG-14", "term-ald", "ok")])
+        self.assertEqual([(r["agent"], r["subject"], r["status"]) for r in rows if r["agent"] == "AG-14"], [("AG-14", "term-ald", "ok")])
+        self.assertTrue(all(r["agent"] in ("AG-14", "AG-23") for r in rows))  # AG-23 の確認の行は、AG-23 のIDで数える
 
     def test_dry_run_does_nothing(self):
         client = self.client()
