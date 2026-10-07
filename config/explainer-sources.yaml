@@ -155,7 +155,7 @@ terms:
 
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
-# slug は仮。data/supply-chain.yaml の工程の slug に合わせて直す(データ定義書4.3)
+# slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
 # ----------------------------------------------------------------------------
 processes:
   circuit-design:
@@ -164,7 +164,7 @@ processes:
       - {status: approved, role: primary, kind: web, publisher: 東芝デバイス&ストレージ株式会社, title: 設計開発(採用情報), url: "https://www.toshiba.co.jp/device-sol/jp/recruitment/about/design.html"}
       - {status: approved, role: primary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: ICガイドブック ICの設計から完成まで, url: "https://semicon.jeita.or.jp/icgb/pdf/icgb_4-1.pdf"}
       - {status: approved, role: supplementary, kind: web, publisher: NTT西日本, title: ICT用語集 EDA, url: "https://business.ntt-west.co.jp/glossary/words-00629.html"}
-  silicon-wafer-manufacturing:
+  wafer:
     process: シリコンウェーハの製造
     sources:
       - {status: approved, role: primary, kind: web, publisher: 株式会社SUMCO, title: シリコンウェーハの製造方法, url: "https://www.sumcosi.com/products/process/"}
