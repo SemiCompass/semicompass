@@ -10,8 +10,7 @@
     "title",
     "description",
     "published_at",
-    "ai_generated",
-    "sources"
+    "ai_generated"
   ],
   "properties": {
     "process": {
@@ -96,16 +95,13 @@
     },
     "sources": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": [
           "id",
           "title",
-          "publisher",
-          "url",
-          "accessed_on"
+          "publisher"
         ],
         "properties": {
           "id": {
@@ -141,9 +137,197 @@
           "pages": {
             "type": "string",
             "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "web",
+              "government",
+              "association",
+              "book",
+              "paper"
+            ],
+            "description": "出典の種類。book（書籍）は author と pages が必要。paper（論文）は author が必要（url は任意）。それ以外、または省略したときは url と accessed_on が必要。"
+          },
+          "author": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "isbn": {
+            "type": "string",
+            "pattern": "^[0-9Xx-]{10,17}$"
+          },
+          "doi": {
+            "type": "string",
+            "pattern": "^10\\.[0-9]{4,9}/\\S+$"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "book"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "author",
+                "pages"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "paper"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "author"
+              ]
+            }
+          },
+          {
+            "if": {
+              "not": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "book",
+                      "paper"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "url",
+                "accessed_on"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "basis": {
+      "type": "string",
+      "enum": [
+        "sources",
+        "reviewed"
+      ],
+      "description": "解説の根拠。sources：公的機関などの公開資料から書く（既定）。reviewed：AIが一般的な説明を書き、運営者が確かめた（工程）。reviewed のときは、draft: true の間は reviewed_on と review_methods を省ける。公開（draft を外す）には、reviewed_on と review_methods が必要。"
+    },
+    "reviewed_on": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date",
+      "description": "運営者が確かめた日（basis: reviewed で公開するとき必須）。"
+    },
+    "review_methods": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "book",
+          "paper",
+          "web",
+          "operator_knowledge"
+        ]
+      },
+      "description": "確かめた方法（複数可）。book：書籍、paper：論文、web：Webサイト、operator_knowledge：運営者の知識。operator_knowledge だけのとき（sources が空のとき）は、画面に「運営者の知識で確認」と示す。operator_knowledge を含まないときは、sources が1件以上必要。"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "basis": {
+            "const": "reviewed"
+          }
+        },
+        "required": [
+          "basis"
+        ]
+      },
+      "then": {
+        "if": {
+          "properties": {
+            "draft": {
+              "const": true
+            }
+          },
+          "required": [
+            "draft"
+          ]
+        },
+        "else": {
+          "required": [
+            "reviewed_on",
+            "review_methods"
+          ],
+          "properties": {
+            "review_methods": {
+              "minItems": 1
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "review_methods": {
+                    "contains": {
+                      "const": "operator_knowledge"
+                    }
+                  }
+                },
+                "required": [
+                  "review_methods"
+                ]
+              },
+              "else": {
+                "required": [
+                  "sources"
+                ],
+                "properties": {
+                  "sources": {
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "sources"
+        ],
+        "properties": {
+          "sources": {
+            "minItems": 1
           }
         }
       }
     }
-  }
+  ]
 }

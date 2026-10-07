@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "schemas/agents/AG-14.term-textbook.output.schema.json",
-  "title": "AG-14 解説作成エージェントの出力（用語の下書き。書籍で確認する方式）",
-  "description": "公的な出典がない用語（設定で basis: textbook と指定したもの）について、AG-14が一般的な技術の説明を書くときの出力。原資料束は使わない。本文に出典の番号 [S1] は付けない（出典は、運営者が確認に使う書籍で、プログラムが sources に入れる）。check_points は、運営者が書籍と見比べる観点で、サイトには出さず、変更案の説明に書く。",
+  "$id": "schemas/agents/AG-14.term-reviewed.output.schema.json",
+  "title": "AG-14 解説作成エージェントの出力（用語の下書き。運営者が確かめる方式）",
+  "description": "公的な出典を使わない用語（設定で basis: reviewed と指定したもの）について、AG-14が一般的な説明を書くときの出力。原資料束は使わない。本文に出典の番号 [S1] は付けない。check_points は、運営者が確かめる観点で、サイトには出さず、変更案の説明に書く。",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -57,7 +57,7 @@
       "maxLength": 200
     },
     "body": {
-      "description": "用語の本文（見出しは含めない）。出典の番号は付けない。一般的に確立した説明だけを書く：何であるか、何のために使うか、半導体の製造や設計のどこに関わるか。数値、年、企業名、シェア、順位、最上級の表現は書かない。目安は200〜400字",
+      "description": "本文（見出しは含めない）。出典の番号は付けない。一般的に確立した説明だけを書く。数値、年、企業名、シェア、順位、最上級の表現は書かない。迷う内容は書かない。目安は200〜400字",
       "type": "string",
       "minLength": 100,
       "maxLength": 700
@@ -95,7 +95,7 @@
       "type": "array",
       "minItems": 1,
       "maxItems": 10,
-      "description": "運営者が書籍と見比べる観点。本文の主張ごとに、1行で書く（例：「ALDは、原子1層ずつ膜を積む成膜法」）。誤りやすい点、専門家の間で言い方が分かれる点を先に書く。サイトには出さない",
+      "description": "運営者が確かめる観点。本文の主張ごとに1行（例：「ALDは、原子1層ずつ膜を積む成膜法」）。誤りやすい点、言い方が分かれる点を先に書く。サイトには出さない",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -115,7 +115,7 @@
               "high",
               "low"
             ],
-            "description": "high：誤りやすい、または言い方が分かれる。low：入門書に必ず書いてある基本的な説明"
+            "description": "high：誤りやすい、または言い方が分かれる。low：基本的な説明"
           }
         }
       }
