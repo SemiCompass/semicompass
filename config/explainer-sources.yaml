@@ -51,6 +51,7 @@ terms:
       - {status: approved, role: primary, kind: web, publisher: キヤノン株式会社, title: 技術のご紹介, url: "https://global.canon/ja/technology/s_labo/light/003/09.html"}
   coater-developer:
     term: コータ・デベロッパ
+    basis: reviewed
     sources:
       - {status: approved, role: supplementary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
   plasma:
@@ -65,6 +66,7 @@ terms:
       - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 成膜工程, url: "https://www.screen.co.jp/spe/technical/guide/deposition"}
   ald:
     term: ALD
+    basis: reviewed
     sources: []   # 公式の出典が未確認
   sputtering:
     term: スパッタリング
@@ -95,6 +97,7 @@ terms:
       - {status: approved, role: primary, kind: web, publisher: 松田産業株式会社, title: ボンディングワイヤ, url: "https://service.matsuda-sangyo.co.jp/preciousmetalbusiness/product/bonding-wires/"}
   mold-compound:
     term: モールド樹脂
+    basis: reviewed
     sources:
       - {status: approved, role: supplementary, kind: government, publisher: 経済産業省 中部経済産業局, title: 半導体産業の概要と近年の変化(講演資料), url: "https://www.chubu.meti.go.jp/b35innovation/meetupchubu/event/pdf/slide83-1.pdf"}
   chiplet:
@@ -104,6 +107,7 @@ terms:
       - {status: approved, role: primary, kind: government, publisher: NEDO, title: チップレット設計基盤構築に向けた技術開発事業, url: "https://www.nedo.go.jp/content/100979330.pdf"}
   hbm:
     term: HBM
+    basis: reviewed
     sources:
       - {status: approved, role: supplementary, kind: government, publisher: 経済産業省 中部経済産業局, title: 半導体産業の概要と近年の変化(講演資料), url: "https://www.chubu.meti.go.jp/b35innovation/meetupchubu/event/pdf/slide83-1.pdf"}
   prober:
@@ -143,13 +147,16 @@ terms:
       - {status: approved, role: supplementary, kind: web, publisher: 世界経済評論IMPACT, title: 半導体産業サプライチェーンの解明, url: "http://www.world-economic-review.jp/impact/article2699.html"}
   osat:
     term: OSAT
+    basis: reviewed
     sources: []   # 公式の出典が未確認
   power-semiconductor:
     term: パワー半導体
+    basis: reviewed
     sources:
       - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略について 令和5年7月, url: "https://www.kyushu.meti.go.jp/seisaku/jyoho/oshirase/230727_1_1.pdf"}
   process-node:
     term: プロセスノード(微細化)
+    basis: reviewed
     sources:
       - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略 令和6年5月31日 資料3, url: "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/0011/handeji_reviesd.pdf"}
 
@@ -189,6 +196,7 @@ processes:
       - {status: approved, role: primary, kind: web, publisher: キヤノン株式会社, title: 技術のご紹介, url: "https://global.canon/ja/technology/s_labo/light/003/09.html"}
   etching:
     process: エッチング
+    basis: reviewed
     sources:
       - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 エッチング, url: "https://www.screen.co.jp/spe/technical/guide/etching"}
       - {status: approved, role: primary, kind: web, publisher: サムコ株式会社, title: ドライエッチング装置とは, url: "https://www.samco.co.jp/company/primer/2011/03/post_5.php"}

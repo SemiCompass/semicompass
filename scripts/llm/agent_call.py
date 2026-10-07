@@ -336,9 +336,9 @@ def call_agent(
     system = prompt
     task_block = {"type": "text", "text": task}
     materials_block = {"type": "text", "cache_control": {"type": "ephemeral"},
-                       "text": "<資料>\n" + materials.replace("<", "＜") + "\n</資料>"}
+                       "text": "<資料>\n" + materials.replace("<", "＜") + "\n</資料>"} if materials else None  # 資料がないとき（原資料束を使わない方式）は、区画を作らない
     followup_blocks = [{"type": "text", "text": followup}] if followup else []
-    input_chars = len(system) + len(task) + len(materials_block["text"]) + len(followup) + len(json.dumps(schema, ensure_ascii=False))
+    input_chars = len(system) + len(task) + len(materials_block["text"] if materials_block else "") + len(followup) + len(json.dumps(schema, ensure_ascii=False))
     estimate = estimate_max_cost_jpy(budgets, prices, input_chars, max_tokens)
     cap = budgets["agents"][agent]["cap_jpy"]
     client = None
@@ -359,7 +359,7 @@ def call_agent(
                 client = client_factory().with_options(max_retries=0)
             except _IDENTITY_ERRORS:
                 return _identity_failure(result, add)
-        content = [task_block, materials_block, *followup_blocks] + ([{"type": "text", "text": attempt_note}] if attempt_note else [])
+        content = [task_block, *([materials_block] if materials_block else []), *followup_blocks] + ([{"type": "text", "text": attempt_note}] if attempt_note else [])
         response = None
         failure = ""
         tries = 0
