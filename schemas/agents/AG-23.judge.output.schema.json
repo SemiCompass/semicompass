@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-23.judge.output.schema.json",
+  "title": "AG-23 知識にもとづく確認エージェントの出力（主張ごとの判定）",
+  "description": "AG-23の2回目の呼び出し。下書きの本文を1文ずつの主張に分け、1回目で作った要点と見比べて判定する。文章を書き換えない。結果は、運営者への警告として、変更案の説明に書く（サイトには出さない）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "claims",
+    "summary"
+  ],
+  "properties": {
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim",
+          "verdict",
+          "risk",
+          "reason"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "本文の主張（1文または1つの事実）"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "consistent",
+              "conflicting",
+              "not_in_reference"
+            ],
+            "description": "consistent：要点と一致。conflicting：要点と矛盾。not_in_reference：要点にない（追加の主張。幻覚の疑いがあるため、運営者の確認を優先する）"
+          },
+          "risk": {
+            "type": "string",
+            "enum": [
+              "high",
+              "low"
+            ],
+            "description": "high：誤りやすい、言い方が分かれる、または具体的な断定。low：基本的な説明"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "判定の理由を1行で。conflicting のときは、どの要点とどう違うか"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "has_conflict",
+        "note"
+      ],
+      "properties": {
+        "has_conflict": {
+          "type": "boolean",
+          "description": "conflicting が1つ以上あるとき true"
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "運営者への連絡。なければ空の文字列"
+        }
+      }
+    }
+  }
+}
