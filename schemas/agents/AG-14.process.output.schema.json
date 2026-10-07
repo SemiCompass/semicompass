@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-14.process.output.schema.json",
+  "title": "AG-14 解説作成エージェントの出力（工程の解説の下書き）",
+  "description": "データ定義書（第1段階）9.1、9.6。AG-14が工程1つについて返す出力。プログラム（scripts/draft/）が、この出力から content/processes/{slug}.md（schemas/content/process）を組み立てる。process、sources（承認済みの出典から作る）、日付、ai_generated、easy_body は、プログラムまたは運営者が書くため、ここには持たない。関係する企業の一覧は企業マスタから自動で作るため、ここには持たない。本文の出典の番号は、入力で渡した承認済みの出典の番号（[S1]〜[Sn]）だけを使う。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "description",
+    "body",
+    "terms"
+  ],
+  "properties": {
+    "title": {
+      "description": "大見出しとページのタイトル。目安は60字以内（暫定）。ここでは広めに取り、目安を外れたら警告にする（V-12）",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "description": {
+      "description": "検索の結果に出す説明文。目安は50〜120字（暫定）。ここでは広めに取り、目安を外れたら警告にする（V-12）",
+      "type": "string",
+      "minLength": 30,
+      "maxLength": 200
+    },
+    "body": {
+      "description": "仕組みの説明の本文。見出しは中見出し（##）から始め、段を飛ばさない。事実の後に出典の番号 [S1]〜[Sn] を付ける。番号は、入力で渡した出典の一覧の番号だけを使う。字数の決まりは第1段階にないため、ここでは広めに取る",
+      "type": "string",
+      "minLength": 300,
+      "maxLength": 3000
+    },
+    "terms": {
+      "description": "本文に出てくる、関係する用語の slug。入力で渡した用語の一覧から選ぶ。当たる用語がなければ空",
+      "type": "array",
+      "maxItems": 30,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "minLength": 2,
+        "maxLength": 60
+      }
+    },
+    "note": {
+      "description": "運営者への連絡。出典が足りない点、出典どうしで食い違う点など。サイトには出さない。なければ書かない",
+      "type": "string",
+      "maxLength": 200
+    }
+  }
+}
