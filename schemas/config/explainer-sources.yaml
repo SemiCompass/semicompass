@@ -1,0 +1,218 @@
+# config/explainer-sources.yaml(案)
+# 承認:2026-10-07 運営者が、掲載のURLすべてを承認(補助 supplementary も含む。補助は定義の出典にしない)。各サイトの利用条件の確認は、取り込みの前に別途行う
+# 工程・用語の下書き(AG-14)が取得してよい出典を、対象ごとに決める。
+# 運営者が status を approved に直したURLだけを、原資料束に取り込む。AIの知識だけで書かせない(CLAUDE.md 6.4)。
+#
+# - status: candidate(候補) / approved(承認) / rejected(不採用)
+# - role: primary(定義の出典にする) / supplementary(補助。定義の出典にはしない)
+# - kind: 原資料束の manifest の kind(データ定義書8.2)に合わせる
+# - slug は仮。用語のslugは英語の名前か略語から決める(データ定義書2.3)
+# - SEAJ(seaj.or.jp)は、転載・営利利用の制限があるため、ここに入れない
+
+schema_version: 1
+
+terms:
+  silicon-wafer:
+    term: シリコンウェーハ
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SUMCO, title: 製品情報, url: "https://www.sumcosi.com/ir/glance/wafer.html"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SUMCO, title: シリコンウェーハの製造方法, url: "https://www.sumcosi.com/products/process/"}
+      - {status: approved, role: primary, kind: web, publisher: 信越化学工業株式会社, title: 製品案内(白河工場), url: "https://www.shinetsu.co.jp/seh/shirakawa/product/"}
+  single-crystal-ingot:
+    term: 単結晶インゴット
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SUMCO, title: シリコンウェーハの製造方法, url: "https://www.sumcosi.com/products/process/"}
+      - {status: approved, role: primary, kind: web, publisher: SUMCO TECHXIV株式会社, title: 単結晶引上工程, url: "https://sumcotechxiv.com/pages/36/"}
+      - {status: approved, role: primary, kind: web, publisher: 信越化学工業株式会社, title: 製品案内(白河工場), url: "https://www.shinetsu.co.jp/seh/shirakawa/product/"}
+  photomask:
+    term: フォトマスク
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: レーザーテック株式会社, title: 用語解説 フォトマスク, url: "https://www.lasertec.co.jp/products/glossary/3254.html"}
+      - {status: approved, role: primary, kind: web, publisher: テクセンドフォトマスク株式会社, title: フォトマスクとは, url: "https://www.photomask.com/careers/jp/graduate/content2/about.html"}
+      - {status: approved, role: primary, kind: web, publisher: HOYA株式会社, title: 統合報告書2022 情報・通信事業, url: "https://www.hoya.com/ir/2022/ja/review/it.html"}
+  photoresist:
+    term: フォトレジスト
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: JSRマイクロ九州株式会社, title: 半導体用フォトレジスト, url: "https://www.jmq.jsr.co.jp/product/photo_resist.php"}
+      - {status: approved, role: primary, kind: association, publisher: 公益社団法人発明協会, title: 戦後日本のイノベーション100選 フォトレジスト, url: "https://koueki.jiii.or.jp/innovation100/innovation_detail.php?age=&eid=00061&test=open"}
+      - {status: approved, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
+  eda:
+    term: EDA(設計ツール)
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: NTT西日本, title: ICT用語集 EDA, url: "https://business.ntt-west.co.jp/glossary/words-00629.html"}
+  exposure-tool:
+    term: 露光装置
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: キヤノン株式会社, title: 技術のご紹介, url: "https://global.canon/ja/technology/s_labo/light/003/09.html"}
+  euv:
+    term: EUV露光
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: キヤノン株式会社, title: EUV露光計測装置 商品一覧, url: "https://canon.jp/biz/product/indtech/euv/lineup"}
+      - {status: approved, role: primary, kind: web, publisher: キヤノン株式会社, title: 技術のご紹介, url: "https://global.canon/ja/technology/s_labo/light/003/09.html"}
+  coater-developer:
+    term: コータ・デベロッパ
+    sources:
+      - {status: approved, role: supplementary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
+  plasma:
+    term: プラズマ
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: サムコ株式会社, title: ドライエッチング装置とは, url: "https://www.samco.co.jp/company/primer/2011/03/post_5.php"}
+      - {status: approved, role: primary, kind: web, publisher: Samsung Semiconductor, title: エッチング工程, url: "https://semiconductor.samsung.com/jp/support/tools-resources/fabrication-process/eight-essential-semiconductor-fabrication-processes-part-5-etching-a-circuit-pattern/"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 エッチング, url: "https://www.screen.co.jp/spe/technical/guide/etching"}
+  cvd:
+    term: CVD
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 成膜工程, url: "https://www.screen.co.jp/spe/technical/guide/deposition"}
+  ald:
+    term: ALD
+    sources: []   # 公式の出典が未確認
+  sputtering:
+    term: スパッタリング
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 成膜工程, url: "https://www.screen.co.jp/spe/technical/guide/deposition"}
+  cmp:
+    term: CMP
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社東京精密, title: CMP装置, url: "https://www.accretech.com/jp/product/semicon/semi/cmp/index.html"}
+      - {status: approved, role: primary, kind: government, publisher: 国立科学博物館 産業技術史資料情報センター, title: CMP装置および材料のサプライチェーン確立, url: "https://www.shmj.or.jp/museum2010/exhibi2463.html"}
+  slurry:
+    term: スラリー
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: TOPPANインフォメディア株式会社, title: CMPスラリーとは, url: "https://www.tim.toppan.com/lp/cmp-slurry.html"}
+      - {status: approved, role: primary, kind: government, publisher: 国立科学博物館 産業技術史資料情報センター, title: CMP装置および材料のサプライチェーン確立, url: "https://www.shmj.or.jp/museum2010/exhibi2463.html"}
+  back-grinding:
+    term: バックグラインド
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社ディスコ, title: 統合報告書2020, url: "https://www.disco.co.jp/jp/ir/library/doc/dar/dar2020.pdf"}
+  dicing-blade:
+    term: ダイシングブレード
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社ディスコ, title: 統合報告書2020, url: "https://www.disco.co.jp/jp/ir/library/doc/dar/dar2020.pdf"}
+  wire-bonding:
+    term: ワイヤボンディング
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体製造後工程, url: "https://www.tok.co.jp/products/semiconductor-post"}
+      - {status: approved, role: primary, kind: web, publisher: 松田産業株式会社, title: ボンディングワイヤ, url: "https://service.matsuda-sangyo.co.jp/preciousmetalbusiness/product/bonding-wires/"}
+  mold-compound:
+    term: モールド樹脂
+    sources:
+      - {status: approved, role: supplementary, kind: government, publisher: 経済産業省 中部経済産業局, title: 半導体産業の概要と近年の変化(講演資料), url: "https://www.chubu.meti.go.jp/b35innovation/meetupchubu/event/pdf/slide83-1.pdf"}
+  chiplet:
+    term: チップレット
+    sources:
+      - {status: approved, role: primary, kind: government, publisher: 経済産業省, title: 研究開発事業に係る事前評価書(チップレット設計基盤構築), url: "https://www.meti.go.jp/policy/tech_evaluation/e00/03/r04/J127.pdf"}
+      - {status: approved, role: primary, kind: government, publisher: NEDO, title: チップレット設計基盤構築に向けた技術開発事業, url: "https://www.nedo.go.jp/content/100979330.pdf"}
+  hbm:
+    term: HBM
+    sources:
+      - {status: approved, role: supplementary, kind: government, publisher: 経済産業省 中部経済産業局, title: 半導体産業の概要と近年の変化(講演資料), url: "https://www.chubu.meti.go.jp/b35innovation/meetupchubu/event/pdf/slide83-1.pdf"}
+  prober:
+    term: プローバ
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: アドバンテスト用語集, url: "https://www.advantest.com/ja/investors/ir-library/glossary/"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: 解説:半導体テスト, url: "https://www.advantest.com/ja/about/business/"}
+  semiconductor-tester:
+    term: 半導体テスタ
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: アドバンテスト用語集, url: "https://www.advantest.com/ja/investors/ir-library/glossary/"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: 解説:半導体テスト, url: "https://www.advantest.com/ja/about/business/"}
+  burn-in:
+    term: バーンイン
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: アドバンテスト用語集, url: "https://www.advantest.com/ja/investors/ir-library/glossary/"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: 解説:半導体テスト, url: "https://www.advantest.com/ja/about/business/"}
+  yield:
+    term: 歩留まり
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: アドバンテスト用語集, url: "https://www.advantest.com/ja/investors/ir-library/glossary/"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: 解説:半導体テスト, url: "https://www.advantest.com/ja/about/business/"}
+  foundry:
+    term: ファウンドリ
+    sources:
+      - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略(概要) 2021年6月, url: "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/20210603008-3.pdf"}
+      - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体戦略(概略) 2021年6月, url: "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/20210603008-4.pdf"}
+  fabless:
+    term: ファブレス
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 日清紡マイクロデバイス株式会社, title: 半導体産業の水平分業化とファブレスの躍進, url: "https://blog.nisshinbo-microdevices.co.jp/ja/process13_fabless"}
+      - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略について 令和5年7月, url: "https://www.kyushu.meti.go.jp/seisaku/jyoho/oshirase/230727_1_1.pdf"}
+  idm:
+    term: IDM(垂直統合型)
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 日清紡マイクロデバイス株式会社, title: 半導体産業の水平分業化とファブレスの躍進, url: "https://blog.nisshinbo-microdevices.co.jp/ja/process13_fabless"}
+      - {status: approved, role: supplementary, kind: web, publisher: 世界経済評論IMPACT, title: 半導体産業サプライチェーンの解明, url: "http://www.world-economic-review.jp/impact/article2699.html"}
+  osat:
+    term: OSAT
+    sources: []   # 公式の出典が未確認
+  power-semiconductor:
+    term: パワー半導体
+    sources:
+      - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略について 令和5年7月, url: "https://www.kyushu.meti.go.jp/seisaku/jyoho/oshirase/230727_1_1.pdf"}
+  process-node:
+    term: プロセスノード(微細化)
+    sources:
+      - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略 令和6年5月31日 資料3, url: "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/0011/handeji_reviesd.pdf"}
+
+# ----------------------------------------------------------------------------
+# 工程(MVPの10工程。運用ルール書4.1)
+# slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
+# ----------------------------------------------------------------------------
+processes:
+  circuit-design:
+    process: 回路設計(設計ツールを含む)
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 東芝デバイス&ストレージ株式会社, title: 設計開発(採用情報), url: "https://www.toshiba.co.jp/device-sol/jp/recruitment/about/design.html"}
+      - {status: approved, role: primary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: ICガイドブック ICの設計から完成まで, url: "https://semicon.jeita.or.jp/icgb/pdf/icgb_4-1.pdf"}
+      - {status: approved, role: supplementary, kind: web, publisher: NTT西日本, title: ICT用語集 EDA, url: "https://business.ntt-west.co.jp/glossary/words-00629.html"}
+  wafer:
+    process: シリコンウェーハの製造
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SUMCO, title: シリコンウェーハの製造方法, url: "https://www.sumcosi.com/products/process/"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SUMCO, title: 製品情報, url: "https://www.sumcosi.com/ir/glance/wafer.html"}
+      - {status: approved, role: primary, kind: web, publisher: 信越化学工業株式会社, title: 製品案内(白河工場), url: "https://www.shinetsu.co.jp/seh/shirakawa/product/"}
+  cleaning:
+    process: 洗浄
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 洗浄, url: "https://www.screen.co.jp/spe/technical/guide/clean"}
+      - {status: approved, role: primary, kind: government, publisher: 国立科学博物館 産業技術史資料情報センター, title: RCA洗浄, url: "https://www.shmj.or.jp/museum2010/exhibi2432.html"}
+  deposition:
+    process: 成膜(CVD、PVD、ALD)
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 成膜工程, url: "https://www.screen.co.jp/spe/technical/guide/deposition"}
+    # 1件のみ。ALDの公式の出典は未確認。補強が必要
+  lithography:
+    process: リソグラフィ(塗布・露光・現像)
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 感光材塗布, url: "https://www.screen.co.jp/spe/technical/guide/photosensitive"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 現像, url: "https://www.screen.co.jp/spe/technical/guide/developing"}
+      - {status: approved, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
+      - {status: approved, role: primary, kind: web, publisher: キヤノン株式会社, title: 技術のご紹介, url: "https://global.canon/ja/technology/s_labo/light/003/09.html"}
+  etching:
+    process: エッチング
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 エッチング, url: "https://www.screen.co.jp/spe/technical/guide/etching"}
+      - {status: approved, role: primary, kind: web, publisher: サムコ株式会社, title: ドライエッチング装置とは, url: "https://www.samco.co.jp/company/primer/2011/03/post_5.php"}
+      - {status: approved, role: primary, kind: web, publisher: Samsung Semiconductor, title: エッチング工程, url: "https://semiconductor.samsung.com/jp/support/tools-resources/fabrication-process/eight-essential-semiconductor-fabrication-processes-part-5-etching-a-circuit-pattern/"}
+  cmp:
+    process: CMP(平坦化)
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社東京精密, title: CMP装置, url: "https://www.accretech.com/jp/product/semicon/semi/cmp/index.html"}
+      - {status: approved, role: primary, kind: government, publisher: 国立科学博物館 産業技術史資料情報センター, title: CMP装置および材料のサプライチェーン確立, url: "https://www.shmj.or.jp/museum2010/exhibi2463.html"}
+      - {status: approved, role: primary, kind: web, publisher: TOPPANインフォメディア株式会社, title: CMPスラリーとは, url: "https://www.tim.toppan.com/lp/cmp-slurry.html"}
+  dicing:
+    process: ダイシング
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社ディスコ, title: 統合報告書2020, url: "https://www.disco.co.jp/jp/ir/library/doc/dar/dar2020.pdf"}
+      - {status: approved, role: primary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: 半導体用語集(出所:ICガイドブック2009年版), url: "https://semicon.jeita.or.jp/word/word.html"}
+  packaging:
+    process: パッケージング(封止)
+    sources:
+      - {status: approved, role: primary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: 半導体用語集(出所:ICガイドブック2009年版), url: "https://semicon.jeita.or.jp/word/word.html"}
+      - {status: approved, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体製造後工程, url: "https://www.tok.co.jp/products/semiconductor-post"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社ダブリュ・ティ・アイ(WTI), title: 半導体パッケージの組立工程紹介『モールド封止』, url: "https://www.wti.jp/contents/blog/blog220705.htm"}
+  final-test:
+    process: 最終検査(テスト)
+    sources:
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: 解説:半導体テスト, url: "https://www.advantest.com/ja/about/business/"}
+      - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: アドバンテスト用語集, url: "https://www.advantest.com/ja/investors/ir-library/glossary/"}
+      - {status: approved, role: supplementary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: 半導体用語集(出所:ICガイドブック2009年版), url: "https://semicon.jeita.or.jp/word/word.html"}

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-14.term.output.schema.json",
+  "title": "AG-14 解説作成エージェントの出力（用語の下書き）",
+  "description": "データ定義書（第1段階）9.1、9.6。AG-14が用語1件について返す出力。プログラム（scripts/draft/）が、この出力から content/glossary/{slug}.md（schemas/content/term）を組み立てる。term、title、slug、sources（承認済みの出典から作る）、日付、ai_generated、companies、easy_body は、プログラムまたは運営者が書くため、ここには持たない。本文の出典の番号は、入力で渡した承認済みの出典の番号（[S1]〜[Sn]）だけを使う。文字数の目安（本文200〜400字）は、ここでは広めに取り、目安を外れたら警告にする（V-12）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reading",
+    "short_definition",
+    "description",
+    "body",
+    "processes"
+  ],
+  "properties": {
+    "reading": {
+      "description": "用語の読み。全角カタカナ（長音「ー」と中点「・」を含めてよい）。英字の略語は、読み方をカタカナで書く",
+      "type": "string",
+      "pattern": "^[\\u30A1-\\u30FA\\u30FB\\u30FC]+$",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "aliases": {
+      "description": "別の表記、略語。出典に出てくるものだけ。なければ空",
+      "type": "array",
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 60
+      }
+    },
+    "name_en": {
+      "description": "英語の名前。出典に出てくるものだけ。なければ書かない",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "abbreviation_of": {
+      "description": "略語の元の英語。用語が略語のときだけ書く",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "short_definition": {
+      "description": "用語の説明の部品に出す短い説明。80字以内。出典の文章を写さない",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "description": "検索の結果に出す説明文。目安は50〜120字（暫定）。ここでは広めに取り、目安を外れたら警告にする（V-12）",
+      "type": "string",
+      "minLength": 30,
+      "maxLength": 200
+    },
+    "body": {
+      "description": "用語の本文（見出しは含めない）。事実の後に出典の番号 [S1]〜[Sn] を付ける。番号は、入力で渡した出典の一覧の番号だけを使う。目安は200〜400字",
+      "type": "string",
+      "minLength": 100,
+      "maxLength": 700
+    },
+    "processes": {
+      "description": "関係する工程の slug。入力で渡した工程の一覧から選ぶ。当たる工程がなければ空",
+      "type": "array",
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "minLength": 2,
+        "maxLength": 60
+      }
+    },
+    "related_terms": {
+      "description": "関係する用語の slug。入力で渡した用語の一覧から選ぶ。なければ空",
+      "type": "array",
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "minLength": 2,
+        "maxLength": 60
+      }
+    },
+    "note": {
+      "description": "運営者への連絡。出典が足りない点、出典どうしで食い違う点など。サイトには出さない。なければ書かない",
+      "type": "string",
+      "maxLength": 200
+    }
+  }
+}
