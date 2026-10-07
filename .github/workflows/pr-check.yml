@@ -45,6 +45,7 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/llm
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/textcheck
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/draft
+          "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/design
 
       - name: データの形式の検証
         run: '"$RUNNER_TEMP/venv/bin/python" scripts/validate/validate_data.py'

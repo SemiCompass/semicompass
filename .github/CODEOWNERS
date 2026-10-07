@@ -1,0 +1,10 @@
+# 運営者の確認を必須にする場所（アーキテクチャ設計書10.3）
+/.github/                    @SemiCompass
+/schemas/                    @SemiCompass
+/scripts/factcheck/          @SemiCompass
+/config/budgets.yaml         @SemiCompass
+/data/auto/                  @SemiCompass
+/docs/                       @SemiCompass
+/CLAUDE.md                   @SemiCompass
+/LICENSE                     @SemiCompass
+/content/essays/             @SemiCompass
