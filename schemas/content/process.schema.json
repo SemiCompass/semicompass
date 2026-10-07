@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/content/process.schema.json",
+  "title": "工程（D14）の front matter",
+  "description": "データ定義書（第1段階）6.1、6.5。content/processes/{slug}.md の先頭の項目（front matter）だけを検査する。本文の決まり（[S1]などの番号が sources にあること、sources の資料が本文で使われていること、元の文章を写さないこと）は、スキーマでは検査できないため、別の検査で行う。title の60字以内、description の50〜120字（どちらも暫定）は、警告の検査（V-12）で行う。ファイル名と process の一致、process が data/supply-chain.yaml の工程の slug にあること、terms の参照先の存在も、別の検査（V-02、V-04）で行う。関係する企業の一覧は企業マスタから自動で作るため、ここには書かない。easy_body は公開後の項目で、第1段階では使わない。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "process",
+    "title",
+    "description",
+    "published_at",
+    "ai_generated",
+    "sources"
+  ],
+  "properties": {
+    "process": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 60
+    },
+    "terms": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "minLength": 2,
+        "maxLength": 60
+      }
+    },
+    "easy_body": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "published_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date"
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date"
+    },
+    "draft": {
+      "type": "boolean"
+    },
+    "ai_generated": {
+      "type": "boolean"
+    },
+    "under_review": {
+      "type": "boolean"
+    },
+    "corrections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "date",
+          "severity",
+          "description"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "severity": {
+            "enum": [
+              "major",
+              "normal"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "issue": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "publisher",
+          "url",
+          "accessed_on"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^S[0-9]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https?://\\S+$"
+          },
+          "published_on": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "accessed_on": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "doc_id": {
+            "type": "string",
+            "pattern": "^S100[0-9A-Z]{4}$"
+          },
+          "pages": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
