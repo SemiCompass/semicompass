@@ -70,6 +70,8 @@ SCHEMAS = {
     "xbrl-map": "schemas/config/xbrl-map.schema.json",
     "segment-map": "schemas/data/segment-map.schema.json",
     "overview": "schemas/content/company-overview.schema.json",
+    "term": "schemas/content/term.schema.json",
+    "process": "schemas/content/process.schema.json",
 }
 OVERVIEW_HEADINGS = ["事業概要", "工程上の位置づけ"]  # データ定義書 6.4
 OVERVIEW_LENGTH = (300, 500)  # 「事業概要」の文字数の目安（V-12）
@@ -192,6 +194,12 @@ def kind_of(path: Path, root: Path) -> str | None:
         return "segment-map"
     if rel.startswith("content/companies/") and rel.endswith(".md") and rel.count("/") == 2:
         return "overview"
+    if rel.startswith("content/glossary/") and rel.endswith(".md") and rel.count("/") == 2:
+        return "term"
+    if rel.startswith("content/processes/") and rel.endswith(".md") and rel.count("/") == 2:
+        return "process"
+    if rel == "config/explainer-sources.yaml":
+        return "explainer-sources"
     if rel == "data/supply-chain.yaml":
         return "supply-chain"
     if rel == "config/xbrl-map.yaml":
@@ -205,7 +213,10 @@ def collect_files(root: Path) -> list[tuple[str, Path]]:
     files += [("auto", p) for p in sorted((root / "data" / "auto").glob("*.json"))]
     files += [("segment-map", p) for p in sorted((root / "data" / "segments").glob("*.yaml"))]
     files += [("overview", p) for p in sorted((root / "content" / "companies").glob("*.md"))]
-    for kind, rel in (("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml")):
+    files += [("term", p) for p in sorted((root / "content" / "glossary").glob("*.md"))]
+    files += [("process", p) for p in sorted((root / "content" / "processes").glob("*.md"))]
+    for kind, rel in (("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml"),
+                      ("explainer-sources", "config/explainer-sources.yaml")):
         if (root / rel).is_file():
             files.append((kind, root / rel))
     return files
@@ -222,7 +233,7 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
         try:
             if kind == "auto":
                 data, pitfalls = load_json(path), []
-            elif kind == "overview":
+            elif kind in ("overview", "term", "process"):
                 data, pitfalls, bodies[rel] = load_markdown(path)
             else:
                 data, pitfalls = load_yaml(path)
@@ -231,7 +242,8 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
             continue
         loaded[rel] = (kind, path, data)
         problems += [Problem(rel, p, rule, msg) for p, rule, msg in pitfalls]
-        problems += schemas.errors(kind, data, rel)
+        if kind != "explainer-sources":  # 出典の設定は、スキーマがない。コードで検査する（check_explainer_sources）
+            problems += schemas.errors(kind, data, rel)
 
     supply = next((d for k, _, d in loaded.values() if k == "supply-chain"), None)
     problems += check_supply_chain(loaded, supply, schemas)
@@ -243,6 +255,14 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
                                    companies, autos)
     problems += check_overviews({rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items()
                                  if k == "overview" and isinstance(d, dict)}, companies)
+    explainer = next((d for k, _, d in loaded.values() if k == "explainer-sources"), None)
+    if explainer is not None:
+        problems += [Problem("config/explainer-sources.yaml", p.path, p.rule, p.message, p.severity)
+                     for p in check_explainer_sources(explainer, supply)]
+    terms = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "term" and isinstance(d, dict)}
+    processes = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "process" and isinstance(d, dict)}
+    problems += check_terms(terms, supply, explainer)
+    problems += check_process_pages(processes, supply, explainer, terms)
     if only is not None:
         target = only.resolve().relative_to(root.resolve()).as_posix()
         problems = [p for p in problems if p.file == target]
@@ -556,6 +576,197 @@ def check_overviews(overviews: dict[str, tuple[dict, str]], companies: dict[str,
             if not low <= count <= high:
                 out.append(Problem(rel, "(本文)", "V-12", f"「事業概要」が {count}字で、目安（{low}〜{high}字）を外れている",
                                    "warning"))
+    return out
+
+
+# ---- 工程・用語の解説と、出典の設定（config/explainer-sources.yaml） ----
+
+EXPLAINER_STATUS = ("candidate", "approved", "rejected")
+EXPLAINER_ROLES = ("primary", "supplementary")
+EXPLAINER_KINDS = ("edinet", "tanshin", "presentation", "timely_disclosure", "press_release", "government", "association",
+                   "press", "web")  # データ定義書 8.2 の kind
+TERM_LENGTH = (200, 400)  # 用語の本文の文字数の目安（V-12、データ定義書 6.6）
+DESCRIPTION_LENGTH = (50, 120)  # description の文字数の目安（暫定。V-12）
+TITLE_MAX = 60  # 工程の title の文字数の目安（暫定。V-12）
+
+
+def check_explainer_sources(config, supply) -> list[Problem]:
+    """config/explainer-sources.yaml の検査（スキーマがないため、コードで書く）。"""
+    rel = "config/explainer-sources.yaml"
+    out: list[Problem] = []
+    if not isinstance(config, dict):
+        return [Problem(rel, "", "V-01", "オブジェクトではない")]
+    if config.get("schema_version") != 1:
+        out.append(Problem(rel, "/schema_version", "V-01", "schema_version は 1"))
+    supply_slugs = _slugs(supply, "processes")
+    mvp = {i["slug"] for i in (supply or {}).get("processes", []) if isinstance(i, dict) and i.get("mvp") is True
+           and isinstance(i.get("slug"), str)} if isinstance(supply, dict) else set()
+    for section, name_key in (("terms", "term"), ("processes", "process")):
+        table = config.get(section)
+        if not isinstance(table, dict):
+            out.append(Problem(rel, f"/{section}", "V-01", "slug をキーとするオブジェクトではない"))
+            continue
+        for slug, entry in table.items():
+            base = [section, slug]
+            if not isinstance(slug, str) or not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", slug):
+                out.append(Problem(rel, pointer(base), "V-01", "slug の形が正しくない（英小文字・数字・ハイフン）"))
+            if not isinstance(entry, dict):
+                out.append(Problem(rel, pointer(base), "V-01", "オブジェクトではない"))
+                continue
+            if not isinstance(entry.get(name_key), str) or not entry[name_key].strip():
+                out.append(Problem(rel, pointer(base + [name_key]), "V-01", f"{name_key}（名前）がない"))
+            for key in ("aliases", "keywords"):
+                if key in entry and not (isinstance(entry[key], list) and all(isinstance(w, str) and w.strip() for w in entry[key])):
+                    out.append(Problem(rel, pointer(base + [key]), "V-01", "文字列の一覧ではない"))
+            if section == "processes" and supply_slugs is not None and slug not in supply_slugs:
+                out.append(Problem(rel, pointer(base), "V-04", f"工程 {slug} が data/supply-chain.yaml にない"))
+            sources = entry.get("sources")
+            if not isinstance(sources, list):
+                out.append(Problem(rel, pointer(base + ["sources"]), "V-01", "sources が一覧ではない"))
+                continue
+            if not sources:  # 「公式の出典が未確認」の対象。下書きは作れない（承認済みの資料がない）。形の誤りではないため、警告
+                out.append(Problem(rel, pointer(base + ["sources"]), "V-01", "sources が空（承認済みの出典がないため、下書きは作れない）",
+                                   "warning"))
+                continue
+            approved_urls: set[str] = set()
+            for i, source in enumerate(sources):
+                at = base + ["sources", i]
+                if not isinstance(source, dict):
+                    out.append(Problem(rel, pointer(at), "V-01", "オブジェクトではない"))
+                    continue
+                for key, allowed in (("status", EXPLAINER_STATUS), ("role", EXPLAINER_ROLES), ("kind", EXPLAINER_KINDS)):
+                    if source.get(key) not in allowed:
+                        out.append(Problem(rel, pointer(at + [key]), "V-01", f"{key} は {' / '.join(allowed)} のどれか"))
+                for key in ("publisher", "title"):
+                    if not isinstance(source.get(key), str) or not source[key].strip():
+                        out.append(Problem(rel, pointer(at + [key]), "V-01", f"{key} がない"))
+                url = source.get("url")
+                if isinstance(url, str) and re.fullmatch(r"http://[^\s/]+\S*", url):
+                    # 取得は https だけ。http のURLは取得できない。運営者が直すまでは警告（--strict でエラー）
+                    out.append(Problem(rel, pointer(at + ["url"]), "V-01", "url が https:// でなく http:// で始まる（取得できない）",
+                                       "warning"))
+                elif not isinstance(url, str) or not re.fullmatch(r"https://[^\s/]+\S*", url):
+                    out.append(Problem(rel, pointer(at + ["url"]), "V-01", "url が https:// で始まる形ではない"))
+                elif source.get("status") == "approved":
+                    if url in approved_urls:
+                        out.append(Problem(rel, pointer(at + ["url"]), "V-03", "承認済み（approved）のURLが、同じ対象の中で重複している"))
+                    approved_urls.add(url)
+    if mvp and isinstance(config.get("processes"), dict):
+        for slug in sorted(mvp - set(config["processes"])):
+            out.append(Problem(rel, "/processes", "V-04", f"mvp: true の工程 {slug} の定義（出典）がない"))
+    return out
+
+
+def _source_roles(config, section: str, slug: str) -> dict[str, str]:
+    """URL → 役割（その対象の承認済みの出典）。"""
+    entry = ((config or {}).get(section) or {}).get(slug) if isinstance(config, dict) else None
+    if not isinstance(entry, dict):
+        return {}
+    return {s["url"]: s["role"] for s in entry.get("sources") or []
+            if isinstance(s, dict) and isinstance(s.get("url"), str) and s.get("role") in EXPLAINER_ROLES}
+
+
+def _body_checks(rel: str, data: dict, body: str, roles: dict[str, str], out: list[Problem]) -> list[str]:
+    """工程・用語の本文の共通の検査（V-07、V-08、V-10、補助の出典だけを引いていないか）。本文の行（コードブロックの外）を返す。"""
+    source_ids = _source_ids(data, rel, out)
+    sections, outside = split_body(body)
+    levels = [level for level, _, _ in sections[1:]]
+    if 1 in levels:
+        out.append(Problem(rel, "(本文)", "V-10", "`#`（大見出し）がある。本文は `##` から始める"))
+    previous = 1
+    for level in levels:
+        if level > previous + 1:
+            out.append(Problem(rel, "(本文)", "V-10", "見出しの段が飛んでいる（`##` の次に `####` など）"))
+            break
+        previous = level
+    cited = set(_CITATION.findall("\n".join(outside)))
+    for number in sorted(cited - source_ids, key=lambda n: int(n[1:])):
+        out.append(Problem(rel, "(本文)", "V-07", f"本文の [{number}] が、sources にない"))
+    for i, source in enumerate(data.get("sources") or []):
+        if isinstance(source, dict) and isinstance(source.get("id"), str) and source["id"] not in cited:
+            out.append(Problem(rel, pointer(["sources", i, "id"]), "V-08", f"sources の {source['id']} が、本文で使われていない",
+                               "warning"))
+    cited_roles = {roles.get(s.get("url")) for s in data.get("sources") or []
+                   if isinstance(s, dict) and s.get("id") in cited}
+    if cited and cited_roles and cited_roles <= {"supplementary", None} and "supplementary" in cited_roles:
+        out.append(Problem(rel, "(本文)", "V-08", "本文が、補助（supplementary）の出典だけを引いている。定義は、primary の出典で裏付ける",
+                           "warning"))
+    return outside
+
+
+def _length_warning(rel: str, path: str, label: str, count: int, low: int, high: int, out: list[Problem]) -> None:
+    if not low <= count <= high:
+        out.append(Problem(rel, path, "V-12", f"{label}が {count}字で、目安（{low}〜{high}字）を外れている", "warning"))
+
+
+def _name_key(text: str) -> str:
+    return unicodedata.normalize("NFKC", text).casefold().strip()
+
+
+def check_terms(terms: dict[str, tuple[dict, str]], supply, config) -> list[Problem]:
+    out: list[Problem] = []
+    config_terms = (config or {}).get("terms") if isinstance(config, dict) else None
+    known = set(config_terms) if isinstance(config_terms, dict) else None
+    process_slugs = _slugs(supply, "processes")
+    file_slugs = {Path(rel).stem for rel in terms}
+    owners: dict[str, list[str]] = {}
+    for rel, (data, body) in terms.items():
+        slug = Path(rel).stem
+        if known is not None and slug not in known:
+            out.append(Problem(rel, "", "V-02", f"ファイル名（{slug}）が config/explainer-sources.yaml の用語の slug にない"))
+        if known is not None and slug in known and isinstance(config_terms[slug], dict) \
+                and isinstance(data.get("term"), str) and data["term"] != config_terms[slug].get("term"):
+            out.append(Problem(rel, "/term", "V-02", "term が config/explainer-sources.yaml の用語の名前と違う", "warning"))
+        for name in [data.get("term"), *(data.get("aliases") or [])]:
+            if isinstance(name, str):
+                owners.setdefault(_name_key(name), []).append(rel)
+        if process_slugs is not None:
+            for i, ref in enumerate(data.get("processes") or []):
+                if ref not in process_slugs:
+                    out.append(Problem(rel, pointer(["processes", i]), "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
+        for i, ref in enumerate(data.get("related_terms") or []):
+            if ref == slug:
+                out.append(Problem(rel, pointer(["related_terms", i]), "V-04", "自分自身を参照している"))
+            elif ref not in file_slugs and (known is None or ref not in known):
+                out.append(Problem(rel, pointer(["related_terms", i]), "V-04", f"用語 {ref} が、用語集にも config/explainer-sources.yaml にもない"))
+            elif ref not in file_slugs:
+                out.append(Problem(rel, pointer(["related_terms", i]), "V-04", f"用語 {ref} は、まだ原稿（content/glossary/）がない。公開の前にそろえる",
+                                   "warning"))
+        roles = _source_roles(config, "terms", slug)
+        outside = _body_checks(rel, data, body, roles, out)
+        _length_warning(rel, "(本文)", "本文", count_characters(outside), *TERM_LENGTH, out)
+        if isinstance(data.get("description"), str):
+            _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
+    for key, files in sorted(owners.items()):  # V-16：term と aliases の語は、用語集の全体で重複させない（同じファイルの中も含む）
+        if len(files) > 1:
+            out.append(Problem(files[1], "(term / aliases)", "V-16",
+                               f"同じ語が、{len(files)}か所の term・aliases にある（{', '.join(Path(f).stem for f in files)}）"))
+    return out
+
+
+def check_process_pages(pages: dict[str, tuple[dict, str]], supply, config, terms: dict[str, tuple[dict, str]]) -> list[Problem]:
+    out: list[Problem] = []
+    process_slugs = _slugs(supply, "processes")
+    config_terms = (config or {}).get("terms") if isinstance(config, dict) else None
+    known = set(config_terms) if isinstance(config_terms, dict) else None
+    term_files = {Path(rel).stem for rel in terms}
+    for rel, (data, body) in pages.items():
+        slug = Path(rel).stem
+        if data.get("process") != slug:
+            out.append(Problem(rel, "/process", "V-02", f"ファイル名（{slug}）と process（{data.get('process')}）が一致しない"))
+        if process_slugs is not None and slug not in process_slugs:
+            out.append(Problem(rel, "/process", "V-04", f"工程 {slug} が data/supply-chain.yaml にない"))
+        for i, ref in enumerate(data.get("terms") or []):
+            if ref not in term_files and (known is None or ref not in known):
+                out.append(Problem(rel, pointer(["terms", i]), "V-04", f"用語 {ref} が、用語集にも config/explainer-sources.yaml にもない"))
+            elif ref not in term_files:
+                out.append(Problem(rel, pointer(["terms", i]), "V-04", f"用語 {ref} は、まだ原稿（content/glossary/）がない。公開の前にそろえる",
+                                   "warning"))
+        _body_checks(rel, data, body, _source_roles(config, "processes", slug), out)
+        if isinstance(data.get("title"), str) and len(data["title"]) > TITLE_MAX:
+            out.append(Problem(rel, "/title", "V-12", f"title が {len(data['title'])}字で、目安（{TITLE_MAX}字以内）を外れている", "warning"))
+        if isinstance(data.get("description"), str):
+            _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
     return out
 
 

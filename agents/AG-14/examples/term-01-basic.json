@@ -1,0 +1,34 @@
+{
+  "description": "用語向けの指示文（prompt.term.md）を変えたときの確認に使う見本。資料は架空の短い文章（実在の発行元・資料ではない）。期待する出力は、本文ではなく、満たすべき条件で書く",
+  "input": {
+    "task": {
+      "kind": "term",
+      "name": "架空研磨",
+      "fetched_on": "2026-10-07",
+      "sources": [
+        {"id": "S1", "role": "primary", "publisher": "架空技術協会", "title": "架空研磨の概要", "format": "html"},
+        {"id": "S2", "role": "supplementary", "publisher": "架空商事", "title": "用語メモ", "format": "html"}
+      ],
+      "selectable_processes": [{"slug": "deposition", "name": "成膜"}, {"slug": "cmp", "name": "CMP"}],
+      "selectable_terms": [{"slug": "fictional-slurry", "term": "架空スラリー"}]
+    },
+    "materials": [
+      {"source": "S1", "page": 1, "text": "架空研磨は、ウエハーの表面を平らにするために、薬液を含む液体と研磨用の布を使う処理である。（架空）"},
+      {"source": "S1", "page": 1, "text": "成膜の後に行い、次の層を重ねる前の表面をそろえる。（架空）"},
+      {"source": "S2", "page": 1, "text": "架空研磨では、架空スラリーという研磨用の液体を使う。（架空）"}
+    ]
+  },
+  "expect": {
+    "schema_valid": true,
+    "citations_only": ["[S1]", "[S2]"],
+    "definition_cites_primary": true,
+    "processes_subset_of_input": true,
+    "related_terms_subset_of_input": true,
+    "no_facts_outside_materials": true,
+    "no_numbers_not_in_materials": true,
+    "no_prohibited_words": true,
+    "no_disclaimers_about_the_source": true,
+    "reading_is_katakana": true,
+    "reprint_check_max_run_below": 30
+  }
+}
