@@ -77,21 +77,26 @@ def load_yaml(path: Path, what: str):
         raise DraftError(f"{what} を読めなかった") from None
 
 
-def read_bundle(creds: dict, key: str, r2_factory) -> dict:
-    """R2 から原資料束を読む。ないときは、先に edinet-bundle を動かすよう伝える。"""
+def fetch_json(creds: dict, key: str, r2_factory, not_found_hint: str) -> object:
+    """R2 から、JSON のオブジェクトを読む。ないときは、not_found_hint（先に動かす処理）を伝える。本文と認証情報は、メッセージに出さない。"""
     r2 = r2_factory(creds)
     try:
         body = r2.get_object(Bucket=creds[make_bundle.ENV_BUCKET], Key=key)["Body"].read()
     except Exception as error:  # noqa: BLE001 - 認証情報と本文を出さないため、種類とコードだけ示す
         code = getattr(error, "response", {}).get("Error", {}).get("Code") if isinstance(getattr(error, "response", None), dict) else None
         if code in ("NoSuchKey", "404"):
-            raise DraftError(f"原資料束 {key} が、バケットにない。先に edinet-bundle を動かす") from None
+            raise DraftError(f"原資料束 {key} が、バケットにない。{not_found_hint}") from None
         raise DraftError(f"原資料束を読めなかった（{type(error).__name__}"
                          f"{'（' + code + '）' if isinstance(code, str) and re.fullmatch(r'[A-Za-z0-9_]{1,40}', code) else ''}）") from None
     try:
-        bundle = json.loads(body.decode("utf-8"))
+        return json.loads(body.decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
         raise DraftError("原資料束がJSONとして読めなかった") from None
+
+
+def read_bundle(creds: dict, key: str, r2_factory) -> dict:
+    """R2 から原資料束を読む。ないときは、先に edinet-bundle を動かすよう伝える。"""
+    bundle = fetch_json(creds, key, r2_factory, "先に edinet-bundle を動かす")
     if not isinstance(bundle, dict) or bundle.get("schema_version") != BUNDLE_SCHEMA_VERSION \
             or not isinstance(bundle.get("sections"), list):
         raise DraftError(f"原資料束の形が正しくない（schema_version {BUNDLE_SCHEMA_VERSION} の形ではない）")

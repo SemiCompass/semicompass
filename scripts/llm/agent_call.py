@@ -110,12 +110,17 @@ def model_and_prices(budgets: dict, agent: str) -> tuple[str, dict]:
     return model, prices
 
 
-def load_agent(agent: str, agents_dir: Path = AGENTS_DIR) -> tuple[str, dict]:
-    """agents/{ID}/ の指示文と、出力の形式（スキーマ）を読む。出力の形式が $ref だけなら、参照先を読む。"""
+def load_agent(agent: str, agents_dir: Path = AGENTS_DIR, variant: str | None = None) -> tuple[str, dict]:
+    """agents/{ID}/ の指示文と、出力の形式（スキーマ）を読む。出力の形式が $ref だけなら、参照先を読む。
+
+    variant（"term"、"process" など）を指定すると、prompt.{variant}.md と output.{variant}.schema.json を読む
+    （同じエージェントが、対象の種類ごとに指示文と出力の形式を持つとき。予算と ledger は、エージェントのIDで数える）。
+    """
     directory = agents_dir / agent
+    suffix = f".{variant}" if variant else ""
     try:
-        prompt = (directory / "prompt.md").read_text(encoding="utf-8")
-        schema_path = directory / "output.schema.json"
+        prompt = (directory / f"prompt{suffix}.md").read_text(encoding="utf-8")
+        schema_path = directory / f"output{suffix}.schema.json"
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
         if isinstance(schema, dict) and set(schema) <= {"$ref", "$schema", "title", "description"} and "$ref" in schema:
             schema = json.loads((schema_path.parent / schema["$ref"]).resolve().read_text(encoding="utf-8"))
@@ -302,6 +307,7 @@ def call_agent(
     budgets_path: Path = BUDGETS_PATH,
     operations_path: Path = OPERATIONS_PATH,
     agents_dir: Path = AGENTS_DIR,
+    variant: str | None = None,
 ) -> AgentResult:
     """エージェントを1回呼ぶ。task は指示の区画（プログラムが作った入力）、materials は資料の区画（外から届いた文章）。
 
@@ -325,7 +331,7 @@ def call_agent(
         result.status, result.reason = STATUS_SKIP_PAUSED, "config/operations.yaml が paused のため、呼ばなかった"
         return result
 
-    prompt, schema = load_agent(agent, agents_dir)
+    prompt, schema = load_agent(agent, agents_dir, variant)
     structured_schema = api_schema(schema)
     system = prompt
     task_block = {"type": "text", "text": task}
