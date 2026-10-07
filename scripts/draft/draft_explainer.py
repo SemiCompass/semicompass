@@ -36,6 +36,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 for sub in ("draft", "llm", "textcheck", "bundle", "validate", "edinet"):
     sys.path.insert(0, str(REPO_ROOT / "scripts" / sub))
 
+import ag23_check  # noqa: E402
 import agent_call  # noqa: E402
 import draft_company as dc  # noqa: E402
 import make_bundle  # noqa: E402
@@ -363,10 +364,28 @@ def sorted_check_points(points: list[dict]) -> list[dict]:
 
 
 def pr_body_reviewed(kind: str, slug: str, name: str, output: dict, body_chars: int, warnings: list, cost_jpy: float,
-                     run_id: str) -> str:
+                     run_id: str, check: "ag23_check.CheckResult | None" = None, notes: list[str] = ()) -> str:
     path = f"content/{'glossary' if kind == 'term' else 'processes'}/{slug}.md"
-    rows = "\n".join(f"| {i} | {'**high**' if p['risk'] == 'high' else 'low'} | {p['claim'].replace('|', '／')} |"
-                     for i, p in enumerate(sorted_check_points(output["check_points"]), start=1))
+    points = sorted_check_points(output["check_points"])
+    if check is not None and not check.skipped:
+        rows = ag23_check.merge_rows(points, check.claims)
+        table = ag23_check.table_markdown(rows, True)
+        counts = check.counts()
+        ai_lines = [f"* AIによる確認（AG-23、別のモデル）：矛盾 {counts['conflicting']}件、要点にない {counts['not_in_reference']}件、一致 {counts['consistent']}件"]
+        if check.has_conflict:
+            ai_lines.append(f"* **矛盾が残っている（{counts['conflicting']}件）。警告であり、取り込みは止めない。運営者が確かめる**")
+        if check.uncertain:
+            ai_lines.append("* 要点を作ったAIが、確かでない・言い方が分かれるとした点：" + "、".join(u.replace("|", "／") for u in check.uncertain))
+        if check.note:
+            ai_lines.append(f"* AG-23 からの連絡：{check.note}")
+        ai_lines.append(f"* {ag23_check.DISCLAIMER}")
+        check_intro = "AIの判定が矛盾、要点にない、一致の順に、risk が high のものを先に並べている。サイトには出さない。"
+    else:
+        table = ag23_check.table_markdown([{"claim": p["claim"], "risk": p["risk"]} for p in points], False)
+        reason = check.skipped_reason if check is not None else "実行していない"
+        ai_lines = [f"* AIによる確認は行っていない（{reason}）。{ag23_check.DISCLAIMER.split('。', 1)[0]}。運営者の確認が必要である"]
+        check_intro = "risk が high（誤りやすい、または言い方が分かれる）を先に並べている。サイトには出さない。"
+    ai_lines += [f"* {n}" for n in notes]
     warning_lines = "\n".join(f"* [{w.rule}] {w.file}: {w.path or '(全体)'}: {w.message}" for w in warnings) or "* なし"
     note = f"\n## AG-14 からの連絡（note）\n{output['note']}\n" if output.get("note") else ""
     return f"""## 変更の種類
@@ -380,11 +399,11 @@ def pr_body_reviewed(kind: str, slug: str, name: str, output: dict, body_chars: 
 使わない（運営者が確かめる方式）。出典は、運営者が確かめに使った資料を、運営者が `sources` に書く。AI は、出典を作らない。
 
 ## 確かめる観点（check_points）
-risk が high（誤りやすい、または言い方が分かれる）を先に並べている。サイトには出さない。
+{check_intro}
 
-| 番号 | risk | 本文の主張 |
-| ---: | :--- | :--- |
-{rows}
+{table}
+
+{chr(10).join(ai_lines)}
 
 ## 検査の結果
 * 本文の文字数：{body_chars}字（用語の目安 {validate_data.TERM_LENGTH[0]}〜{validate_data.TERM_LENGTH[1]}字。工程には目安がない）
@@ -414,16 +433,29 @@ def run_reviewed(args, *, now, client_factory, sleep, root: Path, budgets_path, 
     task = "## 入力（プログラムが渡す値）\n" + json.dumps(task_input, ensure_ascii=False, indent=1)
     all_rows: list[dict] = []
     get_client = dc.shared_client_factory(client_factory)
+    common = dict(run_id=args.run_id, subject=f"{kind}-{slug}", ledger_dir=args.ledger_dir, now=now, sleep=sleep,
+                  client_factory=get_client, budgets_path=budgets_path, operations_path=operations_path, agents_dir=agents_dir)
 
     def cost_of(rows: list[dict]) -> float:
         return round(sum(r["cost_jpy"] for r in rows), 4)
 
-    result = agent_call.call_agent(AGENT, task, "", run_id=args.run_id, subject=f"{kind}-{slug}", ledger_dir=args.ledger_dir, now=now,
-                                   sleep=sleep, client_factory=get_client, budgets_path=budgets_path,
-                                   operations_path=operations_path, agents_dir=agents_dir, variant=f"{kind}-reviewed")
-    all_rows.extend(result.rows)
-    dc.write_ledger(args.out_dir, all_rows)
-    summary.append(f"* AIの利用額: {cost_of(all_rows):.2f}円（呼び出し {len(all_rows)}回、状態: {result.status}）")
+    def write_rows() -> None:
+        dc.write_ledger(args.out_dir, all_rows)  # この実行の、すべての呼び出しの行（AG-14 と AG-23。エージェントのIDごとに数える）
+
+    def call_writer(followup: str = ""):
+        result = agent_call.call_agent(AGENT, task, "", followup=followup, prior_cost_jpy=cost_of(all_rows), variant=f"{kind}-reviewed", **common)
+        all_rows.extend(result.rows)
+        write_rows()
+        summary.append(f"* AIの利用額: {cost_of(all_rows):.2f}円（呼び出し {len(all_rows)}回、状態: {result.status}）")
+        return result
+
+    def evaluate(output: dict) -> tuple[dict, list[str], list]:
+        front = build_reviewed_front(kind, slug, name, today, output)
+        errors = check_reviewed_output(kind, slug, output, supply, config)
+        file_errors, warnings = validate_file(kind, slug, front, output["body"], root, REPO_ROOT, supply, config)
+        return front, errors + file_errors, warnings
+
+    result = call_writer()
     if result.status in (agent_call.STATUS_SKIP_PAUSED, agent_call.STATUS_SKIP_BUDGET):
         summary.append(f"* {result.reason}")
         print(result.reason, file=sys.stderr)
@@ -431,18 +463,46 @@ def run_reviewed(args, *, now, client_factory, sleep, root: Path, budgets_path, 
     if result.status != agent_call.STATUS_OK:
         raise DraftError(result.reason)
     output = result.output
-    front = build_reviewed_front(kind, slug, name, today, output)
-    errors = check_reviewed_output(kind, slug, output, supply, config)
-    file_errors, warnings = validate_file(kind, slug, front, output["body"], root, REPO_ROOT, supply, config)
-    errors += file_errors
+    front, errors, warnings = evaluate(output)
     summary.append("* 転載の検査: しない（原資料束がない）")
     if errors:
         summary += ["* 検査に不合格（ファイルは書かない）："] + [f"  * {e}" for e in errors]
         raise DraftError("検査に不合格のため、ファイルを書かない: " + " / ".join(errors))
+
+    # 別のモデル（AG-23）による確認。結果は警告で、取り込みを止めない。飛ばしても、終了コードは変えない
+    caller = ag23_check.Caller(all_rows, write_rows, common)
+    check, reference = ag23_check.run_check(caller, kind, slug, name, output["body"], output, supply)
+    notes: list[str] = []
+    if check.skipped:
+        summary.append(f"* AIによる確認（AG-23）: 行っていない（{check.skipped_reason}）")
+    else:
+        summary.append(f"* AIによる確認（AG-23）: {check.counts()}")
+    if not check.skipped and check.has_conflict:
+        before = len(check.conflicts())
+        summary.append(f"* 矛盾 {before}件。AG-14 に1回だけ書き直させる")
+        rewrite = call_writer(ag23_check.build_rewrite_followup(check.conflicts(), output))
+        if rewrite.status != agent_call.STATUS_OK:
+            notes.append(f"矛盾があったため、AG-14 に書き直させようとしたが、行えなかった（{rewrite.reason}）。最初の下書きのままである")
+        else:
+            front2, errors2, warnings2 = evaluate(rewrite.output)
+            if errors2:
+                notes.append("矛盾があったため、AG-14 に書き直させたが、書き直した出力が検査に不合格だった。最初の下書きのままである")
+                summary += ["* 書き直した出力は、検査に不合格のため採用しない："] + [f"  * {e}" for e in errors2]
+            else:
+                recheck, _ = ag23_check.run_check(caller, kind, slug, name, rewrite.output["body"], rewrite.output, supply, reference)
+                output, front, warnings = rewrite.output, front2, warnings2
+                if recheck.skipped:
+                    notes.append(f"矛盾があったため、AG-14 に1回だけ書き直させた（矛盾 {before}件）。書き直した後の再確認は行っていない（{recheck.skipped_reason}）")
+                    check = ag23_check.CheckResult(skipped_reason=f"書き直した後の再確認を行っていない：{recheck.skipped_reason}")
+                else:
+                    notes.append(f"矛盾があったため、AG-14 に1回だけ書き直させた（矛盾 {before}件 → {len(recheck.conflicts())}件）")
+                    check = recheck
+                summary.append(f"* 書き直した後の確認: {notes[-1]}")
     body_chars = validate_data.count_characters(output["body"].split("\n"))
     summary += [f"* 本文: {body_chars}字", f"* 警告: {len(warnings)}件", f"* check_points: {len(output['check_points'])}件"]
     dc.write_text(args.out_dir.joinpath(*OUT_DIRS[kind], f"{slug}.md"), render(front, output["body"]))
-    dc.write_text(args.out_dir / "pr-body.md", pr_body_reviewed(kind, slug, name, output, body_chars, warnings, cost_of(all_rows), args.run_id))
+    dc.write_text(args.out_dir / "pr-body.md", pr_body_reviewed(kind, slug, name, output, body_chars, warnings, cost_of(all_rows),
+                                                                 args.run_id, check, notes))
     print(f"下書きを作った: {kind}-{slug}（basis: reviewed、本文 {body_chars}字、警告 {len(warnings)}件、利用額 {cost_of(all_rows):.2f}円）")
     return EXIT_OK
 

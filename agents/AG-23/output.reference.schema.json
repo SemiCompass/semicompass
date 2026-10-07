@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "AG-23（知識にもとづく確認エージェント）の出力の形式（要点の作成）。定義の本体は、schemas/ にある（アーキテクチャ設計書 8.2）。",
+  "$ref": "../../schemas/agents/AG-23.reference.output.schema.json"
+}

@@ -1,0 +1,43 @@
+{
+  "description": "AG-23 judge の指示文（prompt.judge.md）を変えたときの確認に使う見本（架空の用語）。実際の測定は、tests/explainer/ag23_samples.py の見本と scripts/draft/measure_ag23.py で行う",
+  "input": {
+    "task": {
+      "kind": "term",
+      "name": "架空研磨",
+      "points": [
+        {
+          "point": "架空研磨は、ウエハー表面を平らにする処理である",
+          "confidence": "high"
+        },
+        {
+          "point": "成膜の後に行う",
+          "confidence": "medium"
+        },
+        {
+          "point": "研磨剤の種類には流派がある",
+          "confidence": "low"
+        }
+      ],
+      "uncertain": [
+        "研磨剤の種類"
+      ]
+    },
+    "materials": "架空研磨は、ウエハー表面を平らにする処理である。成膜の前に行う。研磨剤の粒は、必ず球形である。"
+  },
+  "expect": {
+    "schema_valid": true,
+    "claims_in_body_order": true,
+    "claims_count": [
+      3,
+      3
+    ],
+    "verdicts": [
+      "consistent",
+      "conflicting",
+      "not_in_reference"
+    ],
+    "has_conflict": true,
+    "low_confidence_point_never_the_only_basis_for_conflicting": true,
+    "never_rewrites_the_body": true
+  }
+}
