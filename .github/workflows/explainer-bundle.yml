@@ -1,0 +1,77 @@
+name: explainer-bundle
+
+# 手動で動かす。config/explainer-sources.yaml で承認した（status: approved）URLだけを取得し、
+# 工程または用語1つの原資料束を、Cloudflare R2 の非公開バケットに保存する。
+# 取得した本文は、リポジトリ、ログ、概要、成果物に出さない（出るのは、資料の番号・取得の成否・段落の数・文字数だけ）。
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: 対象の種類（process＝工程、term＝用語）
+        required: true
+        type: choice
+        options:
+          - process
+          - term
+      slug:
+        description: 対象の slug（config/explainer-sources.yaml のキー。例 etching）
+        required: true
+        type: string
+      dry_run:
+        description: 取得はするが、R2 に書かない
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: explainer-bundle
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    # bundle-write の Environment（R2_*［書き込み］）を使う。main だけに限定済み
+    environment: bundle-write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 原資料束を作る（本文は出さない）
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
+          INPUT_KIND: ${{ inputs.kind }}
+          INPUT_SLUG: ${{ inputs.slug }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          slug="$INPUT_SLUG"
+          if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "slug の形が正しくない"; exit 2
+          fi
+          if [ "$INPUT_KIND" != "process" ] && [ "$INPUT_KIND" != "term" ]; then
+            echo "kind が正しくない"; exit 2
+          fi
+          args=(--kind "$INPUT_KIND" --slug "$slug" --summary "$GITHUB_STEP_SUMMARY")
+          if [ "$INPUT_DRY_RUN" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          set +e
+          "$RUNNER_TEMP/venv/bin/python" scripts/bundle/make_explainer_bundle.py "${args[@]}"
+          code=$?
+          set -e
+          # 0：すべて取得した。4：一部の資料が失敗した（取れた資料だけで保存した。失敗の一覧は概要に出る）
+          if [ "$code" != "0" ] && [ "$code" != "4" ]; then
+            exit "$code"
+          fi
