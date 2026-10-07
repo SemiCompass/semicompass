@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-23.reference.output.schema.json",
+  "title": "AG-23 知識にもとづく確認エージェントの出力（要点の作成）",
+  "description": "AG-23の1回目の呼び出し。用語または工程の名前だけから（下書きを見ずに）、その対象について一般的に確立している要点を作る。2回目の呼び出し（judge）が、下書きの主張と見比べるために使う。サイトには出さない。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "points",
+    "uncertain"
+  ],
+  "properties": {
+    "points": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 12,
+      "description": "一般的に確立している要点。入門書に必ず書いてあるレベルの内容だけ。数値、年、企業名は書かない",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "point",
+          "confidence"
+        ],
+        "properties": {
+          "point": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "description": "その要点を、自分がどれだけ確かだと考えるか。low の要点は、2回目の判定では、矛盾の根拠にしない"
+          }
+        }
+      }
+    },
+    "uncertain": {
+      "type": "array",
+      "maxItems": 6,
+      "description": "この対象について、言い方が分かれる点、自分が確かでない点。なければ空の配列",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
+      }
+    }
+  }
+}
