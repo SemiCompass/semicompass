@@ -1,0 +1,212 @@
+name: draft-explainer
+
+# 手動で動かす。工程または用語1つの原資料束（R2の非公開バケット）を読み、AG-14（Claude API）で、
+# 工程（content/processes/{slug}.md）か用語（content/glossary/{slug}.md）の下書きを作り、変更案にする。
+# 原資料束の本文は、リポジトリ、ログ、要約、成果物、変更案に出さない。外に出るのは、下書きと、AIの利用額の記録だけ。
+# 先に explainer-bundle で、その対象の原資料束を R2 に保存しておく。
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: 対象の種類（process＝工程、term＝用語）
+        required: true
+        type: choice
+        options:
+          - process
+          - term
+      slug:
+        description: 対象の slug（config/explainer-sources.yaml のキー。例 etching）
+        required: true
+        type: string
+
+# 既定は読み取りだけ。必要な権限は、ジョブごとに足す
+permissions:
+  contents: read
+
+concurrency:
+  group: draft-company
+  cancel-in-progress: false
+
+jobs:
+  # 1. 下書きを作る。秘密（R2の読み取り用トークン、Claude APIのID連携）は、このジョブだけに渡す。
+  #    このジョブは、リポジトリに書き込めない
+  draft:
+    runs-on: ubuntu-24.04
+    # draft の Environment（R2_*［読み取り専用］、ANTHROPIC_*）。main だけに限定済み
+    environment: draft
+    permissions:
+      contents: read
+      id-token: write   # Claude API の ID連携（Workload Identity Federation）に使う
+    outputs:
+      created: ${{ steps.run.outputs.created }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      # 今月のAIの利用額を、ops-log ブランチの ops/ledger/ から読む（予算の確認に使う）。
+      # ブランチがまだないときは、利用額 0 として進める（スクリプトが要約に書く）
+      - name: 運営記録（利用額）を読む
+        run: |
+          git clone --quiet --depth 1 --branch ops-log \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/ops-log" \
+            || echo "ops-log ブランチがまだない"
+
+      - name: GitHub の ID トークンを取る（Claude API の ID連携）
+        run: |
+          curl -sS --fail -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+            | jq -r .value > "$RUNNER_TEMP/gha-jwt"
+          test -s "$RUNNER_TEMP/gha-jwt"
+
+      - name: 下書きを作る（原資料束の本文は出さない）
+        id: run
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ runner.temp }}/gha-jwt
+          # 入力は、コマンドに直接埋め込まず、環境変数で受け取る
+          INPUT_KIND: ${{ inputs.kind }}
+          INPUT_SLUG: ${{ inputs.slug }}
+        run: |
+          slug="$INPUT_SLUG"
+          if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "slug の形が正しくない"; exit 2
+          fi
+          if [ "$INPUT_KIND" != "process" ] && [ "$INPUT_KIND" != "term" ]; then
+            echo "kind が正しくない"; exit 2
+          fi
+          out="$RUNNER_TEMP/draft-out"
+          set +e
+          "$RUNNER_TEMP/venv/bin/python" scripts/draft/draft_explainer.py \
+            --kind "$INPUT_KIND" \
+            --slug "$slug" \
+            --out-dir "$out" \
+            --ledger-dir "$RUNNER_TEMP/ops-log/ops/ledger" \
+            --run-id "$GITHUB_RUN_ID" \
+            --summary "$GITHUB_STEP_SUMMARY"
+          code=$?
+          set -e
+          rm -f "$RUNNER_TEMP/gha-jwt"
+          # 0：下書きを作った。3：休止中か予算の上限で、呼ばずに終えた（利用額の記録だけ残す）
+          if [ "$code" = "0" ]; then
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          elif [ "$code" = "3" ]; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          else
+            exit "$code"
+          fi
+
+      # 成果物に入れるのは、下書き（公開の変更案になるもの）と、利用額の記録（公開の前提）と、変更案の説明だけ。
+      # 失敗したときも、利用額の記録を残すために上げる
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: draft-out
+          path: ${{ runner.temp }}/draft-out
+          retention-days: 3
+          if-no-files-found: ignore
+
+  # 2. 変更案を作り、利用額を ops-log に追記する。秘密は渡さない（GITHUB_TOKEN だけ）
+  publish:
+    needs: draft
+    # 下書きのジョブが失敗しても、利用額の記録は追記する（変更案は作らない）
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        continue-on-error: true   # 下書きのジョブが途中で止まり、成果物がないとき
+        with:
+          name: draft-out
+          path: ${{ runner.temp }}/draft-out
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        if: needs.draft.outputs.created == 'true'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 下書きを置いて、形式を検証する
+        if: needs.draft.outputs.created == 'true'
+        env:
+          INPUT_KIND: ${{ inputs.kind }}
+          INPUT_SLUG: ${{ inputs.slug }}
+        run: |
+          slug="$INPUT_SLUG"
+          if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then echo "slug の形が正しくない"; exit 2; fi
+          out="$RUNNER_TEMP/draft-out"
+          # 置いてよいのは、この1つのファイルだけ
+          if [ "$INPUT_KIND" = "process" ]; then dest="content/processes/$slug.md"; elif [ "$INPUT_KIND" = "term" ]; then dest="content/glossary/$slug.md"; else echo "kind が正しくない"; exit 2; fi
+          test -f "$out/$dest"
+          mkdir -p "$(dirname "$dest")"
+          cp "$out/$dest" "$dest"
+          "$RUNNER_TEMP/venv/bin/python" scripts/validate/validate_data.py
+
+      - name: 変更案を作る
+        if: needs.draft.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_KIND: ${{ inputs.kind }}
+          INPUT_SLUG: ${{ inputs.slug }}
+        run: |
+          slug="$INPUT_SLUG"
+          if [ "$INPUT_KIND" = "process" ]; then dest="content/processes/$slug.md"; label="工程"; else dest="content/glossary/$slug.md"; label="用語"; fi
+          branch="draft/${INPUT_KIND}-${slug}-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add "$dest"
+          git commit -m "下書き：${label} ${slug} の解説（AG-14、実行 ${GITHUB_RUN_ID}）"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "下書き：${label} ${slug} の解説" \
+            --body-file "$RUNNER_TEMP/draft-out/pr-body.md"
+
+      # 利用額の記録（データ定義書 10.3）。JSON Lines は追記だけ。ブランチがなければ作る
+      - name: 利用額を ops-log に追記する
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          src="$RUNNER_TEMP/draft-out/ledger"
+          if ! ls "$src"/*.jsonl >/dev/null 2>&1; then
+            echo "利用額の記録がない"; exit 0
+          fi
+          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          dir="$RUNNER_TEMP/ops-log"
+          if git ls-remote --exit-code --heads "$url" ops-log >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch ops-log "$url" "$dir"
+          else
+            git init --quiet "$dir"
+            git -C "$dir" checkout --quiet --orphan ops-log
+            git -C "$dir" remote add origin "$url"
+          fi
+          mkdir -p "$dir/ops/ledger"
+          for f in "$src"/*.jsonl; do
+            name="$(basename "$f")"
+            if ! [[ "$name" =~ ^[0-9]{4}-[0-9]{2}\.jsonl$ ]]; then echo "記録のファイル名が正しくない"; exit 1; fi
+            cat "$f" >> "$dir/ops/ledger/$name"
+          done
+          git -C "$dir" config user.name "github-actions[bot]"
+          git -C "$dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$dir" add ops/ledger
+          git -C "$dir" commit --quiet -m "利用額の記録（draft-explainer、実行 ${GITHUB_RUN_ID}）"
+          git -C "$dir" push --quiet origin ops-log
