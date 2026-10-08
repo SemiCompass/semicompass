@@ -38,7 +38,7 @@ for (const root of document.querySelectorAll<HTMLElement>('[data-company-table]'
       const next = current === 'ascending' ? 'descending' : current === 'descending' ? 'none' : 'ascending';
       for (const other of headers) other.setAttribute('aria-sort', other === th ? next : 'none');
       const key = th.dataset.sortKey!;
-      const numeric = key === 'sales' || key === 'ratio';
+      const numeric = ['sales', 'ratio', 'margin', 'salary'].includes(key);
       const value = (row: HTMLTableRowElement) => row.dataset[`sort${key[0].toUpperCase()}${key.slice(1)}`] ?? '';
       const sorted = [...rows].sort((a, b) => {
         if (next === 'none') return Number(a.dataset.index) - Number(b.dataset.index);

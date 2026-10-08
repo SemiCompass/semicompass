@@ -7,6 +7,7 @@ import { BUILD_ENV } from 'astro:env/server';
 import Chart from '../../components/Chart.astro';
 import ExternalLink from '../../components/ExternalLink.astro';
 import KeyPoints from '../../components/KeyPoints.astro';
+import FigureNotes from '../../components/FigureNotes.astro';
 import Notice from '../../components/Notice.astro';
 import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
@@ -206,7 +207,7 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
               ]}
             />
           )}
-          {company.is_holding_company && <Notice kind="note"><p>持株会社のため、提出会社単体の数値は、持株会社の社員だけです。</p></Notice>}
+          <FigureNotes kind="work" holding={company.is_holding_company} />
         </>
       ) : (
         <StateMessage kind="empty" message="働く環境のデータは、まだありません。" />

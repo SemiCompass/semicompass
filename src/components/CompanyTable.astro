@@ -3,6 +3,7 @@
 // 工程と企業区分の絞り込み、件数の表示、並べ替え（見出しを押す）は、スクリプトがあるときに使える（なくても、全件が表で読める）。
 // 詳細掲載でない企業（Coming Soon、本番の draft）は、「準備中」とし、売上高・比率は出さない（企業ページと同じ決まり）
 import DataTable from './DataTable.astro';
+import FigureNotes from './FigureNotes.astro';
 import { formatNumber, typeLabel, type CompanyRow } from '../lib/companies';
 import { normalizeForSearch } from '../lib/normalize';
 
@@ -24,9 +25,11 @@ const allColumns = [
   { key: 'processes', label: '工程', wrap: true },
   { key: 'sales', label: '売上高（億円）', numeric: true, sort: 'none' as const, sortKey: 'sales' },
   { key: 'ratio', label: '半導体関連の比率（%）', numeric: true, sort: 'none' as const, sortKey: 'ratio' },
+  { key: 'margin', label: '営業利益率（％）', numeric: true, sort: 'none' as const, sortKey: 'margin' },
+  { key: 'salary', label: '平均年間給与（万円）', numeric: true, sort: 'none' as const, sortKey: 'salary' },
   { key: 'status', label: '掲載の状態' },
 ];
-const compactKeys = ['name', 'type', 'sales', 'ratio'];
+const compactKeys = ['name', 'type', 'sales', 'ratio', 'margin', 'salary'];
 const columns = compact ? allColumns.filter((c) => compactKeys.includes(c.key)) : allColumns;
 const tableRows = rows.map((r) => ({
   __href: `/companies/${r.company.slug}/`,
@@ -36,6 +39,8 @@ const tableRows = rows.map((r) => ({
   processes: r.company.processes.map(processName).join('、') || '—',
   sales: r.sales === null ? '—' : formatNumber(r.sales, 1),
   ratio: r.ratio === null ? '—' : formatNumber(r.ratio, 1),
+  margin: r.margin === null ? '—' : formatNumber(r.margin, 1),
+  salary: r.salary === null ? '—' : formatNumber(r.salary, 0),
   status: r.detailed ? '詳細' : '準備中',
 }));
 const rowData = rows.map((r, i) => ({
@@ -46,6 +51,8 @@ const rowData = rows.map((r, i) => ({
   'data-sort-code': r.company.securities_code ?? '',
   'data-sort-sales': r.sales === null ? '' : String(r.sales),
   'data-sort-ratio': r.ratio === null ? '' : String(r.ratio),
+  'data-sort-margin': r.margin === null ? '' : String(r.margin),
+  'data-sort-salary': r.salary === null ? '' : String(r.salary),
 }));
 ---
 
@@ -70,6 +77,7 @@ const rowData = rows.map((r, i) => ({
   <p class="company-table__count" role="status" data-count data-total={rows.length}>{rows.length}社を表示しています</p>
   <DataTable caption={caption} columns={columns} rows={tableRows} rowData={rowData} wideFirst emptyMessage="該当する企業はありません" />
   <p class="company-table__empty" data-empty hidden>条件に当てはまる企業は、ありません。絞り込みを変えてください。</p>
+  <FigureNotes kind="table" />
 </div>
 
 <style>

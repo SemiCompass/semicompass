@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parse } from 'yaml';
 import { dateLabel, formatOku, formatNumber, millionToOku, periodLabel } from './format';
+import { averageSalary, operatingMargin } from './metrics';
 import type { Category, ChartSpec, Series } from './chart';
 
 const root = process.cwd();
@@ -280,6 +281,8 @@ export interface CompanyRow {
   detailed: boolean; // 詳細掲載として出すか（本番：listing が detailed で、事業概要が公開のとき。プレビュー：draft の事業概要も）
   sales: number | null; // 売上高（億円。最新の通期）。詳細掲載でなければ null
   ratio: number | null; // 半導体関連の比率（%）。詳細掲載でなければ null
+  margin: number | null; // 営業利益率（%。全社の連結、最新の通期）。取れない値と、詳細掲載でなければ null
+  salary: number | null; // 平均年間給与（万円。提出会社、最新の期）。取れない値と、詳細掲載でなければ null
   period: string;
 }
 
@@ -290,14 +293,16 @@ export function companyRows(preview: boolean): CompanyRow[] {
     const overview = loadOverview(company.slug);
     const auto = loadAuto(company.slug);
     const detailed = isDetailed(company, overview, auto, preview);
-    if (!detailed || !auto) return { company, detailed, sales: null, ratio: null, period: '' };
+    if (!detailed || !auto) return { company, detailed, sales: null, ratio: null, margin: null, salary: null, period: '' };
     const annual = annualRows(auto);
     const latest = annual[annual.length - 1];
-    if (!latest) return { company, detailed, sales: null, ratio: null, period: '' };
+    const salary = averageSalary(auto.employees ?? []);
+    if (!latest) return { company, detailed, sales: null, ratio: null, margin: null, salary, period: '' };
     const map = loadSegmentMap(company.slug);
     const segment = map ? segmentSpec(annual, map, colors, periodLabel(latest.fiscal_period_end)) : null;
     return { company, detailed, period: periodLabel(latest.fiscal_period_end),
-      sales: latest.net_sales.value === null ? null : millionToOku(latest.net_sales.value), ratio: segment?.ratio?.value ?? null };
+      sales: latest.net_sales.value === null ? null : millionToOku(latest.net_sales.value), ratio: segment?.ratio?.value ?? null,
+      margin: operatingMargin(auto.financials), salary };
   });
   return rows.sort((a, b) => (a.company.securities_code ?? '99999').localeCompare(b.company.securities_code ?? '99999') || a.company.slug.localeCompare(b.company.slug));
 }

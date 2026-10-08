@@ -1,0 +1,25 @@
+---
+// 数値の定義と範囲の注記（FR-803、FR-309）。企業ページの「働く環境」と、企業の一覧表（企業一覧、工程ページ）で、同じ部品を使う。
+//   kind="work"   企業ページの「働く環境」：持株会社のときだけ、提出会社単体の数値の注記を出す（FR-803）
+//   kind="table"  企業の一覧表の下：営業利益率と平均年間給与の、定義と範囲（画面とデザインの仕様書 9.3）
+import Notice from './Notice.astro';
+
+interface Props {
+  kind: 'work' | 'table';
+  holding?: boolean; // kind="work" のとき、企業マスタの is_holding_company
+}
+const { kind, holding = false } = Astro.props;
+---
+
+{kind === 'work' && holding && (
+  <Notice kind="note">
+    <p>持株会社のため、提出会社単体の数値は、持株会社の社員だけです。</p>
+  </Notice>
+)}
+{kind === 'table' && (
+  <Notice kind="note" title="定義と範囲">
+    <p>営業利益率は、全社の連結の数値です。半導体事業だけの数値ではありません。</p>
+    <p>平均年間給与は、提出会社の従業員の数値です。持株会社では、事業会社の水準を表しません。</p>
+    <p>会計基準の違いで、営業利益の定義が異なる場合があります。</p>
+  </Notice>
+)}
