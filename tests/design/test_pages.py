@@ -150,7 +150,7 @@ class PagesBuildTest(unittest.TestCase):
             self.assertIn("この工程の解説は、準備中です", html.replace("<wbr>", ""))  # 本文がない工程の、解説の欄
             heads = re.findall(r'<span class="data-table__label"[^>]*>(.*?)</span>', html)
             if "data-table--wide-first" in html:  # 企業がない工程は、表でなく空の表示
-                self.assertEqual(heads, ["企業名", "企業区分", "売上高（億円）", "半導体関連の比率（%）"], slug)  # 本文の列に収める
+                self.assertEqual(heads, ["企業名", "企業区分", "売上高（億円）", "半導体関連の比率（%）", "営業利益率（％）", "平均年間給与（万円）"], slug)  # 本文の列に収める（FR-309）
             self.assertIn(f'href="/companies/process/{slug}/"', html)
 
     def test_empty_glossary_and_search(self):
