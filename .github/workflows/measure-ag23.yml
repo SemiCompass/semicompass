@@ -7,6 +7,16 @@ name: measure-ag23
 on:
   workflow_dispatch:
     inputs:
+      groups:
+        description: 測る見本の群（費用を抑えるため、群を選ぶ。subtle＝細部の誤り8件、detailed＝正しいが詳しい5件、obvious＝明らかな誤り6件、clean＝誤りなし3件）
+        required: true
+        type: choice
+        default: "subtle,detailed"
+        options:
+          - "subtle,detailed"
+          - "obvious,subtle,clean,detailed"
+          - "subtle"
+          - "detailed"
       repeat:
         description: 同じ見本を繰り返す回数（1〜3。多いほど安定するが、費用が増える）
         required: true
@@ -59,9 +69,13 @@ jobs:
           ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
           ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ runner.temp }}/gha-jwt
           INPUT_REPEAT: ${{ inputs.repeat }}
+          INPUT_GROUPS: ${{ inputs.groups }}
         run: |
           if ! [[ "$INPUT_REPEAT" =~ ^[1-3]$ ]]; then
             echo "repeat は 1〜3"; exit 2
+          fi
+          if ! [[ "$INPUT_GROUPS" =~ ^[a-z]+(,[a-z]+)*$ ]]; then
+            echo "groups の形が正しくない"; exit 2
           fi
           out="$RUNNER_TEMP/draft-out"
           set +e
@@ -70,6 +84,7 @@ jobs:
             --ledger-dir "$RUNNER_TEMP/ops-log/ops/ledger" \
             --run-id "$GITHUB_RUN_ID" \
             --repeat "$INPUT_REPEAT" \
+            --groups "$INPUT_GROUPS" \
             --summary "$GITHUB_STEP_SUMMARY"
           code=$?
           set -e
