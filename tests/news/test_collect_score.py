@@ -158,7 +158,8 @@ class ScoreTest(unittest.TestCase):
         self.assertEqual(c02["score"]["reliability"], 3)  # 政府の情報源は primary
         body = (out / "issue-body.md").read_text(encoding="utf-8")
         self.assertIn("/draft c01 c03", body)
-        self.assertIn("★", body)
+        self.assertIn("★政策・規制", body)
+        self.assertIn("☑ 推奨", body)
         self.assertTrue(list((out / "ledger").glob("*.jsonl")))
         # 候補の見出しは「資料」の区画に入る
         sent = json.dumps(client.calls[0]["messages"], ensure_ascii=False)
