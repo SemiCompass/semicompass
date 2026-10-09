@@ -98,6 +98,14 @@ class CollectTest(unittest.TestCase):
                          [("2026-10-09", "https://c.example.org/japanese/topics/2026/1009.pdf"),
                           ("2026-10-06", "https://c.example.org/japanese/topics/2026/1006.pdf")])
 
+    def test_page_with_date_inside_link_text(self):
+        page = ("<p><a href='/news/event/20261007_001.html'>2026.10.07<b>架空展示会 2026</b>に出展します</a></p>"
+                "<ul><li><a href='https://x.example.org/a.pdf'>2026/09/30 投資家の皆様へ 架空の株式処分のお知らせ</a></li></ul>").encode()
+        items = collect.parse_page(page, "https://c.example.org/news/")
+        self.assertEqual([i["published_on"] for i in items], ["2026-10-07", "2026-09-30"])
+        self.assertTrue(items[0]["title"].startswith("架空展示会 2026"))
+        self.assertNotIn("2026", items[1]["title"][:5])
+
     def test_rejects_non_https_fetch(self):
         with self.assertRaises(ValueError):
             collect.fetch("http://example.org/")

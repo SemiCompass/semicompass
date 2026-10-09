@@ -27,18 +27,42 @@ priority_rules:
   supply_demand: 市場統計の大きな変化（前年比±20%以上）、車載・AIサーバーなど主要な用途の需要の変化についての公表
 
 # 情報源（運用ルール書3.1）。確かさは、区分の標準に合わせる（一次情報＝high、報道＝medium、観測報道＝low）。
-# 2026-10-09 時点で、取得を確かめられたものだけを載せている。
-#   メモ：次の情報源は、取得を確かめられなかったため、まだ載せていない。収集の処理（J02）の試験の段階で、
-#   接続を確かめてから加える：NEDO、SEMI ジャパン、WSTS、SEAJ（転載・営利利用の制限があるため、規約の確認が先）、
-#   詳細掲載・Coming Soon の企業のニュースリリースと IR ニュースの RSS（企業ごと）、報道（全国紙・経済紙・業界紙。規約の確認が先）。
+# 追加は、news-source-check で取得できることを確かめてから行う。報道は、規約の確認が先。SEAJ は、転載・営利利用の制限があるため、規約の確認が先。
 sources:
-  - id: meti-news
-    name: 経済産業省 新着情報
+  # 接続の確認（news-source-check、2026年10月9日）で、取得できて最新の日付が新しかったものだけを置く。
+  # 取得できなかったもの：経産省（Actions からは403）、SEMIジャパン（403）、Rapidus（404）、NEDOのRSS（404）。
+  # 一覧を読めなかったもの：キオクシア（JavaScriptで一覧を作る）、信越化学、レーザーテック、WSTS、SEAJ。見つけ方が分かったら足す。
+  - id: nedo-news
+    name: 新エネルギー・産業技術総合開発機構（NEDO） ニュース
     kind: government
     reliability: high
-    feed_url: "https://www.meti.go.jp/ml_index_release_atom.xml"
+    page_url: "https://www.nedo.go.jp/news/"
   - id: jeita-topics
     name: 電子情報技術産業協会（JEITA） お知らせ
     kind: association
     reliability: high
     page_url: "https://www.jeita.or.jp/cgi-bin/topics/list.cgi"
+  - id: renesas-press
+    name: ルネサス エレクトロニクス プレスルーム
+    kind: company
+    reliability: high
+    company: renesas-electronics
+    page_url: "https://www.renesas.com/jp/ja/about/press-room"
+  - id: disco-news
+    name: ディスコ ニュース
+    kind: company
+    reliability: high
+    company: disco
+    page_url: "https://www.disco.co.jp/jp/news/"
+  - id: tel-news
+    name: 東京エレクトロン ニュース
+    kind: company
+    reliability: high
+    company: tokyo-electron
+    page_url: "https://www.tel.co.jp/news/"
+  - id: advantest-news
+    name: アドバンテスト ニュース
+    kind: company
+    reliability: high
+    company: advantest
+    page_url: "https://www.advantest.com/ja/news/"

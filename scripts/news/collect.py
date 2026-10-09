@@ -112,13 +112,21 @@ class _LinkParser:
         pattern = re.compile(r"<a\b[^>]*?href\s*=\s*[\"']([^\"'#][^\"']*)[\"'][^>]*>(.*?)</a>", re.I | re.S)
         for m in pattern.finditer(html_text):
             title = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m[2]))).strip()
+            # 日付がリンクの文字の中にある書き方（「2026.10.07 見出し」「2026/09/30 区分 見出し」）。見つけたら、見出しから除く
+            inner = re.search(DATE_RE, title)
+            if inner and parse_date(inner.group(0)):
+                found = [parse_date(inner.group(0))]
+                title = re.sub(r"\s+", " ", (title[:inner.start()] + " " + title[inner.end():])).strip()
+            else:
+                found = []
             if len(title) < 8:
                 continue
-            before = re.sub(r"<[^>]+>", " ", html_text[max(0, m.start() - 160): m.start()])
-            after = re.sub(r"<[^>]+>", " ", html_text[m.end(): m.end() + 80])
-            # 日付は、リンクの前にある書き方（JEITA）が多い。前の最も近い日付を先に探し、なければ後ろを見る
-            found = [d for d in (parse_date(x.group(0)) for x in re.finditer(DATE_RE, before)) if d]
-            found = found[-1:] or [d for d in (parse_date(x.group(0)) for x in re.finditer(DATE_RE, after)) if d][:1]
+            if not found:
+                before = re.sub(r"<[^>]+>", " ", html_text[max(0, m.start() - 160): m.start()])
+                after = re.sub(r"<[^>]+>", " ", html_text[m.end(): m.end() + 80])
+                # 日付は、リンクの前にある書き方（JEITA）が多い。前の最も近い日付を先に探し、なければ後ろを見る
+                found = [d for d in (parse_date(x.group(0)) for x in re.finditer(DATE_RE, before)) if d]
+                found = found[-1:] or [d for d in (parse_date(x.group(0)) for x in re.finditer(DATE_RE, after)) if d][:1]
             if not found:
                 continue
             dates = found
