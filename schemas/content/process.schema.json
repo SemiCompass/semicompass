@@ -254,7 +254,7 @@
           "operator_knowledge"
         ]
       },
-      "description": "確かめた方法（複数可）。book：書籍、paper：論文、web：Webサイト、operator_knowledge：運営者の知識。operator_knowledge だけのとき（sources が空のとき）は、画面に「運営者の知識で確認」と示す。operator_knowledge を含まないときは、sources が1件以上必要。"
+      "description": "確かめた方法（複数可）。book：書籍、paper：論文、web：Webサイト、operator_knowledge：運営者の知識。画面には、確かめた方法の表示は出さない（出典があるときだけ、出典として示す）。operator_knowledge を含まないときは、sources が1件以上必要。"
     }
   },
   "allOf": [
