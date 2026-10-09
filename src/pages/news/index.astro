@@ -1,0 +1,88 @@
+---
+// ニュース解説の一覧（/news/。仕様書 9.6）：新しい順に、日付、見出し、分類、関係する企業のタグを、1件ずつ罫線で区切って並べる。
+// content/news/ の draft: true は、プレビューのビルドだけ。0件のときは、データがない状態の表示
+import { BUILD_ENV } from 'astro:env/server';
+import Phrase from '../../components/Phrase.astro';
+import StateMessage from '../../components/StateMessage.astro';
+import Tag from '../../components/Tag.astro';
+import Page from '../../layouts/Page.astro';
+import { dateLabel, loadCompanies } from '../../lib/companies';
+import { CATEGORY_LABEL, loadNews } from '../../lib/news';
+
+const items = loadNews(BUILD_ENV === 'preview');
+const companies = loadCompanies();
+const companyTags = (slugs: string[]) =>
+  slugs.flatMap((slug) => {
+    const c = companies.find((x) => x.slug === slug);
+    return c ? [{ slug, name: c.short_names[0] ?? c.name }] : [];
+  });
+---
+
+<Page
+  title="ニュース解説の一覧｜SemiCompass"
+  heading="ニュース"
+  description="半導体業界のニュースを、何が起きたか、なぜ重要か、サプライチェーン上のどこに関わるかの順に解説します。新しい順に並べています。"
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: 'ニュース' }]}
+  wide
+>
+  {items.length === 0 ? (
+    <StateMessage kind="empty" message="ニュース解説は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
+  ) : (
+    <>
+      <p class="measure">ニュース解説を、新しい順に並べています。（{items.length}件）</p>
+      <ol class="news-list">
+        {items.map((n) => (
+          <li class="news-list__item">
+            <p class="news-list__meta">
+              <time datetime={n.front.published_at}>{dateLabel(n.front.published_at)}</time>
+              <span>分類：{CATEGORY_LABEL[n.front.category]}</span>
+            </p>
+            <h2 class="news-list__title"><a href={n.url}><Phrase text={n.front.title} /></a></h2>
+            {companyTags(n.front.tags.companies).length > 0 && (
+              <p class="news-list__tags">{companyTags(n.front.tags.companies).map((c) => <Tag href={`/companies/${c.slug}/`} kind="企業">{c.name}</Tag>)}</p>
+            )}
+          </li>
+        ))}
+      </ol>
+    </>
+  )}
+</Page>
+
+<style>
+  .news-list {
+    max-width: var(--content-max-width);
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    list-style: none;
+  }
+  .news-list__item {
+    padding-block: var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .news-list__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .news-list__title {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-h3);
+    line-height: var(--text-h3-leading);
+  }
+  .news-list__title a {
+    display: inline-block;
+    min-height: var(--target-min);
+  }
+  .news-list__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+  }
+</style>
