@@ -66,3 +66,10 @@ sources:
     reliability: high
     company: advantest
     page_url: "https://www.advantest.com/ja/news/"
+  # 報道（運用ルール書3.1）。見出しとURLだけを候補にする。解説は、一次情報（企業・官公庁の発表）を探して、そちらを出典にする。
+  # 利用の規約（RSS、見出しの再利用）は、運営者が確かめてから有効にする（2026-10-09 時点で確認中）。
+  - id: eetimes-japan
+    name: EE Times Japan（ITmedia）
+    kind: press
+    reliability: medium
+    feed_url: "https://rss.itmedia.co.jp/rss/2.0/eetimes.xml"
