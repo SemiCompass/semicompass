@@ -1,0 +1,89 @@
+name: explainer-bundle-batch
+
+# 手動で動かす。explainer-bundle を、複数の対象について順に実行する版（種類は1つ、最大12件）。
+# config/explainer-sources.yaml で承認した（status: approved）URLだけを取得し、対象ごとに原資料束を
+# Cloudflare R2 の非公開バケットに保存する。1件が失敗しても、次に進む。
+# 取得した本文は、リポジトリ、ログ、概要、成果物に出さない（出るのは、資料の番号・取得の成否・段落の数・文字数だけ）。
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: 対象の種類（process＝工程、term＝用語）。すべての対象で同じ
+        required: true
+        type: choice
+        options:
+          - term
+          - process
+      slugs:
+        description: 対象の slug を、半角スペースかカンマで区切る（最大12件。例 silicon-wafer photomask）
+        required: true
+        type: string
+      dry_run:
+        description: 取得はするが、R2 に書かない
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: explainer-bundle
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    # bundle-write の Environment（R2_*［書き込み］）を使う。main だけに限定済み
+    environment: bundle-write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 原資料束を作る（本文は出さない）
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          INPUT_KIND: ${{ inputs.kind }}
+          INPUT_SLUGS: ${{ inputs.slugs }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ "$INPUT_KIND" != "process" ] && [ "$INPUT_KIND" != "term" ]; then
+            echo "kind が正しくない"; exit 2
+          fi
+          slugs=$(printf '%s' "$INPUT_SLUGS" | tr ',' ' ')
+          n=0
+          for slug in $slugs; do
+            if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then echo "slug の形が正しくない"; exit 2; fi
+            n=$((n+1))
+          done
+          if [ "$n" -lt 1 ] || [ "$n" -gt 12 ]; then echo "対象は1〜12件にする"; exit 2; fi
+          ok=""; partial=""; failed=""
+          for slug in $slugs; do
+            args=(--kind "$INPUT_KIND" --slug "$slug" --summary "$GITHUB_STEP_SUMMARY")
+            if [ "$INPUT_DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+            set +e
+            "$RUNNER_TEMP/venv/bin/python" scripts/bundle/make_explainer_bundle.py "${args[@]}"
+            code=$?
+            set -e
+            # 0：すべて取得した。4：一部の資料が失敗した（取れた資料だけで保存した）。それ以外：失敗
+            if [ "$code" = "0" ]; then ok="$ok $slug"
+            elif [ "$code" = "4" ]; then partial="$partial $slug"
+            else echo "::warning::$slug は失敗した（終了コード $code）。次に進む"; failed="$failed $slug"
+            fi
+          done
+          {
+            echo "## まとめ"
+            echo "* すべて取得した: ${ok:-なし}"
+            echo "* 一部の資料が失敗した（取れた分だけ保存）: ${partial:-なし}"
+            echo "* 失敗: ${failed:-なし}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$failed" ]; then exit 1; fi
