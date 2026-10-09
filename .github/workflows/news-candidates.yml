@@ -156,6 +156,12 @@ jobs:
           " "$out/candidates.json" >> "$dir/ops/news/seen.txt"
             changed=true
           fi
+          # 点付けの結果（/draft が読む）。日付は Issue の題名と同じ（日本時間）
+          if [ -s "$out/scored.json" ]; then
+            mkdir -p "$dir/ops/news/scored"
+            cp "$out/scored.json" "$dir/ops/news/scored/$(TZ=Asia/Tokyo date +%F).json"
+            changed=true
+          fi
           if [ "$changed" = "false" ]; then echo "追記するものがない"; exit 0; fi
           git -C "$dir" config user.name "github-actions[bot]"
           git -C "$dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
