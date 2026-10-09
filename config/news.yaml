@@ -1,0 +1,44 @@
+# ニュースの設定（データ定義書 7.3、運用ルール書 3章）。追加・削除は変更案で行う。
+schema_version: 1
+
+daily_limit: 2                 # 1日の件数の上限（MVP。正式公開以降は3。運用ルール書3.3）
+busy_period_daily_limit: 2     # 決算集中期の上限
+temporary_limit: null          # CT-06 の一時的な上限（公開後）
+candidate_limit: 30            # 点を付ける候補の数（運用ルール書6.2）
+weekly_max_per_category: 4     # 同じ種別の1週間の上限
+tag_index_threshold: 5         # タグ別一覧を検索に登録させる件数（運用ルール書4.7）
+
+# 1週間の種別の目安（10件の場合。運用ルール書3.3）
+weekly_targets:
+  investment:    {min: 2, max: 3}
+  policy:        {min: 1, max: 2}
+  m_and_a:       {min: 0, max: 1}
+  earnings:      {min: 0, max: 2}
+  technology:    {min: 2, max: 3}
+  supply_demand: {min: 1, max: 2}
+
+# 候補の一覧に表示する、優先の基準（運用ルール書3.2「種別ごとの基準」）
+priority_rules:
+  investment: 国内の拠点の新設・増設、投資額100億円以上、稼働の開始
+  policy: 国の補助金の決定・変更、半導体に関わる輸出規制の新設・変更、国の戦略の改定
+  m_and_a: 掲載企業が当事者となる買収・統合・提携・事業の売却
+  earnings: 業績予想の修正のうち、取引所の開示の基準（売上高で10%以上、利益で30%以上の変動）に当たるもの。通常の決算発表はIR重要ポイントで扱い、ニュースにしない
+  technology: 掲載企業が関わる量産の開始、業界の標準や主要な顧客の採用の発表
+  supply_demand: 市場統計の大きな変化（前年比±20%以上）、車載・AIサーバーなど主要な用途の需要の変化についての公表
+
+# 情報源（運用ルール書3.1）。確かさは、区分の標準に合わせる（一次情報＝high、報道＝medium、観測報道＝low）。
+# 2026-10-09 時点で、取得を確かめられたものだけを載せている。
+#   メモ：次の情報源は、取得を確かめられなかったため、まだ載せていない。収集の処理（J02）の試験の段階で、
+#   接続を確かめてから加える：NEDO、SEMI ジャパン、WSTS、SEAJ（転載・営利利用の制限があるため、規約の確認が先）、
+#   詳細掲載・Coming Soon の企業のニュースリリースと IR ニュースの RSS（企業ごと）、報道（全国紙・経済紙・業界紙。規約の確認が先）。
+sources:
+  - id: meti-news
+    name: 経済産業省 新着情報
+    kind: government
+    reliability: high
+    feed_url: "https://www.meti.go.jp/ml_index_release_atom.xml"
+  - id: jeita-topics
+    name: 電子情報技術産業協会（JEITA） お知らせ
+    kind: association
+    reliability: high
+    page_url: "https://www.jeita.or.jp/cgi-bin/topics/list.cgi"
