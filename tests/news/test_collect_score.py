@@ -106,6 +106,11 @@ class CollectTest(unittest.TestCase):
         self.assertTrue(items[0]["title"].startswith("架空展示会 2026"))
         self.assertNotIn("2026", items[1]["title"][:5])
 
+    def test_category_labels_at_the_end_are_removed(self):
+        page = "<p><a href='/n/1.html'>2026.10.07 架空展示会 2026 会場 架空センター トピックス 製品・サービス IR イベント お知らせ</a></p>".encode()
+        items = collect.parse_page(page, "https://c.example.org/news/")
+        self.assertEqual(items[0]["title"], "架空展示会 2026 会場 架空センター")
+
     def test_rejects_non_https_fetch(self):
         with self.assertRaises(ValueError):
             collect.fetch("http://example.org/")

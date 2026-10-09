@@ -57,6 +57,17 @@ def _local(tag: str) -> str:
 DATE_RE = r"(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})"
 
 
+# 一覧のリンクの文字の末尾に、カテゴリの名前が並んで入っているページがある（東京エレクトロンなど）。見出しから除く
+CATEGORY_NOISE = ("トピックス", "製品・サービス", "IR", "サステナビリティ", "イベント", "災害情報", "お知らせ", "投資家の皆様へ", "イベント情報")
+
+
+def strip_category_tail(title: str) -> str:
+    words = title.split(" ")
+    while len(words) > 1 and words[-1] in CATEGORY_NOISE:
+        words.pop()
+    return " ".join(words)
+
+
 def parse_date(value: str) -> date | None:
     value = value.strip()
     if not value:
@@ -119,6 +130,7 @@ class _LinkParser:
                 title = re.sub(r"\s+", " ", (title[:inner.start()] + " " + title[inner.end():])).strip()
             else:
                 found = []
+            title = strip_category_tail(title)
             if len(title) < 8:
                 continue
             if not found:
