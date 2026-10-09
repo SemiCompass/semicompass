@@ -140,6 +140,7 @@ terms:
       - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: 解説:半導体テスト, url: "https://www.advantest.com/ja/about/business/"}
   foundry:
     term: ファウンドリ
+    basis: reviewed
     sources:
       - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略(概要) 2021年6月, url: "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/20210603008-3.pdf"}
       - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体戦略(概略) 2021年6月, url: "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/20210603008-4.pdf"}
