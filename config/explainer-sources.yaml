@@ -9,6 +9,14 @@
 # - slug は仮。用語のslugは英語の名前か略語から決める(データ定義書2.3)
 # - SEAJ(seaj.or.jp)は、転載・営利利用の制限があるため、ここに入れない
 
+# 2026-10-08 利用規約の確認（運営者の記録）。次のドメインは rejected にした：
+#   semiconductor.samsung.com（個人のPCでの個人利用に限る）、www.samco.co.jp（私用を超える複製は承諾が必要）、
+#   www.tok-pr.com と www.tok.co.jp（非営利かつ組織内の利用に限り複製可）、www.accretech.com（非商業・個人利用に限る。ネットワーク上への複製不可）、
+#   www.lasertec.co.jp（非営利かつ私的・組織内の利用に限り複製可）、www.tim.toppan.com（URLがリンク切れ）。
+#   書面の許可を得たときだけ、approved に戻す。
+#   確認の結果、「法律が認める範囲を超える複製を禁止」とする条件つきのサイトは approved のまま残した（取得は非公開の保管場所への一時保存で、サイトには自分の言葉の解説と出典だけを載せる。法務確認（MV-05）で確かめる）。
+#   basis: reviewed の用語・工程は、出典を取得しない。
+
 schema_version: 1
 
 terms:
@@ -27,7 +35,7 @@ terms:
   photomask:
     term: フォトマスク
     sources:
-      - {status: approved, role: primary, kind: web, publisher: レーザーテック株式会社, title: 用語解説 フォトマスク, url: "https://www.lasertec.co.jp/products/glossary/3254.html"}
+      - {status: rejected, role: primary, kind: web, publisher: レーザーテック株式会社, title: 用語解説 フォトマスク, url: "https://www.lasertec.co.jp/products/glossary/3254.html"}
       - {status: approved, role: primary, kind: web, publisher: テクセンドフォトマスク株式会社, title: フォトマスクとは, url: "https://www.photomask.com/careers/jp/graduate/content2/about.html"}
       - {status: approved, role: primary, kind: web, publisher: HOYA株式会社, title: 統合報告書2022 情報・通信事業, url: "https://www.hoya.com/ir/2022/ja/review/it.html"}
   photoresist:
@@ -35,7 +43,7 @@ terms:
     sources:
       - {status: approved, role: primary, kind: web, publisher: JSRマイクロ九州株式会社, title: 半導体用フォトレジスト, url: "https://www.jmq.jsr.co.jp/product/photo_resist.php"}
       - {status: approved, role: primary, kind: association, publisher: 公益社団法人発明協会, title: 戦後日本のイノベーション100選 フォトレジスト, url: "https://koueki.jiii.or.jp/innovation100/innovation_detail.php?age=&eid=00061&test=open"}
-      - {status: approved, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
+      - {status: rejected, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
   eda:
     term: EDA(設計ツール)
     sources:
@@ -53,12 +61,12 @@ terms:
     term: コータ・デベロッパ
     basis: reviewed
     sources:
-      - {status: approved, role: supplementary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
+      - {status: rejected, role: supplementary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
   plasma:
     term: プラズマ
     sources:
-      - {status: approved, role: primary, kind: web, publisher: サムコ株式会社, title: ドライエッチング装置とは, url: "https://www.samco.co.jp/company/primer/2011/03/post_5.php"}
-      - {status: approved, role: primary, kind: web, publisher: Samsung Semiconductor, title: エッチング工程, url: "https://semiconductor.samsung.com/jp/support/tools-resources/fabrication-process/eight-essential-semiconductor-fabrication-processes-part-5-etching-a-circuit-pattern/"}
+      - {status: rejected, role: primary, kind: web, publisher: サムコ株式会社, title: ドライエッチング装置とは, url: "https://www.samco.co.jp/company/primer/2011/03/post_5.php"}
+      - {status: rejected, role: primary, kind: web, publisher: Samsung Semiconductor, title: エッチング工程, url: "https://semiconductor.samsung.com/jp/support/tools-resources/fabrication-process/eight-essential-semiconductor-fabrication-processes-part-5-etching-a-circuit-pattern/"}
       - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 エッチング, url: "https://www.screen.co.jp/spe/technical/guide/etching"}
   cvd:
     term: CVD
@@ -75,12 +83,12 @@ terms:
   cmp:
     term: CMP
     sources:
-      - {status: approved, role: primary, kind: web, publisher: 株式会社東京精密, title: CMP装置, url: "https://www.accretech.com/jp/product/semicon/semi/cmp/index.html"}
+      - {status: rejected, role: primary, kind: web, publisher: 株式会社東京精密, title: CMP装置, url: "https://www.accretech.com/jp/product/semicon/semi/cmp/index.html"}
       - {status: approved, role: primary, kind: government, publisher: 国立科学博物館 産業技術史資料情報センター, title: CMP装置および材料のサプライチェーン確立, url: "https://www.shmj.or.jp/museum2010/exhibi2463.html"}
   slurry:
     term: スラリー
     sources:
-      - {status: approved, role: primary, kind: web, publisher: TOPPANインフォメディア株式会社, title: CMPスラリーとは, url: "https://www.tim.toppan.com/lp/cmp-slurry.html"}
+      - {status: rejected, role: primary, kind: web, publisher: TOPPANインフォメディア株式会社, title: CMPスラリーとは, url: "https://www.tim.toppan.com/lp/cmp-slurry.html"}
       - {status: approved, role: primary, kind: government, publisher: 国立科学博物館 産業技術史資料情報センター, title: CMP装置および材料のサプライチェーン確立, url: "https://www.shmj.or.jp/museum2010/exhibi2463.html"}
   back-grinding:
     term: バックグラインド
@@ -93,7 +101,7 @@ terms:
   wire-bonding:
     term: ワイヤボンディング
     sources:
-      - {status: approved, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体製造後工程, url: "https://www.tok.co.jp/products/semiconductor-post"}
+      - {status: rejected, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体製造後工程, url: "https://www.tok.co.jp/products/semiconductor-post"}
       - {status: approved, role: primary, kind: web, publisher: 松田産業株式会社, title: ボンディングワイヤ, url: "https://service.matsuda-sangyo.co.jp/preciousmetalbusiness/product/bonding-wires/"}
   mold-compound:
     term: モールド樹脂
@@ -192,21 +200,21 @@ processes:
     sources:
       - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 感光材塗布, url: "https://www.screen.co.jp/spe/technical/guide/photosensitive"}
       - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 現像, url: "https://www.screen.co.jp/spe/technical/guide/developing"}
-      - {status: approved, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
+      - {status: rejected, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体, url: "https://www.tok-pr.com/products/semiconductor.html"}
       - {status: approved, role: primary, kind: web, publisher: キヤノン株式会社, title: 技術のご紹介, url: "https://global.canon/ja/technology/s_labo/light/003/09.html"}
   etching:
     process: エッチング
     basis: reviewed
     sources:
       - {status: approved, role: primary, kind: web, publisher: 株式会社SCREENホールディングス, title: 初心者のための半導体入門 エッチング, url: "https://www.screen.co.jp/spe/technical/guide/etching"}
-      - {status: approved, role: primary, kind: web, publisher: サムコ株式会社, title: ドライエッチング装置とは, url: "https://www.samco.co.jp/company/primer/2011/03/post_5.php"}
-      - {status: approved, role: primary, kind: web, publisher: Samsung Semiconductor, title: エッチング工程, url: "https://semiconductor.samsung.com/jp/support/tools-resources/fabrication-process/eight-essential-semiconductor-fabrication-processes-part-5-etching-a-circuit-pattern/"}
+      - {status: rejected, role: primary, kind: web, publisher: サムコ株式会社, title: ドライエッチング装置とは, url: "https://www.samco.co.jp/company/primer/2011/03/post_5.php"}
+      - {status: rejected, role: primary, kind: web, publisher: Samsung Semiconductor, title: エッチング工程, url: "https://semiconductor.samsung.com/jp/support/tools-resources/fabrication-process/eight-essential-semiconductor-fabrication-processes-part-5-etching-a-circuit-pattern/"}
   cmp:
     process: CMP(平坦化)
     sources:
-      - {status: approved, role: primary, kind: web, publisher: 株式会社東京精密, title: CMP装置, url: "https://www.accretech.com/jp/product/semicon/semi/cmp/index.html"}
+      - {status: rejected, role: primary, kind: web, publisher: 株式会社東京精密, title: CMP装置, url: "https://www.accretech.com/jp/product/semicon/semi/cmp/index.html"}
       - {status: approved, role: primary, kind: government, publisher: 国立科学博物館 産業技術史資料情報センター, title: CMP装置および材料のサプライチェーン確立, url: "https://www.shmj.or.jp/museum2010/exhibi2463.html"}
-      - {status: approved, role: primary, kind: web, publisher: TOPPANインフォメディア株式会社, title: CMPスラリーとは, url: "https://www.tim.toppan.com/lp/cmp-slurry.html"}
+      - {status: rejected, role: primary, kind: web, publisher: TOPPANインフォメディア株式会社, title: CMPスラリーとは, url: "https://www.tim.toppan.com/lp/cmp-slurry.html"}
   dicing:
     process: ダイシング
     sources:
@@ -216,7 +224,7 @@ processes:
     process: パッケージング(封止)
     sources:
       - {status: approved, role: primary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: 半導体用語集(出所:ICガイドブック2009年版), url: "https://semicon.jeita.or.jp/word/word.html"}
-      - {status: approved, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体製造後工程, url: "https://www.tok.co.jp/products/semiconductor-post"}
+      - {status: rejected, role: primary, kind: web, publisher: 東京応化工業株式会社, title: 半導体製造後工程, url: "https://www.tok.co.jp/products/semiconductor-post"}
       - {status: approved, role: primary, kind: web, publisher: 株式会社ダブリュ・ティ・アイ(WTI), title: 半導体パッケージの組立工程紹介『モールド封止』, url: "https://www.wti.jp/contents/blog/blog220705.htm"}
   final-test:
     process: 最終検査(テスト)
