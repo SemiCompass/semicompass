@@ -1,0 +1,235 @@
+name: news-draft
+
+# J03：ニュース候補の Issue に、運営者が `/draft c11` とコメントしたとき、解説の下書きを作って変更案にする（運用ルール書 3.4、3.5）。
+#   `/draft c11`                 候補が一次情報（企業・官公庁・業界団体）のとき。候補のURLを元記事にする
+#   `/draft c11 https://…`       元記事（一次情報）のURLを指定する。報道の候補では、これが必須（運用ルール書 3.1）
+# 元記事を取得 → AG-11 が下書き → AG-13 が校閲 → 変更案（運営者が元記事と見比べて取り込む）。
+# 元記事の本文は、AIに渡す資料としてだけ使い、リポジトリ、ログ、要約、コメント、変更案に出さない。
+# コメントの本文は外から入る値なので、環境変数で受け取り、形を厳しく検査してから使う。
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: news-draft
+  cancel-in-progress: false
+
+jobs:
+  # 1. 下書きを作る。秘密（Claude APIのID連携）は、このジョブだけに渡す。リポジトリには書き込めない
+  draft:
+    # 運営者（所有者・メンバー・共同作業者）が、ニュース候補の Issue（github-actions が作ったもの）に書いたコメントだけ
+    if: >-
+      github.event.issue.pull_request == null &&
+      startsWith(github.event.comment.body, '/draft ') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+      startsWith(github.event.issue.title, 'ニュース候補 ') &&
+      github.event.issue.user.login == 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    environment: draft
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      result: ${{ steps.run.outputs.result }}
+      cid: ${{ steps.parse.outputs.cid }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: コメントを読む（形を厳しく検査する）
+        id: parse
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          first="$(printf '%s' "$COMMENT_BODY" | head -n 1 | tr -d '\r')"
+          if ! [[ "$first" =~ ^/draft\ (c[0-9]{2,3})(\ (https://[^[:space:]]{1,500}))?$ ]]; then
+            echo "コメントの形が正しくない（/draft c11 か、/draft c11 https://…）"; exit 2
+          fi
+          cid="${BASH_REMATCH[1]}"
+          url="${BASH_REMATCH[3]}"
+          if ! [[ "$ISSUE_TITLE" =~ ^ニュース候補\ ([0-9]{4}-[0-9]{2}-[0-9]{2})$ ]]; then
+            echo "Issue の題名が正しくない"; exit 2
+          fi
+          date="${BASH_REMATCH[1]}"
+          { echo "cid=$cid"; echo "url=$url"; echo "date=$date"; } >> "$GITHUB_OUTPUT"
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      # 点付けの結果（その日の候補）と、今月のAIの利用額を、ops-log ブランチから読む
+      - name: 運営記録を読む
+        run: |
+          git clone --quiet --depth 1 --branch ops-log \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/ops-log" \
+            || echo "ops-log ブランチがまだない"
+
+      - name: GitHub の ID トークンを取る（Claude API の ID連携）
+        run: |
+          curl -sS --fail -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+            | jq -r .value > "$RUNNER_TEMP/gha-jwt"
+          test -s "$RUNNER_TEMP/gha-jwt"
+
+      - name: 下書きを作る（元記事の本文は出さない）
+        id: run
+        env:
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ runner.temp }}/gha-jwt
+          CID: ${{ steps.parse.outputs.cid }}
+          SRC_URL: ${{ steps.parse.outputs.url }}
+          CAND_DATE: ${{ steps.parse.outputs.date }}
+        run: |
+          out="$RUNNER_TEMP/news-draft-out"
+          mkdir -p "$out"
+          scored="$RUNNER_TEMP/ops-log/ops/news/scored/${CAND_DATE}.json"
+          if [ ! -f "$scored" ]; then
+            echo "その日の点付けの結果がない（${CAND_DATE}）" | tee "$out/summary.txt"
+            echo "result=input" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          url_args=()
+          if [ -n "$SRC_URL" ]; then url_args=(--url "$SRC_URL"); fi
+          set +e
+          "$RUNNER_TEMP/venv/bin/python" scripts/news/draft_news.py \
+            --scored "$scored" --id "$CID" "${url_args[@]}" \
+            --out-dir "$out" \
+            --ledger-dir "$RUNNER_TEMP/ops-log/ops/ledger" \
+            --run-id "$GITHUB_RUN_ID" \
+            --summary "$out/summary.txt"
+          code=$?
+          set -e
+          rm -f "$RUNNER_TEMP/gha-jwt"
+          cat "$out/summary.txt" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          # 0：作った。2：入力の誤り（報道でURLなし、取得できない、など）。3：休止中か予算の上限。ほかは失敗
+          case "$code" in
+            0) echo "result=created" >> "$GITHUB_OUTPUT" ;;
+            2) echo "result=input" >> "$GITHUB_OUTPUT" ;;
+            3) echo "result=skipped" >> "$GITHUB_OUTPUT" ;;
+            *) echo "result=failed" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: news-draft-out
+          path: ${{ runner.temp }}/news-draft-out
+          retention-days: 3
+          if-no-files-found: ignore
+
+  # 2. 変更案を作り、Issue に知らせ、利用額を ops-log に追記する。秘密は渡さない（GITHUB_TOKEN だけ）
+  publish:
+    needs: draft
+    if: ${{ !cancelled() && needs.draft.result != 'skipped' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        continue-on-error: true
+        with:
+          name: news-draft-out
+          path: ${{ runner.temp }}/news-draft-out
+
+      - name: 依存を入れる
+        if: needs.draft.outputs.result == 'created'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 下書きを置いて、形式を検証する
+        if: needs.draft.outputs.result == 'created'
+        run: |
+          out="$RUNNER_TEMP/news-draft-out"
+          # 置いてよいのは、content/news/ の1つのファイルだけ
+          n="$(find "$out/content" -type f | wc -l)"
+          if [ "$n" != "1" ]; then echo "下書きのファイルが1つではない"; exit 1; fi
+          f="$(find "$out/content" -type f)"
+          rel="${f#"$out/"}"
+          if ! [[ "$rel" =~ ^content/news/[0-9]{4}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.md$ ]]; then echo "ファイル名が正しくない"; exit 1; fi
+          cp "$f" "$rel"
+          "$RUNNER_TEMP/venv/bin/python" scripts/validate/validate_data.py
+          echo "NEWS_REL=$rel" >> "$GITHUB_ENV"
+
+      - name: 変更案を作る
+        id: pr
+        if: needs.draft.outputs.result == 'created'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CID: ${{ needs.draft.outputs.cid }}
+        run: |
+          branch="draft/news-${CID}-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add "$NEWS_REL"
+          git commit -m "下書き：ニュース解説 ${CID}（AG-11・AG-13、実行 ${GITHUB_RUN_ID}）"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "$branch"
+          url="$(gh pr create --base main --head "$branch" \
+            --title "下書き：ニュース解説 ${CID}" \
+            --body-file "$RUNNER_TEMP/news-draft-out/pr-body.md")"
+          echo "pr_url=$url" >> "$GITHUB_OUTPUT"
+
+      # Issue に結果を知らせる。コメントに入れるのは、実行の要約（本文を含まない）と変更案のURLだけ
+      - name: Issue に知らせる
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.draft.outputs.result }}
+          CID: ${{ needs.draft.outputs.cid }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          f="$RUNNER_TEMP/comment.md"
+          case "$RESULT" in
+            created) echo "${CID} の下書きを作った：${PR_URL}" > "$f" ;;
+            input) { echo "${CID} の下書きを作れなかった（入力）。"; echo; cat "$RUNNER_TEMP/news-draft-out/summary.txt" 2>/dev/null; } > "$f" ;;
+            *) { echo "${CID} の下書きに失敗した。実行のログを見る：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"; echo; cat "$RUNNER_TEMP/news-draft-out/summary.txt" 2>/dev/null; } > "$f" ;;
+          esac
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body-file "$f"
+
+      # 利用額の記録（データ定義書 10.3）。追記だけ
+      - name: 利用額を ops-log に追記する
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          src="$RUNNER_TEMP/news-draft-out/ledger"
+          if ! ls "$src"/*.jsonl >/dev/null 2>&1; then echo "利用額の記録がない"; exit 0; fi
+          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          dir="$RUNNER_TEMP/ops-log"
+          if git ls-remote --exit-code --heads "$url" ops-log >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch ops-log "$url" "$dir"
+          else
+            git init --quiet "$dir"
+            git -C "$dir" checkout --quiet --orphan ops-log
+            git -C "$dir" remote add origin "$url"
+          fi
+          mkdir -p "$dir/ops/ledger"
+          for f in "$src"/*.jsonl; do
+            name="$(basename "$f")"
+            if ! [[ "$name" =~ ^[0-9]{4}-[0-9]{2}\.jsonl$ ]]; then echo "記録のファイル名が正しくない"; exit 1; fi
+            cat "$f" >> "$dir/ops/ledger/$name"
+          done
+          git -C "$dir" config user.name "github-actions[bot]"
+          git -C "$dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$dir" add ops/ledger
+          git -C "$dir" commit --quiet -m "利用額の記録（news-draft、実行 ${GITHUB_RUN_ID}）"
+          git -C "$dir" push --quiet origin ops-log
+
+      - name: 失敗のとき、実行を失敗にする
+        if: needs.draft.outputs.result == 'failed'
+        run: exit 1
