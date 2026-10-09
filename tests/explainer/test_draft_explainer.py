@@ -289,7 +289,6 @@ class ProcessTest(Base):
     slug = "cmp"
 
     def test_writes_the_process_file(self):
-        self.config = ROOT / "config" / "explainer-sources.yaml"
         client = self.client()
         self.assertEqual(self.run_draft(client), 0, self.stderr)
         self.assertEqual(self.written(), ["content/processes/cmp.md", "ledger/2026-10.jsonl", "pr-body.md"])
@@ -301,10 +300,9 @@ class ProcessTest(Base):
         task = json.loads(client.calls[0]["messages"][0]["content"][0]["text"].split("\n", 1)[1])
         self.assertEqual(task["kind"], "process")
         self.assertNotIn("selectable_processes", task)
-        self.assertEqual(len(task["selectable_terms"]), 30)
+        self.assertEqual(len(task["selectable_terms"]), len(fk.base_config()["terms"]) + 1)  # 試験用の設定の用語 + test-term
 
     def test_terms_and_validation(self):
-        self.config = ROOT / "config" / "explainer-sources.yaml"
         self.assertEqual(self.run_draft(self.client(process_output(terms=["no-such-term"]))), 1)
         self.assertEqual(self.run_draft(self.client(process_output(terms=["plasma"]))), 0, self.stderr)
         front, _ = self.front_and_body("content/processes/cmp.md")
@@ -312,7 +310,6 @@ class ProcessTest(Base):
         self.assertIn("まだ原稿", (self.out / "pr-body.md").read_text(encoding="utf-8"))  # 用語の原稿がまだない（警告）
 
     def test_heading_level_skip_fails(self):
-        self.config = ROOT / "config" / "explainer-sources.yaml"
         bad = process_output(body="## 見出し\n\n" + lf.cjk(150, 0x5400) + "。[S1]\n\n#### 飛んだ見出し\n\n" + lf.cjk(200, 0x5800) + "。[S1]")
         self.assertEqual(self.run_draft(self.client(bad)), 1)
         self.assertIn("V-10", self.summary)

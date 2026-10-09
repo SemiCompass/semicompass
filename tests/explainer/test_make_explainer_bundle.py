@@ -255,14 +255,18 @@ class FetchTest(Base):
             meb.main(["--kind", "company", "--slug", "x"])
         self.assertEqual(caught.exception.code, 2)
 
-    def test_the_real_config_is_valid_and_fetches_for_a_real_slug(self):
-        config = meb.load_config()
+    def test_the_real_config_is_valid(self):
+        meb.load_config()  # 形の検査だけ。どの対象が reviewed かには頼らない
+
+    def test_the_test_config_fetches_for_a_slug_with_sources(self):
+        path = fk.write_config(self.tmp / "config.yaml", fk.base_config())
+        config = meb.load_config(path)
         entry = meb.find_entry(config, "term", "eda")
         self.assertEqual(meb.target_words("term", entry)[:2], ["EDA(設計ツール)", "EDA"])
-        transport = fk.FakeTransport({"https://business.ntt-west.co.jp/glossary/words-00629.html":
+        transport = fk.FakeTransport({"https://t.example.org/eda.html":
                                       fk.ok(fk.html_page("EDAは、回路の設計を助けるツールである。"))}, self.clock)
         code = meb.main(["--kind", "term", "--slug", "eda", "--dry-run"], env={}, transport=transport, sleep=self.clock.sleep,
-                        monotonic=self.clock.monotonic, now=lambda: NOW)
+                        monotonic=self.clock.monotonic, now=lambda: NOW, config_path=path)
         self.assertEqual(code, 0)
 
 

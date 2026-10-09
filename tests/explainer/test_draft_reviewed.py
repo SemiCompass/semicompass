@@ -52,6 +52,7 @@ class Base(unittest.TestCase):
         self.operations = self.tmp / "operations.yaml"
         self.operations.write_text("status: active\n", encoding="utf-8")
         self.r2 = fk.FakeR2(error=RuntimeError("R2 を読んではいけない"))
+        self.config = fk.write_config(self.tmp / "config.yaml", fk.base_config())  # 本物の設定には頼らない
 
     def output(self, **kw):
         return term_output(**kw) if self.kind == "term" else process_output(**kw)
@@ -68,7 +69,7 @@ class Base(unittest.TestCase):
                            env={} if env is None else env, now=lambda: lf.NOW, r2_factory=lambda creds: self.r2,
                            client_factory=lambda: client, sleep=lambda s: None, root=self.root,
                            budgets_path=ROOT / "config" / "budgets.yaml", operations_path=operations or self.operations,
-                           config_path=config or ROOT / "config" / "explainer-sources.yaml")
+                           config_path=config or self.config)
         self.stdout, self.stderr = out.getvalue(), err.getvalue()
         self.summary = summary.read_text(encoding="utf-8") if summary.exists() else ""
         return code
@@ -140,6 +141,7 @@ class TermReviewedTest(Base):
         repo = self.tmp / "repo2"
         shutil.copytree(ROOT / "data", repo / "data")
         shutil.copytree(ROOT / "config", repo / "config")
+        shutil.copy(self.config, repo / "config" / "explainer-sources.yaml")
         shutil.copytree(self.out / "content", repo / "content")
         self.assertEqual([str(p) for p in vd.validate(repo, ROOT) if p.file.startswith("content/")], [])
 
@@ -206,10 +208,9 @@ class TermReviewedTest(Base):
         self.assertEqual(len(self.r2.gets), 1)  # 設定に basis がない用語は、これまでどおり原資料束を読む
 
     def test_reviewed_is_decided_by_the_config_only(self):
-        config = yaml.safe_load((ROOT / "config" / "explainer-sources.yaml").read_text(encoding="utf-8"))
+        config = fk.base_config()
         del config["terms"]["ald"]["basis"]
-        path = self.tmp / "config.yaml"
-        path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        path = fk.write_config(self.tmp / "no-basis.yaml", config)
         client = self.client()
         self.assertEqual(self.run_draft(client, config=path), 2)  # basis がなければ、公開資料の方式（sources が空で止まる）
         self.assertEqual(client.calls, [])
@@ -230,7 +231,7 @@ class ProcessReviewedTest(Base):
         self.assertIn("工程の解説の下書き", client.calls[0]["system"])
         self.assertIn("運営者が確かめる方式", client.calls[0]["system"])
         task = json.loads(client.calls[0]["messages"][0]["content"][0]["text"].split("\n", 1)[1])
-        self.assertEqual((task["kind"], task["basis"], len(task["selectable_terms"])), ("process", "reviewed", 30))
+        self.assertEqual((task["kind"], task["basis"], len(task["selectable_terms"])), ("process", "reviewed", len(fk.base_config()["terms"])))
         self.assertEqual(len(client.calls[0]["messages"][0]["content"]), 1)
         self.assertEqual(self.r2.gets, [])
 
@@ -245,6 +246,7 @@ class ProcessReviewedTest(Base):
         repo = self.tmp / "repo2"
         shutil.copytree(ROOT / "data", repo / "data")
         shutil.copytree(ROOT / "config", repo / "config")
+        shutil.copy(self.config, repo / "config" / "explainer-sources.yaml")
         shutil.copytree(self.out / "content", repo / "content")
         self.assertEqual([str(p) for p in vd.validate(repo, ROOT) if p.file.startswith("content/")], [])
 
@@ -252,9 +254,12 @@ class ProcessReviewedTest(Base):
 class BundleAndAgentTest(unittest.TestCase):
     def test_bundle_command_refuses_a_reviewed_target_without_network(self):
         transport = fk.FakeTransport({})
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, True)
+        config = fk.write_config(Path(tmp) / "config.yaml", fk.base_config())
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            code = meb.main(["--kind", "term", "--slug", "ald", "--dry-run"], env={}, transport=transport)
+            code = meb.main(["--kind", "term", "--slug", "ald", "--dry-run"], env={}, transport=transport, config_path=config)
         self.assertEqual(code, 2)
         self.assertEqual(transport.calls, [])
         self.assertIn("basis: reviewed", err.getvalue())
