@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-11.output.schema.json",
+  "title": "AG-11 ニュース解説作成エージェントの出力",
+  "description": "運用ルール書 3.4、3.5。AG-11 がニュース1件について返す出力。プログラム（scripts/news/draft_news.py）が、この出力から content/news/{yyyy}-{mm}-{slug}.md（schemas/content/news）を組み立てる。点（score）、種別（category）、海外（overseas）は、点付け（AG-10）の結果を使うため、ここには持たない。本文の出典の番号は [S1] だけを使う。文字数の目安（本文400〜700字）は、広めに取り、外れたら警告にする（V-12）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slug",
+    "title",
+    "description",
+    "what_happened",
+    "why_important",
+    "position",
+    "source_title",
+    "source_publisher",
+    "source_published_on",
+    "reporting",
+    "companies",
+    "unlisted_companies",
+    "processes",
+    "x_text",
+    "uncertain"
+  ],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 5,
+      "maxLength": 40
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 60
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 160
+    },
+    "what_happened": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 600
+    },
+    "why_important": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 600
+    },
+    "position": {
+      "type": "string",
+      "minLength": 30,
+      "maxLength": 600
+    },
+    "source_title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "source_publisher": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "source_published_on": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "reporting": {
+      "enum": [
+        "primary",
+        "press",
+        "speculative"
+      ]
+    },
+    "companies": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      }
+    },
+    "unlisted_companies": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 60
+      }
+    },
+    "processes": {
+      "type": "array",
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      }
+    },
+    "x_text": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 110
+    },
+    "uncertain": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+      }
+    }
+  }
+}

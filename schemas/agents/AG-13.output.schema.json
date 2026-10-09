@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-13.output.schema.json",
+  "title": "AG-13 校閲エージェントの出力（ニュース解説）",
+  "description": "運用ルール書 3.4、10.2。AG-13 が、ニュース解説の下書きを元記事と見比べて返す指摘。指摘の文章に、元記事の文章を写さない。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "issues"
+  ],
+  "properties": {
+    "issues": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "part",
+          "kind",
+          "severity",
+          "note"
+        ],
+        "properties": {
+          "part": {
+            "enum": [
+              "what_happened",
+              "why_important",
+              "position",
+              "title",
+              "description",
+              "x_text"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "unsupported",
+              "number",
+              "opinion",
+              "banned",
+              "tone",
+              "meta"
+            ]
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      }
+    }
+  }
+}
