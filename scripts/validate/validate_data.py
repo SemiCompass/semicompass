@@ -31,6 +31,14 @@
   本文の見出しが「## 事業概要」「## 工程上の位置づけ」の2つだけで、この順。`#` がない（V-10）。
   本文の [S1] などの番号がすべて sources の id にある（V-07）。sources の資料で本文に出てこないものは警告（V-08）。
   「事業概要」の文字数が300〜500字（データ定義書 2.6 の数え方）を外れたら警告（V-12）
+* ニュース（D11、データ定義書 6.2）と config/news.yaml（7.3）：content/news/*.md の front matter は
+  news.schema.json、config/news.yaml は schemas/config/news.schema.json で検査する（draft: true も検査する）。
+  ファイル名が {yyyy}-{mm}-{slug} の形で、年月が published_at と一致する（V-02、V-09）。
+  本文の見出しが「## 何が起きたか」「## なぜ重要か」「## 関係する企業・工程とサプライチェーン上の位置」の3つだけで、この順（V-10）。
+  本文が400〜700字の目安を外れたら警告（V-12）。overseas が true のとき tags.companies が1件以上で、3つ目の見出しの下に
+  その企業の略称か正式名称が1社以上ある（V-13）。tags の企業・工程が存在する（V-04）。
+  x_post が140字以内（URLは23字）で、ハッシュタグが2つまで（V-11）。
+  config/news.yaml は、weekly_targets の min が max 以下、sources の id が重複しない（V-03）、sources の company が企業マスタにある（V-04）
 * YAMLの落とし穴：引用符なしの日付（YAMLが日付型に変える）、yes・no・on・off など（YAML 1.1 では真偽値）
 
 実装していない規則：V-05、V-06、V-09、V-11、V-13〜V-21（公開済みの識別子の削除、必須項目の充足、日付の前後、拠点、予算など）。
@@ -72,6 +80,8 @@ SCHEMAS = {
     "overview": "schemas/content/company-overview.schema.json",
     "term": "schemas/content/term.schema.json",
     "process": "schemas/content/process.schema.json",
+    "news": "schemas/content/news.schema.json",
+    "news-config": "schemas/config/news.schema.json",
 }
 OVERVIEW_HEADINGS = ["事業概要", "工程上の位置づけ"]  # データ定義書 6.4
 OVERVIEW_LENGTH = (300, 500)  # 「事業概要」の文字数の目安（V-12）
@@ -198,6 +208,10 @@ def kind_of(path: Path, root: Path) -> str | None:
         return "term"
     if rel.startswith("content/processes/") and rel.endswith(".md") and rel.count("/") == 2:
         return "process"
+    if rel.startswith("content/news/") and rel.endswith(".md") and rel.count("/") == 2:
+        return "news"
+    if rel == "config/news.yaml":
+        return "news-config"
     if rel == "config/explainer-sources.yaml":
         return "explainer-sources"
     if rel == "data/supply-chain.yaml":
@@ -215,8 +229,9 @@ def collect_files(root: Path) -> list[tuple[str, Path]]:
     files += [("overview", p) for p in sorted((root / "content" / "companies").glob("*.md"))]
     files += [("term", p) for p in sorted((root / "content" / "glossary").glob("*.md"))]
     files += [("process", p) for p in sorted((root / "content" / "processes").glob("*.md"))]
+    files += [("news", p) for p in sorted((root / "content" / "news").glob("*.md"))]
     for kind, rel in (("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml"),
-                      ("explainer-sources", "config/explainer-sources.yaml")):
+                      ("explainer-sources", "config/explainer-sources.yaml"), ("news-config", "config/news.yaml")):
         if (root / rel).is_file():
             files.append((kind, root / rel))
     return files
@@ -233,7 +248,7 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
         try:
             if kind == "auto":
                 data, pitfalls = load_json(path), []
-            elif kind in ("overview", "term", "process"):
+            elif kind in ("overview", "term", "process", "news"):
                 data, pitfalls, bodies[rel] = load_markdown(path)
             else:
                 data, pitfalls = load_yaml(path)
@@ -264,6 +279,11 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     names = company_names(companies)
     problems += check_terms(terms, supply, explainer, names)
     problems += check_process_pages(processes, supply, explainer, terms, names)
+    problems += check_news({rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "news" and isinstance(d, dict)},
+                           companies, supply)
+    news_config = next((d for k, _, d in loaded.values() if k == "news-config"), None)
+    if isinstance(news_config, dict):
+        problems += check_news_config(news_config, companies)
     if only is not None:
         target = only.resolve().relative_to(root.resolve()).as_posix()
         problems = [p for p in problems if p.file == target]
@@ -820,6 +840,114 @@ def check_process_pages(pages: dict[str, tuple[dict, str]], supply, config, term
             out.append(Problem(rel, "/title", "V-12", f"title が {len(data['title'])}字で、目安（{TITLE_MAX}字以内）を外れている", "warning"))
         if isinstance(data.get("description"), str):
             _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
+    return out
+
+
+# ---- ニュースと、config/news.yaml（データ定義書 6.2、7.3） ----
+
+NEWS_HEADINGS = ["何が起きたか", "なぜ重要か", "関係する企業・工程とサプライチェーン上の位置"]  # 6.2
+NEWS_LENGTH = (400, 700)  # 本文の文字数の目安（V-12）
+NEWS_FILE = re.compile(r"([0-9]{4})-([0-9]{2})-([a-z0-9]+(?:-[a-z0-9]+)*)")
+X_POST_MAX = 140
+X_URL_LENGTH = 23  # Xは、URLを23字と数える
+X_HASHTAG_MAX = 2
+_URL = re.compile(r"https?://\S+")
+_HASHTAG = re.compile(r"[#＃](?=[^\s#＃])")
+
+
+def x_post_length(text: str) -> int:
+    """Xの投稿文の字数。URLは、長さにかかわらず23字と数える。"""
+    return len(_URL.sub("x" * X_URL_LENGTH, text))
+
+
+def x_post_hashtags(text: str) -> int:
+    return len(_HASHTAG.findall(_URL.sub("", text)))  # URLの中の # は、ハッシュタグではない
+
+
+def _company_display_names(data: dict) -> set[str]:
+    return {_name_key(n) for n in [data.get("name"), *(data.get("short_names") or [])] if isinstance(n, str) and n.strip()}
+
+
+def check_news(news: dict[str, tuple[dict, str]], companies: dict[str, dict], supply) -> list[Problem]:
+    """ニュースの検査（スキーマで確かめられない整合）。draft: true も検査する。"""
+    out: list[Problem] = []
+    company_slugs = {(d.get("slug") if isinstance(d.get("slug"), str) else Path(rel).stem): d for rel, d in companies.items()}
+    process_slugs = _slugs(supply, "processes")
+    for rel, (data, body) in news.items():
+        stem = Path(rel).stem
+        match = NEWS_FILE.fullmatch(stem)
+        if not match:
+            out.append(Problem(rel, "", "V-02", "ファイル名は {yyyy}-{mm}-{slug}.md の形にする（slug は英小文字・数字・ハイフン）"))
+        published = data.get("published_at")
+        if match and isinstance(published, str) and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", published) \
+                and published[:7] != f"{match.group(1)}-{match.group(2)}":
+            out.append(Problem(rel, "/published_at", "V-09",
+                               f"ファイル名の年月（{match.group(1)}-{match.group(2)}）と published_at の年月（{published[:7]}）が一致しない"))
+
+        sections, outside = split_body(body)
+        headings = [(level, text) for level, text, _ in sections[1:]]
+        if any(level == 1 for level, _ in headings):
+            out.append(Problem(rel, "(本文)", "V-10", "`#`（大見出し）がある。本文は `##` から始める"))
+        if [t for _, t in headings] != NEWS_HEADINGS or any(level != 2 for level, _ in headings):
+            found = " / ".join("#" * level + " " + text for level, text in headings) or "なし"
+            out.append(Problem(rel, "(本文)", "V-10", "本文の見出しは「## 何が起きたか」「## なぜ重要か」"
+                               "「## 関係する企業・工程とサプライチェーン上の位置」の3つだけで、この順にする"
+                               f"（実際：{found[:200]}）"))
+        if any(line.strip() for line in sections[0][2]):
+            out.append(Problem(rel, "(本文)", "V-10", "最初の見出しより前に文章がある。本文は3つの見出しの下だけに書く"))
+        count = count_characters([line for _, _, lines in sections[1:] for line in lines])
+        low, high = NEWS_LENGTH
+        if not low <= count <= high:
+            out.append(Problem(rel, "(本文)", "V-12", f"本文が {count}字で、目安（{low}〜{high}字）を外れている", "warning"))
+
+        tags = data.get("tags") if isinstance(data.get("tags"), dict) else {}
+        tag_companies = [c for c in tags.get("companies") or [] if isinstance(c, str)]
+        for i, ref in enumerate(tags.get("companies") or []):
+            if isinstance(ref, str) and ref not in company_slugs:
+                out.append(Problem(rel, pointer(["tags", "companies", i]), "V-04", f"企業 {ref} が企業マスタにない"))
+        if process_slugs is not None:
+            for i, ref in enumerate(tags.get("processes") or []):
+                if isinstance(ref, str) and ref not in process_slugs:
+                    out.append(Problem(rel, pointer(["tags", "processes", i]), "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
+        if data.get("overseas") is True:
+            if not tag_companies:
+                out.append(Problem(rel, "/tags/companies", "V-13", "overseas: true のニュースには、企業のタグが1件以上必要である"))
+            else:
+                third = next((lines for level, text, lines in sections[1:] if text == NEWS_HEADINGS[2] and level == 2), None)
+                if third is not None:
+                    text = _name_key("\n".join(third))
+                    names = {n for c in tag_companies if c in company_slugs for n in _company_display_names(company_slugs[c])}
+                    if not any(n in text for n in names):
+                        out.append(Problem(rel, "(本文)", "V-13", "overseas: true のニュースは、3つ目の見出しの下に、"
+                                           "tags.companies の企業の略称か正式名称を1社以上書く"))
+
+        post = data.get("x_post")
+        if isinstance(post, str):
+            if x_post_length(post) > X_POST_MAX:
+                out.append(Problem(rel, "/x_post", "V-11", f"x_post が {x_post_length(post)}字で、{X_POST_MAX}字（URLは{X_URL_LENGTH}字）を超えている"))
+            if x_post_hashtags(post) > X_HASHTAG_MAX:
+                out.append(Problem(rel, "/x_post", "V-11", f"x_post のハッシュタグが {x_post_hashtags(post)}個で、{X_HASHTAG_MAX}個までである"))
+    return out
+
+
+def check_news_config(config: dict, companies: dict[str, dict]) -> list[Problem]:
+    """config/news.yaml の検査（スキーマで確かめられない整合）。"""
+    rel = "config/news.yaml"
+    out: list[Problem] = []
+    for category, row in (config.get("weekly_targets") or {}).items():
+        if isinstance(row, dict) and isinstance(row.get("min"), int) and isinstance(row.get("max"), int) and row["min"] > row["max"]:
+            out.append(Problem(rel, pointer(["weekly_targets", category]), "V-01", "min が max より大きい"))
+    company_slugs = {(d.get("slug") if isinstance(d.get("slug"), str) else Path(r).stem) for r, d in companies.items()}
+    seen: set[str] = set()
+    for i, source in enumerate(config.get("sources") or []):
+        if not isinstance(source, dict):
+            continue
+        if isinstance(source.get("id"), str):
+            if source["id"] in seen:
+                out.append(Problem(rel, pointer(["sources", i, "id"]), "V-03", f"sources の id {source['id']} が重複している"))
+            seen.add(source["id"])
+        if isinstance(source.get("company"), str) and source["company"] not in company_slugs:
+            out.append(Problem(rel, pointer(["sources", i, "company"]), "V-04", f"企業 {source['company']} が企業マスタにない"))
     return out
 
 
