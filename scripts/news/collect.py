@@ -53,11 +53,15 @@ def _local(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
 
 
+# 「2026年10月 9日」のように、月と日の間に空白がある書き方も読む
+DATE_RE = r"(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})"
+
+
 def parse_date(value: str) -> date | None:
     value = value.strip()
     if not value:
         return None
-    m = re.search(r"(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})", value)
+    m = re.search(DATE_RE, value)
     if m:
         try:
             return date(int(m[1]), int(m[2]), int(m[3]))
@@ -110,10 +114,14 @@ class _LinkParser:
             title = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m[2]))).strip()
             if len(title) < 8:
                 continue
-            around = re.sub(r"<[^>]+>", " ", html_text[max(0, m.start() - 160): m.end() + 160])
-            dates = [d for d in (parse_date(x.group(0)) for x in re.finditer(r"\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}", around)) if d]
-            if not dates:
+            before = re.sub(r"<[^>]+>", " ", html_text[max(0, m.start() - 160): m.start()])
+            after = re.sub(r"<[^>]+>", " ", html_text[m.end(): m.end() + 80])
+            # 日付は、リンクの前にある書き方（JEITA）が多い。前の最も近い日付を先に探し、なければ後ろを見る
+            found = [d for d in (parse_date(x.group(0)) for x in re.finditer(DATE_RE, before)) if d]
+            found = found[-1:] or [d for d in (parse_date(x.group(0)) for x in re.finditer(DATE_RE, after)) if d][:1]
+            if not found:
                 continue
+            dates = found
             self.items.append({"title": title, "url": urljoin(base, m[1]), "published_on": dates[0].isoformat()})
 
 
@@ -172,7 +180,8 @@ def collect(config: dict, *, today: date, days: int, seen: set[str], fetcher=fet
             else:
                 entries = parse_page(fetcher(source["page_url"]), source["page_url"])
         except (urllib.error.URLError, OSError, ValueError, TimeoutError) as error:
-            failed.append({"source": source["id"], "reason": type(error).__name__})
+            reason = type(error).__name__ + (f" {error.code}" if isinstance(error, urllib.error.HTTPError) else "")
+            failed.append({"source": source["id"], "reason": reason})
             continue
         count = 0
         for e in entries:
@@ -203,7 +212,7 @@ def main(argv=None) -> int:
     config = yaml.safe_load(args.config.read_text(encoding="utf-8"))
     result = collect(config, today=datetime.now(JST).date(), days=args.days, seen=seen_urls(args.content_dir, args.seen))
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"候補 {len(result['candidates'])}件（情報源ごと: {result['per_source']}）、取得に失敗した情報源: {[f['source'] for f in result['failed']]}")
+    print(f"候補 {len(result['candidates'])}件（情報源ごと: {result['per_source']}）、取得に失敗した情報源: {[(f['source'], f['reason']) for f in result['failed']]}")
     # 全部の情報源が失敗したときだけ、失敗にする
     return 1 if result["failed"] and not result["per_source"] else 0
 

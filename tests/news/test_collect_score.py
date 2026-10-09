@@ -75,6 +75,14 @@ class CollectTest(unittest.TestCase):
         urls = collect.seen_urls(tmp, [seen_file])
         self.assertEqual(urls, {"https://a.example.org/1", "https://b.example.org/2"})
 
+    def test_page_with_spaced_japanese_dates(self):
+        page = ("<dl><dt>2026年10月 9日</dt><dd>リリース</dd><dd><a href='/japanese/topics/2026/1009.pdf'>架空のガイドを公開</a></dd>"
+                "<dt>2026年10月 6日</dt><dd>リリース</dd><dd><a href='/japanese/topics/2026/1006.pdf'>架空の賞が決定しました</a></dd></dl>").encode()
+        items = collect.parse_page(page, "https://c.example.org/cgi-bin/list.cgi")
+        self.assertEqual([(i["published_on"], i["url"]) for i in items],
+                         [("2026-10-09", "https://c.example.org/japanese/topics/2026/1009.pdf"),
+                          ("2026-10-06", "https://c.example.org/japanese/topics/2026/1006.pdf")])
+
     def test_rejects_non_https_fetch(self):
         with self.assertRaises(ValueError):
             collect.fetch("http://example.org/")
