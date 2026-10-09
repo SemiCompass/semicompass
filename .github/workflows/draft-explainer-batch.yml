@@ -1,0 +1,224 @@
+name: draft-explainer-batch
+
+# 手動で動かす。draft-explainer を、複数の対象について順に実行する版（種類は1つ、最大8件）。
+# 対象ごとに、AG-14 と AG-23 を実行し、対象ごとに1つの変更案を作る（変更案を取り込むかは、運営者が決める）。
+# 1件が失敗しても、次の対象に進む。休止中か予算の上限（終了コード3）のときは、そこで止める。
+# 原資料束の本文は、リポジトリ、ログ、要約、成果物、変更案に出さない。外に出るのは、下書きと、AIの利用額の記録だけ。
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: 対象の種類（process＝工程、term＝用語）。すべての対象で同じ
+        required: true
+        type: choice
+        options:
+          - term
+          - process
+      slugs:
+        description: 対象の slug を、半角スペースかカンマで区切る（最大8件。例 hbm osat）
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: draft-company
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    runs-on: ubuntu-24.04
+    environment: draft
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      created: ${{ steps.run.outputs.created }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      # 今月のAIの利用額を、ops-log ブランチの ops/ledger/ から読む（予算の確認に使う）。
+      # ブランチがまだないときは、利用額 0 として進める（スクリプトが要約に書く）
+      - name: 運営記録（利用額）を読む
+        run: |
+          git clone --quiet --depth 1 --branch ops-log \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/ops-log" \
+            || echo "ops-log ブランチがまだない"
+
+      - name: GitHub の ID トークンを取る（Claude API の ID連携）
+        run: |
+          curl -sS --fail -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+            | jq -r .value > "$RUNNER_TEMP/gha-jwt"
+          test -s "$RUNNER_TEMP/gha-jwt"
+
+      - name: 下書きを作る（原資料束の本文は出さない）
+        id: run
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ runner.temp }}/gha-jwt
+          INPUT_KIND: ${{ inputs.kind }}
+          INPUT_SLUGS: ${{ inputs.slugs }}
+        run: |
+          if [ "$INPUT_KIND" != "process" ] && [ "$INPUT_KIND" != "term" ]; then
+            echo "kind が正しくない"; exit 2
+          fi
+          slugs=$(printf '%s' "$INPUT_SLUGS" | tr ',' ' ')
+          n=0
+          for slug in $slugs; do
+            if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then echo "slug の形が正しくない"; exit 2; fi
+            n=$((n+1))
+          done
+          if [ "$n" -lt 1 ] || [ "$n" -gt 8 ]; then echo "対象は1〜8件にする"; exit 2; fi
+          mkdir -p "$RUNNER_TEMP/ops-log/ops/ledger"
+          created=""
+          failed=""
+          for slug in $slugs; do
+            out="$RUNNER_TEMP/draft-out/$slug"
+            # ID トークンは有効な時間が短いため、対象ごとに取り直す
+            curl -sS --fail -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+              | jq -r .value > "$RUNNER_TEMP/gha-jwt"
+            test -s "$RUNNER_TEMP/gha-jwt" || { echo "::warning::ID トークンが取れなかった（$slug）"; failed="$failed $slug"; continue; }
+            set +e
+            "$RUNNER_TEMP/venv/bin/python" scripts/draft/draft_explainer.py \
+              --kind "$INPUT_KIND" \
+              --slug "$slug" \
+              --out-dir "$out" \
+              --ledger-dir "$RUNNER_TEMP/ops-log/ops/ledger" \
+              --run-id "$GITHUB_RUN_ID" \
+              --summary "$GITHUB_STEP_SUMMARY"
+            code=$?
+            set -e
+            # 次の対象の予算の確認に、ここまでの利用額を数えさせる（この実行の分は、あとで ops-log にも追記する）
+            for f in "$out"/ledger/*.jsonl; do
+              [ -f "$f" ] && cat "$f" >> "$RUNNER_TEMP/ops-log/ops/ledger/$(basename "$f")"
+            done
+            if [ "$code" = "0" ]; then
+              created="$created $slug"
+            elif [ "$code" = "3" ]; then
+              echo "休止中か予算の上限のため、ここで止める（$slug 以降は実行しない）"
+              break
+            else
+              echo "::warning::$slug は失敗した（終了コード $code）。次に進む"
+              failed="$failed $slug"
+            fi
+          done
+          rm -f "$RUNNER_TEMP/gha-jwt"
+          echo "created=$(echo $created)" >> "$GITHUB_OUTPUT"
+          echo "## まとめ" >> "$GITHUB_STEP_SUMMARY"
+          echo "* 下書きを作った: ${created:-なし}" >> "$GITHUB_STEP_SUMMARY"
+          echo "* 失敗: ${failed:-なし}" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: draft-out
+          path: ${{ runner.temp }}/draft-out
+          retention-days: 3
+          if-no-files-found: ignore
+
+  publish:
+    needs: draft
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        continue-on-error: true
+        with:
+          name: draft-out
+          path: ${{ runner.temp }}/draft-out
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        if: needs.draft.outputs.created != ''
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      # 対象ごとに、下書きを置いて検証し、変更案を作る。検証に通らないものは、変更案を作らない
+      - name: 変更案を作る（対象ごとに1つ）
+        if: needs.draft.outputs.created != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_KIND: ${{ inputs.kind }}
+          CREATED: ${{ needs.draft.outputs.created }}
+        run: |
+          if [ "$INPUT_KIND" = "process" ]; then dir="content/processes"; label="工程"; elif [ "$INPUT_KIND" = "term" ]; then dir="content/glossary"; label="用語"; else echo "kind が正しくない"; exit 2; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          base=$(git rev-parse HEAD)
+          rejected=""
+          for slug in $CREATED; do
+            if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then echo "slug の形が正しくない"; exit 2; fi
+            dest="$dir/$slug.md"
+            src="$RUNNER_TEMP/draft-out/$slug"
+            git checkout -q "$base"
+            if ! test -f "$src/$dest"; then rejected="$rejected $slug"; continue; fi
+            cp "$src/$dest" "$dest"
+            if ! "$RUNNER_TEMP/venv/bin/python" scripts/validate/validate_data.py; then
+              echo "::warning::$slug は形式の検証に通らない。変更案を作らない"
+              rejected="$rejected $slug"
+              git checkout -q -- . ; rm -f "$dest"
+              continue
+            fi
+            branch="draft/${INPUT_KIND}-${slug}-${GITHUB_RUN_ID}"
+            git checkout -q -b "$branch"
+            git add "$dest"
+            git commit -q -m "下書き：${label} ${slug} の解説（AG-14、実行 ${GITHUB_RUN_ID}）"
+            git push origin "$branch"
+            gh pr create --base main --head "$branch" \
+              --title "下書き：${label} ${slug} の解説" \
+              --body-file "$src/pr-body.md"
+          done
+          echo "* 変更案を作らなかった: ${rejected:-なし}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 利用額を ops-log に追記する
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=("$RUNNER_TEMP"/draft-out/*/ledger/*.jsonl)
+          if [ "${#files[@]}" -eq 0 ]; then echo "利用額の記録がない"; exit 0; fi
+          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          dir="$RUNNER_TEMP/ops-log"
+          if git ls-remote --exit-code --heads "$url" ops-log >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch ops-log "$url" "$dir"
+          else
+            git init --quiet "$dir"
+            git -C "$dir" checkout --quiet --orphan ops-log
+            git -C "$dir" remote add origin "$url"
+          fi
+          mkdir -p "$dir/ops/ledger"
+          for f in "${files[@]}"; do
+            name="$(basename "$f")"
+            if ! [[ "$name" =~ ^[0-9]{4}-[0-9]{2}\.jsonl$ ]]; then echo "記録のファイル名が正しくない"; exit 1; fi
+            cat "$f" >> "$dir/ops/ledger/$name"
+          done
+          git -C "$dir" config user.name "github-actions[bot]"
+          git -C "$dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$dir" add ops/ledger
+          git -C "$dir" commit --quiet -m "利用額の記録（draft-explainer-batch、実行 ${GITHUB_RUN_ID}）"
+          git -C "$dir" push --quiet origin ops-log
