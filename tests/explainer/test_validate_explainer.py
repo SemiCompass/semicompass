@@ -269,7 +269,7 @@ class ReviewedConfigTest(unittest.TestCase):
 
     def test_the_designated_targets_have_basis_reviewed(self):
         terms = sorted(k for k, v in CONFIG["terms"].items() if v.get("basis") == "reviewed")
-        self.assertEqual(terms, sorted(["ald", "coater-developer", "hbm", "osat", "mold-compound", "power-semiconductor", "process-node"]))
+        self.assertEqual(terms, sorted(["ald", "coater-developer", "foundry", "hbm", "osat", "mold-compound", "power-semiconductor", "process-node"]))
         self.assertEqual([k for k, v in CONFIG["processes"].items() if v.get("basis") == "reviewed"], ["etching"])
 
     def test_reviewed_with_empty_or_missing_sources_is_not_a_warning(self):
