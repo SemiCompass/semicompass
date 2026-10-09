@@ -45,6 +45,21 @@ def fetcher(url):
     return bodies[url]
 
 
+class CheckSourcesTest(unittest.TestCase):
+    def test_reports_feed_page_and_failure(self):
+        import check_sources
+        import urllib.error
+
+        def fetch(url):
+            if url.endswith("bad"):
+                raise urllib.error.HTTPError(url, 403, "Forbidden", {}, None)
+            return RSS if url.endswith("rss") else b'<html><head><link rel="alternate" type="application/rss+xml" href="/feed.xml"></head></html>'
+
+        self.assertTrue(check_sources.check("https://a.example.org/rss", fetch).startswith("OK  https://a.example.org/rss  フィード  "))
+        self.assertIn("HTTP 403", check_sources.check("https://a.example.org/bad", fetch))
+        self.assertIn("https://a.example.org/feed.xml", check_sources.check("https://a.example.org/top", fetch))
+
+
 class CollectTest(unittest.TestCase):
     def run_collect(self, seen=frozenset()):
         return collect.collect(CONFIG, today=TODAY, days=3, seen=set(seen), fetcher=fetcher)

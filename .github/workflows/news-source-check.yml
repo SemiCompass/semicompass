@@ -1,0 +1,36 @@
+name: news-source-check
+
+# ニュースの情報源の接続の確認。手動で動かす。config/news.yaml に足す前に、URLが取得できるか、フィードかページかを試す。
+# 秘密は使わない。表示するのは、URL、状態、件数、最新の日付、見出しの先頭の1件だけ。
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: 確認するURL（空白か改行で区切る）。空なら、既定の一覧
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 接続を確認する
+        env:
+          INPUT_URLS: ${{ inputs.urls }}
+        run: |
+          urls="$INPUT_URLS"
+          if [ -z "${urls// /}" ]; then
+            urls="https://www.meti.go.jp/ml_index_release_atom.xml https://www.meti.go.jp/press/index.html https://www.nedo.go.jp/news/ https://www.nedo.go.jp/rss/news.xml https://www.semi.org/jp/news-resources https://www.wsts.org/ https://www.seaj.or.jp/ https://www.rapidus.inc/news/ https://www.tel.co.jp/news/ https://www.renesas.com/jp/ja/about/press-room https://www.kioxia.com/ja-jp/about/news.html https://www.shinetsu.co.jp/jp/news/ https://www.disco.co.jp/jp/news/ https://www.lasertec.co.jp/news/ https://www.advantest.com/ja/news/ https://www.jeita.or.jp/cgi-bin/topics/list.cgi"
+          fi
+          # shellcheck disable=SC2086
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -q -r scripts/requirements.txt
+          "$RUNNER_TEMP/venv/bin/python" scripts/news/check_sources.py $urls | tee -a "$GITHUB_STEP_SUMMARY"
