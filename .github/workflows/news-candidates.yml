@@ -8,6 +8,12 @@ on:
   schedule:
     - cron: "0 21 * * 0-4"   # 日曜〜木曜の21:00 UTC ＝ 月曜〜金曜の6:00 JST
   workflow_dispatch:
+    inputs:
+      include_seen:
+        description: 前の実行で候補にした記事も含める（試験のやり直し用。通常は false）
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -45,11 +51,13 @@ jobs:
 
       - name: 候補を集める
         id: collect
+        env:
+          INCLUDE_SEEN: ${{ inputs.include_seen }}
         run: |
           out="$RUNNER_TEMP/news-out"
           mkdir -p "$out"
           seen_args=()
-          if [ -f "$RUNNER_TEMP/ops-log/ops/news/seen.txt" ]; then seen_args=(--seen "$RUNNER_TEMP/ops-log/ops/news/seen.txt"); fi
+          if [ "$INCLUDE_SEEN" != "true" ] && [ -f "$RUNNER_TEMP/ops-log/ops/news/seen.txt" ]; then seen_args=(--seen "$RUNNER_TEMP/ops-log/ops/news/seen.txt"); fi
           "$RUNNER_TEMP/venv/bin/python" scripts/news/collect.py --out "$out/candidates.json" "${seen_args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
           n="$("$RUNNER_TEMP/venv/bin/python" -c "import json,sys; print(len(json.load(open(sys.argv[1]))['candidates']))" "$out/candidates.json")"
           if [ "$n" != "0" ]; then echo "has_candidates=true" >> "$GITHUB_OUTPUT"; else echo "has_candidates=false" >> "$GITHUB_OUTPUT"; fi
@@ -154,6 +162,12 @@ jobs:
           for c in d['candidates']:
               print(c['url'], d['collected_on'])
           " "$out/candidates.json" >> "$dir/ops/news/seen.txt"
+            changed=true
+          fi
+          # 点付けの結果（/draft が読む）。日付は Issue の題名と同じ（日本時間）
+          if [ -s "$out/scored.json" ]; then
+            mkdir -p "$dir/ops/news/scored"
+            cp "$out/scored.json" "$dir/ops/news/scored/$(TZ=Asia/Tokyo date +%F).json"
             changed=true
           fi
           if [ "$changed" = "false" ]; then echo "追記するものがない"; exit 0; fi
