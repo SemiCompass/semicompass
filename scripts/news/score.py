@@ -109,7 +109,7 @@ def md_escape(text: str) -> str:
 
 def issue_body(result: dict, config: dict, collected_on: str, counts: dict[str, int], limit: int) -> str:
     out = [f"## ニュース候補（{collected_on}）", "",
-           f"上位 {limit} 件が、1日の上限（{config['daily_limit']}件）を踏まえた目安。解説を書く候補は、下の `/draft` で指定する。", ""]
+           f"「☑ 推奨」は、1日の上限（{config['daily_limit']}件）に合わせた上位 {limit} 件。解説を書く候補は、下の `/draft` で指定する（推奨以外も選べる）。", ""]
     if counts:
         out.append("今週の公開済み：" + "、".join(f"{CATEGORY_LABEL.get(k, k)} {v}件" for k, v in sorted(counts.items())))
         out.append("")
@@ -117,12 +117,13 @@ def issue_body(result: dict, config: dict, collected_on: str, counts: dict[str, 
 
     def row(s: dict, mark: str) -> str:
         sc = s["score"]
-        flags = ("★" if s["priority_hit"] else "") + ("海外" if s["overseas"] else "") + ("（週の上限）" if s.get("category_full") else "")
-        return (f"| {mark} | {s['id']} | {CATEGORY_LABEL[s['category']]}{flags} | {s['total']} | {sc['impact']}/{sc['supply_chain']}/{sc['novelty']}/{sc['reliability']} | "
+        flags = [x for x in ("海外" if s["overseas"] else "", "週の上限" if s.get("category_full") else "") if x]
+        label = ("★" if s["priority_hit"] else "") + CATEGORY_LABEL[s["category"]] + (f"（{'・'.join(flags)}）" if flags else "")
+        return (f"| {mark} | {s['id']} | {label} | {s['total']} | {sc['impact']}/{sc['supply_chain']}/{sc['novelty']}/{sc['reliability']} | "
                 f"[{md_escape(s['title'])}]({s['url']})（{md_escape(s['publisher'])}、{s['published_on']}） | {md_escape(s['reason'])} |")
 
     for i, s in enumerate(result["ranked"]):
-        out.append(row(s, "☑ 目安" if i < limit and not s.get("category_full") else "☐"))
+        out.append(row(s, "☑ 推奨" if i < limit and not s.get("category_full") else "☐"))
     out.append("")
     if result["observed"]:
         out += ["### 観測報道（原則として扱わない）", ""]
@@ -173,7 +174,7 @@ def main(argv=None, *, client_factory=None, now=None) -> int:
     today = datetime.fromisoformat(data["collected_on"]).date()
     counts = week_counts(args.content_dir, today)
     ranked = rank(merge(candidates, result.output), config, counts)
-    limit = config["daily_limit"] * 3  # 候補の目安は、1日の上限の3倍まで（運営者が選ぶ）
+    limit = config["daily_limit"]  # 推奨は、1日の上限の件数まで（運営者が選ぶ）
     (args.out_dir / "scored.json").write_text(json.dumps(ranked, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     (args.out_dir / "issue-body.md").write_text(issue_body(ranked, config, data["collected_on"], counts, limit), encoding="utf-8")
     print(f"点付け: 候補 {len(candidates)}件 → 表 {len(ranked['ranked'])}件、観測報道 {len(ranked['observed'])}件、AIの利用額 {result.cost_jpy:.2f}円")
