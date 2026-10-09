@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-10.output.schema.json",
+  "title": "AG-10 ニュース候補の点付けエージェントの出力",
+  "description": "運用ルール書 3.2。AG-10 が、収集した候補ごとに返す点と種別。プログラム（scripts/news/score.py）が、入力の候補の id と突き合わせ、config/news.yaml の優先の基準と1週間の目安で並べて、Issue にする。reliability（情報源の確かさの点）は、reporting から、プログラムが付ける（primary＝3、press＝2、speculative＝1）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 60,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "semiconductor_related", "category", "impact", "supply_chain", "novelty", "reporting", "overseas", "priority_hit", "listed_companies", "reason"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^c[0-9]{2,3}$" },
+          "semiconductor_related": { "type": "boolean" },
+          "category": { "enum": ["investment", "policy", "m_and_a", "earnings", "technology", "supply_demand"] },
+          "impact": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "supply_chain": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "novelty": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "reporting": { "enum": ["primary", "press", "speculative"] },
+          "overseas": { "type": "boolean" },
+          "priority_hit": { "type": "boolean" },
+          "listed_companies": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }
+          },
+          "reason": { "type": "string", "minLength": 1, "maxLength": 80 }
+        }
+      }
+    }
+  }
+}

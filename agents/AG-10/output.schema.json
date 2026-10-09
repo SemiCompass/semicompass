@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "AG-10（ニュース候補の点付けエージェント）が返す出力の形式。定義の本体は、schemas/ にある（アーキテクチャ設計書 8.2）。",
+  "$ref": "../../schemas/agents/AG-10.output.schema.json"
+}
