@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/config/news.schema.json",
+  "title": "config/news.yaml",
+  "description": "データ定義書（第1段階）7.3。ニュースの情報源、件数、種別の目安。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "daily_limit",
+    "busy_period_daily_limit",
+    "candidate_limit",
+    "weekly_max_per_category",
+    "weekly_targets",
+    "priority_rules",
+    "tag_index_threshold",
+    "sources"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "daily_limit": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1日の件数の上限（MVPは2、正式公開以降は3）。"
+    },
+    "busy_period_daily_limit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "temporary_limit": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "description": "CT-06 の一時的な上限（公開後）。"
+    },
+    "candidate_limit": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "点を付ける候補の数（30）。"
+    },
+    "weekly_max_per_category": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "weekly_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "investment",
+        "policy",
+        "m_and_a",
+        "earnings",
+        "technology",
+        "supply_demand"
+      ],
+      "properties": {
+        "investment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "m_and_a": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "earnings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "technology": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "supply_demand": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "priority_rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "investment",
+        "policy",
+        "m_and_a",
+        "earnings",
+        "technology",
+        "supply_demand"
+      ],
+      "properties": {
+        "investment": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "m_and_a": {
+          "type": "string",
+          "minLength": 1
+        },
+        "earnings": {
+          "type": "string",
+          "minLength": 1
+        },
+        "technology": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supply_demand": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "tag_index_threshold": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "reliability"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "company",
+              "government",
+              "association",
+              "press"
+            ]
+          },
+          "reliability": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "feed_url": {
+            "type": "string",
+            "pattern": "^https://"
+          },
+          "page_url": {
+            "type": "string",
+            "pattern": "^https://"
+          },
+          "company": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "demand_side": {
+            "type": "boolean"
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "feed_url"
+            ]
+          },
+          {
+            "required": [
+              "page_url"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
