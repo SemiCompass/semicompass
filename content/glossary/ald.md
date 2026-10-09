@@ -16,9 +16,11 @@ related_terms:
 description: 原子層単位で薄膜を積み重ねる成膜手法ALDの解説。原料ガスを交互に供給して膜をつくり、凹凸のある表面にも均一に成膜しやすい。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
 ai_generated: true
 sources: []
+reviewed_on: '2026-10-09'
+review_methods:
+- operator_knowledge
 ---
 
 ALD（Atomic Layer Deposition、原子層堆積）は、薄膜を原子層単位で積み重ねる成膜手法である。

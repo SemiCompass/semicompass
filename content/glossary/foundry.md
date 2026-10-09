@@ -21,9 +21,11 @@ related_terms:
 description: ファウンドリは、他社が設計した半導体を受託して製造する事業者である。ファブレスなど設計に専念する企業が、製造を委託する先となる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
 ai_generated: true
 sources: []
+reviewed_on: '2026-10-09'
+review_methods:
+- operator_knowledge
 ---
 
 ファウンドリは、顧客から渡された回路の設計データをもとに、半導体を受託して製造する事業者である。製造を専業とする企業を指す場合が多いが、受託製造という事業の形を指すこともある。
