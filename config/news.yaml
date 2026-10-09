@@ -67,7 +67,9 @@ sources:
     company: advantest
     page_url: "https://www.advantest.com/ja/news/"
   # 報道（運用ルール書3.1）。見出しとURLだけを候補にする。解説は、一次情報（企業・官公庁の発表）を探して、そちらを出典にする。
-  # 利用の規約（RSS、見出しの再利用）は、運営者が確かめてから有効にする（2026-10-09 時点で確認中）。
+  # ITmedia のRSS利用条件（2026-10-10 に運営者が確認）：発信元の表示は必須、内容の改変は禁止。
+  # このサイトでは、見出しとURLを内部の候補の収集にだけ使い、読者のページには出さない。解説は独自の文章で書き、出典には発信元を付ける。
+  # 指摘を受けたときは、すぐに外す。
   - id: eetimes-japan
     name: EE Times Japan（ITmedia）
     kind: press
