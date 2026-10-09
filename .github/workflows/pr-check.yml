@@ -19,6 +19,32 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 2
+
+      # 保護する場所の変更の検査（アーキテクチャ設計書 10.3 の 2）。
+      # 運営者以外（Bot、または claude/・draft/ で始まる作業ブランチ）が作った変更案で、
+      # 次の場所が変わっていたら不合格にする。運営者が自分で作った変更案は対象外。
+      - name: 保護する場所の変更の検査
+        env:
+          AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          case "$AUTHOR_TYPE" in
+            Bot) restricted=1 ;;
+            *) case "$HEAD_REF" in claude/*|draft/*) restricted=1 ;; *) restricted=0 ;; esac ;;
+          esac
+          if [ "$restricted" != "1" ]; then
+            echo "運営者の変更案のため、この検査の対象外"
+            exit 0
+          fi
+          changed=$(git diff --name-only HEAD^1 HEAD)
+          hits=$(printf '%s\n' "$changed" | grep -E '^(\.github/|schemas/|scripts/factcheck/|config/budgets\.yaml$|CLAUDE\.md$|CODEOWNERS$|\.github/CODEOWNERS$)' || true)
+          if [ -n "$hits" ]; then
+            echo "::error::運営者以外が作った変更案で、保護する場所が変わっている。運営者が自分で作る変更案で行うこと。"
+            printf '%s\n' "$hits"
+            exit 1
+          fi
+          echo "保護する場所の変更はない"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
