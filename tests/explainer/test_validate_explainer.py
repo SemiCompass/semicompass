@@ -10,7 +10,8 @@ import explainer_fakes as fk
 import validate_data as vd
 
 ROOT = fk.ROOT
-CONFIG = yaml.safe_load((ROOT / "config" / "explainer-sources.yaml").read_text(encoding="utf-8"))
+REAL_CONFIG = yaml.safe_load((ROOT / "config" / "explainer-sources.yaml").read_text(encoding="utf-8"))  # 本物の設定。形の検査と、指定の確認だけに使う
+CONFIG = fk.base_config()  # 試験用の設定。basis: reviewed の対象も、そうでない対象も、ここで決める
 SUPPLY = yaml.safe_load((ROOT / "data" / "supply-chain.yaml").read_text(encoding="utf-8"))
 
 
@@ -29,6 +30,7 @@ class ConfigTest(unittest.TestCase):
         return vd.check_explainer_sources(config, SUPPLY)
 
     def test_the_repository_config_has_no_errors(self):
+        self.assertEqual(messages(vd.check_explainer_sources(REAL_CONFIG, SUPPLY), "error"), [])
         self.assertEqual(messages(vd.check_explainer_sources(CONFIG, SUPPLY), "error"), [])
 
     def test_bad_enum_values_are_errors(self):
@@ -65,7 +67,7 @@ class ConfigTest(unittest.TestCase):
             c["terms"]["eda"]["sources"].append(copy.deepcopy(c["terms"]["eda"]["sources"][0]))
         self.assertEqual(rules(self.check(dup)), ["V-03"])
         urls = [s["url"] for t in CONFIG["terms"].values() for s in t["sources"] if s["status"] == "approved"]
-        self.assertGreater(len(urls) - len(set(urls)), 0)  # 実際の設定でも、別の対象で同じURLを使っている
+        self.assertGreater(len(urls) - len(set(urls)), 0)  # 別の対象で同じURLを使っている（試験用の設定の exposure-tool と euv）
         self.assertEqual(messages(vd.check_explainer_sources(CONFIG, SUPPLY), "error"), [])
 
     def test_candidate_urls_may_repeat(self):
@@ -212,6 +214,7 @@ class WholeRepositoryTest(unittest.TestCase):
         repo = Path(directory.name)
         shutil.copytree(ROOT / "data", repo / "data")
         shutil.copytree(ROOT / "config", repo / "config")
+        fk.write_config(repo / "config" / "explainer-sources.yaml", CONFIG)
         (repo / "content" / "glossary").mkdir(parents=True)
         (repo / "content" / "processes").mkdir(parents=True)
         return repo
@@ -268,9 +271,10 @@ class ReviewedConfigTest(unittest.TestCase):
         return vd.check_explainer_sources(config, SUPPLY)
 
     def test_the_designated_targets_have_basis_reviewed(self):
-        terms = sorted(k for k, v in CONFIG["terms"].items() if v.get("basis") == "reviewed")
-        self.assertEqual(terms, sorted(["ald", "coater-developer", "foundry", "hbm", "osat", "mold-compound", "power-semiconductor", "process-node"]))
-        self.assertEqual([k for k, v in CONFIG["processes"].items() if v.get("basis") == "reviewed"], ["etching"])
+        # 本物の設定。指定した対象が reviewed であることだけを見る（reviewed の対象が増えるのは許す）
+        for slug in ("ald", "coater-developer", "foundry", "hbm", "osat", "mold-compound", "power-semiconductor", "process-node"):
+            self.assertEqual(REAL_CONFIG["terms"][slug].get("basis"), "reviewed", slug)
+        self.assertEqual(REAL_CONFIG["processes"]["etching"].get("basis"), "reviewed")
 
     def test_reviewed_with_empty_or_missing_sources_is_not_a_warning(self):
         problems = self.check(lambda c: c["terms"]["ald"].__setitem__("sources", []))
@@ -299,7 +303,7 @@ class ReviewedConfigTest(unittest.TestCase):
         self.assertEqual([(p.path, p.severity) for p in problems if p.path.startswith("/terms/ald")], [("/terms/ald/sources", "warning")])
 
     def test_the_repository_config_has_only_the_http_warning_left(self):
-        warnings = [(p.path, p.severity) for p in vd.check_explainer_sources(CONFIG, SUPPLY) if p.severity == "warning"]
+        warnings = [(p.path, p.severity) for p in vd.check_explainer_sources(REAL_CONFIG, SUPPLY) if p.severity == "warning"]
         self.assertEqual([w for w in warnings if "sources" in w[0] and w[0].endswith("/sources")], [])
 
 
@@ -390,6 +394,7 @@ class ReviewedRepositoryTest(unittest.TestCase):
         repo = Path(directory.name)
         shutil.copytree(ROOT / "data", repo / "data")
         shutil.copytree(ROOT / "config", repo / "config")
+        fk.write_config(repo / "config" / "explainer-sources.yaml", CONFIG)
         (repo / "content" / "glossary").mkdir(parents=True)
         (repo / "content" / "processes").mkdir(parents=True)
 

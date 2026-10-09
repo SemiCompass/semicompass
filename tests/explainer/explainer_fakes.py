@@ -31,12 +31,49 @@ def source(url, status="approved", role="primary", kind="web", title="資料", p
     return {"status": status, "role": role, "kind": kind, "publisher": publisher, "title": title, "url": url}
 
 
-def make_config(path: Path, term_sources, slug="test-term", name="架空研磨", extra=None) -> Path:
-    """本物の設定（工程10件、用語30件）に、試験用の用語 test-term を足した設定を、path に書く。"""
-    config = yaml.safe_load((ROOT / "config" / "explainer-sources.yaml").read_text(encoding="utf-8"))
-    config["terms"][slug] = {"term": name, "sources": term_sources, **(extra or {})}
+def _src(url, *, status="approved", role="primary", publisher="架空協会", title="資料"):
+    return source(url, status=status, role=role, publisher=publisher, title=title)
+
+
+def base_config() -> dict:
+    """試験用の設定（本物の config/explainer-sources.yaml には頼らない）。本物の設定の basis: reviewed の増減に影響されない。
+
+    - basis: reviewed の対象：用語 ald・foundry・hbm、工程 etching
+    - basis のない対象（出典つき）：用語 eda・plasma・silicon-wafer・exposure-tool・euv・coater-developer（出典は補助だけ）、mvp の工程のうち etching 以外
+    - 同じURLを使う別の対象：exposure-tool と euv
+    """
+    supply = yaml.safe_load((ROOT / "data" / "supply-chain.yaml").read_text(encoding="utf-8"))
+    processes = {}
+    for item in supply["processes"]:
+        if item.get("mvp") is True and item["slug"] != "etching":
+            processes[item["slug"]] = {"process": item["slug"], "sources": [_src(f"https://p.example.org/{item['slug']}.html")]}
+    processes["etching"] = {"process": "etching", "basis": "reviewed", "sources": []}
+    shared = "https://t.example.org/shared.html"
+    terms = {
+        "eda": {"term": "EDA(設計ツール)", "sources": [_src("https://t.example.org/eda.html")]},
+        "plasma": {"term": "プラズマ", "sources": [_src("https://t.example.org/plasma-rejected.html", status="rejected"),
+                                                  _src("https://t.example.org/plasma.html")]},
+        "exposure-tool": {"term": "露光装置", "sources": [_src(shared)]},
+        "euv": {"term": "EUV露光", "sources": [_src(shared), _src("https://t.example.org/euv.html")]},
+        "coater-developer": {"term": "コータ・デベロッパ", "sources": [_src("https://t.example.org/coater.html", role="supplementary")]},
+        "ald": {"term": "ALD", "basis": "reviewed", "sources": []},
+        "foundry": {"term": "ファウンドリ", "basis": "reviewed", "sources": []},
+        "hbm": {"term": "HBM", "basis": "reviewed", "sources": []},
+        "silicon-wafer": {"term": "シリコンウェーハ", "sources": [_src("https://t.example.org/wafer.html")]},
+    }
+    return {"schema_version": 1, "terms": terms, "processes": processes}
+
+
+def write_config(path: Path, config: dict) -> Path:
     path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
     return path
+
+
+def make_config(path: Path, term_sources, slug="test-term", name="架空研磨", extra=None) -> Path:
+    """試験用の設定（base_config）に、試験用の用語 test-term を足した設定を、path に書く。"""
+    config = base_config()
+    config["terms"][slug] = {"term": name, "sources": term_sources, **(extra or {})}
+    return write_config(path, config)
 
 
 def html_page(*paragraphs, nav="メニュー項目", footer="フッターの文", extra_head=""):
