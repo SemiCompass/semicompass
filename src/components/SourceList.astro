@@ -9,7 +9,7 @@ interface Source {
   publisher: string;
   url?: string;
   publishedOn?: string; // YYYY-MM-DD
-  accessedOn: string;
+  accessedOn?: string; // 確認日（ニュースの元記事など、確認日を持たない資料は省く）
   pages?: string;
   edinet?: boolean;
 }
@@ -35,7 +35,7 @@ function label(value: string): string {
         </span>
         <span>{s.publisher}</span>
         {s.publishedOn && <span>公表日：<time datetime={s.publishedOn}>{label(s.publishedOn)}</time></span>}
-        <span>確認日：<time datetime={s.accessedOn}>{label(s.accessedOn)}</time></span>
+        {s.accessedOn && <span>確認日：<time datetime={s.accessedOn}>{label(s.accessedOn)}</time></span>}
         {s.pages && <span>該当のページ：{s.pages}</span>}
         {s.edinet && <span>出典：EDINET（金融庁）</span>}
       </li>

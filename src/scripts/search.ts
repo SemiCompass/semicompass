@@ -3,7 +3,7 @@
 // /search/ のページでは、結果を、種類（企業、工程、用語、ニュース）ごとの見出しで並べる。
 import { search, type SearchEntry } from '../lib/normalize';
 
-const TYPE_LABEL: Record<SearchEntry['type'], string> = { company: '企業', process: '工程', term: '用語' };
+const TYPE_LABEL: Record<SearchEntry['type'], string> = { company: '企業', process: '工程', term: '用語', news: 'ニュース' };
 let indexPromise: Promise<SearchEntry[]> | null = null;
 const loadIndex = () => (indexPromise ??= fetch('/search-index.json').then((r) => (r.ok ? (r.json() as Promise<SearchEntry[]>) : [])).catch(() => []));
 
@@ -109,7 +109,7 @@ if (results) {
       p.textContent = '該当するものは見つかりませんでした。企業名、証券コード、用語の一部を入力してみてください。例：東京エレクトロン、8035、CMP';
       target.append(p);
     }
-    for (const type of ['company', 'process', 'term'] as const) {
+    for (const type of ['company', 'process', 'term', 'news'] as const) {
       const group = found.filter((e) => e.type === type);
       if (group.length === 0) continue;
       const h2 = document.createElement('h2');
@@ -125,10 +125,5 @@ if (results) {
       }
       target.append(h2, ul);
     }
-    const news = document.createElement('h2');
-    news.textContent = 'ニュース';
-    const p = document.createElement('p');
-    p.textContent = 'ニュース解説は、まだ検索の対象にありません。';
-    target.append(news, p);
   });
 }

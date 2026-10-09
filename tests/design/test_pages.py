@@ -1,4 +1,4 @@
-"""企業一覧、工程、用語、検索、トップの確認（画面とデザインの仕様書 13章の5）。"""
+"""企業一覧、工程、用語、ニュース、検索、トップの確認（画面とデザインの仕様書 13章の5）。"""
 
 import json
 import os
@@ -13,6 +13,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 HAS_NODE = shutil.which("npx") is not None and (ROOT / "node_modules" / "astro").is_dir()
+
+
+def normalize_key(text: str) -> str:
+    """検索の語の正規化（src/lib/normalize.ts の normalizeForSearch）を、node で呼ぶ。"""
+    return node(f"(n) => n.normalizeForSearch({json.dumps(text, ensure_ascii=False)})")
 
 
 def node(code: str):
@@ -55,15 +60,15 @@ def build_site(env: str, cwd: Path = ROOT) -> tuple[Path, str | None]:
     return out, (None if done.returncode == 0 else done.stdout[-1500:] + done.stderr[-1500:])
 
 
-def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None) -> Path:
-    """サイトの作業用のコピーを作る。**content/glossary/ と content/processes/ は、リポジトリの中身を写さず、空にして、
-    glossary、processes のファイル（名前 → 本文）だけを置く**。リポジトリの実際の content/ は、書き換えない。
+def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None, news: dict[str, str] | None = None) -> Path:
+    """サイトの作業用のコピーを作る。**content/glossary/、content/processes/、content/news/ は、リポジトリの中身を写さず、空にして、
+    glossary、processes、news のファイル（名前 → 本文）だけを置く**。リポジトリの実際の content/ は、書き換えない。
     これで、用語・工程の件数が0件のときの表示を、リポジトリの中身（用語が増えても）に左右されずに確かめられる。"""
     work = Path(tempfile.mkdtemp())
     for name in ("src", "data", "config", "content", "public", "package.json", "astro.config.mjs", "tsconfig.json"):
         source = ROOT / name
         if name == "content":
-            shutil.copytree(source, work / name, ignore=shutil.ignore_patterns("glossary", "processes"))
+            shutil.copytree(source, work / name, ignore=shutil.ignore_patterns("glossary", "processes", "news"))
         elif source.is_dir():
             shutil.copytree(source, work / name)
         elif source.is_file():
@@ -74,7 +79,7 @@ def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] 
         if extra.is_file() and not (work / extra.name).exists() and extra.suffix in (".mjs", ".json", ".ts"):
             shutil.copy(extra, work / extra.name)
     os.symlink(ROOT / "node_modules", work / "node_modules")
-    for directory, files in (("glossary", glossary or {}), ("processes", processes or {})):
+    for directory, files in (("glossary", glossary or {}), ("processes", processes or {}), ("news", news or {})):
         (work / "content" / directory).mkdir(parents=True)
         for filename, text in files.items():
             (work / "content" / directory / filename).write_text(text, encoding="utf-8")
@@ -105,8 +110,9 @@ class PagesBuildTest(unittest.TestCase):
         """content/glossary/ と content/processes/ を空にした、作業用のコピーで、サイトを組み立てる。"""
         return self._built(f"empty-{env}", env, make_site())
 
-    def build_with(self, key: str, env: str, glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None) -> Path:
-        return self._built(f"{key}-{env}", env, make_site(glossary, processes))
+    def build_with(self, key: str, env: str, glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None,
+                   news: dict[str, str] | None = None) -> Path:
+        return self._built(f"{key}-{env}", env, make_site(glossary, processes, news))
 
     def read(self, dist: Path, path: str) -> str:
         return (dist / path).read_text(encoding="utf-8")
@@ -220,6 +226,98 @@ class PagesBuildTest(unittest.TestCase):
         production = self.fixture_site("production")
         self.assertTrue((production / "glossary" / "cmp" / "index.html").is_file())
         self.assertFalse((production / "glossary" / "draft-term").exists())
+
+    # ---- ニュース（仕様書 9.6）。試験用の記事は、ここだけに置く（content/news/ には置かない） ----
+    def news_files(self) -> dict[str, str]:
+        company, process = self.companies[0]["slug"], self.processes[0]["slug"]
+
+        def article(title: str, published: str, category: str, overseas: str, extra: str = "") -> str:
+            return (
+                f"---\ntitle: {title}\ndescription: 試験用の要約である。\npublished_at: '{published}'\nai_generated: true\ncategory: {category}\n"
+                f"source_article:\n  title: 試験用の元記事の見出し\n  publisher: 試験用の発信元\n  url: https://example.com/original\n"
+                f"  published_on: '{published}'\n  reporting: primary\n"
+                f"score: {{impact: 2, supply_chain: 1, novelty: 3, reliability: 3}}\noverseas: {overseas}\n"
+                f"tags: {{companies: [{company}], processes: [{process}], themes: []}}\n{extra}---\n"
+                "## 何が起きたか\n\n試験用の事実である[S1]。\n\n## なぜ重要か\n\n試験用の説明である。\n\n"
+                "## 関係する企業・工程とサプライチェーン上の位置\n\n試験用の位置づけである。\n"
+            )
+
+        return {
+            "2026-10-older-sample.md": article("古い試験用のニュース", "2026-10-08", "technology", "false"),
+            "2026-10-newer-sample.md": article("新しい試験用のニュース", "2026-10-09", "investment", "true"),
+            "2026-10-draft-sample.md": article("下書きの試験用のニュース", "2026-10-07", "policy", "false", "draft: true\n"),
+        }
+
+    def news_site(self, env: str) -> Path:
+        return self.build_with("news", env, news=self.news_files())
+
+    def test_empty_news_list_and_search(self):
+        dist = self.build_empty()  # content/news/ が空の、作業用のコピー
+        html = self.read(dist, "news/index.html")
+        self.assertIn("ニュース解説は、まだありません", html)
+        self.assertEqual(html.count("<h1"), 1)
+        self.assertEqual([p.name for p in (dist / "news").iterdir()], ["index.html"])  # 個別のページは、1つもない
+        self.assertNotIn("news", {e["type"] for e in json.loads(self.read(dist, "search-index.json"))})
+
+    def test_news_list_is_newest_first_with_date_category_and_company_tag(self):
+        company = self.companies[0]
+        html = self.read(self.news_site("production"), "news/index.html").replace("<wbr>", "")
+        self.assertEqual(html.count("<h1"), 1)
+        self.assertLess(html.index("新しい試験用のニュース"), html.index("古い試験用のニュース"))
+        self.assertIn("2026年10月9日", html)
+        self.assertIn("分類：投資", html)
+        self.assertIn("分類：技術", html)
+        self.assertIn(f'href="/companies/{company["slug"]}/"', html.split("<main")[1])
+        self.assertIn('href="/news/2026/10/newer-sample/"', html)
+        self.assertNotIn("card", html.lower().replace("discard", ""))
+
+    def test_news_draft_only_in_preview(self):
+        preview, production = self.news_site("preview"), self.news_site("production")
+        self.assertIn("下書きの試験用のニュース", self.read(preview, "news/index.html").replace("<wbr>", ""))
+        self.assertTrue((preview / "news" / "2026" / "10" / "draft-sample" / "index.html").is_file())
+        self.assertNotIn("下書きの試験用のニュース", self.read(production, "news/index.html").replace("<wbr>", ""))
+        self.assertFalse((production / "news" / "2026" / "10" / "draft-sample").exists())
+        self.assertFalse(any("下書きの試験用" in e["name"] for e in json.loads(self.read(production, "search-index.json"))))
+        draft = self.read(preview, "news/2026/10/draft-sample/index.html")
+        self.assertIn('name="robots" content="noindex', draft)
+
+    def test_news_page_shows_source_article_three_headings_and_tags(self):
+        dist = self.news_site("production")
+        html = self.read(dist, "news/2026/10/newer-sample/index.html")
+        text = html.replace("<wbr>", "")
+        self.assertEqual(html.count("<h1"), 1)
+        self.assertIn("分類：投資", text)
+        self.assertIn("公開日：", text)
+        self.assertIn("試験用の元記事の見出し", text)  # 元記事（見出し、発信元、リンク、公表日）
+        self.assertIn("試験用の発信元", text)
+        self.assertIn('href="https://example.com/original"', html)
+        self.assertIn("公表日：", text)
+        self.assertIn("（外部サイト）", text)
+        headings = re.findall(r"<h2[^>]*>(.*?)</h2>", text.split("<main")[1].split("</main>")[0])
+        self.assertEqual(headings[:3], ["何が起きたか", "なぜ重要か", "関係する企業・工程とサプライチェーン上の位置"])
+        self.assertEqual(headings[3:], ["関係する企業・工程", "出典"])
+        self.assertIn('href="#source-1"', html)  # 本文の [S1] は、出典の1番へのリンク
+        self.assertIn('id="source-1"', html)
+        self.assertIn(f'href="/companies/{self.companies[0]["slug"]}/"', html)
+        self.assertIn(f'href="/processes/{self.processes[0]["slug"]}/"', html)
+        self.assertIn('href="/news/"', html)  # パンくず
+        # 点と海外の印は、画面に出さない（仕様書に表示の指定がない）
+        for hidden in ("overseas", "impact", "reliability", "重要度"):
+            self.assertNotIn(hidden, html)
+        self.assertIn("AIが下書きし、運営者が確認しました", html)
+
+    def test_news_in_search_index(self):
+        index = json.loads(self.read(self.news_site("production"), "search-index.json"))
+        news = [e for e in index if e["type"] == "news"]
+        self.assertEqual(sorted(e["url"] for e in news), ["/news/2026/10/newer-sample/", "/news/2026/10/older-sample/"])
+        newer = next(e for e in news if e["name"] == "新しい試験用のニュース")
+        self.assertEqual(newer["detail"], "2026年10月9日")
+        self.assertIn(normalize_key("新しい試験用のニュース"), newer["keys"])
+
+    def test_news_search_script_has_news_group(self):
+        script = (ROOT / "src" / "scripts" / "search.ts").read_text(encoding="utf-8")
+        self.assertIn("news: 'ニュース'", script)
+        self.assertNotIn("まだ検索の対象にありません", script)
 
     def test_repository_content_renders_whatever_its_size(self):
         """リポジトリの content/glossary/ と content/processes/ が、何件でも（0件でも）、サイトが組み立てられ、表示が合う。

@@ -16,11 +16,11 @@ function unicodeKatakanaToHiragana(text: string): string {
 }
 
 export interface SearchEntry {
-  type: 'company' | 'process' | 'term';
+  type: 'company' | 'process' | 'term' | 'news';
   name: string; // 表示する名前（企業は略称）
   url: string;
   code?: string; // 証券コード
-  detail?: string; // 補足（正式名称、読みなど。表示用）
+  detail?: string; // 補足（正式名称、読み、ニュースの公開日など。表示用）
   keys: string[]; // 正規化した検索の語（正式名称、略称、英語表記、読み、証券コード、別の表記など）
 }
 

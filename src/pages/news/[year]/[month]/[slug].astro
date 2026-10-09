@@ -1,0 +1,97 @@
+---
+// ニュース個別（/news/{yyyy}/{mm}/{slug}/。仕様書 9.6）：見出し → 日付と分類 → 元記事（見出し、発信元、リンク）→ 3つの中見出しの解説 → 関係する企業・工程 → 出典。
+// content/news/{yyyy}-{mm}-{slug}.md（データ定義書 6.2）から作る。draft: true は、プレビューのビルドだけ。
+// 重要度の点（score）と海外の出来事の印（overseas）は、仕様書に表示の指定がないため、画面には出さない（並べ替えや検査に使う値）
+import { BUILD_ENV } from 'astro:env/server';
+import ExternalLink from '../../../../components/ExternalLink.astro';
+import Notice from '../../../../components/Notice.astro';
+import PendingNotice from '../../../../components/PendingNotice.astro';
+import RichText from '../../../../components/RichText.astro';
+import SourceList from '../../../../components/SourceList.astro';
+import Tag from '../../../../components/Tag.astro';
+import Page from '../../../../layouts/Page.astro';
+import { dateLabel, loadCompanies, loadSupply } from '../../../../lib/companies';
+import { CATEGORY_LABEL, loadNews, type NewsItem } from '../../../../lib/news';
+
+export function getStaticPaths() {
+  return loadNews(BUILD_ENV === 'preview').map((n) => ({ params: { year: n.year, month: n.month, slug: n.slug }, props: { news: n } }));
+}
+const { news } = Astro.props as { news: NewsItem };
+const f = news.front;
+const companies = loadCompanies();
+const supply = loadSupply();
+const companyTags = f.tags.companies.flatMap((slug) => {
+  const c = companies.find((x) => x.slug === slug);
+  return c ? [{ slug, name: c.short_names[0] ?? c.name }] : [];
+});
+const processTags = f.tags.processes.flatMap((slug) => {
+  const p = supply.processes.find((x) => x.slug === slug);
+  return p ? [{ slug, name: p.name }] : [];
+});
+const sections = news.sections.filter((s) => s.heading);
+const source = f.source_article;
+const sources = [{ number: 1, title: source.title, publisher: source.publisher, url: source.url, publishedOn: source.published_on }];
+const toc = [
+  ...sections.map((s, i) => ({ id: `s${i}`, label: s.heading })),
+  { id: 'related', label: '関係する企業・工程' },
+  { id: 'sources-heading', label: '出典' },
+];
+---
+
+<Page
+  title={`${f.title}｜ニュース｜SemiCompass`}
+  heading={f.title}
+  description={f.description}
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: 'ニュース', href: '/news/' }, { label: f.title }]}
+  toc={toc}
+  publishedAt={f.published_at}
+  updatedAt={f.updated_at}
+  category={CATEGORY_LABEL[f.category]}
+  aiGenerated={f.ai_generated}
+  aiDraft={f.draft === true}
+  noindex={f.draft === true}
+>
+  <Fragment slot="lead">
+    {f.under_review && <PendingNotice kind="reviewing" />}
+    {(f.corrections ?? []).length > 0 && (
+      <Notice title="訂正">
+        <ul>{(f.corrections ?? []).map((c) => <li><time datetime={c.date}>{dateLabel(c.date)}</time>　{c.description}</li>)}</ul>
+      </Notice>
+    )}
+    <p class="news-source">
+      元記事：<ExternalLink href={source.url}>{source.title}</ExternalLink>（{source.publisher}、<time datetime={source.published_on}>{dateLabel(source.published_on)}</time>）
+    </p>
+  </Fragment>
+  {sections.map((section, i) => (
+    <section>
+      <h2 id={`s${i}`}>{section.heading}</h2>
+      {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+    </section>
+  ))}
+  <section aria-labelledby="related">
+    <h2 id="related">関係する企業・工程</h2>
+    {companyTags.length === 0 && processTags.length === 0 ? (
+      <p>関係する企業・工程のタグは、ありません。</p>
+    ) : (
+      <p class="news-tags">
+        {companyTags.map((c) => <Tag href={`/companies/${c.slug}/`} kind="企業">{c.name}</Tag>)}
+        {processTags.map((p) => <Tag href={`/processes/${p.slug}/`} kind="工程">{p.name}</Tag>)}
+      </p>
+    )}
+  </section>
+  <SourceList sources={sources} heading="出典" />
+</Page>
+
+<style>
+  .news-source {
+    margin-block: 0 var(--space-5);
+    color: var(--color-text-muted);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .news-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+</style>
