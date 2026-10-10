@@ -73,11 +73,17 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/draft
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/design
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/explainer
+          "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/news
 
       - name: データの形式の検証
         run: '"$RUNNER_TEMP/venv/bin/python" scripts/validate/validate_data.py'
 
       - run: npm run build:preview
+
+      # 画面の幅の確認（要件定義書3.5、10.2）。代表のページを5つの幅（320〜1440px）で開き、横のはみ出しと、本文の1行の長さを確かめる。
+      # ブラウザは、ubuntu-24.04 のランナーに入っている Chrome を使う（ブラウザを新しく取得しない）
+      - name: 画面の幅の確認
+        run: npm run check:layout
 
       # 他の確認（文章、アクセシビリティなど）は、要件定義書10.2に沿って後で加える
 
