@@ -3,7 +3,7 @@ title: サイトポリシー
 description: 著作権、引用と転載、リンク、禁止事項、変更の方法、誤りの訂正の方針を定めます。
 path: /policy/
 updated_at: '2026-10-10'
-draft: true
+draft: false
 ---
 
 ## 著作権
