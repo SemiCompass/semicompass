@@ -85,7 +85,8 @@ class SupplyMapPageTest(unittest.TestCase):
         cls.addClassCleanup(shutil.rmtree, out, True)
         if failure is not None:
             raise AssertionError(failure)
-        cls.html = (out / "dist" / "supply-chain" / "index.html").read_text(encoding="utf-8")
+        cls.dist = out / "dist"
+        cls.html = (out / "dist" / "processes" / "index.html").read_text(encoding="utf-8")
 
     def test_every_link_in_the_figure_has_a_matching_heading(self):
         ids = set(re.findall(r'<h4 id="(p-[a-z-]+)"', self.html))
@@ -97,6 +98,11 @@ class SupplyMapPageTest(unittest.TestCase):
         self.assertIn("出典：", self.html)
         self.assertEqual(len(re.findall(r'<svg class="[^"]*map-svg ', self.html)), 2)
         self.assertNotIn("<script src=\"http", self.html)
+
+    def test_old_url_redirects_to_processes(self):
+        old = (self.dist / "supply-chain" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("/processes/", old)
+        self.assertIn("http-equiv=\"refresh\"", old)
 
     def test_company_tables_list_companies_and_empty_processes_say_so(self):
         companies = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in (ROOT / "data" / "companies").glob("*.yaml")]

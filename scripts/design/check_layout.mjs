@@ -19,7 +19,11 @@ async function pages(dir, base = '') {
     const rel = join(base, name);
     const info = await stat(join(dir, rel));
     if (info.isDirectory()) found.push(...(await pages(dir, rel)));
-    else if (name === 'index.html') found.push('/' + base.split(sep).join('/') + (base ? '/' : ''));
+    else if (name === 'index.html') {
+      // 転送だけのページ（meta refresh。astro.config.mjs の redirects）は、画面ではないので除く
+      const head = (await readFile(join(dir, rel), 'utf-8')).slice(0, 400);
+      if (!/http-equiv="refresh"/.test(head)) found.push('/' + base.split(sep).join('/') + (base ? '/' : ''));
+    }
   }
   return found;
 }
