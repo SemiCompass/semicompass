@@ -1,5 +1,6 @@
 """企業一覧、工程、用語、ニュース、検索、トップの確認（画面とデザインの仕様書 13章の5）。"""
 
+import atexit
 import json
 import os
 import re
@@ -58,6 +59,22 @@ def build_site(env: str, cwd: Path = ROOT) -> tuple[Path, str | None]:
     done = subprocess.run(["npx", "astro", "build", "--outDir", str(out / "dist")], text=True, capture_output=True,
                           cwd=cwd, env={**os.environ, "BUILD_ENV": env})
     return out, (None if done.returncode == 0 else done.stdout[-1500:] + done.stderr[-1500:])
+
+
+_REAL_SITES: dict[str, Path] = {}
+
+
+def real_site(env: str) -> Path:
+    """リポジトリそのままのサイトを、環境ごとに、プロセスの中で1回だけ組み立てる（design の全テストで使い回す）。
+    組み立て（astro build）が、design のテストの時間のほとんどを占めるため。**使う側は、出力を書き換えない・消さない**。"""
+    if env not in _REAL_SITES:
+        out, failure = build_site(env, ROOT)
+        if failure is not None:
+            shutil.rmtree(out, True)
+            raise AssertionError(failure)
+        _REAL_SITES[env] = out / "dist"
+        atexit.register(shutil.rmtree, out, True)
+    return _REAL_SITES[env]
 
 
 def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None, news: dict[str, str] | None = None) -> Path:
@@ -130,7 +147,7 @@ class PagesBuildTest(unittest.TestCase):
 
     def build(self, env: str) -> Path:
         """リポジトリそのままの content/ で、サイトを組み立てる（用語・工程の件数は、問わない）。"""
-        return self._built(f"real-{env}", env)
+        return real_site(env)
 
     def build_empty(self, env: str = "preview") -> Path:
         """content/glossary/ と content/processes/ を空にした、作業用のコピーで、サイトを組み立てる。"""

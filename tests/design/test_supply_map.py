@@ -9,7 +9,7 @@ from pathlib import Path
 
 import yaml
 
-from test_pages import HAS_NODE, ROOT, build_site
+from test_pages import HAS_NODE, ROOT, real_site
 
 
 def node(expr: str):
@@ -81,12 +81,8 @@ class SupplyMapModelTest(unittest.TestCase):
 class SupplyMapPageTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        out, failure = build_site("preview", ROOT)
-        cls.addClassCleanup(shutil.rmtree, out, True)
-        if failure is not None:
-            raise AssertionError(failure)
-        cls.dist = out / "dist"
-        cls.html = (out / "dist" / "processes" / "index.html").read_text(encoding="utf-8")
+        cls.dist = real_site("preview")
+        cls.html = (cls.dist / "processes" / "index.html").read_text(encoding="utf-8")
 
     def test_every_link_in_the_figure_has_a_matching_heading(self):
         ids = set(re.findall(r'<h4 id="(p-[a-z-]+)"', self.html))

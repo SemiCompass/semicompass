@@ -1,6 +1,5 @@
 """企業の一覧表（企業一覧と、工程ページの「この工程の企業」）の、営業利益率と平均年間給与の列（FR-309）。"""
 
-import atexit
 import json
 import os
 import re
@@ -12,27 +11,14 @@ from pathlib import Path
 
 import yaml
 
+from test_pages import real_site
+
 ROOT = Path(__file__).resolve().parents[2]
 HAS_NODE = shutil.which("npx") is not None and (ROOT / "node_modules" / "astro").is_dir()
-_BUILDS: dict[str, Path] = {}  # 同じ条件のビルドを、テストの実行の中で1回だけ行う。終了時に消す
-
-
-@atexit.register
-def _remove_builds() -> None:
-    for dist in _BUILDS.values():
-        shutil.rmtree(dist.parent, True)
 
 
 def build(env: str) -> Path:
-    if env not in _BUILDS:
-        out = Path(tempfile.mkdtemp())
-        done = subprocess.run(["npx", "astro", "build", "--outDir", str(out / "dist")], text=True, capture_output=True,
-                              cwd=ROOT, env={**os.environ, "BUILD_ENV": env})
-        if done.returncode != 0:
-            shutil.rmtree(out, True)
-            raise AssertionError(done.stdout[-1500:] + done.stderr[-1500:])
-        _BUILDS[env] = out / "dist"
-    return _BUILDS[env]
+    return real_site(env)
 
 
 def table_rows(html: str) -> list[dict]:
