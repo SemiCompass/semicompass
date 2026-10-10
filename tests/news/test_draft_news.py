@@ -137,10 +137,24 @@ class DraftTest(Base):
         self.assertEqual(code, 1)
         self.assertFalse((self.out / "content").exists())
 
-    def test_overseas_requires_companies(self):
-        bad = draft_output(companies=[])
-        code, _ = self.run_draft(reply(bad), reply(bad))
-        self.assertEqual(code, 1)
+    def test_overseas_without_companies_is_left_to_operator(self):
+        """海外の出来事で日本企業が資料にないとき、企業を無理に選ばせない。警告として運営者の判断に回す（V-13）。"""
+        out = draft_output(companies=[], position="この統計は、チップの出荷の段階の数値であり、製造装置や材料の需要の前提になる。[S1]" + "出荷が増えると、後工程の検査の需要も増える。" * 3)
+        code, _ = self.run_draft(reply(out), review())
+        self.assertEqual(code, 0)
+        _, front, _ = self.front()
+        self.assertFalse(front["draft"])
+        self.assertTrue(front["overseas"])
+        self.assertIn("V-13", (self.out / "pr-body.md").read_text(encoding="utf-8"))
+
+    def test_background_from_glossary_is_passed(self):
+        glossary = self.tmp / "root" / "content" / "glossary"
+        glossary.mkdir(parents=True)
+        (glossary / "x.md").write_text("---\nterm: ZZテスト\naliases: []\nshort_definition: 架空の定義である。\n---\n\n架空の仕組みの説明。\n", encoding="utf-8")
+        found = draft_news.background(self.tmp / "root", "見出し", "本文にZZテストが出る")
+        self.assertEqual([b["term"] for b in found], ["ZZテスト"])
+        self.assertIn("【B1 用語集：ZZテスト】", draft_news.build_materials({"title": "t", "url": "u", "text": "x"}, found))
+        self.assertEqual(draft_news.background(self.tmp / "root", "見出し", "無関係"), [])
 
     def test_press_candidate_without_url_is_refused_without_calling_ai(self):
         code, client = self.run_draft(reply(draft_output()), url=None)

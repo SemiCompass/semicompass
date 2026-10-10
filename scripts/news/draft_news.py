@@ -78,8 +78,36 @@ def build_task(c: dict, url: str, today: str, companies: list[dict], processes: 
     return "## 入力（プログラムが渡す値）\n" + json.dumps(value, ensure_ascii=False, indent=1)
 
 
-def build_materials(doc: dict) -> str:
-    return f"【S1 見出し】{doc['title']}\n【S1 URL】{doc['url']}\n【S1 本文】\n{doc['text']}"
+def _front_and_body(path: Path) -> tuple[dict, str]:
+    m = re.match(r"^---\n(.*?)\n---\n?(.*)$", path.read_text(encoding="utf-8"), re.S)
+    if not m:
+        return {}, ""
+    try:
+        return yaml.safe_load(m[1]) or {}, m[2].strip()
+    except yaml.YAMLError:
+        return {}, ""
+
+
+def background(root: Path, headline: str, text: str, limit: int = 5, body_chars: int = 700) -> list[dict]:
+    """元記事に出てくる用語の、本サイトの用語集の解説を集める（定義と仕組みの説明の材料。数値や企業名の出典にはしない）。
+    英字の用語は大文字小文字を区別せず、2字以下の語は照合しない。"""
+    haystack = f"{headline}\n{text}".lower()
+    found = []
+    for path in sorted((root / "content" / "glossary").glob("*.md")):
+        front, body = _front_and_body(path)
+        names = [n for n in [front.get("term"), *(front.get("aliases") or [])] if isinstance(n, str) and len(n) > 2]
+        hits = sum(haystack.count(n.lower()) for n in names)
+        if hits:
+            found.append((hits, front.get("term", path.stem), front.get("short_definition", ""), body[:body_chars]))
+    found.sort(key=lambda x: -x[0])
+    return [{"term": term, "definition": d, "body": b} for _, term, d, b in found[:limit]]
+
+
+def build_materials(doc: dict, bg: list[dict] | None = None) -> str:
+    out = f"【S1 見出し】{doc['title']}\n【S1 URL】{doc['url']}\n【S1 本文】\n{doc['text']}"
+    for i, b in enumerate(bg or [], 1):
+        out += f"\n\n【B{i} 用語集：{b['term']}】\n{b['definition']}\n{b['body']}"
+    return out
 
 
 def body_of(output: dict) -> str:
@@ -109,8 +137,6 @@ def check_output(output: dict, c: dict, companies: list[dict], processes: list[d
         errors.append("companies に、渡した一覧にない slug がある")
     if set(output["processes"]) - {x["slug"] for x in processes}:
         errors.append("processes に、渡した一覧にない slug がある")
-    if c["overseas"] and not output["companies"]:
-        errors.append("海外の出来事なのに、companies が空である（関係する日本企業を1社以上選ぶ）")
     if output["x_text"].count("#") > 2 or "http" in output["x_text"]:
         errors.append("x_text に、URLがある、またはハッシュタグが3つ以上ある")
     results = reprint.check_reprint([source_text], fields_of(output), min_run)
@@ -162,14 +188,18 @@ def validate_news(rel: str, front: dict, body: str, root: Path) -> tuple[list[st
             [p for p in problems if p.severity == "warning"])
 
 
-def pr_body(c: dict, front: dict, output: dict, issues: list[dict], unresolved: bool, warnings: list, cost: float, run_id: str, longest: int, min_run: int) -> str:
+def pr_body(c: dict, front: dict, output: dict, issues: list[dict], unresolved: bool, warnings: list, v13: list, cost: float, run_id: str, longest: int, min_run: int) -> str:
     src = front["source_article"]
     lines = [f"## ニュース解説の下書き（{c['id']}）", "",
              f"* 候補：{c['title']}（{c['publisher']}、{c['published_on']}）",
              f"* 元記事（出典）：[{src['title']}]({src['url']})（{src['publisher']}、{src['published_on']}、区分 {src['reporting']}）",
              f"* 種別：{c['category']}　海外：{'はい' if c['overseas'] else 'いいえ'}　点：{front['score']}",
              f"* 本文：{body_chars(output)}字　転載の検査：最長 {longest}字連続（基準 {min_run}字）　AIの利用額：{cost:.2f}円", ""]
-    if unresolved:
+    if v13:
+        lines += ["### 運営者の判断：海外の出来事（`overseas: true`）で、日本企業のタグ・記述がない（V-13の警告）", "",
+                  "資料に日本企業との関わりが読み取れないため、企業を無理に選んでいない。",
+                  "資料から言える関わりがあれば、`tags.companies` と3つ目の見出しに足す。なければ、このまま取り込んでよい。", ""]
+    if any(i["severity"] == "error" for i in issues):
         lines += ["### ⚠ 校閲（AG-13）の指摘が残っている（`draft: true` のため、取り込んでも公開されない）", ""]
     errors = [i for i in issues if i["severity"] == "error"]
     if errors or issues:
@@ -227,7 +257,8 @@ def run(args, *, now, client_factory, fetcher, root: Path, budgets_path, operati
         return EXIT_INPUT
     today = now().date().isoformat()
     companies, processes = listed_companies(root), selectable_processes(root)
-    task, materials = build_task(c, url, today, companies, processes), build_materials(doc)
+    task = build_task(c, url, today, companies, processes)
+    materials = build_materials(doc, background(root, c['title'], doc['text']))
     min_run = reprint.load_min_run(textcheck_path)
     rows: list[dict] = []
     get_client = shared(client_factory)
@@ -308,9 +339,11 @@ def run(args, *, now, client_factory, fetcher, root: Path, budgets_path, operati
     if errs:
         summary.append("検査に不合格：" + "; ".join(errs))
         return finish(EXIT_FAILED)
+    # V-13（海外の出来事に日本企業のタグがない）は警告。無理に企業を選ばせず、運営者が判断する
+    v13 = [w for w in warnings if w.rule == "V-13"]
     longest = reprint.longest_overall(results)
     write_text(args.out_dir / rel, render(front, body))
-    write_text(args.out_dir / "pr-body.md", pr_body(c, front, output, issues, unresolved, warnings, cost(), args.run_id, longest, min_run))
+    write_text(args.out_dir / "pr-body.md", pr_body(c, front, output, issues, unresolved, warnings, v13, cost(), args.run_id, longest, min_run))
     summary.append(f"## 作った：{rel}（本文 {body_chars(output)}字、校閲の指摘 {len(issues)}件、draft: {str(unresolved).lower()}、利用額 {cost():.2f}円）")
     return finish(EXIT_OK)
 

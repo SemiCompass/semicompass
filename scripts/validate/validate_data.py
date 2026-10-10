@@ -911,7 +911,9 @@ def check_news(news: dict[str, tuple[dict, str]], companies: dict[str, dict], su
                     out.append(Problem(rel, pointer(["tags", "processes", i]), "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
         if data.get("overseas") is True:
             if not tag_companies:
-                out.append(Problem(rel, "/tags/companies", "V-13", "overseas: true のニュースには、企業のタグが1件以上必要である"))
+                # 資料から日本企業との関わりが言えないときは、企業を無理に付けない。警告にとどめ、運営者が判断する
+                out.append(Problem(rel, "/tags/companies", "V-13", "overseas: true だが企業のタグがない。資料から日本企業との関わりが言えるなら、"
+                                   "企業のタグと3つ目の見出しの記述を足す", "warning"))
             else:
                 third = next((lines for level, text, lines in sections[1:] if text == NEWS_HEADINGS[2] and level == 2), None)
                 if third is not None:
