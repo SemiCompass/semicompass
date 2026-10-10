@@ -103,8 +103,10 @@ def background(root: Path, headline: str, text: str, limit: int = 5, body_chars:
     return [{"term": term, "definition": d, "body": b} for _, term, d, b in found[:limit]]
 
 
-def build_materials(doc: dict, bg: list[dict] | None = None) -> str:
+def build_materials(doc: dict, bg: list[dict] | None = None, refs: list[dict] | None = None) -> str:
     out = f"【S1 見出し】{doc['title']}\n【S1 URL】{doc['url']}\n【S1 本文】\n{doc['text']}"
+    for i, r in enumerate(refs or [], 2):  # 補足の資料（背景や原因が書かれた一次情報）。S1 が出典の本体で、S2 以降は補足
+        out += f"\n\n【S{i} 見出し】{r['title']}\n【S{i} URL】{r['url']}\n【S{i} 本文】\n{r['text']}"
     for i, b in enumerate(bg or [], 1):
         out += f"\n\n【B{i} 用語集：{b['term']}】\n{b['definition']}\n{b['body']}"
     return out
@@ -122,13 +124,14 @@ def fields_of(output: dict) -> dict[str, str]:
     return {k: output[k] for k in ("title", "description", "what_happened", "why_important", "position", "x_text")}
 
 
-def check_output(output: dict, c: dict, companies: list[dict], processes: list[dict], source_text: str, min_run: int):
+def check_output(output: dict, c: dict, companies: list[dict], processes: list[dict], source_text: str | list[str], min_run: int, n_sources: int = 1):
     """(不合格の理由（本文を含まない）、転載の検査の結果)。"""
     errors: list[str] = []
     for name in ("what_happened", "why_important", "position"):
-        bad = sorted({m for m in CITATION.findall(output[name]) if m != "[S1]"})
+        allowed = {f"[S{i}]" for i in range(1, n_sources + 1)}
+        bad = sorted({m for m in CITATION.findall(output[name]) if m not in allowed})
         if bad:
-            errors.append(f"{name} に、[S1] 以外の出典の番号がある")
+            errors.append(f"{name} に、渡した資料にない出典の番号がある（使える番号：{', '.join(sorted(allowed))}）")
     if not any("[S1]" in output[n] for n in ("what_happened", "why_important", "position")):
         errors.append("本文に、出典の番号 [S1] がない")
     if any(CITATION.search(output[n]) for n in ("title", "description", "x_text")):
@@ -139,7 +142,8 @@ def check_output(output: dict, c: dict, companies: list[dict], processes: list[d
         errors.append("processes に、渡した一覧にない slug がある")
     if output["x_text"].count("#") > 2 or "http" in output["x_text"]:
         errors.append("x_text に、URLがある、またはハッシュタグが3つ以上ある")
-    results = reprint.check_reprint([source_text], fields_of(output), min_run)
+    sources = [source_text] if isinstance(source_text, str) else list(source_text)
+    results = reprint.check_reprint(sources, fields_of(output), min_run)
     for r in reprint.failures(results, min_run):
         errors.append(f"転載の検査に不合格：{r.field} で、{r.longest}字（基準 {min_run}字）連続して同じ")
     return errors, results
@@ -188,11 +192,12 @@ def validate_news(rel: str, front: dict, body: str, root: Path) -> tuple[list[st
             [p for p in problems if p.severity == "warning"])
 
 
-def pr_body(c: dict, front: dict, output: dict, issues: list[dict], unresolved: bool, warnings: list, v13: list, cost: float, run_id: str, longest: int, min_run: int) -> str:
+def pr_body(c: dict, front: dict, output: dict, issues: list[dict], unresolved: bool, warnings: list, v13: list, cost: float, run_id: str, longest: int, min_run: int, refs: list[dict] | None = None) -> str:
     src = front["source_article"]
     lines = [f"## ニュース解説の下書き（{c['id']}）", "",
              f"* 候補：{c['title']}（{c['publisher']}、{c['published_on']}）",
              f"* 元記事（出典）：[{src['title']}]({src['url']})（{src['publisher']}、{src['published_on']}、区分 {src['reporting']}）",
+             *[f"* 補足の資料 [S{i}]：[{r['title']}]({r['url']})" for i, r in enumerate(refs or [], 2)],
              f"* 種別：{c['category']}　海外：{'はい' if c['overseas'] else 'いいえ'}　点：{front['score']}",
              f"* 本文：{body_chars(output)}字　転載の検査：最長 {longest}字連続（基準 {min_run}字）　AIの利用額：{cost:.2f}円", ""]
     if v13:
@@ -257,8 +262,17 @@ def run(args, *, now, client_factory, fetcher, root: Path, budgets_path, operati
         return EXIT_INPUT
     today = now().date().isoformat()
     companies, processes = listed_companies(root), selectable_processes(root)
+    refs = []
+    for ref_url in [u for u in dict.fromkeys(args.ref_url or []) if u != url][:2]:
+        try:
+            refs.append(fetcher(ref_url))
+        except fetch_source.FetchError as error:
+            summary.append(f"補足の資料を取得できなかった：{error}（{ref_url[:80]}）。取得できるURLを指定し直す")
+            return EXIT_INPUT
+    texts = [doc["text"], *[r["text"] for r in refs]]
+    n_sources = len(texts)
     task = build_task(c, url, today, companies, processes)
-    materials = build_materials(doc, background(root, c['title'], doc['text']))
+    materials = build_materials(doc, background(root, c['title'], " ".join(texts)), refs)
     min_run = reprint.load_min_run(textcheck_path)
     rows: list[dict] = []
     get_client = shared(client_factory)
@@ -285,16 +299,16 @@ def run(args, *, now, client_factory, fetcher, root: Path, budgets_path, operati
     if result.status != agent_call.STATUS_OK:
         return fail(result, "AG-11")
     output = result.output
-    errors, results = check_output(output, c, companies, processes, doc["text"], min_run)
+    errors, results = check_output(output, c, companies, processes, texts, min_run, n_sources)
     if errors:
         summary.append(f"書き直し（形式・転載の検査）：{len(errors)}件")
-        matches = reprint.find_matches([doc["text"]], fields_of(output), min_run) if any("転載" in e for e in errors) else {}
+        matches = reprint.find_matches(texts, fields_of(output), min_run) if any("転載" in e for e in errors) else {}
         extra = "\n資料と同じになった箇所（言い換える）：\n" + "\n".join(f"* {k}: {v}" for k, v in matches.items()) if matches else ""
         result = call("AG-11", task, rewrite_request(output, errors, extra))
         if result.status != agent_call.STATUS_OK:
             return fail(result, "AG-11（書き直し）")
         output = result.output
-        errors, results = check_output(output, c, companies, processes, doc["text"], min_run)
+        errors, results = check_output(output, c, companies, processes, texts, min_run, n_sources)
         if errors:
             summary.append("書き直しても不合格：" + "; ".join(errors))
             return finish(EXIT_FAILED)
@@ -314,7 +328,7 @@ def run(args, *, now, client_factory, fetcher, root: Path, budgets_path, operati
         if result.status != agent_call.STATUS_OK:
             return fail(result, "AG-11（校閲後の書き直し）")
         rewritten = result.output
-        errs, results2 = check_output(rewritten, c, companies, processes, doc["text"], min_run)
+        errs, results2 = check_output(rewritten, c, companies, processes, texts, min_run, n_sources)
         if errs:
             summary.append("校閲後の書き直しが、形式・転載の検査に不合格：" + "; ".join(errs))
         else:
@@ -343,7 +357,7 @@ def run(args, *, now, client_factory, fetcher, root: Path, budgets_path, operati
     v13 = [w for w in warnings if w.rule == "V-13"]
     longest = reprint.longest_overall(results)
     write_text(args.out_dir / rel, render(front, body))
-    write_text(args.out_dir / "pr-body.md", pr_body(c, front, output, issues, unresolved, warnings, v13, cost(), args.run_id, longest, min_run))
+    write_text(args.out_dir / "pr-body.md", pr_body(c, front, output, issues, unresolved, warnings, v13, cost(), args.run_id, longest, min_run, refs))
     summary.append(f"## 作った：{rel}（本文 {body_chars(output)}字、校閲の指摘 {len(issues)}件、draft: {str(unresolved).lower()}、利用額 {cost():.2f}円）")
     return finish(EXIT_OK)
 
@@ -365,6 +379,7 @@ def main(argv=None, *, now=lambda: datetime.now(JST), client_factory=None, fetch
     parser.add_argument("--scored", required=True, type=Path)
     parser.add_argument("--id", required=True)
     parser.add_argument("--url")
+    parser.add_argument("--ref-url", action="append", default=[], help="補足の資料のURL（背景や原因が書かれた一次情報。最大2件）")
     parser.add_argument("--out-dir", required=True, type=Path)
     parser.add_argument("--ledger-dir", required=True, type=Path)
     parser.add_argument("--run-id", required=True)
