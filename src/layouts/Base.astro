@@ -29,6 +29,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site).href;
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {(BUILD_ENV === 'preview' || noindex) && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
