@@ -11,6 +11,8 @@ from pathlib import Path
 
 import yaml
 
+from test_pages import make_draft_site
+
 ROOT = Path(__file__).resolve().parents[2]
 TOKENS = (ROOT / "src" / "styles" / "tokens.css").read_text(encoding="utf-8")
 HAS_NODE = shutil.which("npx") is not None and (ROOT / "node_modules" / "stylelint").is_dir()
@@ -277,6 +279,17 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
         return out / "dist"
 
+    def build_drafts(self, env: str, slugs: tuple[str, ...]) -> Path:
+        """指定した企業の事業概要を draft: true にした作業用のコピーで組み立てる（企業は、リポジトリでは公開済み）。"""
+        work = make_draft_site(slugs)
+        self.addCleanup(shutil.rmtree, work, True)
+        out = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out, True)
+        done = subprocess.run(["npx", "astro", "build", "--outDir", str(out / "dist")], text=True, capture_output=True,
+                              cwd=work, env={**os.environ, "BUILD_ENV": env})
+        self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+        return out / "dist"
+
     def test_component_page_only_in_preview(self):
         preview = self.build("preview")
         page = preview / "dev" / "components" / "index.html"
@@ -360,7 +373,8 @@ class CompanyPageBuildTest(BuildTest):
         return (dist / "companies" / slug / "index.html").read_text(encoding="utf-8")
 
     def test_detailed_in_preview_and_coming_soon_in_production(self):
-        preview = self.build("preview")
+        drafts = ("tokyo-electron", "jasm")
+        preview = self.build_drafts("preview", drafts)
         html = self.page(preview, "tokyo-electron")
         self.assertIn('class="chart-svg', html)
         self.assertIn("表で見る", html)
@@ -387,7 +401,7 @@ class CompanyPageBuildTest(BuildTest):
         self.assertIn("Coming Soon", jasm)
         self.assertNotIn('class="chart-svg', jasm)
         self.assertIn('name="robots" content="noindex, nofollow"', jasm)
-        production = self.build("production")
+        production = self.build_drafts("production", drafts)
         html = self.page(production, "tokyo-electron")
         self.assertIn("Coming Soon", html)
         self.assertNotIn('class="chart-svg', html)
@@ -397,9 +411,17 @@ class CompanyPageBuildTest(BuildTest):
         self.assertNotIn("売上高", html.split("<main")[1])  # 業績を出さない
         self.assertEqual(len(list((production / "companies").glob("*/index.html"))), len(list((ROOT / "data" / "companies").glob("*.yaml"))))
 
+    def test_published_company_is_detailed_in_production(self):
+        # draft: false の企業（リポジトリの実際の状態）は、本番でも詳細掲載として出る
+        production = self.build("production")
+        html = self.page(production, "tokyo-electron")
+        self.assertIn('class="chart-svg', html)
+        self.assertNotIn("Coming Soon", html.split("<main")[1])
+        self.assertNotIn("下書きです", html)
+
     def test_review_fixes_on_company_pages(self):
         import re
-        preview = self.build("preview")
+        preview = self.build_drafts("preview", ("tokyo-electron", "sony", "screen"))
         # 1 AI作成の表示：draft: true は「運営者の確認前」
         for slug in ("tokyo-electron", "sony", "screen"):
             html = self.page(preview, slug)
