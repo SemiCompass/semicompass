@@ -5,6 +5,8 @@ import { defineConfig, envField } from 'astro/config';
 export default defineConfig({
   site: 'https://semicompass.com',
   output: 'static',
+  // 工程の一覧とサプライチェーンマップは、/processes/ の1ページにまとめた（旧 /supply-chain/ は転送する）
+  redirects: { '/supply-chain/': '/processes/' },
   // ページは `/foo/index.html` として出力し、URLは末尾スラッシュに統一する（要件定義書3.1）。
   // wrangler.jsonc の assets.html_handling（auto-trailing-slash）と合わせる。
   trailingSlash: 'always',
