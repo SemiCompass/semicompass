@@ -87,7 +87,7 @@ def edit_distance(a: str, b: str) -> int:
     return prev[-1]
 
 
-def near_dictionary_words(text: str, dictionary: set[str]) -> list[tuple[int, str]]:
+def near_dictionary_words(text: str, dictionary: set[str], is_common=None) -> list[tuple[int, str]]:
     """辞書の語と1文字だけ違う語（書き間違い）を、文章の中から探す。(位置, 文章にある表記)。
     1文字の違いなら、語の前半か後半（2文字）は一致しているため、その位置だけを調べる。辞書の語は4文字以上だけを対象にする。"""
     found: list[tuple[int, str]] = []
@@ -116,6 +116,10 @@ def near_dictionary_words(text: str, dictionary: set[str]) -> list[tuple[int, st
                 if not WORD_CHARS.fullmatch(cand):
                     continue  # 空白や句読点をまたぐ
                 found.append((p, cand))
+    if is_common:
+        # 一般の語（形態素解析で、辞書にある1語の普通名詞）は、指摘にしない。その語と重なる候補（一部だけの切り出し）も除く
+        common = [(p, p + len(c)) for p, c in found if is_common(c)]
+        found = [(p, c) for p, c in found if not any(p < e and s < p + len(c) for s, e in common)]
     out: list[tuple[int, str]] = []
     for p, cand in sorted(set(found), key=lambda x: (-len(x[1]), x[0])):  # 長いものを先に、重ならないように選ぶ
         if not any(p < q + len(c) and q < p + len(cand) for q, c in out):
@@ -123,7 +127,7 @@ def near_dictionary_words(text: str, dictionary: set[str]) -> list[tuple[int, st
     return sorted(out)
 
 
-def extract_claims(text: str, dictionary: set[str] | None = None) -> list[Claim]:
+def extract_claims(text: str, dictionary: set[str] | None = None, is_common=None) -> list[Claim]:
     """変更後の文章（本文）から主張を取り出す。位置の順に並べる。dictionary があれば、辞書の語の書き間違いも、固有名詞の候補にする。"""
     t = normalize(text)
     claims: list[Claim] = []
@@ -153,7 +157,7 @@ def extract_claims(text: str, dictionary: set[str] | None = None) -> list[Claim]
         claims.append(Claim("", "proper", m.group(0), m.start()))
     if dictionary:
         have = {(c.start, c.text) for c in claims if c.kind == "proper"}
-        for p, cand in near_dictionary_words(rest, dictionary):
+        for p, cand in near_dictionary_words(rest, dictionary, is_common):
             if not any(c.kind == "proper" and c.start <= p < c.start + len(c.text) for c in claims):
                 claims.append(Claim("", "proper", cand, p))
     claims.sort(key=lambda c: c.start)

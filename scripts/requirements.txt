@@ -8,3 +8,6 @@ boto3==1.43.108
 anthropic==1.11.0
 # 工程・用語の解説の原資料束（scripts/bundle/make_explainer_bundle.py）で、PDFの本文をページごとに取り出す。純Pythonで、ほかの依存がない
 pypdf==6.19.0
+# 事実確認の形態素解析（scripts/factcheck/morph.py）。なくても動く（一般語の判定をしないだけ）
+sudachipy==0.7.0
+sudachidict_core==20260723.1

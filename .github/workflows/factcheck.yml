@@ -3,35 +3,55 @@ name: factcheck
 # P08：変更案の事実確認（アーキテクチャ設計書 9.3、10.2）。
 # main にあるこの定義だけが動く（workflow_run）。変更案のコードは実行せず、変更案の文章を「資料」として読むだけにする。
 # 追加・変更された本文の行だけを、出典の一覧のURLから取った原資料と照合する。結果の表を変更案にコメントし、合否を `factcheck` の確認として付ける。
-# 原資料の本文は、ログ、コメントに出さない。この段階では、秘密の情報を使わない（R2の原資料束は、次の段階で bundle-read の Environment から読む）。
+# 原資料の本文は、ログ、コメントに出さない。
+# 第2段階b：変更案の説明の「原資料束」の欄の番号で、R2の非公開バケットから原資料束を読む（Environment bundle-read の読み取り専用のキー。
+# 設定がなければ、出典のURLからの取得だけで照合する）。運営者の記録（/factcheck-ack）のあとは、ops-command が workflow_dispatch で、この確認をやり直す。
 on:
   workflow_run:
     workflows: [pr-check]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      number:
+        description: 事実確認をやり直す変更案の番号
+        required: true
+        type: string
 
 permissions: {}
 
 jobs:
   find-pr:
     if: >-
-      github.event.workflow_run.conclusion != 'cancelled' &&
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion != 'cancelled' &&
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: read
     outputs:
       number: ${{ steps.find.outputs.number }}
+      head_sha: ${{ steps.find.outputs.head_sha }}
     steps:
       - id: find
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          EVENT: ${{ github.event_name }}
+          INPUT_NUMBER: ${{ github.event.inputs.number }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          number=$(gh api "repos/${REPO}/commits/${HEAD_SHA}/pulls" \
-            --jq '[.[] | select(.state == "open" and .base.ref == "main")][0].number // empty')
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            case "$INPUT_NUMBER" in ''|*[!0-9]*) echo "変更案の番号が正しくない"; exit 1;; esac
+            number=$(gh api "repos/${REPO}/pulls/${INPUT_NUMBER}" --jq 'select(.state == "open" and .base.ref == "main") | .number // empty')
+            HEAD_SHA=$(gh api "repos/${REPO}/pulls/${INPUT_NUMBER}" --jq '.head.sha')
+          else
+            HEAD_SHA="$RUN_HEAD_SHA"
+            number=$(gh api "repos/${REPO}/commits/${HEAD_SHA}/pulls" \
+              --jq '[.[] | select(.state == "open" and .base.ref == "main")][0].number // empty')
+          fi
+          echo "head_sha=${HEAD_SHA}" >> "$GITHUB_OUTPUT"
           case "$number" in
             ''|*[!0-9]*) echo "開いている変更案が見つからないため、事実確認はしない"; number="" ;;
           esac
@@ -41,6 +61,8 @@ jobs:
     needs: find-pr
     if: needs.find-pr.outputs.number != ''
     runs-on: ubuntu-24.04
+    # 読み取り専用のR2のキー（原資料束）。mainだけが使える Environment。設定がなければ、原資料束は読まない
+    environment: bundle-read
     permissions:
       contents: read
       pull-requests: write
@@ -66,7 +88,7 @@ jobs:
         id: pr
         env:
           NUMBER: ${{ needs.find-pr.outputs.number }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_SHA: ${{ needs.find-pr.outputs.head_sha }}
         run: |
           case "$NUMBER" in ''|*[!0-9]*) exit 1;; esac
           git fetch --no-tags origin "refs/pull/${NUMBER}/head"
@@ -83,16 +105,29 @@ jobs:
           git fetch --no-tags origin ops-log 2>/dev/null \
             && git show "FETCH_HEAD:ops/factcheck/pr-${NUMBER}.json" > "$RUNNER_TEMP/acks.json" 2>/dev/null || echo '{"acks":[]}' > "$RUNNER_TEMP/acks.json"
 
+      # 変更案の説明は、データとして取り出すだけ（「原資料束」の欄の番号を拾う）
+      - name: 変更案の説明を取り出す
+        if: steps.pr.outputs.stale != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ needs.find-pr.outputs.number }}
+        run: gh api "repos/${REPO}/pulls/${NUMBER}" --jq '.body // ""' > "$RUNNER_TEMP/pr-body.md"
+
       - name: 事実確認
         if: steps.pr.outputs.stale != '1'
         id: run
         env:
           BASE: ${{ steps.pr.outputs.base }}
           HEAD: ${{ steps.pr.outputs.head }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
         run: |
           set +e
           "$RUNNER_TEMP/venv/bin/python" scripts/factcheck/run_pr.py --base "$BASE" --head "$HEAD" \
-            --acks "$RUNNER_TEMP/acks.json" --url-check \
+            --acks "$RUNNER_TEMP/acks.json" --url-check --pr-body-file "$RUNNER_TEMP/pr-body.md" \
             --comment "$RUNNER_TEMP/comment.md" --summary "$RUNNER_TEMP/summary.json" > /dev/null
           code=$?
           echo "code=${code}" >> "$GITHUB_OUTPUT"
