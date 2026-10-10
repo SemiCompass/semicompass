@@ -1,0 +1,95 @@
+---
+// サプライチェーンマップの図（FR-102）：段階ごとの列に、工程の箱を並べる。箱は、同じページの工程ごとの企業の表（#p-{工程}）へのリンク。
+// 色はCSSの変数だけ。インラインのstyleは使わない（CSP）。矢印は大まかな流れの飾りで、読み上げない。
+import { lineHeight, type MapModel } from '../lib/supplyMap';
+
+interface Props {
+  model: MapModel;
+  title: string;
+}
+const { model: m, title } = Astro.props;
+---
+
+<svg
+  class:list={['map-svg', `map-svg--${m.layout}`]}
+  viewBox={`0 0 ${m.width} ${m.height}`}
+  width={m.width}
+  height={m.height}
+  role="group"
+  aria-label={title}
+  focusable="false"
+>
+  {m.columns.map((c) => (
+    <g>
+      <text class="map-svg__stage" x={c.x} y={c.y}>{c.name}</text>
+      <line class="map-svg__rule" x1={c.x} x2={c.x + c.w} y1={c.ruleY + 8} y2={c.ruleY + 8}></line>
+      {c.boxes.map((b) => (
+        <a class="map-box" href={`#p-${b.slug}`} aria-label={b.aria}>
+          <rect class="map-box__shape" x={b.x} y={b.y} width={b.w} height={b.h}></rect>
+          <text class="map-box__name" x={b.x + 12} y={b.textY}>
+            {b.lines.map((line, i) => <tspan x={b.x + 12} dy={i === 0 ? 0 : lineHeight}>{line}</tspan>)}
+          </text>
+          <text class="map-box__count" x={b.countX} y={b.countY} text-anchor="end">{b.count}社</text>
+        </a>
+      ))}
+    </g>
+  ))}
+  {m.arrows.map((a) => <path class="map-svg__arrow" d={a.d} fill="none" aria-hidden="true"></path>)}
+</svg>
+
+<style>
+  .map-svg {
+    height: auto;
+    max-width: 100%;
+    overflow: visible;
+  }
+  .map-svg__stage {
+    fill: var(--color-text);
+    font-family: var(--font-family-base);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+  }
+  .map-svg__rule {
+    stroke: var(--chart-axis);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .map-svg__arrow {
+    stroke: var(--chart-axis);
+    stroke-width: var(--icon-stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .map-box {
+    cursor: pointer;
+    outline: none;
+  }
+  .map-box__shape {
+    fill: var(--color-surface);
+    stroke: var(--color-border-strong);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .map-box__name {
+    fill: var(--color-primary);
+    font-family: var(--font-family-base);
+    font-size: var(--text-small);
+    text-decoration: underline;
+  }
+  .map-box__count {
+    fill: var(--color-text-muted);
+    font-family: var(--font-family-base);
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .map-box:hover .map-box__shape {
+    fill: var(--color-primary-tint);
+  }
+  .map-box:hover .map-box__name {
+    fill: var(--color-primary-hover);
+  }
+  .map-box:focus-visible .map-box__shape {
+    stroke: var(--color-focus);
+    stroke-width: var(--border-width-focus);
+  }
+</style>
