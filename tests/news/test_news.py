@@ -161,10 +161,10 @@ class TagsAndOverseasTest(Base):
         tags = {"companies": [], "unlisted_companies": [{"name": "架空商事"}], "processes": [], "themes": []}
         self.assertEqual(self.rules(data=article(tags=tags)), [])
 
-    def test_overseas_needs_a_company_tag(self):
+    def test_overseas_without_company_tag_is_only_a_warning(self):
         tags = {"companies": [], "processes": [], "themes": []}
         problems = self.problems(data=article(overseas=True, tags=tags))
-        self.assertEqual([(p.rule, p.path) for p in problems], [("V-13", "/tags/companies")])
+        self.assertEqual([(p.rule, p.path, p.severity) for p in problems], [("V-13", "/tags/companies", "warning")])
         self.assertEqual(self.rules(data=article(overseas=False, tags=tags)), [])
 
     def test_overseas_needs_the_company_name_under_the_third_heading(self):
