@@ -105,8 +105,6 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
     toc={toc}
     publishedAt={overview.front.published_at}
     updatedAt={overview.front.updated_at}
-    aiGenerated={overview.front.ai_generated}
-    aiDraft={overview.front.draft === true}
     noindex={overview.front.draft === true}
   >
     <Fragment slot="lead">

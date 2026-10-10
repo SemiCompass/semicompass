@@ -24,7 +24,7 @@ const inline = (text: string) =>
   [...text.matchAll(/\[([^\]]+)\]\((\/[a-z0-9/#-]*|https:\/\/[^)\s]+)\)|([^[]+|\[)/g)].map((m) => (m[1] ? { label: m[1], href: m[2] } : { text: m[3] ?? '' }));
 ---
 
-<Page title={`${f.title}｜SemiCompass`} heading={f.title} description={f.description} breadcrumbs={crumbs} toc={toc} updatedAt={f.updated_at} aiGenerated={f.draft === true} aiDraft={f.draft === true} noindex={f.draft === true}>
+<Page title={`${f.title}｜SemiCompass`} heading={f.title} description={f.description} breadcrumbs={crumbs} toc={toc} updatedAt={f.updated_at} noindex={f.draft === true}>
   {page.sections.map((section) => (
     <section>
       {section.heading && <h2 id={section.id}>{section.heading}</h2>}
