@@ -1,9 +1,14 @@
 import { defineConfig, envField } from 'astro/config';
+import { seoFiles } from './src/integrations/seoFiles.mjs';
+
+const SITE = 'https://semicompass.com';
 
 // 静的出力（要件定義書2.3、アーキテクチャ設計書ADR-02）。
 // 公開URL（site）は、正規のURL（canonical）の元になる。独自ドメインは wrangler.jsonc の routes と合わせる。
 export default defineConfig({
-  site: 'https://semicompass.com',
+  site: SITE,
+  // robots.txt と sitemap.xml（本番は登録を許可、プレビューは登録させない）。指定がないときは、プレビューの側に倒す
+  integrations: [seoFiles({ site: SITE, production: process.env.BUILD_ENV === 'production' })],
   output: 'static',
   // 工程の一覧とサプライチェーンマップは、/processes/ の1ページにまとめた（旧 /supply-chain/ は転送する）
   redirects: { '/supply-chain/': '/processes/' },
