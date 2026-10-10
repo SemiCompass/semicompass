@@ -109,6 +109,7 @@ class DraftTest(Base):
         # AI へは、資料の区画に元記事を入れる。コメントや候補の見出しは、資料の外
         sent = json.dumps(client.calls[0]["messages"], ensure_ascii=False)
         self.assertIn("【S1 本文】", sent)
+        self.assertIn("tagline", sent)  # 企業の一言の説明と工程を渡す（本サイトの見方で企業を選ぶ材料）
 
     def test_unresolved_review_error_makes_draft_true(self):
         code, _ = self.run_draft(reply(draft_output()), review(ERR), reply(draft_output(title="別の架空の見出しで書き直した")), review(ERR, WARN))

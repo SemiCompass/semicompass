@@ -51,12 +51,18 @@ def load_candidate(scored: dict, cid: str) -> dict | None:
 
 
 def listed_companies(root: Path) -> list[dict]:
+    """選べる企業。名前に加えて、何に関わるか（分類、工程、一言の説明。企業マスタの値）を渡す。
+    資料に日本企業の名前が出ない出来事（海外の統計など）で、AG-11 が「本サイトの見方」として企業を選ぶときの材料になる。"""
     result = []
     for path in sorted((root / "data" / "companies").glob("*.yaml")):
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         slug = data.get("slug") or path.stem
         names = data.get("short_names") or [data.get("name", slug)]
-        result.append({"slug": slug, "name": names[0]})
+        item = {"slug": slug, "name": names[0]}
+        for key in ("categories", "processes", "tagline"):
+            if data.get(key):
+                item[key] = data[key]
+        result.append(item)
     return result
 
 
