@@ -1,0 +1,183 @@
+---
+// 工程の解説図（仕様書 8.15）：段階ごとの小さな模式図（SVG。形だけ。文字は入れない）と、段階の名前・説明（HTML）を並べる。
+// 色はCSSの変数だけ。感光した部分は、色でなく斜線の模様でも示す。図は読み上げず（aria-hidden）、図の内容は figcaption と各段階の文で伝える。
+import type { ProcessFigureSpec } from '../lib/processFigures';
+
+interface Props {
+  figure: ProcessFigureSpec;
+  id: string; // ページの中で重ならない名前
+}
+const { figure, id } = Astro.props;
+// 図の座標（viewBox 0 0 200 128）
+const W = 200;
+const H = 128;
+const base = { x: 6, w: 188 };
+const sub = { y: 92, h: 30 }; // ウェーハ
+const resist = { y: 66, h: 26 }; // レジスト
+const openings = [{ x: 40, w: 36 }, { x: 124, w: 36 }]; // マスクの開口（光が通る所）
+---
+
+<figure class="pfigure" aria-labelledby={`${id}-title`}>
+  <p class="pfigure__title" id={`${id}-title`}>{figure.title}</p>
+  <ol class="pfigure__steps">
+    {figure.panels.map((panel, i) => (
+      <li class="pfigure__step">
+        <svg class="pfigure__svg" viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
+          <defs>
+            <pattern id={`${id}-hatch-${i}`} patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+              <rect width="6" height="6" fill="var(--color-primary-tint)"></rect>
+              <line x1="0" y1="0" x2="0" y2="6" class="pfigure__hatch"></line>
+            </pattern>
+          </defs>
+          <rect class="pfigure__wafer" x={base.x} y={sub.y} width={base.w} height={sub.h}></rect>
+
+          {panel.kind === 'coat' && (
+            <rect class="pfigure__resist" x={base.x} y={resist.y} width={base.w} height={resist.h}></rect>
+          )}
+
+          {panel.kind === 'expose' && (
+            <g>
+              <rect class="pfigure__resist" x={base.x} y={resist.y} width={base.w} height={resist.h}></rect>
+              {openings.map((o) => (
+                <rect x={o.x} y={resist.y} width={o.w} height={resist.h} fill={`url(#${id}-hatch-${i})`} class="pfigure__exposed"></rect>
+              ))}
+              {/* マスク：開口のあいだが、光をさえぎる */}
+              <rect class="pfigure__mask" x={base.x} y="22" width={openings[0].x - base.x} height="10"></rect>
+              <rect class="pfigure__mask" x={openings[0].x + openings[0].w} y="22" width={openings[1].x - openings[0].x - openings[0].w} height="10"></rect>
+              <rect class="pfigure__mask" x={openings[1].x + openings[1].w} y="22" width={base.x + base.w - openings[1].x - openings[1].w} height="10"></rect>
+              {/* 光 */}
+              {openings.map((o) => (
+                <g>
+                  <line class="pfigure__ray" x1={o.x + 4} y1="2" x2={o.x + 4} y2={resist.y - 2}></line>
+                  <line class="pfigure__ray" x1={o.x + o.w - 4} y1="2" x2={o.x + o.w - 4} y2={resist.y - 2}></line>
+                  <path class="pfigure__arrow" d={`M${o.x + o.w / 2 - 5} ${resist.y - 9}L${o.x + o.w / 2} ${resist.y - 2}L${o.x + o.w / 2 + 5} ${resist.y - 9}`}></path>
+                </g>
+              ))}
+            </g>
+          )}
+
+          {(panel.kind === 'develop' || panel.kind === 'next') && (
+            <g>
+              {/* 感光した部分を除いたあと：レジストが、開口のあいだに残る */}
+              <rect class="pfigure__resist" x={base.x} y={resist.y} width={openings[0].x - base.x} height={resist.h}></rect>
+              <rect class="pfigure__resist" x={openings[0].x + openings[0].w} y={resist.y} width={openings[1].x - openings[0].x - openings[0].w} height={resist.h}></rect>
+              <rect class="pfigure__resist" x={openings[1].x + openings[1].w} y={resist.y} width={base.x + base.w - openings[1].x - openings[1].w} height={resist.h}></rect>
+            </g>
+          )}
+
+          {panel.kind === 'next' && (
+            <g>
+              {openings.map((o) => (
+                <g>
+                  <line class="pfigure__ray" x1={o.x + o.w / 2} y1="34" x2={o.x + o.w / 2} y2={sub.y - 4}></line>
+                  <path class="pfigure__arrow" d={`M${o.x + o.w / 2 - 5} ${sub.y - 11}L${o.x + o.w / 2} ${sub.y - 4}L${o.x + o.w / 2 + 5} ${sub.y - 11}`}></path>
+                </g>
+              ))}
+            </g>
+          )}
+        </svg>
+        <p class="pfigure__label"><span class="pfigure__no">{i + 1}</span>{panel.label}</p>
+        <p class="pfigure__text">{panel.text}</p>
+      </li>
+    ))}
+  </ol>
+  <figcaption class="pfigure__caption">{figure.summary}図は仕組みを模式的に示したもので、実際の寸法や形ではありません。</figcaption>
+</figure>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .pfigure {
+    margin: var(--space-5) 0 var(--space-6);
+  }
+  .pfigure__title {
+    margin: 0 0 var(--space-3);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .pfigure__steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pfigure__step {
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+    padding: var(--space-3);
+  }
+  .pfigure__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .pfigure__wafer {
+    fill: var(--chart-other);
+    stroke: var(--color-border-strong);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .pfigure__resist {
+    fill: var(--color-primary-tint);
+    stroke: var(--color-primary);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .pfigure__exposed {
+    stroke: var(--color-primary);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .pfigure__hatch {
+    stroke: var(--color-primary);
+    stroke-width: var(--chart-line-width);
+  }
+  .pfigure__mask {
+    fill: var(--color-text);
+  }
+  .pfigure__ray {
+    stroke: var(--color-text);
+    stroke-width: var(--icon-stroke);
+    stroke-dasharray: 4 3;
+    vector-effect: non-scaling-stroke;
+  }
+  .pfigure__arrow {
+    fill: none;
+    stroke: var(--color-text);
+    stroke-width: var(--icon-stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .pfigure__label {
+    margin: var(--space-3) 0 var(--space-1);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--text-body);
+    line-height: var(--text-body-leading);
+  }
+  .pfigure__no {
+    margin-inline-end: var(--space-2);
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .pfigure__text {
+    margin: 0;
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .pfigure__caption {
+    margin-block-start: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  @media (--tablet) {
+    .pfigure__steps {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
