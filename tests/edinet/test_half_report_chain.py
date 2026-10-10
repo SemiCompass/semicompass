@@ -5,7 +5,7 @@ import unittest
 from test_comparative import (CODE, DOC_TYPES, T1, T2, XMAP, build, doc, ext, fin_rows, fy2025, listing, money, seg_rows,
                               state)
 from test_extract import HEADER, dei, r
-from test_five_fixes import (LATER, SONY, SONY_PFX, check_all, emp_all, fetch, ifrs_fin, ifrs_segs)
+from test_ingest_rules import (LATER, SONY, SONY_PFX, check_all, emp_all, fetch, ifrs_fin, ifrs_segs)
 from test_inspect_document import csv_text
 
 build_auto = __import__("build_auto")
