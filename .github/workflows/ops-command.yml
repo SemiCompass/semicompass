@@ -1,0 +1,86 @@
+name: ops-command
+
+# P14：運営者のコメントの指示を受ける（アーキテクチャ設計書 9.1）。いまは `/factcheck-ack {指紋または番号} {判断} {原因}` だけ。
+# main にあるこの定義だけが動く（issue_comment）。変更案のコードは取り出さず、コメントの文は環境変数で渡す（シェルに埋め込まない）。
+# 書き込むのは ops-log ブランチの ops/factcheck/ だけ。運営者（リポジトリの write 以上の権限）以外のコメントは、何もしない。
+on:
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: ops-log-write
+  cancel-in-progress: false
+
+jobs:
+  factcheck-ack:
+    if: >-
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/factcheck-ack')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write        # ops-log への記録
+      pull-requests: write   # 結果のコメント
+      actions: write         # 事実確認のやり直し（workflow_dispatch）
+    steps:
+      - name: コメントした人が運営者か確かめる
+        id: who
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          USER_LOGIN: ${{ github.event.comment.user.login }}
+        run: |
+          case "$USER_LOGIN" in ''|*[!A-Za-z0-9-]*) echo "ok=0" >> "$GITHUB_OUTPUT"; exit 0;; esac
+          permission=$(gh api "repos/${REPO}/collaborators/${USER_LOGIN}/permission" --jq '.permission' 2>/dev/null || echo none)
+          case "$permission" in
+            admin|maintain|write) echo "ok=1" >> "$GITHUB_OUTPUT" ;;
+            *) echo "運営者ではないため、何もしない"; echo "ok=0" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.who.outputs.ok == '1'
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.who.outputs.ok == '1'
+        with:
+          ref: ops-log
+          path: ops-log
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: 記録する
+        if: steps.who.outputs.ok == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          USER_LOGIN: ${{ github.event.comment.user.login }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          case "$NUMBER" in ''|*[!0-9]*) exit 1;; esac
+          printf '%s' "$COMMENT_BODY" > "$RUNNER_TEMP/comment.txt"
+          gh api "repos/${REPO}/issues/${NUMBER}/comments" --paginate \
+            --jq '[.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- semicompass-factcheck -->")))] | last | .body // ""' > "$RUNNER_TEMP/result.md"
+          set +e
+          python3 scripts/ops/factcheck_ack.py --repo-dir ops-log --pr "$NUMBER" --user "$USER_LOGIN" \
+            --comment-file "$RUNNER_TEMP/comment.txt" --result-file "$RUNNER_TEMP/result.md" > "$RUNNER_TEMP/reply.md"
+          code=$?
+          set -e
+          if [ "$code" = "0" ]; then
+            cd ops-log
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add ops/factcheck
+            git commit -m "factcheck-ack: PR #${NUMBER}"
+            for i in 1 2 3; do
+              git push origin HEAD:ops-log && break
+              git pull --rebase origin ops-log
+            done
+            cd ..
+            gh workflow run factcheck.yml -f number="$NUMBER"
+          fi
+          gh api -X POST "repos/${REPO}/issues/${NUMBER}/comments" -F body=@"$RUNNER_TEMP/reply.md" > /dev/null

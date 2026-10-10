@@ -76,6 +76,7 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/news
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/pages
           "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/factcheck
+          "$RUNNER_TEMP/venv/bin/python" -m unittest discover -s tests/ops
 
       - name: データの形式の検証
         run: '"$RUNNER_TEMP/venv/bin/python" scripts/validate/validate_data.py'
