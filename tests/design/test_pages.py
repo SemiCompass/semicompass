@@ -86,6 +86,32 @@ def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] 
     return work
 
 
+def make_draft_site(slugs: tuple[str, ...]) -> Path:
+    """サイトの作業用のコピーを作り、指定した企業の事業概要（content/companies/{slug}.md）を draft: true にする。
+    リポジトリの企業は公開済みのため、「下書きのときの表示」（プレビューでは詳細掲載、本番では Coming Soon）は、このコピーで確かめる。
+    content/ は、用語・工程・ニュースも含めてそのまま写す。リポジトリの実際のファイルは、書き換えない。"""
+    work = Path(tempfile.mkdtemp())
+    for name in ("src", "data", "config", "content", "public", "package.json", "astro.config.mjs", "tsconfig.json"):
+        source = ROOT / name
+        if source.is_dir():
+            shutil.copytree(source, work / name)
+        elif source.is_file():
+            shutil.copy(source, work / name)
+    for extra in ROOT.glob("*"):
+        if extra.name.startswith("."):
+            continue
+        if extra.is_file() and not (work / extra.name).exists() and extra.suffix in (".mjs", ".json", ".ts"):
+            shutil.copy(extra, work / extra.name)
+    os.symlink(ROOT / "node_modules", work / "node_modules")
+    for slug in slugs:
+        path = work / "content" / "companies" / f"{slug}.md"
+        text = path.read_text(encoding="utf-8")
+        changed = re.sub(r"^draft: false$", "draft: true", text, count=1, flags=re.M)
+        assert changed != text, f"{slug} は draft: false のはず"
+        path.write_text(changed, encoding="utf-8")
+    return work
+
+
 @unittest.skipUnless(HAS_NODE, "node_modules がない")
 class PagesBuildTest(unittest.TestCase):
     _cache: dict[str, Path] = {}  # 同じ条件のビルドを、クラスの中で1回だけ行う（キーは "real-preview" など）
@@ -139,9 +165,11 @@ class PagesBuildTest(unittest.TestCase):
             self.assertTrue(list((dist / "companies" / "process").glob("*/index.html")))
 
     def test_production_shows_draft_companies_as_coming_soon(self):
-        preview = self.read(self.build("preview"), "companies/index.html")
-        production = self.read(self.build("production"), "companies/index.html")
-        self.assertGreater(preview.count(">詳細<"), production.count(">詳細<"))
+        # 企業はすべて公開済み。下書き（draft: true）の企業を2社置いたコピーで、本番にだけ出ない（Coming Soon になる）ことを確かめる
+        drafts = ("tokyo-electron", "sony")
+        preview = self.read(self._built("drafts-preview", "preview", make_draft_site(drafts)), "companies/index.html")
+        production = self.read(self._built("drafts-production", "production", make_draft_site(drafts)), "companies/index.html")
+        self.assertEqual(preview.count(">詳細<") - production.count(">詳細<"), len(drafts))
 
     def test_process_pages_and_neighbours(self):
         dist = self.build_empty()  # 「解説は準備中」は、content/processes/ に本文がない（空の）ときの表示
