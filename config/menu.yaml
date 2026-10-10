@@ -8,6 +8,10 @@ main:
     path: /processes/
   - label: ニュース
     path: /news/
+# 運営者のnoteへのリンク（要件定義書 FR-708）。フッターの全ページと、トップページに置く。URLは、ここに1か所だけ書く。
+note:
+  label: SemiCompass｜note
+  url: https://note.com/hysd_research
 footer:
   - title: サイトについて
     links:

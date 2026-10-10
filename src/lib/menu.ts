@@ -11,7 +11,12 @@ export interface FooterGroup {
   title: string;
   links: MenuItem[];
 }
+export interface NoteLink {
+  label: string;
+  url: string;
+}
 export interface Menu {
+  note: NoteLink;
   main: MenuItem[];
   footer: FooterGroup[];
 }
@@ -26,7 +31,7 @@ function isItem(value: unknown): value is MenuItem {
 }
 
 export function parseMenu(text: string): Menu {
-  const data = parse(text) as { main?: unknown; footer?: unknown } | null;
+  const data = parse(text) as { main?: unknown; footer?: unknown; note?: unknown } | null;
   const main = data?.main;
   const footer = data?.footer;
   if (!Array.isArray(main) || !main.every(isItem)) {
@@ -38,7 +43,11 @@ export function parseMenu(text: string): Menu {
   ) {
     throw new Error('config/menu.yaml の footer は、title と links を持つ組の並びにする');
   }
-  return { main, footer };
+  const note = data?.note as NoteLink | undefined;
+  if (!note || typeof note.label !== 'string' || typeof note.url !== 'string' || !note.url.startsWith('https://')) {
+    throw new Error('config/menu.yaml の note は、label と url（https:// で始まる）を持つ項目にする');
+  }
+  return { note, main, footer };
 }
 
 // ビルドは、リポジトリの直下で動かす（npm run build）。ビルド後のファイルの位置に依らないよう、作業の場所から読む
