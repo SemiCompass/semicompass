@@ -292,12 +292,13 @@ class BuildTest(unittest.TestCase):
         self.assertTrue((production / "index.html").is_file())
 
     def test_pages_have_the_frame_and_menu_in_config_order(self):
+        note_url = yaml.safe_load((ROOT / "config" / "menu.yaml").read_text(encoding="utf-8"))["note"]["url"]
         dist = self.build("preview")
         for path in dist.rglob("*.html"):
             html = path.read_text(encoding="utf-8")
             self.assertIn('class="skip-link"', html, path.name)
             self.assertIn("site-footer", html, path.name)
-            self.assertIn("https://note.com/hyss_research", html, path.name)  # FR-708：全ページにnoteへのリンク
+            self.assertIn(note_url, html, path.name)  # FR-708：全ページにnoteへのリンク（URLは config/menu.yaml の1か所）
         html = (dist / "index.html").read_text(encoding="utf-8")
         self.assertEqual(html.count("<h1"), 1)
         self.assertRegex(html, r"企業</a>.*工程</a>.*ニュース</a>")
