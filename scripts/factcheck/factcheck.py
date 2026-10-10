@@ -25,6 +25,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import morph  # noqa: E402
 from claims import BARE_NUMBER, CITATION, UNITS, Claim, edit_distance, extract_claims, normalize, to_number  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -187,9 +188,11 @@ def check_url(c: Claim, listed: set[str], fetcher=None) -> Result:
     return Result(c, UNVERIFIABLE, f"HTTP {status}")
 
 
-def check_claims(text: str, sources: list[Source], dictionary: set[str], listed_urls: set[str], fetcher=None) -> list[Result]:
+def check_claims(text: str, sources: list[Source], dictionary: set[str], listed_urls: set[str], fetcher=None, is_common=None) -> list[Result]:
     results = []
-    for c in extract_claims(text, dictionary):
+    if is_common is None:
+        is_common = morph.is_common_word  # SudachiPy がなければ、常に False
+    for c in extract_claims(text, dictionary, is_common):
         if c.kind == "number":
             results.append(check_number(c, sources))
         elif c.kind == "date":

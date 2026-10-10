@@ -175,9 +175,11 @@ def sources_of(front: dict) -> list[tuple[str, str]]:
     return out
 
 
-def gather(front: dict, fetch=fetch_text) -> tuple[list[fc.Source], list[str]]:
-    """資料を取得する。取得できなかった資料の番号と理由（種類だけ）を返す。本文は返さない。"""
-    sources, failed = [], []
+def gather(front: dict, fetch=fetch_text, bundles: list[tuple[str, str]] | None = None, bundle_failed: list[str] | None = None) -> tuple[list[fc.Source], list[str]]:
+    """資料を取得する。取得できなかった資料の番号と理由（種類だけ）を返す。本文は返さない。
+    原資料束（bundles：(bundle_id, 文章)）があれば、先に資料として加える。"""
+    sources = [fc.make_source(bundle_id, text) for bundle_id, text in bundles or []]
+    failed = list(bundle_failed or [])
     for sid, url in sources_of(front):
         try:
             sources.append(fc.make_source(sid, fetch(url)))
@@ -217,7 +219,8 @@ def load_acks(path: Path | None, file: str) -> set[str]:
     return out
 
 
-def run(base: str, head: str, acks_path: Path | None = None, root: Path = ROOT, fetch=fetch_text, fetcher=None) -> tuple[str, int, dict]:
+def run(base: str, head: str, acks_path: Path | None = None, root: Path = ROOT, fetch=fetch_text, fetcher=None,
+        bundles: list[tuple[str, str]] | None = None, bundle_failed: list[str] | None = None) -> tuple[str, int, dict]:
     config = yaml.safe_load((root / "config/operations.yaml").read_text(encoding="utf-8")) or {}
     prefixes = config.get("factcheck_paths") or ["content/"]
     files = changed_files(base, head, prefixes, root)
@@ -235,7 +238,7 @@ def run(base: str, head: str, acks_path: Path | None = None, root: Path = ROOT, 
         diff = changed_text(old_body, new_body)
         if not diff.strip():
             continue
-        sources, failed = gather(front, fetch)
+        sources, failed = gather(front, fetch, bundles, bundle_failed)
         results = check_file(front, diff, dictionary, sources, failed, fetcher)
         acks = load_acks(acks_path, path)
         bad = fc.failures(results, acks)
@@ -263,9 +266,24 @@ def main(argv=None) -> int:
     parser.add_argument("--comment", type=Path, help="PRコメントの本文の出力先")
     parser.add_argument("--summary", type=Path, help="件数のJSONの出力先")
     parser.add_argument("--url-check", action="store_true")
+    parser.add_argument("--pr-body-file", type=Path, help="変更案の説明（「原資料束」の欄の bundle_id を拾う）")
     args = parser.parse_args(argv)
+    bundles, bundle_failed = [], []
+    if args.pr_body_file and args.pr_body_file.is_file():
+        import os
+        import bundle_read
+        ids = bundle_read.bundle_ids_from_body(args.pr_body_file.read_text(encoding="utf-8", errors="replace"))
+        creds = bundle_read.r2_env(os.environ)
+        if ids and creds:
+            try:
+                bundles, bundle_failed = bundle_read.read_bundles(bundle_read.make_client(creds), creds["R2_BUCKET"], ids)
+            except Exception as error:  # noqa: BLE001
+                bundle_failed = [f"原資料束（{type(error).__name__}）"]
+        elif ids:
+            bundle_failed = ["原資料束（読み取りの設定なし）"]
     try:
-        body, code, summary = run(args.base, args.head, args.acks, args.root, fetcher=safe_url_status if args.url_check else None)
+        body, code, summary = run(args.base, args.head, args.acks, args.root, fetcher=safe_url_status if args.url_check else None,
+                                  bundles=bundles, bundle_failed=bundle_failed)
     except (subprocess.CalledProcessError, OSError, ValueError, yaml.YAMLError) as error:
         print(f"実行の誤り：{type(error).__name__}")
         return 2
