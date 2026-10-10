@@ -47,16 +47,19 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
           first="$(printf '%s' "$COMMENT_BODY" | head -n 1 | tr -d '\r')"
-          if ! [[ "$first" =~ ^/draft\ (c[0-9]{2,3})(\ (https://[^[:space:]]{1,500}))?$ ]]; then
-            echo "コメントの形が正しくない（/draft c11 か、/draft c11 https://…）"; exit 2
+          # /draft c11 、/draft c11 URL 、/draft c11 URL 補足URL 補足URL（補足は最大2件。背景や原因が書かれた一次情報）
+          if ! [[ "$first" =~ ^/draft\ (c[0-9]{2,3})(\ (https://[^[:space:]]{1,500})(\ https://[^[:space:]]{1,500}){0,2})?$ ]]; then
+            echo "コメントの形が正しくない（/draft c11 か、/draft c11 https://… か、/draft c11 https://… https://…）"; exit 2
           fi
           cid="${BASH_REMATCH[1]}"
-          url="${BASH_REMATCH[3]}"
+          read -r -a urls <<< "${BASH_REMATCH[2]}"
+          url="${urls[0]:-}"
+          refs="${urls[*]:1}"
           if ! [[ "$ISSUE_TITLE" =~ ^ニュース候補\ ([0-9]{4}-[0-9]{2}-[0-9]{2})$ ]]; then
             echo "Issue の題名が正しくない"; exit 2
           fi
           date="${BASH_REMATCH[1]}"
-          { echo "cid=$cid"; echo "url=$url"; echo "date=$date"; } >> "$GITHUB_OUTPUT"
+          { echo "cid=$cid"; echo "url=$url"; echo "refs=$refs"; echo "date=$date"; } >> "$GITHUB_OUTPUT"
 
       - name: 依存を入れる（版は scripts/requirements.txt で固定）
         run: |
@@ -90,6 +93,7 @@ jobs:
           ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ runner.temp }}/gha-jwt
           CID: ${{ steps.parse.outputs.cid }}
           SRC_URL: ${{ steps.parse.outputs.url }}
+          REF_URLS: ${{ steps.parse.outputs.refs }}
           CAND_DATE: ${{ steps.parse.outputs.date }}
         run: |
           out="$RUNNER_TEMP/news-draft-out"
@@ -101,6 +105,9 @@ jobs:
           fi
           url_args=()
           if [ -n "$SRC_URL" ]; then url_args=(--url "$SRC_URL"); fi
+          set -f  # URLの * などを展開しない
+          for u in $REF_URLS; do url_args+=(--ref-url "$u"); done
+          set +f
           set +e
           "$RUNNER_TEMP/venv/bin/python" scripts/news/draft_news.py \
             --scored "$scored" --id "$CID" "${url_args[@]}" \
