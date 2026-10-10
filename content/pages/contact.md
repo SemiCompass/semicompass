@@ -3,7 +3,7 @@ title: お問い合わせ
 description: 記載内容の誤りの報告、掲載企業からの連絡、その他のお問い合わせを受け付けます。
 path: /contact/
 updated_at: '2026-10-10'
-draft: true
+draft: false
 ---
 
 ## お問い合わせの前に

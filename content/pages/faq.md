@@ -3,7 +3,7 @@ title: よくある質問
 description: サイトの目的、数値の出典、AIの使い方、誤りの報告、掲載企業、投資の助言ではないことについて、短く答えます。
 path: /faq/
 updated_at: '2026-10-10'
-draft: true
+draft: false
 ---
 
 ## サイトについて

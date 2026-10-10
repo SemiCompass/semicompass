@@ -3,7 +3,7 @@ title: 編集方針
 description: 掲載の基準、並び順、広告との独立、AIの使い方と公開前の確認、掲載企業からの依頼への対応を説明します。
 path: /editorial-policy/
 updated_at: '2026-10-10'
-draft: true
+draft: false
 ---
 
 ## 掲載の基準
