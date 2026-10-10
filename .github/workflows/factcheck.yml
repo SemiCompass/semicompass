@@ -1,0 +1,131 @@
+name: factcheck
+
+# P08：変更案の事実確認（アーキテクチャ設計書 9.3、10.2）。
+# main にあるこの定義だけが動く（workflow_run）。変更案のコードは実行せず、変更案の文章を「資料」として読むだけにする。
+# 追加・変更された本文の行だけを、出典の一覧のURLから取った原資料と照合する。結果の表を変更案にコメントし、合否を `factcheck` の確認として付ける。
+# 原資料の本文は、ログ、コメントに出さない。この段階では、秘密の情報を使わない（R2の原資料束は、次の段階で bundle-read の Environment から読む）。
+on:
+  workflow_run:
+    workflows: [pr-check]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  find-pr:
+    if: >-
+      github.event.workflow_run.conclusion != 'cancelled' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      number: ${{ steps.find.outputs.number }}
+    steps:
+      - id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          number=$(gh api "repos/${REPO}/commits/${HEAD_SHA}/pulls" \
+            --jq '[.[] | select(.state == "open" and .base.ref == "main")][0].number // empty')
+          case "$number" in
+            ''|*[!0-9]*) echo "開いている変更案が見つからないため、事実確認はしない"; number="" ;;
+          esac
+          echo "number=${number}" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: find-pr
+    if: needs.find-pr.outputs.number != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    concurrency:
+      group: factcheck-${{ needs.find-pr.outputs.number }}
+      cancel-in-progress: true
+    steps:
+      # コードは main のものを使う
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Python の部品を入れる
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install PyYAML==6.0.1 pypdf==6.19.0
+
+      # 変更案の内容は、データとして取り出すだけ（実行しない）。確認の対象の最新と一致しなければ、何もしない
+      - name: 変更案の内容を取り出す
+        id: pr
+        env:
+          NUMBER: ${{ needs.find-pr.outputs.number }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          case "$NUMBER" in ''|*[!0-9]*) exit 1;; esac
+          git fetch --no-tags origin "refs/pull/${NUMBER}/head"
+          head=$(git rev-parse FETCH_HEAD)
+          if [ "$head" != "$HEAD_SHA" ]; then
+            echo "変更案に新しい変更があるため、この実行は対象にしない"
+            echo "stale=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          base=$(git merge-base origin/main "$head")
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          # 運営者の記録（ops-log。なければ空）
+          git fetch --no-tags origin ops-log 2>/dev/null \
+            && git show "FETCH_HEAD:ops/factcheck/pr-${NUMBER}.json" > "$RUNNER_TEMP/acks.json" 2>/dev/null || echo '{"acks":[]}' > "$RUNNER_TEMP/acks.json"
+
+      - name: 事実確認
+        if: steps.pr.outputs.stale != '1'
+        id: run
+        env:
+          BASE: ${{ steps.pr.outputs.base }}
+          HEAD: ${{ steps.pr.outputs.head }}
+        run: |
+          set +e
+          "$RUNNER_TEMP/venv/bin/python" scripts/factcheck/run_pr.py --base "$BASE" --head "$HEAD" \
+            --acks "$RUNNER_TEMP/acks.json" --url-check \
+            --comment "$RUNNER_TEMP/comment.md" --summary "$RUNNER_TEMP/summary.json" > /dev/null
+          code=$?
+          echo "code=${code}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: 結果を変更案にコメントする
+        if: steps.pr.outputs.stale != '1' && steps.run.outputs.code != '2'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ needs.find-pr.outputs.number }}
+        run: |
+          id=$(gh api "repos/${REPO}/issues/${NUMBER}/comments" --paginate \
+            --jq '[.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- semicompass-factcheck -->")))][0].id // empty')
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${id}" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          else
+            gh api -X POST "repos/${REPO}/issues/${NUMBER}/comments" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          fi
+
+      - name: 合否を付ける
+        if: steps.pr.outputs.stale != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD: ${{ steps.pr.outputs.head }}
+          CODE: ${{ steps.run.outputs.code }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          case "$CODE" in
+            0) state=success; desc="事実確認：合格" ;;
+            1) state=failure; desc="事実確認：不合格（コメントの表を確認）" ;;
+            *) state=error;   desc="事実確認：実行の誤り" ;;
+          esac
+          gh api -X POST "repos/${REPO}/statuses/${HEAD}" -f state="$state" -f context="factcheck" \
+            -f description="$desc" -f target_url="$RUN_URL" > /dev/null
