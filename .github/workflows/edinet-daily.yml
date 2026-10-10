@@ -1,0 +1,110 @@
+name: edinet-daily
+
+# J01：毎朝5:00（日本時間、平日）に、前日までにEDINETへ提出された書類を取り込み、変更案（Pull request）を作る（要件定義書 6.2、7.9）。
+#   * 対象は、data/auto/ にすでにある企業。範囲は、前の3日（取りこぼしを拾う。取り込み済みの書類は重ねて取り込まない）
+#   * 取り込みの後に、異常値の検知（scripts/edinet/check_anomalies.py）を動かす。異常があれば、変更案の題に【異常あり】を付ける
+#   * 変更案は、運営者が内容を見てから取り込む。専用のGitHub App（auto-merge-data）ができるまで、自動では取り込まない
+#   * GITHUB_TOKEN で作った変更案には、pr-check が自動で動かない。取り込む前に、変更案を閉じて開き直す（または、App ができるまでの手順として運用ルール書に書く）
+on:
+  schedule:
+    - cron: "0 20 * * 0-4"   # UTC 20:00（日〜木）＝ 日本時間 5:00（月〜金）
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 何日前から取り込むか（1〜31。既定 3）
+        required: false
+        type: string
+        default: "3"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: edinet-daily
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-24.04
+    environment: edinet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 取り込み前のデータを控える
+        run: cp -r data/auto "$RUNNER_TEMP/before"
+
+      - name: 書類を取り込む
+        env:
+          EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+          INPUT_DAYS: ${{ inputs.days }}
+        run: |
+          days="${INPUT_DAYS:-3}"
+          if ! [[ "$days" =~ ^[0-9]{1,2}$ ]] || [ "$days" -lt 1 ] || [ "$days" -gt 31 ]; then echo "日数の形が正しくない"; exit 2; fi
+          from="$(TZ=Asia/Tokyo date -d "${days} days ago" +%F)"
+          to="$(TZ=Asia/Tokyo date -d "1 day ago" +%F)"
+          args=()
+          for f in data/auto/*.json; do
+            slug="$(basename "$f" .json)"
+            if ! [[ "$slug" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then echo "slug の形が正しくない"; exit 2; fi
+            args+=(--company "$slug")
+          done
+          echo "取り込みの範囲：${from} 〜 ${to}（${#args[@]} 社分の指定）"
+          "$RUNNER_TEMP/venv/bin/python" scripts/edinet/ingest_all.py "${args[@]}" \
+            --from "$from" --to "$to" --max-requests 150 \
+            --write-data-auto --out-dir data/auto \
+            --summary "$RUNNER_TEMP/summary.md"
+
+      - name: 異常値を検知する
+        id: anomaly
+        run: |
+          set +e
+          "$RUNNER_TEMP/venv/bin/python" scripts/edinet/check_anomalies.py \
+            --before "$RUNNER_TEMP/before" --after data/auto --out "$RUNNER_TEMP/anomaly.md" > /dev/null
+          code=$?
+          echo "code=${code}" >> "$GITHUB_OUTPUT"
+          [ "$code" = "0" ] || [ "$code" = "10" ] || exit 1
+          exit 0
+
+      - name: 変更案を作る
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ANOMALY: ${{ steps.anomaly.outputs.code }}
+        run: |
+          if [ -z "$(git status --porcelain -- data/auto)" ]; then
+            echo "変更がないため、変更案は作らない"
+            exit 0
+          fi
+          today="$(TZ=Asia/Tokyo date +%F)"
+          prefix="データ："
+          if [ "$ANOMALY" = "10" ]; then prefix="【異常あり】データ："; fi
+          branch="data/auto-${today}-${GITHUB_RUN_ID}"
+          { cat "$RUNNER_TEMP/summary.md"; echo; cat "$RUNNER_TEMP/anomaly.md"; } > "$RUNNER_TEMP/body.md"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add data/auto
+          git commit -m "開示データの取り込み（日次 ${today}）"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "${prefix}開示データの取り込み（日次 ${today}）" \
+            --body-file "$RUNNER_TEMP/body.md"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: edinet-daily
+          path: |
+            ${{ runner.temp }}/summary.md
+            ${{ runner.temp }}/anomaly.md
+          retention-days: 7
+          if-no-files-found: ignore
