@@ -418,10 +418,10 @@ class CompanyPageBuildTest(BuildTest):
     def test_review_fixes_on_company_pages(self):
         import re
         preview = self.build_drafts("preview", ("tokyo-electron", "sony", "screen"))
-        # 1 AI作成の表示：draft: true は「運営者の確認前」
+        # 1 「AIが下書きし、運営者が確認しました」の表示は、どのページにも出さない（2026年10月10日、運営者の判断）
         for slug in ("tokyo-electron", "sony", "screen"):
             html = self.page(preview, slug)
-            self.assertIn("AIが下書きしました（運営者の確認前）", html)
+            self.assertNotIn("AIが下書き", html)
             self.assertNotIn("運営者が確認しました", html)
             # 2 出典の番号：前に空白がなく、句点の後ろにない。句読点は、番号と同じ折り返さない一続きの中
             self.assertNotRegex(html, r"\s<sup class=\"citation\"")
@@ -455,10 +455,9 @@ class CompanyPageBuildTest(BuildTest):
         for fill in ("var(--chart-highlight)", "var(--chart-cat-1)", "url(#hatch-segment-w)"):
             self.assertIn(f'fill="{fill}"', html)
 
-    def test_component_page_shows_both_ai_states_and_multi_semiconductor_chart(self):
+    def test_component_page_has_multi_semiconductor_chart_and_no_ai_badge(self):
         html = (self.build("preview") / "dev" / "components" / "index.html").read_text(encoding="utf-8")
-        self.assertIn("AIが下書きしました（運営者の確認前）", html)
-        self.assertIn("AIが下書きし、運営者が確認しました", html)
+        self.assertNotIn("AIが下書き", html)
         for var in ("--chart-cat-1", "--chart-cat-2", "--chart-cat-3"):
             self.assertIn(f'fill="var({var})"', html)
 

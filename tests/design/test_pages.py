@@ -349,7 +349,7 @@ class PagesBuildTest(unittest.TestCase):
         # 点と海外の印は、画面に出さない（仕様書に表示の指定がない）
         for hidden in ("overseas", "impact", "reliability", "重要度"):
             self.assertNotIn(hidden, html)
-        self.assertIn("AIが下書きし、運営者が確認しました", html)
+        self.assertNotIn("AIが下書き", html)  # AI作成の表示は、どのページにも出さない（運営者の判断）
 
     def test_news_in_search_index(self):
         index = json.loads(self.read(self.news_site("production"), "search-index.json"))

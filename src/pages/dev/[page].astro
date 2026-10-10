@@ -2,7 +2,6 @@
 // 部品の一覧（仕様書 13章の3）：すべての部品の、すべての状態を並べて確かめるページ。
 // プレビューのビルド（BUILD_ENV=preview）でだけ出力する。本番のビルドでは、ページを作らない。検索に登録させない指定を付ける
 import { BUILD_ENV } from 'astro:env/server';
-import AiBadge from '../../components/AiBadge.astro';
 import Button from '../../components/Button.astro';
 import Chart from '../../components/Chart.astro';
 import Citation from '../../components/Citation.astro';
@@ -101,15 +100,12 @@ const sources = [
   publishedAt="2026-10-06"
   updatedAt="2026-10-06"
   author="運営者"
-  aiGenerated
   noindex
 >
   <p>このページは、プレビューのビルドだけに出力されます。ヘッダー、パンくず、ページの頭、フッター、目次は、このページ自体で確かめられます。</p>
 
   <h2 id="frame">共通の枠</h2>
-  <p>ヘッダー（上）、パンくず・ページの頭・目次（このページの上）、フッター（下）は、このページに出ています。ページの頭の下の1行は、公開日・更新日・作成者とAI作成の表示（単独）の例です。</p>
-  <p><AiBadge draft /></p>
-  <p><AiBadge /></p>
+  <p>ヘッダー（上）、パンくず・ページの頭・目次（このページの上）、フッター（下）は、このページに出ています。ページの頭の下の1行は、公開日・更新日・作成者の例です。</p>
   <PageHead title="ページの頭だけの例（日付なし）" />
 
   <h2 id="links">リンクとボタン</h2>
