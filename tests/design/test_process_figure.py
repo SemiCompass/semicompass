@@ -4,7 +4,7 @@ import re
 import shutil
 import unittest
 
-from test_pages import HAS_NODE, ROOT, build_site
+from test_pages import HAS_NODE, ROOT, real_site
 
 SOURCE = (ROOT / "src" / "lib" / "processFigures.ts").read_text(encoding="utf-8")
 COMPONENT = (ROOT / "src" / "components" / "ProcessFigure.astro").read_text(encoding="utf-8")
@@ -31,11 +31,7 @@ class FigureSourceTest(unittest.TestCase):
 class FigurePageTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        out, failure = build_site("preview", ROOT)
-        cls.addClassCleanup(shutil.rmtree, out, True)
-        if failure is not None:
-            raise AssertionError(failure)
-        cls.dist = out / "dist"
+        cls.dist = real_site("preview")
 
     def test_lithography_has_the_figure_with_caption_and_four_steps(self):
         html = (self.dist / "processes" / "lithography" / "index.html").read_text(encoding="utf-8")
