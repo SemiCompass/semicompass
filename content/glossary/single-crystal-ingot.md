@@ -10,7 +10,10 @@ related_terms:
 description: 単結晶インゴットは、単結晶のシリコンを円柱状に育てた塊で、シリコンウェーハの素材となる。ウェーハ製造の最初の段階で作られる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

@@ -14,7 +14,10 @@ related_terms:
 description: パワー半導体は、電力の変換や制御に使う半導体素子の総称。ダイオードやIGBTなどがあり、交流と直流の変換や電圧の調整に用いる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

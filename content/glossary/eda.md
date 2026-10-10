@@ -17,7 +17,10 @@ related_terms:
 description: EDAは、半導体の回路を設計・検証するソフトウェアの総称。回路の記述からレイアウトのデータ作成までを支援し、設計と製造をつなぐ。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

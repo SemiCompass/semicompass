@@ -17,7 +17,10 @@ related_terms:
 description: フォトマスクは、回路パターンを描いた原版である。露光装置の光を通し、ウェーハ上のフォトレジストにパターンを転写するために使われる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

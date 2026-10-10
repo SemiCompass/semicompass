@@ -13,7 +13,10 @@ related_terms:
 description: 露光装置は、フォトマスクの回路パターンを光でシリコンウェーハ上のフォトレジストに転写する装置。リソグラフィ工程で、レジスト塗布の後、現像の前に使われる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

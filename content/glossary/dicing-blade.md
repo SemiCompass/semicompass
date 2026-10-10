@@ -12,7 +12,10 @@ related_terms:
 description: ダイシングブレードは、ウェーハを個々のチップに切り分けるダイシング工程で使う、高速で回転する薄い円盤状の刃である。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

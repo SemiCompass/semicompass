@@ -14,7 +14,10 @@ related_terms:
 description: スパッタリングは、プラズマのイオンをターゲット材料に衝突させ、はじき出された原子をウェーハ上に堆積させる物理的な成膜法。金属膜の形成などに使われる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

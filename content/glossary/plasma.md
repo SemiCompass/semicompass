@@ -12,7 +12,10 @@ related_terms:
 description: プラズマは、気体が電離して電子とイオンが混在する状態である。半導体の製造では、エッチングや成膜の工程で、反応を起こす手段として使われる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

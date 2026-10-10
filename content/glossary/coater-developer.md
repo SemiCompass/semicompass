@@ -11,7 +11,10 @@ related_terms:
 description: コータ・デベロッパは、ウェーハにフォトレジストを塗布し、露光後に現像する装置。リソグラフィ工程で露光装置とあわせて使われる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

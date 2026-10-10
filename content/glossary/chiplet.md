@@ -14,7 +14,10 @@ related_terms:
 description: 大きな回路を機能ごとの小さなチップに分けて作り、パッケージ内で組み合わせて一つの半導体として動かす方式。製造技術の使い分けや設計の再利用に向く。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

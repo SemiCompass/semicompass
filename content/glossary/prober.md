@@ -15,7 +15,10 @@ related_terms:
 description: プローバは、ウェーハ上のチップの電極パッドに探針を接触させ、半導体テスタによる電気的な測定を可能にする装置である。ダイシングの前の選別検査に使う。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

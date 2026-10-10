@@ -15,7 +15,10 @@ related_terms:
 description: モールド樹脂は、半導体チップを包んで固め、湿気や衝撃、ほこりから守る封止用の樹脂材料。パッケージングの工程で使われる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---
