@@ -147,6 +147,24 @@ class DraftTest(Base):
         self.assertTrue(front["overseas"])
         self.assertIn("V-13", (self.out / "pr-body.md").read_text(encoding="utf-8"))
 
+    def test_reference_url_is_passed_as_s2_and_can_be_cited(self):
+        ref_url = "https://stats.example.org/background.html"
+        docs = {SOURCE_URL: {"url": SOURCE_URL, "title": "架空統計機構の発表", "text": SOURCE_TEXT},
+                ref_url: {"url": ref_url, "title": "架空の背景資料", "text": "背景として、別の架空の事情が長く説明されている資料の本文である。" * 5}}
+        client = FakeClient(reply(draft_output(why_important="今回の増加には、別の事情がある。[S2]" + "市場の拡大は、装置や材料への投資の判断に影響する。" * 4)), review())
+        argv = ["--scored", str(self.scored), "--id", "c11", "--url", SOURCE_URL, "--ref-url", ref_url, "--out-dir", str(self.out),
+                "--ledger-dir", str(self.tmp / "ledger"), "--run-id", "r1"]
+        code = draft_news.main(argv, now=lambda: NOW, client_factory=lambda: client, fetcher=lambda u: docs[u])
+        self.assertEqual(code, 0)
+        sent = json.dumps(client.calls[0]["messages"], ensure_ascii=False)
+        self.assertIn("【S2 本文】", sent)
+        self.assertIn("補足の資料 [S2]", (self.out / "pr-body.md").read_text(encoding="utf-8"))
+
+    def test_citation_without_matching_source_is_refused(self):
+        bad = draft_output(why_important="根拠のない番号を付けた。[S2]" + "市場の拡大は、装置や材料への投資の判断に影響する。" * 4)
+        code, _ = self.run_draft(reply(bad), reply(bad))
+        self.assertEqual(code, 1)
+
     def test_background_from_glossary_is_passed(self):
         glossary = self.tmp / "root" / "content" / "glossary"
         glossary.mkdir(parents=True)
