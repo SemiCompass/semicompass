@@ -1,7 +1,7 @@
 ---
 company: jasm
 published_at: '2026-10-10'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

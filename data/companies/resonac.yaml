@@ -15,7 +15,8 @@ processes:
   - cmp
   - bonding
   - packaging
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-10"
 tagline: "半導体の前工程・後工程向けの材料を扱う化学メーカーの持株会社"
 website_url: "https://www.resonac.com/"
 ir_url: "https://www.resonac.com/ir"

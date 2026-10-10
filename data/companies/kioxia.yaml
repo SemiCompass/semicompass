@@ -10,7 +10,9 @@ securities_code: "285A"
 edinet_code: E35948
 categories:
   - devices
-listing: coming_soon
+processes: []
+listing: detailed
+detailed_since: "2026-10-10"
 tagline: "フラッシュメモリとSSDを開発・製造・販売するグループの持株会社"
 website_url: "https://www.kioxia-holdings.com/ja-jp/top.html"
 ir_url: "https://www.kioxia-holdings.com/ja-jp/ir.html"

@@ -2,7 +2,7 @@
 company: ebara
 reviewed_filing: S100XS6E
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

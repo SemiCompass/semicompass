@@ -2,7 +2,7 @@
 company: rohm
 reviewed_filing: S100YF41
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

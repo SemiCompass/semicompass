@@ -2,7 +2,7 @@
 company: screen
 reviewed_filing: S100YK9N
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

@@ -13,7 +13,8 @@ categories:
   - front-end
 processes:
   - cmp
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-10"
 tagline: "半導体製造装置やポンプなどを手がける機械メーカー"
 website_url: "https://www.ebara.com/jp-ja/"
 ir_url: "https://www.ebara.com/jp-ja/ir/"
@@ -25,6 +26,7 @@ selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S1
 sources:
   - id: S1
     title: "有価証券報告書（2025年12月期）"

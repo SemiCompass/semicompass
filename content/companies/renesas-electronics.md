@@ -2,7 +2,7 @@
 company: renesas-electronics
 reviewed_filing: S100XR06
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

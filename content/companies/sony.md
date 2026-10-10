@@ -2,7 +2,7 @@
 company: sony
 reviewed_filing: S100YE2C
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

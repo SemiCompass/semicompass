@@ -2,7 +2,7 @@
 company: towa
 reviewed_filing: S100YERT
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1
