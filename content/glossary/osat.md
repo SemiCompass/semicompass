@@ -18,7 +18,10 @@ related_terms:
 description: OSATは、半導体の組み立て（パッケージング）と検査を受託する企業。ファブレスやIDM（垂直統合型）などから、後工程を請け負う。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

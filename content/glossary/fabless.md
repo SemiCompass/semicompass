@@ -15,7 +15,10 @@ related_terms:
 description: ファブレスは、自社で半導体の製造工場を持たず、回路設計や製品企画に特化し、ウェーハの製造をファウンドリなどに委託する事業形態、またはその企業を指す。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

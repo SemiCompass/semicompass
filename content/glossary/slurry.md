@@ -12,7 +12,10 @@ related_terms:
 description: スラリーは、固体の微粒子を液体に分散させた懸濁液である。半導体製造では、CMPでウェーハ表面を平らに削る研磨用の液として使われる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

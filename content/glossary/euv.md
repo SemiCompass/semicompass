@@ -16,7 +16,10 @@ related_terms:
 description: EUV露光は、極端紫外線を使ってフォトマスクの回路パターンをウェーハ上のフォトレジストに転写する露光方式。リソグラフィ工程で微細な回路を形成するために用いられる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

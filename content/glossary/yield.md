@@ -19,7 +19,10 @@ related_terms:
 description: 歩留まりは、製造した製品のうち良品が占める割合である。半導体ではウェーハ上のチップのうち検査に合格したものの割合を指し、製造コストに直結する。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

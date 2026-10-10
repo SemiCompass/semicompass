@@ -15,7 +15,10 @@ related_terms:
 description: ワイヤボンディングは、チップ上の電極と基板や端子を細い金属線で一本ずつつなぐ接続方法。組立工程で、チップの固定後、封止の前に行う。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

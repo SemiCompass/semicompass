@@ -17,7 +17,10 @@ related_terms:
 description: プロセスノードは半導体の製造技術の世代を表す呼び方で、微細化は回路を小さく作る取り組み。性能や消費電力、チップ面積に関わる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

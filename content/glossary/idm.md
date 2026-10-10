@@ -21,7 +21,10 @@ related_terms:
 description: IDMは、半導体の設計から製造、組立、検査までを自社で一貫して担う企業の形態である。設計に専念するファブレスや製造受託のファウンドリと対比される。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

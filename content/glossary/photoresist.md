@@ -16,7 +16,10 @@ related_terms:
 description: 光などの照射で現像液への溶けやすさが変わる感光性材料。リソグラフィでウェーハに塗り、回路パターンを写し取る役割を持つ。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

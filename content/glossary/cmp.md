@@ -20,7 +20,10 @@ related_terms:
 description: CMP（化学機械研磨）は、ウェーハ表面を化学作用と機械的な研磨で平らにする加工。成膜やエッチングで生じた凹凸をならし、次の層の加工を行いやすくする。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

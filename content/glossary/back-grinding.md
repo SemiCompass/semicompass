@@ -15,7 +15,10 @@ related_terms:
 description: バックグラインドは、回路を形成し終えたウェーハの裏面を研削して薄くする加工である。パッケージへの収まりや放熱、チップの積層のために行い、ダイシングの前に置かれる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

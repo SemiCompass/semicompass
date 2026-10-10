@@ -15,7 +15,10 @@ related_terms:
 description: CVDは、原料ガスの化学反応でウェーハ上に薄い膜を堆積させる成膜法。絶縁膜や金属膜などの形成に使われ、半導体の前工程で繰り返し用いられる。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---

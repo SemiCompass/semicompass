@@ -22,7 +22,10 @@ related_terms:
 description: 半導体チップの回路を作り込む土台となる、高純度のシリコン単結晶から作られた薄い円板状の基板。表面は鏡のように平坦に磨かれている。
 basis: reviewed
 published_at: '2026-10-09'
-draft: true
+reviewed_on: '2026-10-10'
+review_methods:
+- operator_knowledge
+draft: false
 ai_generated: true
 sources: []
 ---
