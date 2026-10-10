@@ -2,7 +2,7 @@
 company: resonac
 reviewed_filing: S100XTT8
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

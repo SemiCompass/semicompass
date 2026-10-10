@@ -2,7 +2,7 @@
 company: disco
 reviewed_filing: S100YC6I
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

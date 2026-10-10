@@ -2,7 +2,7 @@
 company: tokyo-ohka-kogyo
 reviewed_filing: S100XT0N
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

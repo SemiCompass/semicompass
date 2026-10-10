@@ -10,8 +10,10 @@ categories:
   - devices
   - front-end
 processes: []
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-10"
 tagline: "熊本県で半導体の受託製造工場を運営する、台湾積体電路製造の子会社"
+recruit_url: "https://careers.tsmc.com/"
 ir_url: "https://investor.tsmc.com/english"
 parent:
   name: "台湾積体電路製造"
@@ -23,6 +25,7 @@ selection:
   basis: domestic_fab
   note: "運営者が掲載企業リスト（第1.0版）で承認。国内の主要な生産拠点は、公開資料で確認予定"
   decided_on: "2026-10-04"
+  source: S1
 sources:
   - id: S1
     title: "JASM Set to Expand in Kumamoto, Japan"

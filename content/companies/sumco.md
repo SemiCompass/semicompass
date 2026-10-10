@@ -2,7 +2,7 @@
 company: sumco
 reviewed_filing: S100XRR5
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

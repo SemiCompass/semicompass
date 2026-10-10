@@ -2,7 +2,7 @@
 company: shin-etsu-chemical
 reviewed_filing: S100YE9I
 published_at: '2026-10-06'
-draft: true
+draft: false
 ai_generated: true
 sources:
 - id: S1

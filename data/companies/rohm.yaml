@@ -11,7 +11,8 @@ edinet_code: E01953
 categories:
   - devices
 processes: []
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-10"
 tagline: "LSIやパワー半導体素子などの半導体を作る企業"
 website_url: "https://www.rohm.co.jp"
 ir_url: "https://www.rohm.co.jp/ir"

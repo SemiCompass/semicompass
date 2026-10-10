@@ -12,7 +12,8 @@ categories:
   - design
 processes:
   - circuit-design
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-10"
 tagline: "SoC（システムオンチップ）を設計・開発・販売するファブレス半導体企業"
 website_url: "https://www.socionext.com/jp/"
 ir_url: "https://www.socionext.com/jp/ir/"

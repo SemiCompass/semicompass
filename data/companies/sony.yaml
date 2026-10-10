@@ -10,17 +10,21 @@ securities_code: "6758"
 edinet_code: E01777
 categories:
   - devices
-listing: coming_soon
+processes: []
+listing: detailed
+detailed_since: "2026-10-10"
 tagline: "ゲーム、音楽、映画、イメージセンサーなどの事業を持つ企業グループ"
 website_url: "https://www.sony.com/ja/"
 ir_url: "https://www.sony.com/ja/SonyInfo/IR/"
 recruit_url: "https://www.sony.com/ja/SonyInfo/Jobs/"
 accounting_standard: ifrs
 fiscal_year_end_month: 3
+is_holding_company: true
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S1
 sources:
   - id: S1
     title: "有価証券報告書（2026年3月期）"

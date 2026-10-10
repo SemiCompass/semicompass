@@ -15,7 +15,8 @@ processes:
   - cleaning
   - lithography
   - inspection-metrology
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-10"
 tagline: "半導体製造装置やディスプレイ製造装置などを手がけるグループの持株会社"
 website_url: "https://www.screen.co.jp/"
 ir_url: "https://www.screen.co.jp/ir"
