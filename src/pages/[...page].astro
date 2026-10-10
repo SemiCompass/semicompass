@@ -1,0 +1,54 @@
+---
+// 固定ページ（content/pages/*.md から作る。要件定義書 3.1）：/about/、/policy/、/disclaimer/、/privacy/、/external-transmission/、
+// /editorial-policy/、/contact/、/faq/、/about/roadmap/。draft: true は、プレビューのビルドだけ
+import { BUILD_ENV } from 'astro:env/server';
+import Button from '../components/Button.astro';
+import DataTable from '../components/DataTable.astro';
+import Notice from '../components/Notice.astro';
+import RichText from '../components/RichText.astro';
+import Page from '../layouts/Page.astro';
+import { loadPages, type StaticPage } from '../lib/pages';
+import { loadSite } from '../lib/site';
+
+export function getStaticPaths() {
+  return loadPages(BUILD_ENV === 'preview').map((page) => ({ params: { page: page.front.path.replace(/^\/|\/$/g, '') }, props: { page } }));
+}
+const { page } = Astro.props as { page: StaticPage };
+const f = page.front;
+const site = loadSite();
+const toc = [...page.sections.filter((s) => s.heading).map((s) => ({ id: s.id, label: s.heading })), ...(f.path === '/contact/' ? [{ id: 'form', label: '問い合わせフォーム' }] : [])];
+const crumbs = [{ label: 'ホーム', href: '/' }, ...(f.parent ? [f.parent] : []), { label: f.title }];
+const isContact = f.path === '/contact/';
+// 文中の [表示](/path/) を、リンクにする（それ以外の記法は使わない）
+const inline = (text: string) =>
+  [...text.matchAll(/\[([^\]]+)\]\((\/[a-z0-9/#-]*|https:\/\/[^)\s]+)\)|([^[]+|\[)/g)].map((m) => (m[1] ? { label: m[1], href: m[2] } : { text: m[3] ?? '' }));
+---
+
+<Page title={`${f.title}｜SemiCompass`} heading={f.title} description={f.description} breadcrumbs={crumbs} toc={toc} updatedAt={f.updated_at} aiGenerated={f.draft === true} aiDraft={f.draft === true} noindex={f.draft === true}>
+  {page.sections.map((section) => (
+    <section>
+      {section.heading && <h2 id={section.id}>{section.heading}</h2>}
+      {section.blocks.map((b) =>
+        b.kind === 'p' ? <p class="measure">{inline(b.text).map((s) => 'href' in s ? <a href={s.href}>{s.label}</a> : <RichText text={s.text} />)}</p>
+        : b.kind === 'ul' ? <ul class="measure">{b.items.map((i) => <li>{inline(i).map((s) => 'href' in s ? <a href={s.href}>{s.label}</a> : <RichText text={s.text} />)}</li>)}</ul>
+        : b.kind === 'ol' ? <ol class="measure">{b.items.map((i) => <li>{inline(i).map((s) => 'href' in s ? <a href={s.href}>{s.label}</a> : <RichText text={s.text} />)}</li>)}</ol>
+        : b.kind === 'h3' ? <h3 id={b.id || undefined}>{b.text}</h3>
+        : <div class="static-table"><DataTable caption={section.heading || f.title} columns={b.head.map((label, i) => ({ key: `c${i}`, label, wrap: true }))} rows={b.rows.map((r) => Object.fromEntries(r.map((c, i) => [`c${i}`, c])))} /></div>,
+      )}
+    </section>
+  ))}
+  {isContact && (
+    <section>
+      <h2 id="form">問い合わせフォーム</h2>
+      {site.contact_form_url
+        ? <p><Button href={site.contact_form_url} variant="primary">問い合わせフォームを開く（Googleフォーム）</Button></p>
+        : <Notice kind="warning" title="フォームは準備中です">問い合わせフォームは、準備ができ次第、ここに置きます。</Notice>}
+    </section>
+  )}
+</Page>
+
+<style>
+  .static-table {
+    margin-block: var(--space-4) var(--space-5);
+  }
+</style>

@@ -1,0 +1,36 @@
+---
+// 訂正一覧（/corrections/。要件定義書 3.1、CR-03）：content/ のファイルの先頭の項目 corrections（訂正日、内容）から、自動で作る。
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { parse } from 'yaml';
+import DataTable from '../../components/DataTable.astro';
+import StateMessage from '../../components/StateMessage.astro';
+import Page from '../../layouts/Page.astro';
+
+interface Entry { date: string; page: string; text: string }
+const root = process.cwd();
+function walk(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).flatMap((name) => {
+    const path = resolve(dir, name);
+    return statSync(path).isDirectory() ? walk(path) : path.endsWith('.md') ? [path] : [];
+  });
+}
+const entries: Entry[] = [];
+for (const file of walk(resolve(root, 'content'))) {
+  const m = /^---\n([\s\S]*?)\n---/.exec(readFileSync(file, 'utf-8').replace(/\r\n/g, '\n'));
+  if (!m) continue;
+  const front = parse(m[1]) as { title?: string; term?: string; draft?: boolean; corrections?: { date: string; text: string }[] } | null;
+  if (!front?.corrections || front.draft) continue;
+  const rel = file.slice(root.length + 1).replace(/^content\//, '').replace(/\.md$/, '');
+  for (const c of front.corrections) entries.push({ date: String(c.date), page: front.title ?? front.term ?? rel, text: c.text });
+}
+entries.sort((a, b) => b.date.localeCompare(a.date));
+---
+
+<Page title="訂正一覧｜SemiCompass" heading="訂正一覧" description="サイトの記載を訂正した日と内容の一覧です。" breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '訂正一覧' }]} wide>
+  <p class="measure">誤りを訂正したときは、訂正した日と内容をここに載せ、該当のページにも表示します。訂正の方針は<a href="/policy/">サイトポリシー</a>に書いています。</p>
+  {entries.length === 0
+    ? <StateMessage kind="empty" message="訂正した記載は、まだありません。" actionLabel="誤りを報告する" actionHref="/contact/" />
+    : <DataTable caption="訂正の一覧" columns={[{ key: 'date', label: '訂正日' }, { key: 'page', label: 'ページ', wrap: true }, { key: 'text', label: '訂正の内容', wrap: true }]} rows={entries.map((e) => ({ date: e.date, page: e.page, text: e.text }))} />}
+</Page>
