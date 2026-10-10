@@ -264,6 +264,7 @@ class MenuTest(unittest.TestCase):
         for required in ("/faq/", "/corrections/", "/about/roadmap/", "/policy/", "/privacy/", "/disclaimer/",
                          "/external-transmission/", "/editorial-policy/", "/contact/", "/about/"):
             self.assertIn(required, paths)  # 要件定義書 3.1、3.2 のフッターのリンク
+        self.assertRegex(data["note"]["url"], r"^https://note\.com/[A-Za-z0-9_]+$")  # FR-708（URLはここに1か所だけ）
 
 
 @unittest.skipUnless(HAS_NODE, "node_modules がない")
@@ -291,11 +292,13 @@ class BuildTest(unittest.TestCase):
         self.assertTrue((production / "index.html").is_file())
 
     def test_pages_have_the_frame_and_menu_in_config_order(self):
+        note_url = yaml.safe_load((ROOT / "config" / "menu.yaml").read_text(encoding="utf-8"))["note"]["url"]
         dist = self.build("preview")
         for path in dist.rglob("*.html"):
             html = path.read_text(encoding="utf-8")
             self.assertIn('class="skip-link"', html, path.name)
             self.assertIn("site-footer", html, path.name)
+            self.assertIn(note_url, html, path.name)  # FR-708：全ページにnoteへのリンク（URLは config/menu.yaml の1か所）
         html = (dist / "index.html").read_text(encoding="utf-8")
         self.assertEqual(html.count("<h1"), 1)
         self.assertRegex(html, r"企業</a>.*工程</a>.*ニュース</a>")

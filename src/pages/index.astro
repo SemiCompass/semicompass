@@ -5,9 +5,12 @@ import SearchBox from '../components/SearchBox.astro';
 import Phrase from '../components/Phrase.astro';
 import StateMessage from '../components/StateMessage.astro';
 import Base from '../layouts/Base.astro';
+import ExternalLink from '../components/ExternalLink.astro';
 import { loadSupply } from '../lib/companies';
+import { loadMenu } from '../lib/menu';
 
 const supply = loadSupply();
+const { note } = loadMenu();
 const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.categories.find((c) => c.slug === slug)?.name ?? slug }));
 ---
 
@@ -42,6 +45,8 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
       <h2 id="latest-news">新着のニュース解説</h2>
       <StateMessage kind="empty" message="ニュース解説は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
     </section>
+
+    <p class="measure home__note">運営者は、noteでも発信しています。<ExternalLink href={note.url}>{note.label}</ExternalLink></p>
   </div>
 </Base>
 
@@ -101,6 +106,13 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
   }
   .home__news {
     margin-block-start: var(--space-7);
+  }
+  .home__note {
+    margin-block-start: var(--space-6);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
   }
   .home__news h2 {
     margin-block-start: 0;
