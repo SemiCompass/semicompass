@@ -17,7 +17,7 @@ const stages = [...new Set(supply.processes.map((p) => p.stage))]
   breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '工程' }]}
   wide
 >
-  <p class="measure">半導体は、設計から前工程、後工程までの多くの工程を経て作られます。工程の名前を選ぶと、その工程の説明と、関わる企業の一覧を見られます。</p>
+  <p class="measure">半導体は、設計から前工程、後工程までの多くの工程を経て作られます。工程の名前を選ぶと、その工程の説明と、関わる企業の一覧を見られます。全体を1枚で見渡すには、<a href="/supply-chain/">サプライチェーンマップ</a>を使えます。</p>
   {stages.map((stage) => (
     <section aria-labelledby={`stage-${stage.slug}`}>
       <h2 id={`stage-${stage.slug}`}>{stage.name}</h2>
