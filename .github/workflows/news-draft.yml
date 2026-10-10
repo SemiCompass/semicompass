@@ -76,9 +76,6 @@ jobs:
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
             | jq -r .value > "$RUNNER_TEMP/gha-jwt"
           test -s "$RUNNER_TEMP/gha-jwt"
-          # 連携のルールが何を見ているかを確かめるため、認証の情報の中身（秘密ではない項目だけ）を表示する
-          jq -R 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | . + ("=" * ((4 - (length % 4)) % 4)) | @base64d | fromjson | {iss, aud, sub, ref, event_name, environment, job_workflow_ref, workflow_ref, repository, runner_environment}' \
-            "$RUNNER_TEMP/gha-jwt" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: 下書きを作る（元記事の本文は出さない）
         id: run
