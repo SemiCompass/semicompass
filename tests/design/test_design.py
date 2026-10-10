@@ -296,6 +296,8 @@ class BuildTest(unittest.TestCase):
         dist = self.build("preview")
         for path in dist.rglob("*.html"):
             html = path.read_text(encoding="utf-8")
+            if 'http-equiv="refresh"' in html[:400]:
+                continue  # 転送だけのページ（astro.config.mjs の redirects。例：/supply-chain/）は、画面の枠を持たない
             self.assertIn('class="skip-link"', html, path.name)
             self.assertIn("site-footer", html, path.name)
             self.assertIn(note_url, html, path.name)  # FR-708：全ページにnoteへのリンク（URLは config/menu.yaml の1か所）
