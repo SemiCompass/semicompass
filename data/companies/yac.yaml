@@ -10,8 +10,23 @@ securities_code: "6298"
 edinet_code: E02008
 categories:
   - equipment
+processes:
+  - oxidation-diffusion
+  - etching
+  - final-test
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "半導体・メカトロニクス関連事業"
+    publisher: "ワイエイシイホールディングス株式会社"
+    url: "https://www.yac.co.jp/ja/business/mechatronics.html"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "イオンビームミリング装置"
+    publisher: "ワイエイシイビーム株式会社"
+    url: "https://www.yac.co.jp/ja/beam/product/beam/detail_01.html"
+    accessed_on: "2026-10-11"

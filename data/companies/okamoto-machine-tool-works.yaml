@@ -11,8 +11,22 @@ edinet_code: E01493
 categories:
   - equipment
   - back-end
+processes:
+  - wafer
+  - dicing
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "Okamotoと半導体"
+    publisher: "株式会社岡本工作機械製作所"
+    url: "https://www.okamoto.co.jp/company/semiconductor/"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "200mm/300mmバックグラインダー GNX200B / 300B"
+    publisher: "株式会社岡本工作機械製作所"
+    url: "https://www.okamoto.co.jp/products/gnx200b/"
+    accessed_on: "2026-10-11"

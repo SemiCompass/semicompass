@@ -11,8 +11,16 @@ edinet_code: E36545
 categories:
   - equipment
   - front-end
+processes:
+  - cleaning
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "2025年12月期第1四半期決算説明資料"
+    publisher: "株式会社ジェイ・イー・ティ"
+    url: "https://www2.jpx.co.jp/disc/62280/140120250430527293.pdf"
+    accessed_on: "2026-10-11"

@@ -11,8 +11,23 @@ edinet_code: E01589
 categories:
   - equipment
   - front-end
+processes:
+  - deposition
+  - etching
+  - ion-implantation
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "Power Device Solutions"
+    publisher: "株式会社アルバック"
+    url: "https://www.ulvac.co.jp/special/en/power-device/"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "半導体及び電子部品製造装置"
+    publisher: "株式会社アルバック"
+    url: "https://www.ulvac.co.jp/business/semiconductor_electronic_device_production_equipment/"
+    accessed_on: "2026-10-11"

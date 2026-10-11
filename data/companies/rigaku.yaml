@@ -11,8 +11,16 @@ edinet_code: E39892
 categories:
   - test
   - equipment
+processes:
+  - inspection-metrology
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "TXRF310Fab"
+    publisher: "リガク・ホールディングス株式会社"
+    url: "https://rigaku.com/products/semiconductor-metrology/txrf/txrf310fab"
+    accessed_on: "2026-10-11"
