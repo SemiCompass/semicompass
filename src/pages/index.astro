@@ -11,6 +11,10 @@ import ExternalLink from '../components/ExternalLink.astro';
 import { dateLabel, loadCompanies, loadSupply } from '../lib/companies';
 import { loadMenu } from '../lib/menu';
 import { loadNews } from '../lib/news';
+import Chart from '../components/Chart.astro';
+import SupplyMapSvg from '../components/SupplyMapSvg.astro';
+import { companyRows, loadChartColors } from '../lib/companies';
+import { buildSupplyMap, type MapProcess, type MapStage } from '../lib/supplyMap';
 
 const supply = loadSupply();
 const { note } = loadMenu();
@@ -22,6 +26,20 @@ const companyTags = (slugs: string[]) =>
     const c = companies.find((x) => x.slug === slug);
     return c ? [{ slug, name: c.short_names[0] ?? c.name }] : [];
   });
+// 【試作】工程の全体図と、売上高の大きい企業のグラフ
+const supplyAll = loadSupply() as unknown as { categories: MapStage[]; processes: MapProcess[] };
+const rowsAll = companyRows(BUILD_ENV === 'preview');
+const counts: Record<string, number> = {};
+for (const r of rowsAll) for (const p of r.company.processes) counts[p] = (counts[p] ?? 0) + 1;
+const mapCompact = buildSupplyMap(supplyAll.categories, supplyAll.processes, counts, 'compact');
+const mapWide = buildSupplyMap(supplyAll.categories, supplyAll.processes, counts, 'wide');
+// 半導体関連の売上高 ＝ 売上高 × 半導体関連の比率（セグメント対応表による本サイトの分類。企業ページと同じ値）
+const semi = (r: (typeof rowsAll)[number]) => (r.sales !== null && r.ratio !== null ? Math.round((r.sales * r.ratio) / 100) : null);
+const ranked = rowsAll.filter((r) => r.detailed && semi(r) !== null).sort((a, b) => (semi(b) ?? 0) - (semi(a) ?? 0)).slice(0, 10);
+const colors = loadChartColors();
+const salesSpec = { kind: 'hbar' as const, unit: '億円', decimals: 0, labelLatest: false,
+  categories: ranked.map((r) => { const n = (r.company.short_names[0] ?? r.company.name).replace(/・?(ホールディングス|グループ)$/, ""); return { label: n, short: n.length > 8 ? `${n.slice(0, 7)}…` : n, lines: [n] }; }),
+  series: [{ name: '半導体関連の売上高', color: colors.metrics.net_sales.color, values: ranked.map(semi) }] };
 const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.categories.find((c) => c.slug === slug)?.name ?? slug }));
 ---
 
@@ -51,6 +69,23 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
         <dd><SearchBox id="home-search" /></dd>
       </div>
     </dl>
+
+    <section aria-labelledby="home-map-title" class="home__map">
+      <h2 id="home-map-title">半導体ができるまで</h2>
+      <p class="measure">材料から設計、前工程、後工程まで。箱は工程で、数はその工程に関わる掲載企業の数です。箱を選ぶと、その工程の企業の一覧へ移動します。</p>
+      <div class="home__map-plot">
+        <SupplyMapSvg model={mapCompact} title="半導体の工程の全体図" hrefBase="/processes/" />
+        <SupplyMapSvg model={mapWide} title="半導体の工程の全体図" hrefBase="/processes/" />
+      </div>
+    </section>
+
+    <section aria-labelledby="home-sales-title" class="home__sales">
+      <h2 id="home-sales-title">半導体の売上が大きい企業</h2>
+      <p class="measure">連結の売上高に、半導体関連の事業の比率を掛けた値です。総合メーカーも、半導体の部分だけで比べられます。</p>
+      <Chart id="home-sales" title="半導体関連の売上高（最新の通期）の上位10社" unit="億円" period="各社の最新の通期（決算期は企業により異なる）" spec={salesSpec}
+        source={{ title: '有価証券報告書', publisher: 'EDINET（金融庁）', accessedOn: '2026-10-11' }} />
+      <p class="home__more"><a href="/companies/">20社の売上高・営業利益率・平均年間給与を表で比べる</a></p>
+    </section>
 
     <section aria-labelledby="latest-news" class="home__news">
       <h2 id="latest-news">新着のニュース解説</h2>
@@ -146,6 +181,35 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
     margin-block-start: 0;
   }
   /* 新着のニュース解説：1件ずつ罫線で区切る（ニュースの一覧と同じ並べ方。仕様書 9.6） */
+  .home__map,
+  .home__sales {
+    margin-block-start: var(--space-7);
+  }
+  .home__map h2,
+  .home__sales h2 {
+    margin-block-start: 0;
+  }
+  .home__map-plot {
+    overflow-x: auto;
+    padding-block: var(--space-3);
+  }
+  .home__map-plot :global(.map-svg) {
+    display: block;
+  }
+  .home__map-plot :global(.map-svg--wide) {
+    display: none;
+  }
+  @media (--tablet) {
+    .home__map-plot :global(.map-svg--compact) {
+      display: none;
+    }
+    .home__map-plot :global(.map-svg--wide) {
+      display: block;
+    }
+  }
+  .home__more {
+    margin-block-start: var(--space-3);
+  }
   .home-news {
     max-width: var(--content-max-width);
     margin: var(--space-4) 0 0;
