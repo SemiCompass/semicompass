@@ -11,8 +11,16 @@ edinet_code: E01929
 categories:
   - equipment
   - front-end
+processes:
+  - lithography
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "投影露光装置「UX-4シリーズ」"
+    publisher: "ウシオ電機株式会社"
+    url: "https://www.ushio.co.jp/jp/products/1025.html"
+    accessed_on: "2026-10-11"

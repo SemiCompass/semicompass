@@ -12,8 +12,28 @@ categories:
   - equipment
   - front-end
   - back-end
+processes:
+  - cleaning
+  - lithography
+  - cmp
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "CSXシリーズ"
+    publisher: "タツモ株式会社"
+    url: "https://tazmo.co.jp/products_cate/handoutai/csx"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "CENOTE"
+    publisher: "タツモ株式会社"
+    url: "https://tazmo.co.jp/products_cate/handoutai/cenote"
+    accessed_on: "2026-10-11"
+  - id: S3
+    title: "New MX2000"
+    publisher: "タツモ株式会社"
+    url: "https://tazmo.co.jp/products_cate/handoutai/new-mx2000"
+    accessed_on: "2026-10-11"

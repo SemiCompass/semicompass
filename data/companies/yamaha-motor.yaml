@@ -11,8 +11,17 @@ edinet_code: E02168
 categories:
   - equipment
   - back-end
+processes:
+  - bonding
+  - packaging
 listing: coming_soon
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "SEMI事業説明会 質疑応答（2026年9月10日）"
+    publisher: "ヤマハ発動機株式会社"
+    url: "https://global.yamaha-motor.com/jp/ir/library/report/pdf/2026/semi_qa_Jp.pdf"
+    accessed_on: "2026-10-11"
