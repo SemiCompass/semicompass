@@ -260,6 +260,19 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("role=\"search\"", html)
         self.assertIn("新着のニュース解説", html)
 
+    def test_home_lists_latest_news_up_to_five(self):
+        # 公開しているニュース解説を、トップに新しい順で最大5件出す（仕様書 9.1 の4）。0件のときだけ「まだありません」
+        for env in ("preview", "production"):
+            html = self.read(self.build(env), "index.html")
+            news_dir = ROOT / "content" / "news"
+            published = [p for p in news_dir.glob("*.md") if env == "preview" or not re.search(r"^draft: true$", p.read_text(encoding="utf-8"), re.M)]
+            items = re.findall(r'<li class="home-news__item"', html)
+            self.assertEqual(len(items), min(5, len(published)), env)
+            if published:
+                self.assertNotIn("ニュース解説は、まだありません。", html)
+                self.assertIn('href="/news/"', html.split("<main")[1])
+        self.assertNotIn("広告主", self.read(self.build("production"), "index.html").split("<main")[1])
+
     def fixture_site(self, env: str) -> Path:
         """試験用の用語2件（公開1件、下書き1件）と、工程の解説1件を置いた、作業用のコピーで組み立てる。"""
         slug = self.processes[0]["slug"]

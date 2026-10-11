@@ -1,24 +1,35 @@
 ---
-// トップページ（/。要件定義書 3.3、仕様書 9.1）：説明の一文（h1）→ サイトの説明 → 3つの入口 → 新着のニュース解説。
+// トップページ（/。要件定義書 3.3、仕様書 9.1）：説明の一文（h1）→ サイトの説明 → 3つの入口 → 新着のニュース解説（最大5件）。
 // 最初の画面（幅360px、高さ約640px）に、説明と3つの入口が収まる。同じ形のカードを3つ並べない（定義の一覧）
+import { BUILD_ENV } from 'astro:env/server';
 import SearchBox from '../components/SearchBox.astro';
 import Phrase from '../components/Phrase.astro';
 import StateMessage from '../components/StateMessage.astro';
+import Tag from '../components/Tag.astro';
 import Base from '../layouts/Base.astro';
 import ExternalLink from '../components/ExternalLink.astro';
-import { loadSupply } from '../lib/companies';
+import { dateLabel, loadCompanies, loadSupply } from '../lib/companies';
 import { loadMenu } from '../lib/menu';
+import { loadNews } from '../lib/news';
 
 const supply = loadSupply();
 const { note } = loadMenu();
+// 新着のニュース解説（仕様書 9.1 の4）：新しい順に最大5件。日付、見出し、関係する企業のタグ
+const news = loadNews(BUILD_ENV === 'preview').slice(0, 5);
+const companies = loadCompanies();
+const companyTags = (slugs: string[]) =>
+  slugs.flatMap((slug) => {
+    const c = companies.find((x) => x.slug === slug);
+    return c ? [{ slug, name: c.short_names[0] ?? c.name }] : [];
+  });
 const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.categories.find((c) => c.slug === slug)?.name ?? slug }));
 ---
 
-<Base title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="日本の半導体業界を、企業・工程・ニュースでつなげて理解する情報サイト。数値には出典を付け、広告主の意向で内容を変えません。">
+<Base title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="半導体ができるまでの工程と、そこに関わる日本の企業を、図と業績の数字でたどれる情報サイト。ニュースは、どの工程・どの企業に関わるかまで解説します。">
   <div class="container home">
     <h1 class="home__title"><Phrase text="日本の半導体業界を、企業・工程・ニュースでつなげて理解する" /></h1>
     <p class="lead measure home__lead">
-      半導体業界の情報サイトです。企業・工程・ニュースを行き来して理解できます。数値には出典を付け、広告主の意向で内容を変えません。
+      半導体の工程と、そこに関わる日本の企業を、図と業績の数字でたどれます。
     </p>
 
     <dl class="entries">
@@ -33,7 +44,7 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
       </div>
       <div class="entries__item">
         <dt><a href="/news/">ニュース・テーマから探す</a></dt>
-        <dd>ニュース解説の一覧を見ます。</dd>
+        <dd>何が起きたか、なぜ重要か、どの工程・企業に関わるかを解説します。</dd>
       </div>
       <div class="entries__item">
         <dt>企業名・証券コードで探す</dt>
@@ -43,7 +54,24 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
 
     <section aria-labelledby="latest-news" class="home__news">
       <h2 id="latest-news">新着のニュース解説</h2>
-      <StateMessage kind="empty" message="ニュース解説は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
+      {news.length === 0 ? (
+        <StateMessage kind="empty" message="ニュース解説は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
+      ) : (
+        <>
+          <ol class="home-news">
+            {news.map((n) => (
+              <li class="home-news__item">
+                <time class="home-news__date" datetime={n.front.published_at}>{dateLabel(n.front.published_at)}</time>
+                <h3 class="home-news__title"><a href={n.url}><Phrase text={n.front.title} /></a></h3>
+                {companyTags(n.front.tags.companies).length > 0 && (
+                  <p class="home-news__tags">{companyTags(n.front.tags.companies).map((c) => <Tag href={`/companies/${c.slug}/`} kind="企業">{c.name}</Tag>)}</p>
+                )}
+              </li>
+            ))}
+          </ol>
+          <p class="home-news__more"><a href="/news/">ニュース解説の一覧</a></p>
+        </>
+      )}
     </section>
 
     <p class="measure home__note">運営者は、noteでも発信しています。<ExternalLink href={note.url}>{note.label}</ExternalLink></p>
@@ -116,6 +144,42 @@ const stages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.cat
   }
   .home__news h2 {
     margin-block-start: 0;
+  }
+  /* 新着のニュース解説：1件ずつ罫線で区切る（ニュースの一覧と同じ並べ方。仕様書 9.6） */
+  .home-news {
+    max-width: var(--content-max-width);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    list-style: none;
+  }
+  .home-news__item {
+    padding-block: var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .home-news__date {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .home-news__title {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-h3);
+    line-height: var(--text-h3-leading);
+  }
+  .home-news__title a {
+    display: inline-block;
+    min-height: var(--target-min);
+  }
+  .home-news__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+  }
+  .home-news__more {
+    margin-block-start: var(--space-4);
   }
   @media (--tablet) {
     .home__news {
