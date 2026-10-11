@@ -265,7 +265,7 @@ class PagesBuildTest(unittest.TestCase):
         html = self.read(self.build("production"), "index.html")
         main = html.split("<main")[1]
         self.assertIn("半導体ができるまで", main)
-        self.assertEqual(main.count('class="stage-summary__item"'), 4)  # 設計、材料、前工程、後工程
+        self.assertEqual(main.count('class="stage-summary__item"'), 5)  # 設計、材料、前工程、後工程、工場設備
         self.assertIn('class="map-svg map-svg--wide"', main)
         self.assertIn('href="/processes/#p-', main)  # 全体図の箱は、工程の一覧のページの工程へ
         self.assertNotIn('href="#p-', main)
@@ -273,6 +273,17 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("出典：有価証券報告書", main)
         self.assertIn("ニュースから探す", main)
         self.assertNotIn("ニュース・テーマから探す", main)
+
+    def test_facilities_band_on_home_and_processes(self):
+        # 工場設備（分類 facilities）：特定の工程ではなく工場全体を支える会社。全体図の下の帯から、分類の企業の一覧へ
+        dist = self.build("production")
+        n = sum(1 for c in self.companies if "facilities" in (c.get("categories") or []))
+        self.assertGreater(n, 0)
+        for page in ("index.html", "processes/index.html"):
+            main = self.read(dist, page).split("<main")[1]
+            self.assertIn('class="facilities-band" href="/companies/process/facilities/"', main, page)
+            self.assertIn(f"{n}社", main, page)
+        self.assertTrue((dist / "companies" / "process" / "facilities" / "index.html").exists())
 
     def test_home_lists_latest_news_up_to_five(self):
         # 公開しているニュース解説を、トップに新しい順で最大5件出す（仕様書 9.1 の4）。0件のときだけ「まだありません」

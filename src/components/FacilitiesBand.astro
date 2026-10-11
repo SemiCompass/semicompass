@@ -1,0 +1,55 @@
+---
+// 工場設備の帯（仕様書 9.1 の4、工程の全体図の下）：特定の工程ではなく、工場全体を支える製品の会社（分類 facilities）。
+// 全体図の工程の箱と同じ見た目（面、強い枠、リンクの色）で、横長に1つ置く。押すと、分類の企業の一覧（/companies/process/facilities/）を開く
+import { loadCompanies, loadSupply } from '../lib/companies';
+
+const supply = loadSupply();
+const category = supply.categories.find((c) => c.slug === 'facilities') as { slug: string; name: string; description?: string } | undefined;
+const count = loadCompanies().filter((c) => c.categories.includes('facilities')).length;
+---
+
+{category && count > 0 && (
+  <a class="facilities-band" href={`/companies/process/${category.slug}/`}>
+    <span class="facilities-band__name">{category.name}</span>
+    <span class="facilities-band__desc">{category.description}</span>
+    <span class="facilities-band__count">{count}社</span>
+  </a>
+)}
+
+<style>
+  .facilities-band {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-4);
+    min-height: var(--target-min);
+    margin-block-start: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
+    text-decoration: none;
+  }
+  .facilities-band__name {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+    text-decoration: underline;
+  }
+  .facilities-band__desc {
+    flex-grow: 1;
+    min-width: 0;
+    color: var(--color-text);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .facilities-band__count {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .facilities-band:hover {
+    background: var(--color-primary-tint);
+  }
+  .facilities-band:hover .facilities-band__name {
+    color: var(--color-primary-hover);
+  }
+</style>

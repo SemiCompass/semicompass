@@ -24,6 +24,10 @@ categories:
   - slug: test
     name: 検査
     order: 7
+  - slug: facilities
+    name: 工場設備
+    order: 8
+    description: 特定の工程ではなく、工場全体を支える製品（搬送、超純水、ガス供給、ウェーハの容器）
 
 processes:
   - slug: circuit-design
