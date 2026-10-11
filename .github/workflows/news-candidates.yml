@@ -174,5 +174,7 @@ jobs:
           git -C "$dir" config user.name "github-actions[bot]"
           git -C "$dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C "$dir" add ops
+          # 候補が0件のときは、candidates.json があっても追記する行がない。差分がなければ、記録せずに終える（空のコミットで失敗しない）
+          if git -C "$dir" diff --cached --quiet; then echo "追記するものがない（候補0件）"; exit 0; fi
           git -C "$dir" commit --quiet -m "ニュース候補の記録（news-candidates、実行 ${GITHUB_RUN_ID}）"
           git -C "$dir" push --quiet origin ops-log
