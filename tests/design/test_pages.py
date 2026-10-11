@@ -181,6 +181,36 @@ class PagesBuildTest(unittest.TestCase):
             # 工程ごとの一覧
             self.assertTrue(list((dist / "companies" / "process").glob("*/index.html")))
 
+    def test_internal_links_point_to_existing_pages(self):
+        # 出力したすべてのページの、サイトの中へのリンク（href="/..."）が、出力したページか転送を指す。
+        # 企業を詳細掲載に切り替えたときに、分類のタグが存在しないページを指していた不具合（本番で29か所）を防ぐ
+        for env in ("preview", "production"):
+            dist = self.build(env)
+            pages = set()
+            for f in dist.rglob("*.html"):
+                rel = f.relative_to(dist).as_posix()
+                pages.add("/" + (rel[: -len("index.html")] if rel.endswith("index.html") else rel))
+            broken: dict[str, set[str]] = {}
+            for f in dist.rglob("*.html"):
+                if f.relative_to(dist).parts[0] == "dev":
+                    continue  # 部品の一覧（プレビューだけ）は、見本のリンク（/companies/sample/ など）を並べる
+                for href in re.findall(r'href="(/[^"#?]*)', f.read_text(encoding="utf-8")):
+                    last = href.rstrip("/").rsplit("/", 1)[-1]
+                    if href.startswith("/_astro/") or "." in last:
+                        continue  # CSS・スクリプト・画像・robots.txt などのファイル
+                    if href not in pages:
+                        broken.setdefault(href, set()).add(f.relative_to(dist).as_posix())
+            self.assertEqual({k: sorted(v)[:3] for k, v in broken.items()}, {}, f"{env}: リンク先のページがない")
+
+    def test_category_pages_list_companies_of_the_category(self):
+        dist = self.build("production")
+        supply = yaml.safe_load((ROOT / "data" / "supply-chain.yaml").read_text(encoding="utf-8"))
+        for category in supply["categories"]:
+            html = self.read(dist, f"companies/process/{category['slug']}/index.html")
+            self.assertIn(f"{category['name']}の企業", html)
+            expected = sum(1 for c in self.companies if category["slug"] in (c.get("categories") or []))
+            self.assertEqual(len(re.findall(r"<tr[^>]*data-index", html)), expected, category["slug"])
+
     def test_production_shows_draft_companies_as_coming_soon(self):
         # 企業はすべて公開済み。下書き（draft: true）の企業を2社置いたコピーで、本番にだけ出ない（Coming Soon になる）ことを確かめる
         drafts = ("tokyo-electron", "sony")
