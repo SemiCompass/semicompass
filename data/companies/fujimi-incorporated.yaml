@@ -10,8 +10,22 @@ securities_code: "5384"
 edinet_code: E01207
 categories:
   - materials
+processes:
+  - wafer
+  - cmp
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "製品ラインナップ（半導体デバイス）"
+    publisher: "株式会社フジミインコーポレーテッド"
+    url: "https://www.fujimiinc.co.jp/service/cmp/lineup.html"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "製品ラインナップ（シリコンウェハー）"
+    publisher: "株式会社フジミインコーポレーテッド"
+    url: "https://www.fujimiinc.co.jp/service/silicon/lineup.html"
+    accessed_on: "2026-10-11"

@@ -10,8 +10,21 @@ securities_code: "7741"
 edinet_code: E01124
 categories:
   - materials
+processes:
+  - photomask
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "事業紹介"
+    publisher: "HOYA株式会社"
+    url: "https://www.hoya.com/business/"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "Information Technology Business（統合報告書2023）"
+    publisher: "HOYA株式会社"
+    url: "https://www.hoya.com/ir/2023/en/review/it.html"
+    accessed_on: "2026-10-11"

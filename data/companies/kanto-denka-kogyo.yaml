@@ -10,8 +10,22 @@ securities_code: "4047"
 edinet_code: E00772
 categories:
   - materials
+processes:
+  - deposition
+  - etching
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "特殊ガス製品"
+    publisher: "関東電化工業株式会社"
+    url: "https://www.kantodenka.co.jp/product/gas/"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "KSG-14"
+    publisher: "関東電化工業株式会社"
+    url: "https://www.kantodenka.co.jp/product_new/ksg14/"
+    accessed_on: "2026-10-11"

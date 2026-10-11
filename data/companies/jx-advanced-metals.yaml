@@ -10,8 +10,23 @@ securities_code: "5016"
 edinet_code: E01081
 categories:
   - materials
+processes:
+  - deposition
+  - interconnect
+  - packaging
 listing: coming_soon
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "半導体・センサー"
+    publisher: "JX金属株式会社"
+    url: "https://www.jx-nmm.com/products/semiconductor_sensor/"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "スパッタリングターゲット"
+    publisher: "JX金属株式会社"
+    url: "https://www.jx-nmm.com/products/sputtering/"
+    accessed_on: "2026-10-11"

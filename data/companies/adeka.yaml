@@ -10,8 +10,25 @@ securities_code: "4401"
 edinet_code: E00878
 categories:
   - materials
+processes:
+  - deposition
+  - lithography
+  - etching
+  - interconnect
+  - advanced-packaging
 listing: coming_soon
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "半導体材料"
+    publisher: "株式会社ADEKA"
+    url: "https://www.adeka.co.jp/chemical/products/chip/"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "半導体（用途別）"
+    publisher: "株式会社ADEKA"
+    url: "https://www.adeka.co.jp/chemical/industry/chip/"
+    accessed_on: "2026-10-11"

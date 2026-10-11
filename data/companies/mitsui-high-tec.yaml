@@ -11,8 +11,16 @@ edinet_code: E02293
 categories:
   - back-end
   - materials
+processes:
+  - packaging
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "リードフレーム"
+    publisher: "株式会社三井ハイテック"
+    url: "https://www.mitsui-high-tec.com/products/lf/"
+    accessed_on: "2026-10-11"

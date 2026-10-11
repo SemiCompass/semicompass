@@ -10,8 +10,27 @@ securities_code: "4901"
 edinet_code: E00988
 categories:
   - materials
+processes:
+  - photomask
+  - cleaning
+  - deposition
+  - lithography
+  - etching
+  - cmp
+  - advanced-packaging
 listing: coming_soon
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "富士フイルムの半導体材料事業"
+    publisher: "富士フイルム株式会社"
+    url: "https://www.fujifilm.com/jp/ja/business/semiconductor-materials/overview"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "CMPスラリー"
+    publisher: "富士フイルム株式会社"
+    url: "https://www.fujifilm.com/jp/ja/business/semiconductor-materials/cmp"
+    accessed_on: "2026-10-11"
