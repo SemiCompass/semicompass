@@ -10,8 +10,24 @@ securities_code: "4091"
 edinet_code: E00783
 categories:
   - materials
+processes:
+  - oxidation-diffusion
+  - deposition
+  - etching
+  - ion-implantation
 listing: coming_soon
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "製品検索（電子機材ガス事業部）"
+    publisher: "日本酸素株式会社"
+    url: "https://nsc.jp.nipponsanso.com/denzaigas/product/"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "取扱い製品・サービス（エレクトロニクス）"
+    publisher: "日本酸素ホールディングス株式会社"
+    url: "https://jp.nipponsanso.com/business/electronics/product/"
+    accessed_on: "2026-10-11"

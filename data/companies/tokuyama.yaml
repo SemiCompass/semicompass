@@ -10,8 +10,28 @@ securities_code: "4043"
 edinet_code: E00768
 categories:
   - materials
+processes:
+  - wafer
+  - cleaning
+  - lithography
 listing: coming_soon
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "高純度多結晶シリコン"
+    publisher: "株式会社トクヤマ"
+    url: "https://www.tokuyama.co.jp/products/electronic_materials/polysilicon.html"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "電子工業用高純度IPA「IPA SE」"
+    publisher: "株式会社トクヤマ"
+    url: "https://www.tokuyama.co.jp/products/electronic_materials/ipa_se.html"
+    accessed_on: "2026-10-11"
+  - id: S3
+    title: "ポジ型フォトレジスト用現像液「SDシリーズ」"
+    publisher: "株式会社トクヤマ"
+    url: "https://www.tokuyama.co.jp/products/electronic_materials/sd.html"
+    accessed_on: "2026-10-11"

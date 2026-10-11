@@ -10,8 +10,22 @@ securities_code: "4183"
 edinet_code: E00840
 categories:
   - materials
+processes:
+  - lithography
+  - dicing
 listing: coming_soon
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "三井化学、次世代EUV露光用CNTペリクルの生産設備を設置"
+    publisher: "三井化学株式会社"
+    url: "https://jp.mitsuichemicals.com/content/dam/mitsuichemicals/sites/mci/documents/release/2024/240528_1.pdf"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "三井化学グループ、「SEMICON JAPAN 2025」に出展"
+    publisher: "三井化学株式会社"
+    url: "https://jp.mitsuichemicals.com/content/dam/mitsuichemicals/sites/mci/documents/release/2025/251209.pdf"
+    accessed_on: "2026-10-11"

@@ -11,8 +11,23 @@ edinet_code: E00819
 categories:
   - materials
   - back-end
+processes:
+  - dicing
+  - bonding
+  - packaging
 listing: coming_soon
 selection:
   basis: revenue_ratio
   note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+sources:
+  - id: S1
+    title: "情報通信材料営業本部"
+    publisher: "住友ベークライト株式会社"
+    url: "https://www.sumibe.co.jp/product/it-materials/index.html"
+    accessed_on: "2026-10-11"
+  - id: S2
+    title: "ダイシングテープ／UV剥離粘着テープ（スミライトFSL）"
+    publisher: "住友ベークライト株式会社"
+    url: "https://www.sumibe.co.jp/product/film-sheets/dicing-tape/sumilite-fsl/index.html"
+    accessed_on: "2026-10-11"
