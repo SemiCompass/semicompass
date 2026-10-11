@@ -5,6 +5,7 @@
 import { BUILD_ENV } from 'astro:env/server';
 import Chart from '../components/Chart.astro';
 import ExternalLink from '../components/ExternalLink.astro';
+import FacilitiesBand from '../components/FacilitiesBand.astro';
 import Phrase from '../components/Phrase.astro';
 import SearchBox from '../components/SearchBox.astro';
 import StateMessage from '../components/StateMessage.astro';
@@ -40,6 +41,10 @@ const stageSummary = orderedStages(supply.categories, supply.processes).map(({ s
   processes: items.length,
   companies: rows.filter((r) => r.company.processes.some((p) => items.some((i) => i.slug === p))).length,
 }));
+
+// 工場設備（分類 facilities）：特定の工程ではなく、工場全体を支える会社。スマートフォンの一覧の最後の行と、全体図の下の帯
+const facilities = supply.categories.find((c) => c.slug === 'facilities');
+const facilitiesCount = companies.filter((c) => c.categories.includes('facilities')).length;
 
 // 半導体関連の売上高の上位10社（9.1 の5）：売上高（最新の通期、連結）× 半導体関連の比率（セグメント対応表。企業ページと同じ値）
 const semi = (r: (typeof rows)[number]) => (r.sales !== null && r.ratio !== null ? Math.round((r.sales * r.ratio) / 100) : null);
@@ -85,7 +90,7 @@ const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: suppl
 
     <section aria-labelledby="home-map-title" class="home__map">
       <h2 id="home-map-title">半導体ができるまで</h2>
-      <p class="measure">設計と材料から、前工程、後工程を経て、半導体ができます。数は、その工程に関わる掲載企業の数です。</p>
+      <p class="measure">設計と材料から、前工程、後工程を経て、半導体ができます。数は、その工程に関わる掲載企業の数です。工場全体を支える設備の会社は、最後にまとめました。</p>
       <ol class="stage-summary">
         {stageSummary.map((s) => (
           <li class="stage-summary__item">
@@ -93,9 +98,16 @@ const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: suppl
             <span class="stage-summary__count">{s.processes}工程・{s.companies}社</span>
           </li>
         ))}
+        {facilities && facilitiesCount > 0 && (
+          <li class="stage-summary__item">
+            <a class="stage-summary__name" href={`/companies/process/${facilities.slug}/`}>{facilities.name}</a>
+            <span class="stage-summary__count">工場全体・{facilitiesCount}社</span>
+          </li>
+        )}
       </ol>
       <div class="home__map-plot">
         <SupplyMapSvg model={mapWide} title="半導体の工程の全体図" hrefBase="/processes/" />
+        <FacilitiesBand />
       </div>
       <p class="home__more"><a href="/processes/">工程の一覧と、工程ごとの企業を見る</a></p>
     </section>
@@ -252,8 +264,10 @@ const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: suppl
     .stage-summary {
       display: none;
     }
+    /* 工場設備の帯の幅を、全体図の幅に揃える（列の幅は、全体図の幅で決まる） */
     .home__map-plot {
-      display: block;
+      display: grid;
+      justify-content: start;
     }
   }
   .home__more {

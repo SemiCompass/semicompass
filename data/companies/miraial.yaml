@@ -10,6 +10,7 @@ securities_code: "4238"
 edinet_code: E02477
 categories:
   - materials
+  - facilities
 listing: coming_soon
 selection:
   basis: revenue_ratio

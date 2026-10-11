@@ -10,6 +10,7 @@ securities_code: "7970"
 edinet_code: E02388
 categories:
   - materials
+  - facilities
 listing: coming_soon
 selection:
   basis: revenue_ratio

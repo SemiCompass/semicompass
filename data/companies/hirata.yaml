@@ -10,6 +10,7 @@ securities_code: "6258"
 edinet_code: E01733
 categories:
   - equipment
+  - facilities
 listing: coming_soon
 selection:
   basis: revenue_ratio
