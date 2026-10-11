@@ -15,7 +15,6 @@ categories:
 processes:
   - cleaning
   - lithography
-  - cmp
 listing: coming_soon
 selection:
   basis: revenue_ratio
@@ -31,9 +30,4 @@ sources:
     title: "CENOTE"
     publisher: "タツモ株式会社"
     url: "https://tazmo.co.jp/products_cate/handoutai/cenote"
-    accessed_on: "2026-10-11"
-  - id: S3
-    title: "New MX2000"
-    publisher: "タツモ株式会社"
-    url: "https://tazmo.co.jp/products_cate/handoutai/new-mx2000"
     accessed_on: "2026-10-11"
