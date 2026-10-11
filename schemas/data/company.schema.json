@@ -84,7 +84,8 @@
           "materials",
           "equipment",
           "devices",
-          "test"
+          "test",
+          "facilities"
         ]
       }
     },
