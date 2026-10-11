@@ -6,8 +6,9 @@ import { lineHeight, type MapModel } from '../lib/supplyMap';
 interface Props {
   model: MapModel;
   title: string;
+  hrefBase?: string; // 箱のリンク先のページ（既定は同じページ。トップでは '/processes/'）
 }
-const { model: m, title } = Astro.props;
+const { model: m, title, hrefBase = '' } = Astro.props;
 ---
 
 <svg
@@ -24,7 +25,7 @@ const { model: m, title } = Astro.props;
       <text class="map-svg__stage" x={c.x} y={c.y}>{c.name}</text>
       <line class="map-svg__rule" x1={c.x} x2={c.x + c.w} y1={c.ruleY + 8} y2={c.ruleY + 8}></line>
       {c.boxes.map((b) => (
-        <a class="map-box" href={`#p-${b.slug}`} aria-label={b.aria}>
+        <a class="map-box" href={`${hrefBase}#p-${b.slug}`} aria-label={b.aria}>
           <rect class="map-box__shape" x={b.x} y={b.y} width={b.w} height={b.h}></rect>
           <text class="map-box__name" x={b.x + 12} y={b.textY}>
             {b.lines.map((line, i) => <tspan x={b.x + 12} dy={i === 0 ? 0 : lineHeight}>{line}</tspan>)}

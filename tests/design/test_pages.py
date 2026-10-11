@@ -260,6 +260,20 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("role=\"search\"", html)
         self.assertIn("新着のニュース解説", html)
 
+    def test_home_has_process_map_and_semiconductor_sales_chart(self):
+        # 半導体ができるまで（スマートフォンは段階の要約、タブレット以上は全体図）と、半導体関連の売上高の上位10社（仕様書 9.1 の4・5）
+        html = self.read(self.build("production"), "index.html")
+        main = html.split("<main")[1]
+        self.assertIn("半導体ができるまで", main)
+        self.assertEqual(main.count('class="stage-summary__item"'), 4)  # 設計、材料、前工程、後工程
+        self.assertIn('class="map-svg map-svg--wide"', main)
+        self.assertIn('href="/processes/#p-', main)  # 全体図の箱は、工程の一覧のページの工程へ
+        self.assertNotIn('href="#p-', main)
+        self.assertIn("半導体関連の売上高（最新の通期）の上位10社", main)
+        self.assertIn("出典：有価証券報告書", main)
+        self.assertIn("ニュースから探す", main)
+        self.assertNotIn("ニュース・テーマから探す", main)
+
     def test_home_lists_latest_news_up_to_five(self):
         # 公開しているニュース解説を、トップに新しい順で最大5件出す（仕様書 9.1 の4）。0件のときだけ「まだありません」
         for env in ("preview", "production"):
