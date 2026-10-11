@@ -13,8 +13,6 @@ categories:
   - equipment
 processes:
   - wafer
-  - oxidation-diffusion
-  - deposition
 listing: coming_soon
 selection:
   basis: revenue_ratio

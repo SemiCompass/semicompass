@@ -12,11 +12,6 @@ categories:
   - test
   - equipment
 processes:
-  - cleaning
-  - deposition
-  - lithography
-  - etching
-  - cmp
   - inspection-metrology
 listing: coming_soon
 selection:
@@ -25,31 +20,6 @@ selection:
   decided_on: "2026-10-04"
 sources:
   - id: S1
-    title: "エッチング工程"
-    publisher: "株式会社堀場製作所"
-    url: "https://www.horiba.com/jpn/semiconductor/process/etching/"
-    accessed_on: "2026-10-11"
-  - id: S2
-    title: "成膜工程"
-    publisher: "株式会社堀場製作所"
-    url: "https://www.horiba.com/jpn/semiconductor/process/deposition/"
-    accessed_on: "2026-10-11"
-  - id: S3
-    title: "洗浄工程"
-    publisher: "株式会社堀場製作所"
-    url: "https://www.horiba.com/jpn/semiconductor/process/cleaning/"
-    accessed_on: "2026-10-11"
-  - id: S4
-    title: "露光工程"
-    publisher: "株式会社堀場製作所"
-    url: "https://www.horiba.com/jpn/semiconductor/process/lithography/"
-    accessed_on: "2026-10-11"
-  - id: S5
-    title: "CMP工程"
-    publisher: "株式会社堀場製作所"
-    url: "https://www.horiba.com/jpn/semiconductor/process/cmp/"
-    accessed_on: "2026-10-11"
-  - id: S6
     title: "ウェハ検査"
     publisher: "株式会社堀場製作所"
     url: "https://www.horiba.com/jpn/semiconductor/process/wafer-inspection/"
