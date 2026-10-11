@@ -1,25 +1,40 @@
 ---
-// 工程別の企業一覧（/companies/process/{工程}/。要件定義書 3.1）：その工程に当たる企業の表
+// 工程別の企業一覧（/companies/process/{工程}/。要件定義書 3.1）：その工程に当たる企業の表。
+// 企業ページの「分類」のタグ（設計、前工程、装置など）も、同じ形のURL（/companies/process/{分類}/）で、その分類の企業の表を開く。
+// 分類と工程の slug は重ならない（data/supply-chain.yaml）
 import { BUILD_ENV } from 'astro:env/server';
 import CompanyTable from '../../../components/CompanyTable.astro';
 import Page from '../../../layouts/Page.astro';
 import { companyRows, loadSupply } from '../../../lib/companies';
 
+type Target = { slug: string; name: string; kind: 'process' | 'category' };
+
 export function getStaticPaths() {
-  return loadSupply().processes.map((p) => ({ params: { process: p.slug }, props: { process: p } }));
+  const supply = loadSupply();
+  const targets: Target[] = [
+    ...supply.processes.map((p) => ({ slug: p.slug, name: p.name, kind: 'process' as const })),
+    ...supply.categories.map((c) => ({ slug: c.slug, name: c.name, kind: 'category' as const })),
+  ];
+  return targets.map((t) => ({ params: { process: t.slug }, props: { target: t } }));
 }
-const { process } = Astro.props as { process: { slug: string; name: string } };
+const { target } = Astro.props as { target: Target };
 const supply = loadSupply();
-const rows = companyRows(BUILD_ENV === 'preview').filter((r) => r.company.processes.includes(process.slug));
+const isProcess = target.kind === 'process';
+const rows = companyRows(BUILD_ENV === 'preview').filter((r) =>
+  isProcess ? r.company.processes.includes(target.slug) : r.company.categories.includes(target.slug),
+);
+const label = isProcess ? '工程' : '分類';
 ---
 
 <Page
-  title={`${process.name}の企業一覧｜SemiCompass`}
-  heading={`${process.name}の企業`}
-  description={`${process.name}の工程に関わる企業の一覧。`}
-  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '企業', href: '/companies/' }, { label: process.name }]}
+  title={`${target.name}の企業一覧｜SemiCompass`}
+  heading={`${target.name}の企業`}
+  description={`${target.name}の${label}に関わる企業の一覧。`}
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '企業', href: '/companies/' }, { label: target.name }]}
   wide
 >
-  <p class="measure"><a href={`/processes/${process.slug}/`}>{process.name}の工程の説明</a>、<a href="/companies/">すべての企業の一覧</a></p>
-  <CompanyTable rows={rows} caption={`${process.name}の企業の一覧`} processes={supply.processes} />
+  <p class="measure">
+    {isProcess ? <a href={`/processes/${target.slug}/`}>{target.name}の工程の説明</a> : <a href="/processes/">工程の一覧</a>}、<a href="/companies/">すべての企業の一覧</a>
+  </p>
+  <CompanyTable rows={rows} caption={`${target.name}の企業の一覧`} processes={supply.processes} />
 </Page>
