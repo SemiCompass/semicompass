@@ -260,6 +260,33 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("role=\"search\"", html)
         self.assertIn("新着のニュース解説", html)
 
+    def test_home_has_process_map_and_semiconductor_sales_chart(self):
+        # 半導体ができるまで（スマートフォンは段階の要約、タブレット以上は全体図）と、半導体関連の売上高の上位10社（仕様書 9.1 の4・5）
+        html = self.read(self.build("production"), "index.html")
+        main = html.split("<main")[1]
+        self.assertIn("半導体ができるまで", main)
+        self.assertEqual(main.count('class="stage-summary__item"'), 4)  # 設計、材料、前工程、後工程
+        self.assertIn('class="map-svg map-svg--wide"', main)
+        self.assertIn('href="/processes/#p-', main)  # 全体図の箱は、工程の一覧のページの工程へ
+        self.assertNotIn('href="#p-', main)
+        self.assertIn("半導体関連の売上高（最新の通期）の上位10社", main)
+        self.assertIn("出典：有価証券報告書", main)
+        self.assertIn("ニュースから探す", main)
+        self.assertNotIn("ニュース・テーマから探す", main)
+
+    def test_home_lists_latest_news_up_to_five(self):
+        # 公開しているニュース解説を、トップに新しい順で最大5件出す（仕様書 9.1 の4）。0件のときだけ「まだありません」
+        for env in ("preview", "production"):
+            html = self.read(self.build(env), "index.html")
+            news_dir = ROOT / "content" / "news"
+            published = [p for p in news_dir.glob("*.md") if env == "preview" or not re.search(r"^draft: true$", p.read_text(encoding="utf-8"), re.M)]
+            items = re.findall(r'<li class="home-news__item"', html)
+            self.assertEqual(len(items), min(5, len(published)), env)
+            if published:
+                self.assertNotIn("ニュース解説は、まだありません。", html)
+                self.assertIn('href="/news/"', html.split("<main")[1])
+        self.assertNotIn("広告主", self.read(self.build("production"), "index.html").split("<main")[1])
+
     def fixture_site(self, env: str) -> Path:
         """試験用の用語2件（公開1件、下書き1件）と、工程の解説1件を置いた、作業用のコピーで組み立てる。"""
         slug = self.processes[0]["slug"]

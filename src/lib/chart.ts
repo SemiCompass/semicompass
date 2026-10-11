@@ -143,7 +143,15 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
   };
 
   if (horizontal) {
-    model.hTicks = ticks.map((t) => ({ x: xOfH(t), text: tickText(t) }));
+    // 値の目盛りの文字が重ならないように、目盛りの数を減らす（スマートフォンの幅で、桁の多い目盛りの文字が重なっていた）
+    let hTicks = ticks;
+    for (let count = 3; count >= 1; count--) {
+      const gap = ((plot.r - plot.l) * (hTicks[1] - hTicks[0])) / span;
+      if (hTicks.length < 2 || gap >= Math.max(...hTicks.map((t) => textWidth(tickText(t)))) + 12) break;
+      const fewer = niceTicks(domMin, domMax, count).filter((t) => t <= domMax);
+      if (fewer.length >= 2) hTicks = fewer;
+    }
+    model.hTicks = hTicks.map((t) => ({ x: xOfH(t), text: tickText(t) }));
     model.baseline = { x1: xOfH(0), y1: plot.t, x2: xOfH(0), y2: plot.b };
     const slot = (plot.b - plot.t) / n;
     const bar = Math.min(slot / 1.5 / 1.0, 28);
