@@ -43,16 +43,15 @@ SemiCompassは、日本の半導体業界を「企業・工程・ニュース」
 | `data/segments/` | セグメント対応表 | 可 |
 | `data/supply-chain.yaml` | 工程・プロダクトの分類 | 可 |
 | `data/fabs/` | 国内拠点 | 可 |
-| `data/holidays.yaml` | 祝日 | 可 |
-| `data/auto/` | 自動取得のデータ（業績、働く環境、提出書類の一覧） | **不可**。取り込みの処理（J01）だけが書く。値の誤りは、原因（`config/xbrl-map.yaml`や`scripts/xbrl/`）を直す |
+| `data/auto/` | 自動取得のデータ（業績、働く環境、提出書類の一覧） | **不可**。取り込みの処理（J01）だけが書く。値の誤りは、原因（`config/xbrl-map.yaml`や`scripts/edinet/`）を直す |
 | `content/` | ニュース、IR重要ポイント、工程、用語、テーマ、学習、固定ページ（Markdown） | 可 |
 | `content/essays/` | 論考（第2段階） | **不可**。運営者が書く |
 | `src/` | Astroのテンプレート、部品、スタイル、表示のための計算（`src/lib/`） | 可 |
-| `scripts/` | 取り込み、照合、確認のプログラム（Python） | 可（`scripts/factcheck/`は不可） |
+| `scripts/` | 取り込み、照合、確認のプログラム（Python。画面の幅の確認だけは`scripts/design/`のNode.js） | 可（`scripts/factcheck/`は不可） |
 | `agents/` | エージェントの指示文と出力の形式 | 指示があれば可。変えたら`agents/{ID}/examples/`で結果を確かめる |
 | `schemas/` | データとコンテンツの形式の定義（JSON Schema） | **不可** |
 | `tests/` | 自動テスト、事実確認の見本 | 可（`tests/factcheck/`の見本を減らす変更は不可） |
-| `docs/` | 要求定義書、要件定義書、運用ルール書、アーキテクチャ設計書 | 不可（運営者が管理する） |
+| `docs/` | 要求定義書、要件定義書、アーキテクチャ設計書、データ定義書、運用ルール書、画面とデザインの仕様書、掲載企業リスト | 不可（運営者が管理する） |
 
 運営記録は`ops-log`ブランチにある。読んでよいが、書き込まない。
 
@@ -79,7 +78,7 @@ SemiCompassは、日本の半導体業界を「企業・工程・ニュース」
 **警告になる言葉（具体的な内容に置き換える）**
 革新的、画期的、次世代、最先端、シームレス、飛躍的、圧倒的、徹底解説、完全ガイド、必見、〜の鍵を握る、重要な役割を果たしている、注目を集めている、今後の動向が注目される、〜と言えるでしょう、さまざまな／多岐にわたる（具体例がない場合）、いかがでしたか、「！」の連続
 
-一覧の正は`config/textlint/`である。食い違う場合は`config/textlint/`に従う。
+いまは、この節の一覧が正である（`config/textlint/`はまだ空）。`config/textlint/`に一覧を置いたら、そちらを正とし、食い違う場合は`config/textlint/`に従う。
 
 ### 5.3 見通しと評価
 原資料にない見通しや評価を書く場合は、「発表元の見方」と「本サイトの見方」を分けて書く。どちらか分からない書き方をしない。
@@ -115,7 +114,7 @@ SemiCompassは、日本の半導体業界を「企業・工程・ニュース」
   * 確かめた方法（書籍、論文、Webサイト、運営者の知識）は、運営者が`review_methods`に書く。画面には、確かめた方法の表示は出さない。出典（`sources`）があるときだけ、出典として示す。
 
 ### 6.5 AIで作った文章の印
-Claudeが書いた、または大きく書き換えた本文には、ファイルの先頭の項目に`ai_generated: true`を付ける。
+Claudeが書いた、または大きく書き換えた本文には、ファイルの先頭の項目に`ai_generated: true`を付ける。この印は記録のためで、読者向けのページには表示しない（要件定義書UI-06）。
 
 ## 7. データの扱い
 
@@ -155,11 +154,12 @@ Claudeが書いた、または大きく書き換えた本文には、ファイ�
 | 目的 | コマンド |
 | :--- | :--- |
 | 形式の検証 | `python3 scripts/validate/validate_data.py` |
-| 文章の確認 | 転載の検査：`python3 -m unittest discover -s tests/textcheck`（検査の部品のテスト）。表記と禁止表現の確認は、まだ自動化していない（5.2の一覧と`config/textlint/`を見て、自分で確かめる） |
-| 単体テスト（Python） | `python3 -m unittest discover -s tests/{名前}`（`tests/`の下の`deploy`、`edinet`、`validate`、`bundle`、`llm`、`textcheck`、`draft`、`design`を、1つずつ実行する） |
+| 文章の確認 | 転載の検査：`python3 -m unittest discover -s tests/textcheck`（検査の部品のテスト）。表記と禁止表現の確認は、まだ自動化していない（5.2の一覧を見て、自分で確かめる） |
+| 単体テスト（Python） | `python3 -m unittest discover -s tests/{名前}`（`tests/`の下の`deploy`、`edinet`、`validate`、`bundle`、`llm`、`textcheck`、`draft`、`design`、`explainer`、`news`、`pages`、`factcheck`、`ops`の13個を、1つずつ実行する。`design`はサイトを組み立てるため数分かかる） |
 | 単体テスト（TypeScript） | なし（表示のための計算は、`tests/design`で確かめる） |
 | CSSの検査 | `npm run lint:css` |
 | ビルドと出力の確認 | `npm run build:preview`（出力は`dist/`） |
+| 画面の幅の確認 | `npm run check:layout`（ビルドの後に実行する。代表のページを幅320〜1440pxで開き、横のはみ出しと本文の1行の字数を検査する） |
 
 ## 11. 参照する文書
 
