@@ -15,5 +15,14 @@ categories:
 listing: coming_soon
 selection:
   basis: revenue_ratio
-  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。業種別売上の「エレクトロニクス」が全社の38.0%（2025年12月期、S1）。液晶などを含む可能性があり、半導体だけの比率は資料にない。30%以上かの判断は保留（2026年10月12日）"
   decided_on: "2026-10-04"
+  source: S1
+sources:
+  - id: S1
+    title: "決算説明資料 2025年12月期"
+    publisher: "株式会社ダイフク"
+    url: "https://www2.jpx.co.jp/disc/63830/140120260212556155.pdf"
+    published_on: "2026-02-12"
+    pages: "5、8、10"
+    accessed_on: "2026-10-12"

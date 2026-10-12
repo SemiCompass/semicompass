@@ -5,7 +5,7 @@ short_names:
   - "荏原製作所"
 name_en: "EBARA CORPORATION"
 name_kana: "エバラセイサクショ"
-type: conglomerate
+type: domestic_listed
 securities_code: "6361"
 edinet_code: E01542
 categories:
@@ -23,8 +23,8 @@ accounting_standard: ifrs
 fiscal_year_end_month: 12
 is_holding_company: false
 selection:
-  basis: global_share
-  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  basis: revenue_ratio
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は35.8%（2025年12月期。有価証券報告書のセグメント情報と、本サイトのセグメント対応表による）で、30%以上であることを確認した。これにより、区分を総合メーカーから国内上場企業に改めた（運営者の判断、2026年10月12日）"
   decided_on: "2026-10-04"
   source: S1
 sources:

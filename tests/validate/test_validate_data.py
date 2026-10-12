@@ -88,7 +88,7 @@ class RealDataTest(unittest.TestCase):
     def test_repository_has_the_expected_files(self):
         files = vd.collect_files(ROOT)
         kinds = [k for k, _ in files]
-        self.assertEqual(kinds.count("company"), 88)
+        self.assertEqual(kinds.count("company"), 87)  # 掲載企業リストの88社から、日本特殊陶業を外した（2026年10月12日）
         self.assertEqual((kinds.count("supply-chain"), kinds.count("xbrl-map")), (1, 1))
         self.assertEqual(kinds.count("auto"), len(list((ROOT / "data" / "auto").glob("*.json"))))
 

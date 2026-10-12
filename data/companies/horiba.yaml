@@ -16,11 +16,19 @@ processes:
 listing: coming_soon
 selection:
   basis: revenue_ratio
-  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。セグメント「先端材料・半導体」の外部売上が全社の47.0%（2025年12月期。資料の金額から計算、S2）。研究用の分析装置を含むが、30%以上と判断した（運営者の判断、2026年10月12日）"
   decided_on: "2026-10-04"
+  source: S2
 sources:
   - id: S1
     title: "ウェハ検査"
     publisher: "株式会社堀場製作所"
     url: "https://www.horiba.com/jpn/semiconductor/process/wafer-inspection/"
     accessed_on: "2026-10-11"
+  - id: S2
+    title: "2025年12月期 決算短信〔日本基準〕(連結)"
+    publisher: "株式会社堀場製作所"
+    url: "https://static.horiba.com/fileadmin/Horiba/Company/Investor_Relations/IR_Library/Financial_Statements/2022-/20260212_FS_jp_Or9.pdf"
+    published_on: "2026-02-12"
+    pages: "9、16、18、22"
+    accessed_on: "2026-10-12"
