@@ -259,7 +259,7 @@ class PagesBuildTest(unittest.TestCase):
         entries = re.findall(r'<nav class="entries"[^>]*>(.*?)</nav>', html, re.S)[0]
         links = re.findall(r'<a class="entry"[^>]*href="([^"]+)"[^>]*>(.*?)</a>', entries, re.S)
         self.assertEqual([h for h, _ in links], ["/glossary/", "/processes/", "/news/", "/companies/"])
-        for title, (_, body) in zip(["半導体を学ぶ", "工程を学ぶ", "ニュースを読む", "企業を探す"], links):
+        for title, (_, body) in zip(["半導体を学ぶ", "工程を学ぶ", "ニュースを読む", "企業分析"], links):
             self.assertIn(title, body)
             self.assertIn('aria-hidden="true"', body)  # 記号は見出しと組にし、読み上げない
         self.assertIn("role=\"search\"", html)  # 企業名・証券コードの検索は、ヘッダーの検索欄
