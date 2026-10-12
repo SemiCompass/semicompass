@@ -1,0 +1,74 @@
+---
+// 半導体を学ぶ（/learn/。要求定義書 FR-901、要件定義書 FR-901）：分野ごとに、できている単元を並べる。
+// ページはできたものから順に増やす。単元がまだない分野は「準備中」とし、完成しているように見せない（MV-08）
+import { BUILD_ENV } from 'astro:env/server';
+import Page from '../../layouts/Page.astro';
+import { learnIndex } from '../../lib/learn';
+
+const index = learnIndex(BUILD_ENV === 'preview');
+---
+
+<Page
+  title="半導体を学ぶ｜SemiCompass"
+  heading="半導体を学ぶ"
+  description="半導体の基礎（物理）から、デバイス、製造工程、業界の構造までを、分野ごとに順に学べます。"
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '半導体を学ぶ' }]}
+  toc={index.map(({ field }) => ({ id: `field-${field.slug}`, label: field.title }))}
+>
+  <p class="lead measure">半導体の基礎から、デバイス、製造工程、業界の構造までを、分野ごとに順に学べます。各ページの最後に、内容を確かめる問いがあります。ページは、順に増やしています。</p>
+  {index.map(({ field, units }) => (
+    <section aria-labelledby={`field-${field.slug}`} class="learn-field">
+      <h2 id={`field-${field.slug}`}>{field.no}. {field.title}</h2>
+      <p class="measure">{field.summary}</p>
+      {units.length > 0 ? (
+        <ol class="learn-units">
+          {units.map((u) => (
+            <li class="learn-units__item">
+              <a class="learn-units__title" href={u.href}>{u.title}</a>
+              {u.summary && <span class="learn-units__summary">{u.summary}</span>}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p class="learn-field__pending">この分野のページは、準備中です。</p>
+      )}
+    </section>
+  ))}
+</Page>
+
+<style>
+  .learn-field {
+    margin-block-start: var(--space-7);
+  }
+  .learn-units {
+    max-width: var(--content-max-width);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    list-style: none;
+    counter-reset: unit;
+  }
+  .learn-units__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .learn-units__title {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-lead-leading);
+  }
+  .learn-units__summary {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .learn-field__pending {
+    color: var(--color-text-muted);
+  }
+</style>

@@ -77,7 +77,8 @@ def real_site(env: str) -> Path:
     return _REAL_SITES[env]
 
 
-def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None, news: dict[str, str] | None = None) -> Path:
+def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None, news: dict[str, str] | None = None,
+              extra_files: dict[str, str] | None = None) -> Path:
     """サイトの作業用のコピーを作る。**content/glossary/、content/processes/、content/news/ は、リポジトリの中身を写さず、空にして、
     glossary、processes、news のファイル（名前 → 本文）だけを置く**。リポジトリの実際の content/ は、書き換えない。
     これで、用語・工程の件数が0件のときの表示を、リポジトリの中身（用語が増えても）に左右されずに確かめられる。"""
@@ -100,6 +101,9 @@ def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] 
         (work / "content" / directory).mkdir(parents=True)
         for filename, text in files.items():
             (work / "content" / directory / filename).write_text(text, encoding="utf-8")
+    for relpath, text in (extra_files or {}).items():  # そのほかのファイル（学習のページ、図など。作業用のコピーからの相対の位置）
+        (work / relpath).parent.mkdir(parents=True, exist_ok=True)
+        (work / relpath).write_text(text, encoding="utf-8")
     return work
 
 
@@ -154,8 +158,8 @@ class PagesBuildTest(unittest.TestCase):
         return self._built(f"empty-{env}", env, make_site())
 
     def build_with(self, key: str, env: str, glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None,
-                   news: dict[str, str] | None = None) -> Path:
-        return self._built(f"{key}-{env}", env, make_site(glossary, processes, news))
+                   news: dict[str, str] | None = None, extra: dict[str, str] | None = None) -> Path:
+        return self._built(f"{key}-{env}", env, make_site(glossary, processes, news, extra))
 
     def read(self, dist: Path, path: str) -> str:
         return (dist / path).read_text(encoding="utf-8")
@@ -336,6 +340,51 @@ class PagesBuildTest(unittest.TestCase):
         processes = {f"{slug}.md": f"---\ntitle: 試験用の工程\ndescription: 試験用の説明である。\nprocess: {slug}\npublished_at: '2026-01-01'\n"
                                    f"ai_generated: true\nterms: [cmp]\n{src}---\n## 解説\n\n試験用の解説である[S1]。\n"}
         return self.build_with("fixture", env, glossary, processes)
+
+    def learn_site(self, env: str = "preview") -> Path:
+        """学習のページ1件（図と理解度チェック付き）と、理解度チェック付きの用語1件を置いた、作業用のコピーで組み立てる。"""
+        src = "sources:\n  - id: S1\n    title: 例の資料\n    publisher: 例の団体\n    url: https://example.com/a\n    accessed_on: '2026-01-01'\n"
+        quiz = ("## 理解度チェック\n\n### 問1\n試験の問いである。\n\n1. 一つ目\n2. 二つ目\n3. 三つ目\n4. 四つ目\n\n"
+                "答え：3\n解説：試験の解説である。\n")
+        slug = self.processes[0]["slug"]
+        glossary = {"cmp.md": f"---\nslug: cmp\nterm: CMP\nreading: しーえむぴー\nshort_definition: ウエハーの表面を平らにする工程である。\n"
+                              f"published_at: '2026-01-01'\nai_generated: true\nprocesses: [{slug}]\n{src}---\n## 概要\n\n試験用の本文である[S1]。\n\n{quiz}"}
+        path = (ROOT / "content" / "learn" / "path.yaml").read_text(encoding="utf-8").replace(
+            "summary: 電気を通す・通さないの違いから、電子と正孔、pn接合とダイオードまでを学びます。\n    units: []",
+            "summary: 電気を通す・通さないの違いから、電子と正孔、pn接合とダイオードまでを学びます。\n    units:\n      - { type: learn, ref: test-page }")
+        extra = {
+            "content/learn/path.yaml": path,
+            "content/learn/basics/test-page.md": f"---\ntitle: 試験の学習ページ\nfield: basics\ndescription: 試験用の説明である。\n"
+                                                 f"published_at: '2026-01-01'\nai_generated: true\nrelated_terms: [cmp]\n{src}---\n"
+                                                 f"## 一つ目の節\n\n試験用の本文である[S1]。\n\n{quiz}",
+            "src/figures/learn/basics/test-page.astro": '<figure class="learn-figure-test"><svg role="img" aria-label="試験の図" viewBox="0 0 10 10"></svg><figcaption>図：試験の図。模式図、本サイトで作成</figcaption></figure>\n',
+        }
+        return self.build_with("learn", env, glossary=glossary, extra=extra)
+
+    def test_learn_index_page_and_quiz(self):
+        # 半導体を学ぶ（FR-901、FR-904）：一覧に分野と単元、学習のページに図・本文・理解度チェック、トップの入口は /learn/ へ
+        dist = self.learn_site()
+        index = self.read(dist, "learn/index.html")
+        self.assertIn("1. 半導体の基礎", index)
+        self.assertIn('href="/learn/basics/test-page/"', index)
+        self.assertIn("この分野のページは、準備中です。", index)  # 単元のない分野は、準備中と示す
+        page = self.read(dist, "learn/basics/test-page/index.html")
+        self.assertIn("learn-figure-test", page)
+        self.assertIn('href="/learn/#field-basics"', page)
+        quiz = re.findall(r'<section class="quiz"[^>]*data-quiz[^>]*>(.*?)</section>', page, re.S)[0]
+        self.assertEqual(quiz.count('data-choice='), 4)
+        self.assertIn('data-answer="3"', page)
+        self.assertIn("答えと解説を見る", quiz)  # JavaScriptがなくても読める
+        self.assertNotIn("答え：3", page.split('<section class="quiz"')[0])  # 理解度チェックの行は、本文の節に出さない
+        home = self.read(dist, "index.html")
+        self.assertIn('href="/learn/"', home.split("<main")[1])
+        term = self.read(dist, "glossary/cmp/index.html")
+        self.assertIn('data-quiz data-page-type="term"', term)
+
+    def test_learn_index_without_pages_keeps_glossary_entry(self):
+        html = self.read(self.build("production"), "index.html").split("<main")[1]
+        self.assertIn('href="/glossary/"', html)
+        self.assertNotIn('href="/learn/"', html)
 
     def test_glossary_with_terms_lists_them_and_has_no_coming_soon(self):
         """用語が1件以上あるときの表示（試験用の用語を、作業用のコピーに置く。リポジトリの content/ は使わない）。"""

@@ -6,6 +6,7 @@ import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
 import SourceList from '../../components/SourceList.astro';
 import PageFeedback from '../../components/PageFeedback.astro';
+import Quiz from '../../components/Quiz.astro';
 import Tag from '../../components/Tag.astro';
 import Page from '../../layouts/Page.astro';
 import { loadCompanies, loadSupply } from '../../lib/companies';
@@ -26,6 +27,7 @@ const sources = f.sources.map((s) => ({
 const toc = [
   ...term.sections.filter((s) => s.heading).map((s, i) => ({ id: `s${i}`, label: s.heading })),
   { id: 'related', label: '関係する工程と企業' },
+  ...(term.quiz.length > 0 ? [{ id: 'quiz-title', label: '理解度チェック' }] : []),
   { id: 'sources-heading', label: '出典' },
 ];
 ---
@@ -61,6 +63,7 @@ const toc = [
     )}
     {related.length > 0 && <p>関係する用語：{related.map((t, i) => <>{i > 0 && '、'}<a href={`/glossary/${t.slug}/`}>{t.front.term}</a></>)}</p>}
   </section>
+  <Quiz questions={term.quiz} pageType="term" />
   <SourceList sources={sources} heading="出典" />
   <PageFeedback pageType="term" />
 </Page>

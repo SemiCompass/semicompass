@@ -1,0 +1,55 @@
+# 半導体を学ぶの体系（データ定義書 6.8、運用ルール書 4.2）。分野の並びと、各分野の単元の順番。
+# "no" は引用符で囲む（YAML 1.1 では no が false と読まれるため）。
+# units には、ページ（content/learn/{分野}/{slug}.md、工程ページ、用語ページ）ができたものだけを書く。
+schema_version: 1
+fields:
+  - "no": 1
+    slug: basics
+    title: 半導体の基礎
+    summary: 電気を通す・通さないの違いから、電子と正孔、pn接合とダイオードまでを学びます。
+    units: []
+  - "no": 2
+    slug: devices
+    title: デバイス
+    summary: トランジスタの仕組みから、ロジック、メモリ、パワー半導体、イメージセンサーまでを学びます。
+    units: []
+  - "no": 3
+    slug: logic
+    title: 論理回路
+    summary: スイッチとしてのトランジスタが、どのように計算をするのかを学びます。
+    units: []
+  - "no": 4
+    slug: silicon
+    title: シリコンとウェーハ
+    summary: 半導体の材料であるシリコンの結晶と、ウェーハができるまでを学びます。
+    units: []
+  - "no": 5
+    slug: process
+    title: 製造工程
+    summary: 設計から前工程、後工程、検査まで、半導体ができる流れを、工程ごとに学びます。
+    units:
+      - { type: process, ref: circuit-design }
+      - { type: process, ref: wafer }
+      - { type: process, ref: cleaning }
+      - { type: process, ref: deposition }
+      - { type: process, ref: lithography }
+      - { type: process, ref: etching }
+      - { type: process, ref: cmp }
+      - { type: process, ref: dicing }
+      - { type: process, ref: packaging }
+      - { type: process, ref: final-test }
+  - "no": 6
+    slug: test
+    title: 検査・評価・信頼性
+    summary: できた半導体を確かめる方法と、長く使えることを確かめる考え方を学びます。
+    units: []
+  - "no": 7
+    slug: facilities
+    title: 工場を支える技術
+    summary: クリーンルーム、超純水、ガス、搬送など、工場全体を支える技術を学びます。
+    units: []
+  - "no": 8
+    slug: industry
+    title: 業界の構造と企業
+    summary: 設計専業、受託製造、一貫生産などの役割の違いと、サプライチェーンの中の日本企業を学びます。
+    units: []
