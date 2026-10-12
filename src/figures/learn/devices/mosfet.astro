@@ -1,0 +1,180 @@
+---
+// 図：nMOSの断面（模式図）。ゲートの電圧がないとき（切）と、しきい値電圧を超えたとき（入：反転層のチャネル）（仕様書 7章、8.18）
+const panels = [
+  { key: 'off', name: 'ゲートに電圧をかけないとき（切）', note: 'ソースとドレインの間に二つのpn接合があり、電気はほとんど流れない' },
+  { key: 'on', name: 'ゲートにプラスの電圧（入）', note: '酸化膜の下に電子が集まって反転層（チャネル）ができ、電気が流れる' },
+];
+const channel = [68, 80, 92, 104, 116, 128];
+---
+
+<figure class="lfig" aria-labelledby="lfig-mos-cap">
+  <p class="lfig__title">nMOSの断面（模式図）</p>
+  <ol class="lfig__panels">
+    {panels.map((p) => (
+      <li class="lfig__panel">
+        <svg class="lfig__svg" viewBox="0 0 200 150" role="img" aria-label={`${p.name}：${p.note}`}>
+          <rect class="lfig__psub" x="10" y="62" width="180" height="80" />
+          <rect class="lfig__nreg" x="18" y="62" width="44" height="22" />
+          <rect class="lfig__nreg" x="138" y="62" width="44" height="22" />
+          <rect class="lfig__oxide" x="60" y="54" width="80" height="8" />
+          <rect class="lfig__gate" x="64" y="36" width="72" height="18" />
+          <path class="lfig__wire" d="M40 62V18M100 36V18M160 62V18" />
+          <text class="lfig__label" font-size="10" x="40" y="13" text-anchor="middle">ソース</text>
+          <text class="lfig__label" font-size="10" x="100" y="13" text-anchor="middle">ゲート</text>
+          <text class="lfig__label" font-size="10" x="160" y="13" text-anchor="middle">ドレイン</text>
+          <text class="lfig__label" font-size="10" x="40" y="78" text-anchor="middle">n</text>
+          <text class="lfig__label" font-size="10" x="160" y="78" text-anchor="middle">n</text>
+          <text class="lfig__label" font-size="10" x="100" y="128" text-anchor="middle">p型の基板</text>
+          {p.key === 'on' && (
+            <g>
+              <rect class="lfig__channel" x="60" y="62" width="80" height="7" />
+              {channel.map((x) => <circle class="lfig__electron" cx={x} cy="65.5" r="2.5" />)}
+              <path class="lfig__flow" d="M66 82h68m-7-5 7 5-7 5" />
+              <text class="lfig__plus" font-size="14" x="116" y="30" text-anchor="middle">＋</text>
+            </g>
+          )}
+        </svg>
+        <span class="lfig__name">{p.name}</span>
+        <span class="lfig__ex">{p.note}</span>
+      </li>
+    ))}
+  </ol>
+  <ul class="lfig__legend" aria-hidden="true">
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><rect class="lfig__gate" x="3" y="7" width="18" height="10" /></svg>ゲート（電極）</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><rect class="lfig__oxide" x="3" y="9" width="18" height="6" /></svg>酸化膜</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><rect class="lfig__nreg" x="3" y="6" width="18" height="12" /></svg>n型の領域</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><circle class="lfig__electron" cx="12" cy="12" r="4" /></svg>電子（チャネル）</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><path class="lfig__flow" d="M3 12h16m-5-5 5 5-5 5" /></svg>電子の流れ</li>
+  </ul>
+  <figcaption id="lfig-mos-cap" class="lfig__caption">図：nMOSでは、p型の基板にn型のソースとドレインを作り、その間の表面の上に酸化膜とゲートを載せる。ゲートにしきい値電圧より高いプラスの電圧をかけると、酸化膜の下に電子の通り道ができ、ソースからドレインへ電子が流れる。寸法は簡単にした模式図、本サイトで作成</figcaption>
+</figure>
+
+<style>
+  @import "../../../styles/breakpoints.css";
+
+  .lfig {
+    margin: var(--space-5) 0 var(--space-6);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .lfig__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  .lfig__panels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (--tablet) {
+    .lfig__panels {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .lfig__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .lfig__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--color-surface);
+  }
+  .lfig__psub {
+    fill: var(--color-surface-sunken);
+    stroke: var(--color-border-strong);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__nreg {
+    fill: var(--color-primary-tint);
+    stroke: var(--color-primary);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__oxide {
+    fill: var(--color-warning-bg);
+    stroke: var(--color-warning);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__gate {
+    fill: var(--color-text-muted);
+    stroke: var(--color-text);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__wire {
+    fill: none;
+    stroke: var(--color-text);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__channel {
+    fill: var(--color-primary-tint);
+    stroke: var(--color-primary);
+    stroke-width: var(--icon-stroke);
+    stroke-dasharray: 3 2;
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__electron {
+    fill: var(--color-text);
+  }
+  .lfig__flow {
+    fill: none;
+    stroke: var(--color-primary);
+    stroke-width: var(--border-width-current);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__label,
+  .lfig__plus {
+    fill: var(--color-text);
+    font-family: var(--font-family-base);
+  }
+  .lfig__plus {
+    fill: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+  }
+  .lfig__name {
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-small-leading);
+  }
+  .lfig__ex {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .lfig__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-small);
+  }
+  .lfig__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .lfig__key {
+    width: var(--icon-size);
+    height: var(--icon-size);
+  }
+  .lfig__caption {
+    margin-block-start: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+</style>

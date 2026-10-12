@@ -15,7 +15,8 @@ fields:
     slug: devices
     title: デバイス
     summary: トランジスタの仕組みから、ロジック、メモリ、パワー半導体、イメージセンサーまでを学びます。
-    units: []
+    units:
+      - { type: learn, ref: mosfet }
   - "no": 3
     slug: logic
     title: 論理回路
