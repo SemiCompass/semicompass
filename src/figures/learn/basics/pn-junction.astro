@@ -1,0 +1,187 @@
+---
+// 図：pn接合と、順方向・逆方向の電圧（模式図）。空乏層の広さ、固定された電気（＋・−）、電流の流れ（仕様書 7章、8.18）
+// 左がp型（正孔＝白い円）、右がn型（電子＝黒い点）。中央の帯が空乏層
+type Panel = { key: 'zero' | 'forward' | 'reverse'; name: string; note: string; depletion: number; battery?: 'forward' | 'reverse' };
+const panels: Panel[] = [
+  { key: 'zero', name: '電圧をかけないとき', note: '境目に空乏層ができ、電気の壁で釣り合う', depletion: 36 },
+  { key: 'forward', name: '順方向（p型にプラス）', note: '空乏層が狭くなり、電気が流れる', depletion: 28, battery: 'forward' },
+  { key: 'reverse', name: '逆方向（p型にマイナス）', note: '空乏層が広がり、電気はほとんど流れない', depletion: 64, battery: 'reverse' },
+];
+const W = 200;
+const holes = (d: number) => [[22, 30], [50, 52], [28, 74], [62, 24], [44, 92], [70, 80]].filter(([x]) => x < W / 2 - d / 2 - 6);
+const electrons = (d: number) => [[130, 30], [160, 52], [138, 76], [176, 26], [150, 94], [182, 80]].filter(([x]) => x > W / 2 + d / 2 + 6);
+const ions = (d: number) => {
+  const left = W / 2 - d / 2, right = W / 2 + d / 2;
+  const cols = Math.max(1, Math.floor(d / 2 / 14));
+  const out: { x: number; y: number; sign: '+' | '-' }[] = [];
+  for (let c = 0; c < cols; c++) for (const y of [30, 60, 90]) {
+    out.push({ x: left + 7 + c * 14, y, sign: '-' });
+    out.push({ x: right - 7 - c * 14, y, sign: '+' });
+  }
+  return out;
+};
+---
+
+<figure class="lfig" aria-labelledby="lfig-pn-cap">
+  <p class="lfig__title">pn接合と、電圧のかけ方（模式図）</p>
+  <ol class="lfig__panels">
+    {panels.map((p) => (
+      <li class="lfig__panel">
+        <svg class="lfig__svg" viewBox={`0 0 ${W} 170`} role="img" aria-label={`${p.name}：${p.note}`}>
+          <rect class="lfig__p" x="4" y="8" width={W / 2 - 4} height="104" />
+          <rect class="lfig__n" x={W / 2} y="8" width={W / 2 - 4} height="104" />
+          <rect class="lfig__depl" x={W / 2 - p.depletion / 2} y="8" width={p.depletion} height="104" />
+          {holes(p.depletion).map(([x, y]) => <circle class="lfig__hole" cx={x} cy={y} r="5" />)}
+          {electrons(p.depletion).map(([x, y]) => <circle class="lfig__electron" cx={x} cy={y} r="4" />)}
+          {ions(p.depletion).map((i) => (
+            <path class="lfig__ion" d={i.sign === '+' ? `M${i.x - 4} ${i.y}h8M${i.x} ${i.y - 4}v8` : `M${i.x - 4} ${i.y}h8`} />
+          ))}
+          {p.battery && (
+            <g class="lfig__circuit">
+              <path d={`M14 112v38h${W / 2 - 22}M${W - 14} 112v38h-${W / 2 - 22}`} />
+              {/* 電池：長い線がプラス。順方向はp型（左）にプラス、逆方向はn型（右）にプラス */}
+              <path class="lfig__cell-long" d={p.battery === 'forward' ? `M${W / 2 - 8} 138v24` : `M${W / 2 + 8} 138v24`} />
+              <path class="lfig__cell-short" d={p.battery === 'forward' ? `M${W / 2 + 8} 144v12` : `M${W / 2 - 8} 144v12`} />
+              {p.battery === 'forward' && <path class="lfig__flow" d={`M60 128h80m-8-6 8 6-8 6`} />}
+            </g>
+          )}
+        </svg>
+        <span class="lfig__name">{p.name}</span>
+        <span class="lfig__ex">{p.note}</span>
+      </li>
+    ))}
+  </ol>
+  <ul class="lfig__legend" aria-hidden="true">
+    <li>左：p型　右：n型</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><rect class="lfig__depl" x="3" y="3" width="18" height="18" /></svg>空乏層</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><circle class="lfig__hole" cx="12" cy="12" r="6" /></svg>正孔</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><circle class="lfig__electron" cx="12" cy="12" r="5" /></svg>電子</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><path class="lfig__ion" d="M7 12h10M12 7v10" /></svg><svg class="lfig__key" viewBox="0 0 24 24"><path class="lfig__ion" d="M7 12h10" /></svg>動けない電気（混ぜた元素の原子）</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><path class="lfig__cell-long" d="M9 4v16" /><path class="lfig__cell-short" d="M15 8v8" /></svg>電池（長い線がプラス）</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><path class="lfig__flow" d="M4 12h16m-5-5 5 5-5 5" /></svg>電気が流れる</li>
+  </ul>
+  <figcaption id="lfig-pn-cap" class="lfig__caption">図：p型とn型の境目には、キャリアのない空乏層ができる。p型にプラスをつなぐ順方向では空乏層が狭くなって電気が流れ、逆方向では空乏層が広がって電気はほとんど流れない。粒の数や大きさは簡単にした模式図、本サイトで作成</figcaption>
+</figure>
+
+<style>
+  @import "../../../styles/breakpoints.css";
+
+  .lfig {
+    margin: var(--space-5) 0 var(--space-6);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .lfig__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  .lfig__panels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lfig__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  @media (--tablet) {
+    .lfig__panels {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .lfig__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .lfig__p {
+    fill: var(--color-surface-sunken);
+    stroke: var(--color-border-strong);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__n {
+    fill: var(--color-primary-tint);
+    stroke: var(--color-border-strong);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__depl {
+    fill: var(--color-surface);
+    stroke: var(--color-primary);
+    stroke-width: var(--icon-stroke);
+    stroke-dasharray: 4 3;
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__hole {
+    fill: var(--color-surface);
+    stroke: var(--color-error);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__electron {
+    fill: var(--color-text);
+  }
+  .lfig__ion,
+  .lfig__circuit path {
+    fill: none;
+    stroke: var(--color-text);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__cell-long,
+  .lfig__cell-short {
+    fill: none;
+    stroke: var(--color-text);
+    stroke-width: var(--border-width-current);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__circuit .lfig__flow,
+  .lfig__flow {
+    fill: none;
+    stroke: var(--color-primary);
+    stroke-width: var(--border-width-current);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__name {
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-small-leading);
+  }
+  .lfig__ex {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .lfig__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-small);
+  }
+  .lfig__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .lfig__key {
+    width: var(--icon-size);
+    height: var(--icon-size);
+  }
+  .lfig__caption {
+    margin-block-start: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+</style>
