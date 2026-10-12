@@ -1,13 +1,13 @@
 ---
-// トップページ（/。要件定義書 3.3、仕様書 9.1）：説明の一文（h1）→ サイトの説明 → 3つの入口 → 半導体ができるまで（工程の全体図）
+// トップページ（/。要件定義書 3.3、仕様書 9.1）：説明の一文（h1）→ サイトの説明 → 4つの入口 → 半導体ができるまで（工程の全体図）
 // → 半導体関連の売上高の上位10社（グラフ）→ 新着のニュース解説（最大5件）。
-// 最初の画面（幅360px、高さ約640px）に、説明と3つの入口が収まる。同じ形のカードを3つ並べない（定義の一覧）
+// 最初の画面（幅360px、高さ約640px）に、説明と4つの入口が収まる。入口は、記号と見出しを組にした同じ形のボタン（運用ルール書 10.3.3 の例外）
 import { BUILD_ENV } from 'astro:env/server';
 import Chart from '../components/Chart.astro';
+import Icon from '../components/Icon.astro';
 import ExternalLink from '../components/ExternalLink.astro';
 import FacilitiesBand from '../components/FacilitiesBand.astro';
 import Phrase from '../components/Phrase.astro';
-import SearchBox from '../components/SearchBox.astro';
 import StateMessage from '../components/StateMessage.astro';
 import SupplyMapSvg from '../components/SupplyMapSvg.astro';
 import Tag from '../components/Tag.astro';
@@ -58,7 +58,13 @@ const salesSpec = {
 };
 // 出典の確認日：グラフに使った企業の、自動取得のデータの更新日のうち、もっとも新しい日
 const accessedOn = ranked.map((r) => loadAuto(r.company.slug)?.updated_at.slice(0, 10) ?? '').sort().pop() ?? '';
-const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: supply.categories.find((c) => c.slug === slug)?.name ?? slug }));
+// 4つの入口（要件定義書 3.3 の3）：行き先、見出し、一文の説明、記号。企業名・証券コードの検索は、ヘッダーの検索欄を使う
+const entries = [
+  { href: '/glossary/', icon: 'book', title: '半導体を学ぶ', text: '用語から基本を知る' },
+  { href: '/processes/', icon: 'flow', title: '工程を学ぶ', text: '設計から検査まで' },
+  { href: '/news/', icon: 'newspaper', title: 'ニュースを読む', text: '背景と関わる企業' },
+  { href: '/companies/', icon: 'building', title: '企業を探す', text: '工程と業績で比べる' },
+] as const;
 ---
 
 <Base title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="半導体ができるまでの工程と、そこに関わる日本の企業を、図と業績の数字でたどれる情報サイト。ニュースは、どの工程・どの企業に関わるかまで解説します。">
@@ -68,25 +74,19 @@ const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: suppl
       半導体の工程と、そこに関わる日本の企業を、図と業績の数字でたどれます。
     </p>
 
-    <dl class="entries">
-      <div class="entries__item">
-        <dt><a href="/processes/">工程から探す</a></dt>
-        <dd>
-          <ul class="entries__links">
-            {entryStages.map((s) => <li><a href={`/processes/#stage-${s.slug}`}>{s.name}</a></li>)}
-            <li><a href="/processes/">すべての工程</a></li>
-          </ul>
-        </dd>
-      </div>
-      <div class="entries__item">
-        <dt><a href="/news/">ニュースから探す</a></dt>
-        <dd>何が起きたか、なぜ重要か、どの工程・企業に関わるかを解説します。</dd>
-      </div>
-      <div class="entries__item">
-        <dt>企業名・証券コードで探す</dt>
-        <dd><SearchBox id="home-search" /></dd>
-      </div>
-    </dl>
+    <nav class="entries" aria-label="目的から探す">
+      <ul class="entries__list">
+        {entries.map((e) => (
+          <li>
+            <a class="entry" href={e.href}>
+              <Icon name={e.icon} class="entry__icon" />
+              <span class="entry__title">{e.title}</span>
+              <span class="entry__text">{e.text}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
 
     <section aria-labelledby="home-map-title" class="home__map">
       <h2 id="home-map-title">半導体ができるまで</h2>
@@ -149,7 +149,7 @@ const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: suppl
 <style>
   @import "../styles/breakpoints.css";
 
-  /* まとまりは余白で示す（仕様書 6.1）。スマートフォンは、最初の画面（360×640）に説明と3つの入口が収まる範囲に抑え、
+  /* まとまりは余白で示す（仕様書 6.1）。スマートフォンは、最初の画面（360×640）に説明と4つの入口が収まる範囲に抑え、
      タブレット以上で、--space-7〜--space-8 を取る */
   .home {
     padding-block: var(--space-3) var(--space-6);
@@ -160,10 +160,6 @@ const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: suppl
   .home__lead {
     margin-block-end: var(--space-4);
   }
-  .entries {
-    margin: 0;
-    padding: 0;
-  }
   @media (--tablet) {
     .home {
       padding-block: var(--space-7) var(--space-8);
@@ -172,33 +168,56 @@ const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: suppl
       margin-block-end: var(--space-7);
     }
   }
-  .entries__item {
-    padding-block: var(--space-1);
-    border-top: var(--border-width) solid var(--color-border);
+  /* 4つの入口：記号・見出し・一文の説明を縦に組んだボタン。スマートフォンは2列×2行、タブレット以上は4列（仕様書 9.1 の3） */
+  .entries__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  .entries dt {
+  @media (--tablet) {
+    .entries__list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .entries__list li {
+    display: flex;
+  }
+  .entry {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+    min-height: var(--target-min);
+    padding: var(--space-3);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .entry:hover {
+    background: var(--color-primary-tint);
+  }
+  .entry :global(.entry__icon) {
+    width: var(--icon-entry);
+    height: var(--icon-entry);
+    color: var(--color-primary);
+  }
+  .entry__title {
+    color: var(--color-primary);
     font-size: var(--text-lead);
     font-weight: var(--font-weight-bold);
     line-height: var(--text-lead-leading);
     letter-spacing: var(--text-lead-tracking);
   }
-  .entries dd {
-    margin: 0;
-    font-size: var(--text-dense);
-    line-height: var(--text-dense-leading);
-  }
-  .entries__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 var(--space-5);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .entries__links a {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--target-min);
+  .entry__text {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
   }
   .home__news {
     margin-block-start: var(--space-7);
@@ -311,17 +330,6 @@ const entryStages = ['front-end', 'back-end'].map((slug) => ({ slug, name: suppl
   @media (--tablet) {
     .home__news {
       margin-block-start: var(--space-8);
-    }
-  }
-
-  @media (--pc) {
-    .entries {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-6);
-    }
-    .entries__item {
-      padding-block: var(--space-4) 0;
     }
   }
 </style>

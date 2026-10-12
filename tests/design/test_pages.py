@@ -252,12 +252,17 @@ class PagesBuildTest(unittest.TestCase):
         for key in ("とうきょうえれくとろん", "tokyoelectronlimited", "8035"):
             self.assertIn(key, tel[0]["keys"])
 
-    def test_home_has_description_three_entries_and_news_empty_state(self):
+    def test_home_has_description_four_entries_and_news_empty_state(self):
+        # 4つの入口（要件定義書 3.3 の3）：記号・見出し・一文の説明を組にしたリンク
         html = self.read(self.build("preview"), "index.html")
         self.assertEqual(html.count("<h1"), 1)
-        entries = re.findall(r'<dl class="entries"[^>]*>(.*?)</dl>', html, re.S)[0]
-        self.assertEqual(entries.count("<dt"), 3)
-        self.assertIn("role=\"search\"", html)
+        entries = re.findall(r'<nav class="entries"[^>]*>(.*?)</nav>', html, re.S)[0]
+        links = re.findall(r'<a class="entry"[^>]*href="([^"]+)"[^>]*>(.*?)</a>', entries, re.S)
+        self.assertEqual([h for h, _ in links], ["/glossary/", "/processes/", "/news/", "/companies/"])
+        for title, (_, body) in zip(["半導体を学ぶ", "工程を学ぶ", "ニュースを読む", "企業を探す"], links):
+            self.assertIn(title, body)
+            self.assertIn('aria-hidden="true"', body)  # 記号は見出しと組にし、読み上げない
+        self.assertIn("role=\"search\"", html)  # 企業名・証券コードの検索は、ヘッダーの検索欄
         self.assertIn("新着のニュース解説", html)
 
     def test_home_has_process_map_and_semiconductor_sales_chart(self):
@@ -271,8 +276,8 @@ class PagesBuildTest(unittest.TestCase):
         self.assertNotIn('href="#p-', main)
         self.assertIn("半導体関連の売上高（最新の通期）の上位10社", main)
         self.assertIn("出典：有価証券報告書", main)
-        self.assertIn("ニュースから探す", main)
-        self.assertNotIn("ニュース・テーマから探す", main)
+        self.assertIn("ニュースを読む", main)
+        self.assertNotIn("ニュース・テーマを読む", main)
 
     def test_facilities_band_on_home_and_processes(self):
         # 工場設備（分類 facilities）：特定の工程ではなく工場全体を支える会社。全体図の下の帯から、分類の企業の一覧へ

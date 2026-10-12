@@ -109,6 +109,7 @@
   --control-height: 2.75rem; /* ボタン、検索の入力欄 */
   --tag-height: 2rem;
   --icon-size: 1.25rem; /* 図と記号の大きさ（仕様書に値がない） */
+  --icon-entry: 2rem; /* トップページの入口の記号（仕様書 7章） */
   --link-underline-offset: 0.2em; /* 8.5 */
   --motion-duration: 0.15s; /* 11 開閉の動き */
   --icon-inline-offset: -0.125em; /* 文章の中の記号の縦の位置（仕様書に値がない） */
