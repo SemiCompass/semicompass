@@ -35,6 +35,9 @@ export default defineConfig({
         values: ['production', 'preview'],
         default: 'preview',
       }),
+      // ビルドの日（YYYY-MM-DD、日本時間）。日付で変わる表示（終わったイベントを出さないなど）に使う（CLAUDE.md 9章）。
+      // 指定がないときは、ビルドした日（src/lib/buildDate.ts）
+      BUILD_DATE: envField.string({ context: 'server', access: 'public', optional: true }),
     },
   },
 });

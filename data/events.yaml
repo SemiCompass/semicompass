@@ -1,0 +1,53 @@
+# 技術系のイベント（データ定義書 4.6、運用ルール書 4.9）。日程と会場は、主催者の公式ページだけを出典とする。
+# 開催日の古い順。終わったイベントは表示しない（ファイルから消さなくてよい）。
+schema_version: 1
+sources:
+  - id: S1
+    title: SEMICON Japan 2026
+    publisher: SEMI
+    url: https://semiconjapan.org/
+    accessed_on: '2026-10-12'
+  - id: S2
+    title: ISSCC 2027 Call for Papers
+    publisher: IEEE Solid-State Circuits Society
+    url: https://sscs.ieee.org/wp-content/uploads/ISSCC2027CFP.pdf
+    accessed_on: '2026-10-12'
+  - id: S3
+    title: SEMICON KOREA 2027
+    publisher: SEMI
+    url: https://semiconkorea.org/
+    accessed_on: '2026-10-12'
+events:
+  - id: semicon-japan-2026
+    name: SEMICON Japan 2026
+    kind: exhibition
+    start_date: '2026-12-09'
+    end_date: '2026-12-11'
+    venue: 東京ビッグサイト
+    city: 東京都江東区
+    organizer: SEMI
+    url: https://semiconjapan.org/
+    source: S1
+    checked_on: '2026-10-12'
+  - id: isscc-2027
+    name: ISSCC 2027（IEEE International Solid-State Circuits Conference）
+    kind: conference
+    start_date: '2027-02-14'
+    end_date: '2027-02-18'
+    venue: San Francisco Marriott Marquis
+    city: アメリカ・サンフランシスコ
+    organizer: IEEE Solid-State Circuits Society
+    url: https://www.isscc.org/
+    source: S2
+    checked_on: '2026-10-12'
+  - id: semicon-korea-2027
+    name: SEMICON KOREA 2027
+    kind: exhibition
+    start_date: '2027-02-17'
+    end_date: '2027-02-19'
+    venue: COEX
+    city: 韓国・ソウル
+    organizer: SEMI
+    url: https://semiconkorea.org/
+    source: S3
+    checked_on: '2026-10-12'

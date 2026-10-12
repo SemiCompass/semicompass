@@ -381,6 +381,23 @@ class PagesBuildTest(unittest.TestCase):
         term = self.read(dist, "glossary/cmp/index.html")
         self.assertIn('data-quiz data-page-type="term"', term)
 
+    def test_home_lists_upcoming_events_only(self):
+        # 近く開かれる技術系のイベント（要件定義書 3.3 の5）：終わったものは出さず、開催日の近い順に最大5件
+        events = [{"id": f"e{i}", "name": f"試験の展示会{i}", "kind": "exhibition", "start_date": f"2099-0{i}-10", "end_date": f"2099-0{i}-12",
+                   "venue": "試験の会場", "city": "東京都", "organizer": "試験の主催者", "url": f"https://example.org/{i}", "source": "S1",
+                   "checked_on": "2098-12-01"} for i in range(1, 8)]
+        events.append({**events[0], "id": "past", "name": "終わった展示会", "start_date": "2000-01-01", "end_date": "2000-01-02"})
+        data = {"schema_version": 1, "sources": [{"id": "S1", "title": "公式", "publisher": "主催者", "url": "https://example.org/",
+                                                   "accessed_on": "2098-12-01"}], "events": events}
+        dist = self.build_with("events", "production", extra={"data/events.yaml": yaml.safe_dump(data, allow_unicode=True, sort_keys=False)})
+        main = self.read(dist, "index.html").split("<main")[1]
+        self.assertIn("近く開かれる技術系のイベント", main)
+        self.assertEqual(main.count('class="home-events__item"'), 5)
+        self.assertNotIn("終わった展示会", main)
+        self.assertLess(main.index("試験の展示会1"), main.index("試験の展示会2"))
+        self.assertIn("2099年1月10日〜12日", main)
+        self.assertIn("出典：各主催者の公式ページ", main)
+
     def test_learn_index_without_pages_keeps_glossary_entry(self):
         html = self.read(self.build("production"), "index.html").split("<main")[1]
         self.assertIn('href="/glossary/"', html)
