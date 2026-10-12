@@ -292,3 +292,9 @@ learn:
   power:
     title: 電力を操る：パワー半導体
     basis: reviewed
+  image-sensor:
+    title: 光を電気に変える：イメージセンサー
+    basis: reviewed
+  crystal:
+    title: シリコンと単結晶：インゴットができるまで
+    basis: reviewed

@@ -1,0 +1,62 @@
+---
+// 図：単結晶と多結晶の原子の並び、引き上げ法（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const grid = (x0: number, y0: number, cols: number, rows: number, step: number) =>
+  Array.from({ length: cols * rows }, (_, i) => ({ x: x0 + (i % cols) * step, y: y0 + Math.floor(i / cols) * step }));
+const single = grid(40, 30, 9, 7, 15);
+// 多結晶：向きの違う四つの粒。粒ごとに回した格子を、境目の線で区切った形で切り抜く
+const big = grid(-45, -45, 20, 17, 15);
+const grains = [
+  { id: 'g1', r: 0, cx: 50, cy: 40, poly: '0,0 100,0 104,80 0,86' },
+  { id: 'g2', r: 28, cx: 150, cy: 40, poly: '100,0 200,0 200,96 104,80' },
+  { id: 'g3', r: -22, cx: 50, cy: 118, poly: '0,86 104,80 120,150 0,150' },
+  { id: 'g4', r: 50, cx: 160, cy: 125, poly: '104,80 200,96 200,150 120,150' },
+];
+---
+
+<FigureFrame id="fig-crystal" columns={3} title="単結晶と、引き上げ法（模式図）" caption="図：左は単結晶。原子が端から端まで同じ向きにそろって並ぶ。中は多結晶。向きの違う小さな粒が集まり、粒の境目（点線）で並びが乱れる。右は引き上げ法。融けたシリコンに種結晶を触れさせ、回しながらゆっくり引き上げると、種結晶と同じ並びの単結晶が下へ育つ。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="単結晶：原子が端から端まで同じ向きにそろって並ぶ">
+      {single.map((p) => <circle class="fig-dot" cx={p.x} cy={p.y} r="3" />)}
+    </svg>
+    <span class="fig__name">単結晶</span>
+    <span class="fig__note">原子が、全体で同じ向きにそろって並ぶ</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="多結晶：向きの違う粒が集まり、粒の境目で並びが乱れる">
+      <defs>
+        {grains.map((g) => <clipPath id={`fig-crystal-${g.id}`}><polygon points={g.poly} /></clipPath>)}
+      </defs>
+      {grains.map((g) => (
+        <g clip-path={`url(#fig-crystal-${g.id})`}>
+          <g transform={`rotate(${g.r} ${g.cx} ${g.cy})`}>
+            {big.map((p) => <circle class="fig-dot" cx={p.x} cy={p.y} r="3" />)}
+          </g>
+        </g>
+      ))}
+      <path class="fig-dash" d="M100 0L104 80L0 86M104 80L200 96M104 80L120 150" />
+    </svg>
+    <span class="fig__name">多結晶</span>
+    <span class="fig__note">粒ごとに向きが違い、境目で並びが乱れる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="引き上げ法：融けたシリコンに種結晶を触れさせ、回しながら引き上げると、単結晶のインゴットが育つ">
+      <path class="fig-line" d="M100 4v18" />
+      <rect class="fig-metal" x="94" y="22" width="12" height="10" />
+      <path class="fig-wafer" d="M94 32h12l12 12v58h-36v-58z" />
+      <path class="fig-arrow" d="M104 14h20M118 8l6 6-6 6" />
+      <path class="fig-arrow" d="M80 12a20 5 0 0 0 40 0" />
+      <path class="fig-part" d="M40 92h120v44h-120z" />
+      <path class="fig-film" d="M44 98h112v34h-112z" />
+      <path class="fig-wafer" d="M82 98h36v4h-36z" />
+      <text class="fig-text" x="128" y="18" font-size="9">引き上げる</text>
+      <text class="fig-text" x="76" y="16" font-size="9" text-anchor="end">回す</text>
+      <text class="fig-text" x="90" y="31" font-size="9" text-anchor="end">種結晶</text>
+      <text class="fig-text" x="100" y="70" font-size="9" text-anchor="middle">単結晶</text>
+      <text class="fig-text" x="100" y="122" font-size="9" text-anchor="middle">融けたシリコン</text>
+      <text class="fig-text" x="162" y="134" font-size="9">るつぼ</text>
+    </svg>
+    <span class="fig__name">引き上げ法</span>
+    <span class="fig__note">種結晶の並びにならって、単結晶が下へ育つ</span>
+  </li>
+</FigureFrame>

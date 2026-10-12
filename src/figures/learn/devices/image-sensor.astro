@@ -1,0 +1,45 @@
+---
+// 図：表面照射型と裏面照射型のイメージセンサーの断面（模式図）。3つの画素を並べる（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const px = [
+  { x: 30, c: '赤' },
+  { x: 80, c: '緑' },
+  { x: 130, c: '青' },
+];
+// 層の上下の位置。front：表側から光を入れる（配線がフォトダイオードの上）、back：裏側から光を入れる（配線が下）
+const layouts = [
+  { key: 'front', name: '表面照射型', note: '光は、配線の間を通ってからフォトダイオードに届く', wire: 66, si: 96 },
+  { key: 'back', name: '裏面照射型', note: '光は、配線のない裏側から、直接フォトダイオードに届く', wire: 112, si: 66 },
+];
+---
+
+<FigureFrame id="fig-image-sensor" columns={2} title="イメージセンサーの画素の断面（模式図）" caption="図：画素を三つ並べた断面。上からマイクロレンズ、カラーフィルター（赤・緑・青）の順に重なる。左の表面照射型では、光が配線の間を通ってからフォトダイオードに届く。右の裏面照射型では、ウェーハを薄く削って裏側から光を入れるので、配線にさえぎられない。模式図、本サイトで作成">
+  {layouts.map((l) => (
+    <li class="fig__panel">
+      <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label={`${l.name}：${l.note}`}>
+        {px.map((p) => (
+          <>
+            <path class="fig-arrow" d={`M${p.x + 20} 4v12M${p.x + 16} 12l4 4 4-4`} />
+            <path class="fig-part" d={`M${p.x + 4} 32a16 12 0 0 1 32 0z`} />
+            <rect class="fig-film" x={p.x + 2} y="32" width="36" height="14" />
+            <text class="fig-text" x={p.x + 20} y="43" font-size="9" text-anchor="middle">{p.c}</text>
+          </>
+        ))}
+        <rect class="fig-part" x="30" y={l.wire} width="140" height="26" />
+        {px.map((p) => <path class="fig-metal" d={`M${p.x + 1} ${l.wire + 8}h8v4h-8zM${p.x + 31} ${l.wire + 8}h8v4h-8zM${p.x + 1} ${l.wire + 18}h8v4h-8zM${p.x + 31} ${l.wire + 18}h8v4h-8z`} />)}
+        <rect class="fig-wafer" x="30" y={l.si} width="140" height="30" />
+        {px.map((p) => <rect class="fig-resist" x={p.x + 10} y={l.si + 6} width="20" height="16" />)}
+        <text class="fig-text" x="174" y={l.wire + 16} font-size="9">配線</text>
+        <text class="fig-text" x="174" y={l.si + 14} font-size="9">PD</text>
+        <text class="fig-text" x="2" y="30" font-size="9">光</text>
+      </svg>
+      <span class="fig__name">{l.name}</span>
+      <span class="fig__note">{l.note}</span>
+    </li>
+  ))}
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-arrow" d="M12 3v18" /></svg>光</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-resist" x="4" y="6" width="16" height="12" /></svg>フォトダイオード（PD）</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-metal" x="4" y="9" width="16" height="6" /></svg>配線</li>
+  </ul>
+</FigureFrame>
