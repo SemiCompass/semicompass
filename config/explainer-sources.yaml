@@ -286,3 +286,9 @@ learn:
   cmos-inverter:
     title: スイッチで計算する：CMOSインバーター
     basis: reviewed
+  memory:
+    title: 情報を覚える：メモリ（DRAMとNAND型フラッシュ）
+    basis: reviewed
+  power:
+    title: 電力を操る：パワー半導体
+    basis: reviewed

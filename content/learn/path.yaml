@@ -18,6 +18,8 @@ fields:
     units:
       - { type: learn, ref: mosfet }
       - { type: learn, ref: scaling }
+      - { type: learn, ref: memory }
+      - { type: learn, ref: power }
   - "no": 3
     slug: logic
     title: 論理回路

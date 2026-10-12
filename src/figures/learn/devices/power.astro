@@ -1,0 +1,54 @@
+---
+// 図：パワー半導体の働きと形（模式図）。左は入切の時間の割合を変えて交流の代わりを作る様子、右は電気を縦に流す構造（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const n = 16;
+const x0 = 20;
+const cell = 160 / n;
+const pulses = Array.from({ length: n }, (_, i) => {
+  const v = Math.sin((2 * Math.PI * (i + 0.5)) / n);
+  const w = Math.abs(v) * cell * 0.9;
+  return { x: x0 + i * cell + (cell - w) / 2, w, y: v >= 0 ? 30 : 70 };
+});
+const wave = Array.from({ length: 26 }, (_, k) => {
+  const t = k / 25;
+  return `${(x0 + 160 * t).toFixed(1)},${(70 - 34 * Math.sin(2 * Math.PI * t)).toFixed(1)}`;
+}).join(' ');
+---
+
+<FigureFrame id="fig-power" columns={2} title="パワー半導体の働きと形（模式図）" caption="図：左は、スイッチを入切して作る電気の形。入の時間の割合を少しずつ変え、向きも切り替えると、平均すると波のように変わる電気（点線）になる。右は、電気をウェーハの表側から裏側へ縦に流す構造。厚めに作った層が、切のときに電圧を受け止める。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="入の時間の割合を変えながら入切し、向きも切り替えると、平均すると波のように変わる電気になる">
+      <path class="fig-line" d="M14 70h172M20 22v96" />
+      {pulses.map((p) => <rect class="fig-film" x={p.x.toFixed(1)} y={p.y} width={p.w.toFixed(1)} height="40" />)}
+      <polyline class="fig-dash" points={wave} />
+      <text class="fig-text" x="186" y="64" font-size="10" text-anchor="end">時間</text>
+      <text class="fig-text" x="24" y="132" font-size="10">入の時間の割合を変えて並べる</text>
+    </svg>
+    <span class="fig__name">入切で電気の形を変える</span>
+    <span class="fig__note">入の時間の割合と向きを変えると、平均して交流の代わりになる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="表側にソースとゲート、裏側にドレインがあり、電気は表から裏へ縦に流れる。厚めの層が切のときに電圧を受け止める">
+      <rect class="fig-metal" x="30" y="14" width="40" height="10" />
+      <rect class="fig-metal" x="130" y="14" width="40" height="10" />
+      <rect class="fig-part" x="82" y="14" width="36" height="10" />
+      <text class="fig-text" x="50" y="10" font-size="9" text-anchor="middle">ソース</text>
+      <text class="fig-text" x="100" y="10" font-size="9" text-anchor="middle">ゲート</text>
+      <text class="fig-text" x="150" y="10" font-size="9" text-anchor="middle">ソース</text>
+      <rect class="fig-wafer" x="20" y="24" width="160" height="14" />
+      <rect class="fig-film" x="20" y="38" width="160" height="56" />
+      <text class="fig-text" x="128" y="62" font-size="9" text-anchor="middle">電圧を受け止める</text>
+      <text class="fig-text" x="128" y="74" font-size="9" text-anchor="middle">厚めの層</text>
+      <rect class="fig-wafer" x="20" y="94" width="160" height="18" />
+      <rect class="fig-metal" x="20" y="112" width="160" height="10" />
+      <text class="fig-text" x="100" y="134" font-size="9" text-anchor="middle">ドレイン（裏側）</text>
+      <path class="fig-arrow" d="M60 30v76M54 98l6 8 6-8" />
+    </svg>
+    <span class="fig__name">電気を縦に流す構造</span>
+    <span class="fig__note">表から裏へ流すので、チップの面積全体を通り道に使える</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-arrow" d="M12 3v18" /></svg>電気の流れ</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-dash" d="M2 12h20" /></svg>平均した電気の形</li>
+  </ul>
+</FigureFrame>
