@@ -1,0 +1,147 @@
+---
+// 図：純粋なシリコン、n型、p型の結晶（模式図）。原子の並びと、余った電子・正孔（仕様書 7章、8.18）
+const grid = [0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => ({ x: 24 + c * 48, y: 24 + r * 48, center: r === 1 && c === 1 })));
+const bonds = grid.flatMap((a) => grid.filter((b) => (b.x - a.x === 48 && b.y === a.y) || (b.y - a.y === 48 && b.x === a.x)).map((b) => ({ a, b })));
+const panels = [
+  { key: 'pure', name: '純粋なシリコン', note: 'すべての原子が結びつきに電子を使い、動ける電子はほとんどない' },
+  { key: 'n', name: 'n型（リンなどを混ぜる）', note: '混ぜた原子のまわりに、結びつきに使われない電子が余る' },
+  { key: 'p', name: 'p型（ホウ素などを混ぜる）', note: '混ぜた原子のまわりに、電子が一つ足りない場所（正孔）ができる' },
+];
+---
+
+<figure class="lfig" aria-labelledby="lfig-doping-cap">
+  <p class="lfig__title">シリコンの結晶と、n型・p型（模式図）</p>
+  <ol class="lfig__panels">
+    {panels.map((p) => (
+      <li class="lfig__panel">
+        <svg class="lfig__svg" viewBox="0 0 144 144" role="img" aria-label={`${p.name}：${p.note}`}>
+          {bonds.map(({ a, b }) => <line class="lfig__bond" x1={a.x} y1={a.y} x2={b.x} y2={b.y} />)}
+          {grid.map((g) => (
+            <circle class:list={['lfig__atom', { 'lfig__atom--dopant': g.center && p.key !== 'pure' }]} cx={g.x} cy={g.y} r="11" />
+          ))}
+          {p.key === 'n' && <circle class="lfig__electron" cx="92" cy="58" r="5" />}
+          {p.key === 'p' && <circle class="lfig__hole" cx="96" cy="72" r="6" />}
+        </svg>
+        <span class="lfig__name">{p.name}</span>
+        <span class="lfig__ex">{p.note}</span>
+      </li>
+    ))}
+  </ol>
+  <ul class="lfig__legend" aria-hidden="true">
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><circle class="lfig__atom" cx="12" cy="12" r="9" /></svg>シリコンの原子</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><circle class="lfig__atom lfig__atom--dopant" cx="12" cy="12" r="9" /></svg>混ぜた元素の原子</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><circle class="lfig__electron" cx="12" cy="12" r="5" /></svg>余った電子</li>
+    <li><svg class="lfig__key" viewBox="0 0 24 24"><circle class="lfig__hole" cx="12" cy="12" r="6" /></svg>正孔（電子の足りない場所）</li>
+  </ul>
+  <figcaption id="lfig-doping-cap" class="lfig__caption">図：シリコンの原子は、周りの原子と電子を出し合って結びつく。リンなどを混ぜると電子が余り（n型）、ホウ素などを混ぜると正孔ができる（p型）。原子の数や結びつきの形は簡単にした模式図、本サイトで作成</figcaption>
+</figure>
+
+<style>
+  @import "../../../styles/breakpoints.css";
+
+  .lfig {
+    margin: var(--space-5) 0 var(--space-6);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .lfig__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  /* スマートフォンは1列（図と説明を横に並べる）。タブレット以上は3列 */
+  .lfig__panels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lfig__panel {
+    display: grid;
+    grid-template-columns: var(--figure-thumb) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-3);
+    row-gap: var(--space-1);
+  }
+  .lfig__panel .lfig__svg {
+    grid-row: span 2;
+  }
+  @media (--tablet) {
+    .lfig__panels {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .lfig__panel {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+  .lfig__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--color-surface-sunken);
+  }
+  .lfig__bond {
+    stroke: var(--color-border-strong);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__atom {
+    fill: var(--color-surface);
+    stroke: var(--color-text);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__atom--dopant {
+    fill: var(--color-primary);
+    stroke: var(--color-primary);
+  }
+  .lfig__electron {
+    fill: var(--color-text);
+  }
+  .lfig__hole {
+    fill: var(--color-surface);
+    stroke: var(--color-error);
+    stroke-width: var(--icon-stroke);
+    stroke-dasharray: 3 2;
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__name {
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-small-leading);
+  }
+  .lfig__ex {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .lfig__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-small);
+  }
+  .lfig__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .lfig__key {
+    width: var(--icon-size);
+    height: var(--icon-size);
+  }
+  .lfig__caption {
+    margin-block-start: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+</style>

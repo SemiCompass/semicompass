@@ -262,7 +262,9 @@ class PagesBuildTest(unittest.TestCase):
         self.assertEqual(html.count("<h1"), 1)
         entries = re.findall(r'<nav class="entries"[^>]*>(.*?)</nav>', html, re.S)[0]
         links = re.findall(r'<a class="entry"[^>]*href="([^"]+)"[^>]*>(.*?)</a>', entries, re.S)
-        self.assertEqual([h for h, _ in links], ["/glossary/", "/processes/", "/news/", "/companies/"])
+        # 「半導体を学ぶ」は、学習のページがあれば /learn/、なければ用語集（プレビューでは下書きのページも数える）
+        self.assertIn(links[0][0], ("/learn/", "/glossary/"))
+        self.assertEqual([h for h, _ in links[1:]], ["/processes/", "/news/", "/companies/"])
         for title, (_, body) in zip(["半導体を学ぶ", "工程を学ぶ", "ニュースを読む", "企業分析"], links):
             self.assertIn(title, body)
             self.assertIn('aria-hidden="true"', body)  # 記号は見出しと組にし、読み上げない
@@ -349,9 +351,11 @@ class PagesBuildTest(unittest.TestCase):
         slug = self.processes[0]["slug"]
         glossary = {"cmp.md": f"---\nslug: cmp\nterm: CMP\nreading: しーえむぴー\nshort_definition: ウエハーの表面を平らにする工程である。\n"
                               f"published_at: '2026-01-01'\nai_generated: true\nprocesses: [{slug}]\n{src}---\n## 概要\n\n試験用の本文である[S1]。\n\n{quiz}"}
-        path = (ROOT / "content" / "learn" / "path.yaml").read_text(encoding="utf-8").replace(
-            "summary: 電気を通す・通さないの違いから、電子と正孔、pn接合とダイオードまでを学びます。\n    units: []",
-            "summary: 電気を通す・通さないの違いから、電子と正孔、pn接合とダイオードまでを学びます。\n    units:\n      - { type: learn, ref: test-page }")
+        tree = yaml.safe_load((ROOT / "content" / "learn" / "path.yaml").read_text(encoding="utf-8"))
+        for field in tree["fields"]:
+            if field["slug"] == "basics":
+                field["units"] = [{"type": "learn", "ref": "test-page"}]  # リポジトリの学習のページは写さない（下の content/learn/basics/ を置き換える）
+        path = yaml.safe_dump(tree, allow_unicode=True, sort_keys=False)
         extra = {
             "content/learn/path.yaml": path,
             "content/learn/basics/test-page.md": f"---\ntitle: 試験の学習ページ\nfield: basics\ndescription: 試験用の説明である。\n"
