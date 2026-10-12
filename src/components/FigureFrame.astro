@@ -155,6 +155,14 @@ const { title, caption, id, columns = 3 } = Astro.props;
     stroke-width: var(--icon-stroke);
     vector-effect: non-scaling-stroke;
   }
+  .fig :global(.fig-text),
+  .fig :global(.fig-strong) {
+    fill: var(--color-text);
+    font-family: var(--font-family-base);
+  }
+  .fig :global(.fig-strong) {
+    font-weight: var(--font-weight-bold);
+  }
   .fig :global(.fig-plasma) {
     fill: var(--color-primary-tint);
     stroke: var(--color-accent);

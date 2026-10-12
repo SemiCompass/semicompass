@@ -283,3 +283,6 @@ learn:
   scaling:
     title: 微細化と、その課題
     basis: reviewed
+  cmos-inverter:
+    title: スイッチで計算する：CMOSインバーター
+    basis: reviewed

@@ -22,7 +22,8 @@ fields:
     slug: logic
     title: 論理回路
     summary: スイッチとしてのトランジスタが、どのように計算をするのかを学びます。
-    units: []
+    units:
+      - { type: learn, ref: cmos-inverter }
   - "no": 4
     slug: silicon
     title: シリコンとウェーハ
