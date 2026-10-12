@@ -20,6 +20,7 @@ fields:
       - { type: learn, ref: scaling }
       - { type: learn, ref: memory }
       - { type: learn, ref: power }
+      - { type: learn, ref: image-sensor }
   - "no": 3
     slug: logic
     title: 論理回路
@@ -30,7 +31,8 @@ fields:
     slug: silicon
     title: シリコンとウェーハ
     summary: 半導体の材料であるシリコンの結晶と、ウェーハができるまでを学びます。
-    units: []
+    units:
+      - { type: learn, ref: crystal }
   - "no": 5
     slug: process
     title: 製造工程
