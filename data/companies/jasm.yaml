@@ -23,7 +23,7 @@ parent:
   source: S1
 selection:
   basis: domestic_fab
-  note: "運営者が掲載企業リスト（第1.0版）で承認。国内の主要な生産拠点は、公開資料で確認予定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。熊本県菊池郡菊陽町に12インチ（300mm）ウェーハの前工程の工場（第1工場）を持ち、2024年第4四半期に量産を始めた（S1、S3）。TSMCが過半を出資する製造子会社（S1）。国内の主要な生産拠点を持つことを確認した（2026年10月12日）"
   decided_on: "2026-10-04"
   source: S1
 sources:
@@ -38,3 +38,10 @@ sources:
     publisher: "TSMC"
     url: "https://investor.tsmc.com/english"
     accessed_on: "2026-10-05"
+  - id: S3
+    title: "工場概要説明（国内投資拡大のための官民連携フォーラム 第6回 資料1）"
+    publisher: "内閣官房（資料の作成はJASM）"
+    url: "https://www.cas.go.jp/jp/seisaku/kokunai_toushikakudai_forum/dai6/siryou1.pdf"
+    published_on: "2025-01-27"
+    pages: "2-3"
+    accessed_on: "2026-10-12"

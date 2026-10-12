@@ -15,14 +15,20 @@ parent:
   name_en: "Micron Technology, Inc."
   country: US
   listed_market: "NASDAQ"
-  source: S1
+  source: S2
 selection:
   basis: domestic_fab
-  note: "運営者が掲載企業リスト（第1.0版）で承認。国内の主要な生産拠点は、公開資料で確認予定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。広島県東広島市にDRAMの前工程の工場（広島工場）を持つ（S1）。マイクロン・テクノロジーの子会社の一覧に載っている（S2）。国内の主要な生産拠点を持つことを確認した（2026年10月12日）"
   decided_on: "2026-10-04"
 sources:
   - id: S1
-    title: "Micron Memory Japan（二次資料。公式資料での確認が必要）"
-    publisher: "Wikipedia"
-    url: "https://en.wikipedia.org/wiki/Micron_Memory_Japan"
-    accessed_on: "2026-10-04"
+    title: "マイクロンメモリ ジャパン株式会社 広島工場"
+    publisher: "広島県"
+    url: "https://www.pref.hiroshima.lg.jp/site/onlyonenoonezigyou/1267752475949.html"
+    published_on: "2025-02-28"
+    accessed_on: "2026-10-12"
+  - id: S2
+    title: "Form 10-K（2025年度） Exhibit 21.1 Subsidiaries of the Registrant"
+    publisher: "Micron Technology, Inc.（米国証券取引委員会 EDGAR）"
+    url: "https://www.sec.gov/Archives/edgar/data/723125/000072312525000028/a2025q4ex211-subsidiarieso.htm"
+    accessed_on: "2026-10-12"

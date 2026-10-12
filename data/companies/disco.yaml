@@ -24,7 +24,7 @@ fiscal_year_end_month: 3
 is_holding_company: false
 selection:
   basis: revenue_ratio
-  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は100.0%（2026年3月期。有価証券報告書のセグメント情報と、本サイトのセグメント対応表による）で、30%以上であることを確認した（2026年10月12日）"
   decided_on: "2026-10-04"
   source: S1
 sources:

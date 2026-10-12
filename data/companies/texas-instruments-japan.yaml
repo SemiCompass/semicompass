@@ -18,7 +18,7 @@ parent:
   source: S1
 selection:
   basis: domestic_fab
-  note: "運営者が掲載企業リスト（第1.0版）で承認。国内の主要な生産拠点は、公開資料で確認予定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。福島県会津若松市にウェーハ製造の前工程の工場（会津工場）を持つ（S2、S3）。茨城県美浦の拠点もテキサス・インスツルメンツの自社保有の拠点として載っているが、種類と稼働は確かめていない（S2）。国内の主要な生産拠点を持つことを確認した（2026年10月12日）"
   decided_on: "2026-10-04"
 sources:
   - id: S1
@@ -26,3 +26,15 @@ sources:
     publisher: "厚生労働省（若者雇用促進総合サイト）"
     url: "https://f-style.mhlw.go.jp/wp-content/uploads/2024/12/日本テキサス・インスツルメンツ合同会社-1.pdf"
     accessed_on: "2026-10-04"
+  - id: S2
+    title: "Form 10-K（2025年度） Item 2 Properties"
+    publisher: "Texas Instruments Incorporated（米国証券取引委員会 EDGAR）"
+    url: "https://www.sec.gov/Archives/edgar/data/97476/000009747626000059/txn-20251231.htm"
+    pages: "Item 2"
+    accessed_on: "2026-10-12"
+  - id: S3
+    title: "Product Change Notification PCN#20260609002.1A"
+    publisher: "Texas Instruments Incorporated（販売代理店Mouserのサイトに掲載）"
+    url: "https://www.mouser.com/PCN/Texas_Instruments_PCN20260609002.1A_Notification.pdf"
+    published_on: "2026-07-02"
+    accessed_on: "2026-10-12"
