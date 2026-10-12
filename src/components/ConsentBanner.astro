@@ -1,0 +1,75 @@
+---
+// Cookieの利用の確認（要件定義書 LG-03）：本番のビルドで、測定IDがあるときだけ出力する。選択がまだのときだけ、画面の下に表示する。
+// 「同意する」と「同意しない」は同じ形・同じ大きさのボタンにする（どちらかを目立たせない）。影は使わず、上の罫線で本文と分ける
+import Button from './Button.astro';
+---
+
+<section class="consent" data-consent hidden aria-labelledby="consent-title">
+  <div class="container consent__inner">
+    <div class="consent__text">
+      <h2 class="consent__title" id="consent-title">Cookieの利用について</h2>
+      <p>
+        このサイトは、読まれているページを把握してサイトを改善するために、アクセス解析（Google Analytics 4）のCookieを使います。同意した場合だけ、閲覧の状況をGoogleに送ります。詳しくは、<a href="/privacy/">プライバシーポリシー</a>と<a href="/external-transmission/">外部送信について</a>をご覧ください。
+      </p>
+    </div>
+    <div class="consent__actions">
+      <span data-consent-accept-wrap><Button id="consent-accept">同意する</Button></span>
+      <span data-consent-reject-wrap><Button id="consent-reject">同意しない</Button></span>
+    </div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/analytics';
+</script>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .consent {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 10;
+    border-top: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
+  }
+  .consent[hidden] {
+    display: none;
+  }
+  .consent__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+  }
+  .consent__title {
+    margin: 0 0 var(--space-1);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  .consent__text p {
+    margin: 0;
+    max-width: var(--content-max-width);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .consent__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  @media (--tablet) {
+    .consent__inner {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-5);
+    }
+    .consent__actions {
+      flex-shrink: 0;
+    }
+  }
+</style>

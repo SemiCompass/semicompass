@@ -1,0 +1,49 @@
+---
+// 疑問の解決ボタン（要件定義書 FR-709、要求定義書 VM-01）：企業・工程・用語・ニュースのページの末尾に置く。
+// 押した結果は、Cookieの利用に同意しているときだけ、GA4のイベント page_feedback（ページの種類、URL、回答）として送る
+import Button from './Button.astro';
+
+interface Props {
+  pageType: 'company' | 'process' | 'term' | 'news';
+}
+const { pageType } = Astro.props;
+---
+
+<section class="feedback" data-feedback data-page-type={pageType} aria-labelledby="feedback-title">
+  <h2 class="feedback__title" id="feedback-title">知りたいことは分かりましたか？</h2>
+  <div class="feedback__choices" data-feedback-choices>
+    <span data-feedback-wrap="yes"><Button id="feedback-yes">はい</Button></span>
+    <span data-feedback-wrap="no"><Button id="feedback-no">いいえ</Button></span>
+  </div>
+  <p class="feedback__thanks" data-feedback-thanks role="status" tabindex="-1" hidden>ありがとうございました。今後の改善に使います。</p>
+</section>
+
+<script>
+  import '../scripts/feedback';
+</script>
+
+<style>
+  .feedback {
+    margin-block: var(--space-7) 0;
+    padding-block-start: var(--space-4);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+  .feedback__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead-leading);
+    letter-spacing: var(--text-lead-tracking);
+  }
+  .feedback__choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .feedback__choices[hidden],
+  .feedback__thanks[hidden] {
+    display: none;
+  }
+  .feedback__thanks {
+    margin: 0;
+  }
+</style>

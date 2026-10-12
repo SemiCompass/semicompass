@@ -6,6 +6,7 @@ import CompanyTable from '../../components/CompanyTable.astro';
 import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
 import SourceList from '../../components/SourceList.astro';
+import PageFeedback from '../../components/PageFeedback.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import Tag from '../../components/Tag.astro';
 import ProcessFigure from '../../components/ProcessFigure.astro';
@@ -102,4 +103,5 @@ const toc = [
   </section>
 
   {sources.length > 0 && <SourceList sources={sources} heading="出典" />}
+  <PageFeedback pageType="process" />
 </Page>
