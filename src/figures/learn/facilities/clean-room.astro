@@ -1,0 +1,37 @@
+---
+// 図：クリーンルームの空気の流れと、ごみが不良になる様子（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const down = [48, 72, 96, 120, 144];
+---
+
+<FigureFrame id="fig-clean-room" columns={2} title="クリーンルームの仕組み（模式図）" caption="図：左は、クリーンルームの断面。天井のフィルターを通したきれいな空気が、部屋を上から下へそろって流れ、穴の開いた床から床下へ抜け、壁の中を通って天井の上に戻る。右は、配線の間にごみが入り、本来つながらない線がつながってしまう様子。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="クリーンルームの断面：天井のフィルターから床へ空気が流れ、床下から壁の中を通って天井の上へ戻る">
+      <rect class="fig-film" x="36" y="22" width="128" height="10" />
+      <text class="fig-text" x="100" y="16" font-size="8" text-anchor="middle">天井のフィルター</text>
+      {down.map((x) => <path class="fig-arrow" d={`M${x - 8} 40v58M${x - 12} 92l4 6 4-6`} />)}
+      <rect class="fig-part" x="80" y="80" width="40" height="24" />
+      <text class="fig-text" x="100" y="96" font-size="8" text-anchor="middle">装置</text>
+      <path class="fig-dash" d="M36 108h128" />
+      <text class="fig-text" x="100" y="120" font-size="8" text-anchor="middle">穴の開いた床・床下</text>
+      <path class="fig-line" d="M30 18v110h140v-110" />
+      <path class="fig-arrow" d="M174 124v-106M170 24l4-6 4 6M26 124v-106M22 24l4-6 4 6" />
+      <text class="fig-text" x="100" y="142" font-size="8" text-anchor="middle">空気は壁の中を通って天井の上へ戻る</text>
+    </svg>
+    <span class="fig__name">空気を上から下へ流す</span>
+    <span class="fig__note">部屋で生まれたごみを、すぐに床下へ運び去る</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="配線の間にごみが入ると、本来つながらない線がつながってしまう">
+      <rect class="fig-wafer" x="16" y="20" width="168" height="110" />
+      <rect class="fig-metal" x="30" y="36" width="140" height="12" />
+      <rect class="fig-metal" x="30" y="64" width="140" height="12" />
+      <rect class="fig-metal" x="30" y="92" width="140" height="12" />
+      <circle class="fig-resist" cx="108" cy="84" r="14" />
+      <text class="fig-text" x="130" y="124" font-size="8" text-anchor="middle">ごみが線をつなぐ</text>
+      <text class="fig-text" x="100" y="14" font-size="8" text-anchor="middle">上から見た配線</text>
+    </svg>
+    <span class="fig__name">ごみが不良になる</span>
+    <span class="fig__note">小さなごみでも、細い配線どうしをつないでしまう</span>
+  </li>
+</FigureFrame>

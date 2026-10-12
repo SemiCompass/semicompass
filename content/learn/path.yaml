@@ -52,12 +52,14 @@ fields:
     slug: test
     title: 検査・評価・信頼性
     summary: できた半導体を確かめる方法と、長く使えることを確かめる考え方を学びます。
-    units: []
+    units:
+      - { type: learn, ref: test-and-reliability }
   - "no": 7
     slug: facilities
     title: 工場を支える技術
     summary: クリーンルーム、超純水、ガス、搬送など、工場全体を支える技術を学びます。
-    units: []
+    units:
+      - { type: learn, ref: clean-room }
   - "no": 8
     slug: industry
     title: 業界の構造と企業

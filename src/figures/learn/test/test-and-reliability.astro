@@ -1,0 +1,41 @@
+---
+// 図：検査の流れと、バスタブ曲線（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const steps = [
+  { y: 8, name: '工程の途中の検査', sub: '膜の厚さ・寸法・ごみ' },
+  { y: 42, name: 'ウェーハテスト', sub: '針を当てて電気で確かめる' },
+  { y: 76, name: '組み立て（後工程）', sub: '' },
+  { y: 110, name: '最終テスト', sub: '温度を変える・性能で分ける' },
+];
+---
+
+<FigureFrame id="fig-test" columns={2} title="検査の流れと、故障の起きやすさ（模式図）" caption="図：左は、製造の中で確かめる段階の流れ。工程の途中の検査、ウェーハのままの電気のテスト、組み立て、最終テストの順に進む。右は、使う時間と故障の起きやすさの関係（バスタブ曲線）。使い始めは初期故障が多く、その後は少ない時期が続き、長く使うと摩耗故障で再び増える。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="検査の流れ：工程の途中の検査、ウェーハテスト、組み立て、最終テストの順">
+      {steps.map((s, i) => (
+        <>
+          <rect class={s.sub ? 'fig-film' : 'fig-part'} x="24" y={s.y} width="152" height="26" />
+          <text class="fig-strong" x="100" y={s.y + (s.sub ? 11 : 17)} font-size="9" text-anchor="middle">{s.name}</text>
+          {s.sub && <text class="fig-text" x="100" y={s.y + 22} font-size="8" text-anchor="middle">{s.sub}</text>}
+          {i < steps.length - 1 && <path class="fig-arrow" d={`M100 ${s.y + 27}v6M97 ${s.y + 30}l3 3 3-3`} />}
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">確かめる段階</span>
+    <span class="fig__note">早い段階で見つけるほど、無駄が少ない</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="バスタブ曲線：使い始めは故障が多く、その後は少ない時期が続き、長く使うと再び増える">
+      <path class="fig-line" d="M24 12v108h164" />
+      <path class="fig-arrow" d="M28 24C40 80 52 96 70 98H134C152 96 166 80 180 34" />
+      <path class="fig-dash" d="M70 20v100M134 20v100" />
+      <text class="fig-text" x="47" y="134" font-size="8" text-anchor="middle">初期故障</text>
+      <text class="fig-text" x="102" y="134" font-size="8" text-anchor="middle">偶発故障</text>
+      <text class="fig-text" x="158" y="134" font-size="8" text-anchor="middle">摩耗故障</text>
+      <text class="fig-text" x="188" y="146" font-size="8" text-anchor="end">使う時間</text>
+      <text class="fig-text" x="28" y="10" font-size="8">故障の起きやすさ</text>
+    </svg>
+    <span class="fig__name">バスタブ曲線</span>
+    <span class="fig__note">故障の起きやすさは、三つの時期で変わる</span>
+  </li>
+</FigureFrame>
