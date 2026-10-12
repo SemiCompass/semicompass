@@ -1,3 +1,6 @@
 # サイトの設定（要件定義書 FP-07）。
 # 問い合わせフォーム（Googleフォーム）のURL。空のあいだは、問い合わせのページに「準備中」と表示する。
 contact_form_url: "https://docs.google.com/forms/d/e/1FAIpQLSdOjSDiqQEl5Xhau5Vdvm5oJKgkjv7Df2ACLMBTyxAKT2NiDg/viewform"
+# Google Analytics 4 の測定ID（要件定義書 FR-709、LG-03）。本番のビルドでだけ使い、Cookieの利用に同意した閲覧者だけを計測する。
+# 空にすると、同意の確認も計測も出さない。測定IDはページに書かれる公開の値で、秘密の情報ではない
+ga4_measurement_id: "G-H3F8Q7M89B"

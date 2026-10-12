@@ -8,6 +8,7 @@ import Notice from '../../../../components/Notice.astro';
 import PendingNotice from '../../../../components/PendingNotice.astro';
 import RichText from '../../../../components/RichText.astro';
 import SourceList from '../../../../components/SourceList.astro';
+import PageFeedback from '../../../../components/PageFeedback.astro';
 import Tag from '../../../../components/Tag.astro';
 import Page from '../../../../layouts/Page.astro';
 import { dateLabel, loadCompanies, loadSupply } from '../../../../lib/companies';
@@ -78,6 +79,7 @@ const toc = [
     )}
   </section>
   <SourceList sources={sources} heading="出典" />
+  <PageFeedback pageType="news" />
 </Page>
 
 <style>

@@ -285,6 +285,29 @@ class PagesBuildTest(unittest.TestCase):
             self.assertIn(f"{n}社", main, page)
         self.assertTrue((dist / "companies" / "process" / "facilities" / "index.html").exists())
 
+    def test_analytics_only_in_production_with_consent_and_feedback_on_content_pages(self):
+        # GA4（要件定義書 LG-03）：本番のビルドだけ、測定IDとCookieの利用の確認を出す。計測のプログラムは、同意の後に読み込む（ページに直接書かない）
+        prod, prev = self.build("production"), self.build("preview")
+        home = self.read(prod, "index.html")
+        self.assertRegex(home, r'data-ga-id="G-[A-Z0-9]+"')
+        self.assertIn("data-consent ", home)
+        self.assertIn("data-consent-open", home)
+        self.assertNotIn("googletagmanager.com/gtag/js", home)  # 同意の前は読み込まない
+        self.assertNotIn("data-ga-id", self.read(prev, "index.html"))
+        self.assertNotIn("data-consent ", self.read(prev, "index.html"))
+        # 疑問の解決ボタン（FR-709）：企業（詳細掲載）・工程・用語・ニュースのページの末尾
+        pages = [p for p in (prod / "companies").glob("*/index.html") if "data-feedback-wrap" in p.read_text(encoding="utf-8")]
+        self.assertGreater(len(pages), 0)
+        for pattern in ("processes/*/index.html", "glossary/*/index.html", "news/*/*/*/index.html"):
+            found = list(prod.glob(pattern))
+            if found:
+                self.assertIn("知りたいことは分かりましたか？", found[0].read_text(encoding="utf-8"), pattern)
+        self.assertNotIn("data-feedback", home)
+        # CSP：Google Analytics 4 だけを許す
+        headers = (ROOT / "public" / "_headers").read_text(encoding="utf-8")
+        self.assertIn("script-src 'self' https://www.googletagmanager.com", headers)
+        self.assertNotIn("unsafe-inline", headers)
+
     def test_home_lists_latest_news_up_to_five(self):
         # 公開しているニュース解説を、トップに新しい順で最大5件出す（仕様書 9.1 の4）。0件のときだけ「まだありません」
         for env in ("preview", "production"):
@@ -408,7 +431,7 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("（外部サイト）", text)
         headings = re.findall(r"<h2[^>]*>(.*?)</h2>", text.split("<main")[1].split("</main>")[0])
         self.assertEqual(headings[:3], ["何が起きたか", "なぜ重要か", "関係する企業・工程とサプライチェーン上の位置"])
-        self.assertEqual(headings[3:], ["関係する企業・工程", "出典"])
+        self.assertEqual(headings[3:], ["関係する企業・工程", "出典", "知りたいことは分かりましたか？"])  # 末尾に疑問の解決ボタン（FR-709）
         self.assertIn('href="#source-1"', html)  # 本文の [S1] は、出典の1番へのリンク
         self.assertIn('id="source-1"', html)
         self.assertIn(f'href="/companies/{self.companies[0]["slug"]}/"', html)

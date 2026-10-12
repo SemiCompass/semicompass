@@ -4,6 +4,7 @@ import ExternalLink from './ExternalLink.astro';
 import { loadMenu } from '../lib/menu';
 
 const { footer, note } = loadMenu();
+const { analytics = false } = Astro.props as { analytics?: boolean };
 ---
 
 <footer class="site-footer">
@@ -29,6 +30,7 @@ const { footer, note } = loadMenu();
     <div class="site-footer__bottom">
       <p class="site-footer__name">SemiCompass</p>
       <p class="site-footer__note">業績などの数値の出典は、EDINET（金融庁）などの公開資料で、各ページに示しています。</p>
+      {analytics && <p class="site-footer__note"><button type="button" class="site-footer__consent" data-consent-open>Cookieの設定</button></p>}
       <p class="site-footer__note"><small>© SemiCompass</small></p>
     </div>
   </div>
@@ -87,6 +89,17 @@ const { footer, note } = loadMenu();
   }
   .site-footer__bottom p {
     margin-block: 0 var(--space-2);
+  }
+  /* リンクと同じ見た目のボタン（同意の確認を開き直す） */
+  .site-footer__consent {
+    min-height: var(--target-min);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-primary);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
   }
   .site-footer__name {
     color: var(--color-text);

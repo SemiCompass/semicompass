@@ -13,6 +13,7 @@ import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
 import SourceLine from '../../components/SourceLine.astro';
 import SourceList from '../../components/SourceList.astro';
+import PageFeedback from '../../components/PageFeedback.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import Tag from '../../components/Tag.astro';
 import DataTable from '../../components/DataTable.astro';
@@ -238,6 +239,7 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
         <StateMessage kind="empty" message="同じ工程の企業は、まだありません。" />
       )}
     </section>
+    <PageFeedback pageType="company" />
     <Fragment slot="aside" />
   </Page>
 ) : (
