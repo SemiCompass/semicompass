@@ -298,3 +298,9 @@ learn:
   crystal:
     title: シリコンと単結晶：インゴットができるまで
     basis: reviewed
+  test-and-reliability:
+    title: 確かめる：検査の流れと、信頼性の考え方
+    basis: reviewed
+  clean-room:
+    title: ごみを入れない：クリーンルーム
+    basis: reviewed
