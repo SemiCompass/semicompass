@@ -1,0 +1,128 @@
+---
+// 図：電気の通りやすさ（模式図）。絶縁体・半導体・導体の並びと、半導体は条件で通りやすさが変わること（仕様書 7章、8.18）
+---
+
+<figure class="lfig" aria-labelledby="lfig-conductivity-cap">
+  <p class="lfig__title">電気の通りやすさ（模式図）</p>
+  <p class="lfig__order">上ほど電気を通しにくく、下ほど電気を通しやすい。</p>
+  <div class="lfig__scale">
+    <div class="lfig__cell">
+      <span class="lfig__name">絶縁体</span>
+      <span class="lfig__ex">ゴム、ガラス、多くのプラスチック</span>
+    </div>
+    <div class="lfig__cell lfig__cell--semi">
+      <span class="lfig__name">半導体</span>
+      <span class="lfig__ex">シリコンなど</span>
+      <span class="lfig__note">
+        <svg class="lfig__both" viewBox="0 0 48 12" aria-hidden="true" focusable="false"><path d="M2 6h44M8 1 2 6l6 5M40 1l6 5-6 5"></path></svg>
+        温度、光、混ぜる元素、かける電圧で、通りやすさが変わる
+      </span>
+    </div>
+    <div class="lfig__cell">
+      <span class="lfig__name">導体</span>
+      <span class="lfig__ex">銅、アルミニウムなどの金属</span>
+    </div>
+  </div>
+  <div class="lfig__axis" aria-hidden="true">
+    <span>電気を通しにくい</span>
+    <svg class="lfig__arrow" viewBox="0 0 100 12" preserveAspectRatio="none" focusable="false"><path d="M2 6h94M90 1l6 5-6 5"></path></svg>
+    <span>電気を通しやすい</span>
+  </div>
+  <figcaption id="lfig-conductivity-cap" class="lfig__caption">図：物質は電気の通りやすさで、絶縁体、半導体、導体に分けられる。半導体は、条件によって通りやすさを大きく変えられる。模式図、本サイトで作成</figcaption>
+</figure>
+
+<style>
+  @import "../../../styles/breakpoints.css";
+
+  .lfig {
+    margin: var(--space-5) 0 var(--space-6);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .lfig__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  /* スマートフォンは縦に並べる（上ほど通しにくい）。タブレット以上は横に並べ、下に矢印の軸を置く */
+  .lfig__scale {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+  .lfig__order {
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+  }
+  .lfig__cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3);
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface-sunken);
+  }
+  .lfig__cell--semi {
+    border-color: var(--color-primary);
+    border-width: var(--border-width-current);
+    background: var(--color-primary-tint);
+  }
+  .lfig__name {
+    font-weight: var(--font-weight-bold);
+  }
+  .lfig__ex,
+  .lfig__note {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .lfig__note {
+    color: var(--color-primary);
+  }
+  .lfig__both {
+    display: block;
+    width: var(--icon-entry);
+    height: var(--icon-size);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .lfig__axis {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    margin-block-start: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    white-space: nowrap;
+  }
+  .lfig__arrow {
+    flex: 1 1 auto;
+    height: var(--icon-size);
+    fill: none;
+    stroke: var(--color-text-muted);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  @media (--tablet) {
+    .lfig__scale {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .lfig__order {
+      display: none;
+    }
+    .lfig__axis {
+      display: flex;
+    }
+  }
+  .lfig__caption {
+    margin-block-start: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+</style>

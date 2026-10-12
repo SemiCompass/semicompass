@@ -764,7 +764,7 @@ def _reviewed_checks(rel: str, section: str, slug: str, data: dict, body: str, c
         for key in ("reviewed_on", "review_methods"):
             if not data.get(key):
                 out.append(Problem(rel, f"/{key}", "V-01", f"basis: reviewed で公開する（draft: true でない）には、{key} が必要"))
-    _, outside = split_body(body)
+    _, outside = split_body(quiz_split(body)[0])  # 理解度チェックの番号（選択肢と答え）は、数値として数えない
     text = "\n".join(outside)
     if _CITATION.search(text):
         out.append(Problem(rel, "(本文)", "V-07", "basis: reviewed の本文に、出典の番号 [S1] などがある（付けない。出典は、運営者が sources に書く）",
