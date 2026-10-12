@@ -1,6 +1,7 @@
 ---
 // 意味のある図と記号だけ（仕様書 7章）。線の太さは --icon-stroke にそろえ、文字と同じ色にする。装飾だけのアイコンは作らない
-type Name = 'search' | 'external' | 'chevron' | 'chevron-down' | 'warning' | 'error' | 'note' | 'ai' | 'sort' | 'sort-up' | 'sort-down';
+type Name = 'search' | 'external' | 'chevron' | 'chevron-down' | 'warning' | 'error' | 'note' | 'ai' | 'sort' | 'sort-up' | 'sort-down'
+  | 'book' | 'flow' | 'newspaper' | 'building'; // 後の4つは、トップページの入口の記号（行き先を表す線の図。見出しと組にする）
 interface Props {
   name: Name;
   class?: string;
@@ -18,6 +19,10 @@ const paths: Record<Name, string> = {
   sort: 'M8 9l4-4 4 4M8 15l4 4 4-4',
   'sort-up': 'M8 15l4-4 4 4',
   'sort-down': 'M8 9l4 4 4-4',
+  book: 'M12 6.5C10 5 7 4.5 3 5v13c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5V5c-4-.5-7 0-9 1.5Zm0 0v13',
+  flow: 'M2.5 8.5h6v7h-6v-7Zm13 0h6v7h-6v-7ZM8.5 12h7m-2.5-2.5L15.5 12 13 14.5',
+  newspaper: 'M4 5h12v14H6a2 2 0 0 1-2-2V5Zm12 4h4v8a2 2 0 0 1-2 2h-2M7 9h6M7 12h6M7 15h4',
+  building: 'M3 20h18M5 20V4h9v16m0-11h5v11M8 8h3m-3 4h3m-3 4h3',
 };
 const turn = name === 'chevron' ? 'icon-turn' : name === 'chevron-down' ? 'icon-flip' : '';
 ---
