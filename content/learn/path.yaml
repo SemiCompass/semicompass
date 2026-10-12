@@ -10,6 +10,7 @@ fields:
     units:
       - { type: learn, ref: what-is-semiconductor }
       - { type: learn, ref: electrons-and-holes }
+      - { type: learn, ref: pn-junction }
   - "no": 2
     slug: devices
     title: デバイス

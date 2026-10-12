@@ -274,3 +274,6 @@ learn:
   electrons-and-holes:
     title: 電子と正孔、n型とp型
     basis: reviewed
+  pn-junction:
+    title: pn接合とダイオード
+    basis: reviewed
