@@ -29,13 +29,15 @@ V = variables(TOKENS)
 
 # 仕様書 4章の値
 SPEC_COLORS = {
-    "--color-bg": "#fbfaf6", "--color-surface": "#ffffff", "--color-surface-sunken": "#f2f4f2", "--color-text": "#1b2a2c",
-    "--color-text-muted": "#4a5b5e", "--color-primary": "#0b4f54", "--color-primary-hover": "#083b3f",
-    "--color-primary-tint": "#e8f1f0", "--color-visited": "#3d5f61", "--color-accent": "#b7791f",
-    "--color-accent-text": "#8a5a12", "--color-border": "#c9d3d3", "--color-border-strong": "#6b7c7e",
-    "--color-focus": "#0b4f54", "--color-warning-bg": "#fff4e0", "--color-error": "#b42318",
-    "--color-error-bg": "#fdecea", "--color-success": "#1e6b3a", "--chart-single": "#0b4f54",
-    "--chart-highlight": "#0b4f54", "--chart-other": "#9aa7a8", "--chart-cat-1": "#008c7a", "--chart-cat-2": "#c2550a",
+    "--color-bg": "#ffffff", "--color-surface": "#ffffff", "--color-surface-sunken": "#f1f4f8", "--color-text": "#111827",
+    "--color-text-muted": "#4b5563", "--color-primary": "#0b6e4f", "--color-primary-hover": "#08523b",
+    "--color-primary-tint": "#e7f3ee", "--color-visited": "#3e5c52", "--color-accent": "#1a9e6e",
+    "--color-accent-text": "#14875f", "--color-border": "#d1d5db", "--color-border-strong": "#6b7280",
+    "--color-focus": "#0b6e4f", "--color-brand": "#0d2440", "--color-brand-hover": "#12305a",
+    "--color-on-brand": "#ffffff", "--color-brand-accent": "#2fbf8a", "--color-warning": "#b7791f",
+    "--color-warning-bg": "#fff4e0", "--color-error": "#b42318",
+    "--color-error-bg": "#fdecea", "--color-success": "#1e6b3a", "--chart-single": "#0b6e4f",
+    "--chart-highlight": "#0b6e4f", "--chart-other": "#9aa7a8", "--chart-cat-1": "#008c7a", "--chart-cat-2": "#c2550a",
     "--chart-cat-3": "#4a7bd0", "--chart-cat-4": "#c2a000", "--chart-grid": "#e3e8e8", "--chart-axis": "#6b7c7e",
 }
 
