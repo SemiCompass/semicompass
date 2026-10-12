@@ -405,7 +405,9 @@ class CompanyPageBuildTest(BuildTest):
         self.assertIn('name="robots" content="noindex, nofollow"', html)
         self.assertIn('href="/about/roadmap/"', html)
         self.assertNotIn("売上高", html.split("<main")[1])  # 業績を出さない
-        self.assertEqual(len(list((production / "companies").glob("*/index.html"))), len(list((ROOT / "data" / "companies").glob("*.yaml"))))
+        # 掲載から外した企業の転送のページ（astro.config.mjs の redirects）は、企業のページに数えない
+        pages = [p for p in (production / "companies").glob("*/index.html") if "Redirecting to:" not in p.read_text(encoding="utf-8")]
+        self.assertEqual(len(pages), len(list((ROOT / "data" / "companies").glob("*.yaml"))))
 
     def test_published_company_is_detailed_in_production(self):
         # draft: false の企業（リポジトリの実際の状態）は、本番でも詳細掲載として出る

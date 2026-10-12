@@ -15,5 +15,14 @@ categories:
 listing: coming_soon
 selection:
   basis: revenue_ratio
-  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。水処理エンジニアリング事業の電子産業向けの売上が全社の60.8%（2026年3月期。資料の金額から計算、S1）。電子産業には液晶などを含む可能性があるが、30%以上と判断した（運営者の判断、2026年10月12日）"
   decided_on: "2026-10-04"
+  source: S1
+sources:
+  - id: S1
+    title: "2026年3月期 決算説明会資料"
+    publisher: "オルガノ株式会社"
+    url: "https://www2.jpx.co.jp/disc/63680/140120260512527047.pdf"
+    published_on: "2026-05-14"
+    pages: "3、5、11"
+    accessed_on: "2026-10-12"

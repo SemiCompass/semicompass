@@ -11,7 +11,8 @@ export default defineConfig({
   integrations: [seoFiles({ site: SITE, production: process.env.BUILD_ENV === 'production' })],
   output: 'static',
   // 工程の一覧とサプライチェーンマップは、/processes/ の1ページにまとめた（旧 /supply-chain/ は転送する）
-  redirects: { '/supply-chain/': '/processes/' },
+  // 掲載から外した企業のページは、企業の一覧へ転送する（公開したURLを切らない。掲載企業リスト5章）
+  redirects: { '/supply-chain/': '/processes/', '/companies/niterra/': '/companies/' },
   // ページは `/foo/index.html` として出力し、URLは末尾スラッシュに統一する（要件定義書3.1）。
   // wrangler.jsonc の assets.html_handling（auto-trailing-slash）と合わせる。
   trailingSlash: 'always',
