@@ -1,7 +1,7 @@
 ---
 // トップページ（/。要件定義書 3.3、仕様書 9.1）：説明の一文（h1）→ サイトの説明 → 4つの入口 → 新着のニュース解説（最大5件）。
 // 最初の画面（幅360px、高さ約640px）に、説明と4つの入口が収まる。入口は、記号と見出しを組にした同じ形のボタン（運用ルール書 10.3.3 の例外）
-import { BUILD_ENV } from 'astro:env/server';
+import { BUILD_DATE, BUILD_ENV } from 'astro:env/server';
 import Icon from '../components/Icon.astro';
 import ExternalLink from '../components/ExternalLink.astro';
 import Phrase from '../components/Phrase.astro';
@@ -9,12 +9,17 @@ import StateMessage from '../components/StateMessage.astro';
 import Tag from '../components/Tag.astro';
 import Base from '../layouts/Base.astro';
 import { dateLabel, loadCompanies } from '../lib/companies';
+import { buildDate } from '../lib/buildDate';
 import { loadLearnPages } from '../lib/content';
+import { eventDates, upcomingEvents } from '../lib/events';
 import { loadMenu } from '../lib/menu';
 import { loadNews } from '../lib/news';
 
 const { note } = loadMenu();
 const preview = BUILD_ENV === 'preview';
+// 近く開かれる技術系のイベント（要件定義書 3.3 の5、FR-206）：終わっていないものを、開催日の近い順に最大5件
+const events = upcomingEvents(buildDate(BUILD_DATE));
+const eventsCheckedOn = events.map((e) => String(e.checked_on)).sort().pop() ?? '';
 
 // 新着のニュース解説（9.1 の4）：新しい順に最大5件。日付、見出し、関係する企業のタグ
 const news = loadNews(preview).slice(0, 5);
@@ -79,6 +84,22 @@ const entries = [
         </>
       )}
     </section>
+
+    {events.length > 0 && (
+      <section aria-labelledby="home-events-title" class="home__events">
+        <h2 id="home-events-title">近く開かれる技術系のイベント</h2>
+        <ol class="home-events">
+          {events.map((e) => (
+            <li class="home-events__item">
+              <span class="home-events__date">{eventDates(e)}</span>
+              <span class="home-events__name"><ExternalLink href={e.url}>{e.name}</ExternalLink></span>
+              <span class="home-events__place">{e.venue}（{e.city}）・主催：{e.organizer}</span>
+            </li>
+          ))}
+        </ol>
+        <p class="home-events__source">出典：各主催者の公式ページ。{dateLabel(eventsCheckedOn)}確認</p>
+      </section>
+    )}
 
     <p class="measure home__note">運営者は、noteでも発信しています。<ExternalLink href={note.url}>{note.label}</ExternalLink></p>
   </div>
@@ -171,6 +192,42 @@ const entries = [
     margin-block-start: 0;
   }
   /* 新着のニュース解説：1件ずつ罫線で区切る（ニュースの一覧と同じ並べ方。仕様書 9.6） */
+  .home__events {
+    margin-block-start: var(--space-7);
+  }
+  .home__events h2 {
+    margin-block-start: 0;
+  }
+  /* イベント：1件ずつ罫線で区切る（ニュースの一覧と同じ並べ方。仕様書 9.1 の5） */
+  .home-events {
+    max-width: var(--content-max-width);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    list-style: none;
+  }
+  .home-events__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .home-events__date,
+  .home-events__place,
+  .home-events__source {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .home-events__date {
+    font-variant-numeric: tabular-nums;
+  }
+  .home-events__name {
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-lead-leading);
+  }
   .home-news {
     max-width: var(--content-max-width);
     margin: var(--space-4) 0 0;
@@ -207,7 +264,8 @@ const entries = [
     margin-block-start: var(--space-4);
   }
   @media (--tablet) {
-    .home__news {
+    .home__news,
+    .home__events {
       margin-block-start: var(--space-8);
     }
   }

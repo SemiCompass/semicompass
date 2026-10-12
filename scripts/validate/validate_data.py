@@ -57,6 +57,8 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import os
+from datetime import date, timedelta
 import re
 import sys
 import unicodedata
@@ -83,6 +85,7 @@ SCHEMAS = {
     "news": "schemas/content/news.schema.json",
     "news-config": "schemas/config/news.schema.json",
     "learn": "schemas/content/learn.schema.json",
+    "events": "schemas/data/events.schema.json",
     "learn-path": "schemas/content/learn-path.schema.json",
 }
 OVERVIEW_HEADINGS = ["事業概要", "工程上の位置づけ"]  # データ定義書 6.4
@@ -216,6 +219,8 @@ def kind_of(path: Path, root: Path) -> str | None:
         return "learn"
     if rel == "content/learn/path.yaml":
         return "learn-path"
+    if rel == "data/events.yaml":
+        return "events"
     if rel == "config/news.yaml":
         return "news-config"
     if rel == "config/explainer-sources.yaml":
@@ -237,14 +242,14 @@ def collect_files(root: Path) -> list[tuple[str, Path]]:
     files += [("process", p) for p in sorted((root / "content" / "processes").glob("*.md"))]
     files += [("news", p) for p in sorted((root / "content" / "news").glob("*.md"))]
     files += [("learn", p) for p in sorted((root / "content" / "learn").glob("*/*.md"))]
-    for kind, rel in (("learn-path", "content/learn/path.yaml"), ("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml"),
+    for kind, rel in (("learn-path", "content/learn/path.yaml"), ("events", "data/events.yaml"), ("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml"),
                       ("explainer-sources", "config/explainer-sources.yaml"), ("news-config", "config/news.yaml")):
         if (root / rel).is_file():
             files.append((kind, root / rel))
     return files
 
 
-def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path | None = None) -> list[Problem]:
+def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path | None = None, today: date | None = None) -> list[Problem]:
     """root の下のデータを検査する。only を指定すると、そのファイルのエラーだけを返す。"""
     schemas = SchemaSet(schema_root)
     problems: list[Problem] = []
@@ -293,6 +298,9 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     problems += check_learn(learn_pages, learn_path, supply, terms, companies, explainer, names, root)
     for rel, (_, body) in {**terms, **processes, **learn_pages}.items():  # V-24：理解度チェックの形
         problems += check_quiz(rel, body)
+    events = next((d for k, _, d in loaded.values() if k == "events"), None)
+    if isinstance(events, dict):
+        problems += check_events(events, today=today)
     news_config = next((d for k, _, d in loaded.values() if k == "news-config"), None)
     if isinstance(news_config, dict):
         problems += check_news_config(news_config, companies)
@@ -978,6 +986,49 @@ def check_learn(pages: dict[str, tuple[dict, str]], path, supply, terms: dict[st
         _length_warning(rel, "(本文)", "本文", count_characters(split_body(quiz_split(body)[0])[1]), *LEARN_LENGTH, out)
         if isinstance(data.get("description"), str):
             _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
+    return out
+
+
+# ---- 技術系のイベント（データ定義書 4.6、V-22、V-23） ----
+
+EVENT_RECHECK_DAYS = 90  # 開催の90日前に、公式ページで日程の変更を確かめる（運用ルール書 4.9）
+
+
+def build_date() -> date:
+    """検査の基準の日。環境変数 BUILD_DATE（YYYY-MM-DD）があればその日、なければ今日（日本時間）。"""
+    value = os.environ.get("BUILD_DATE", "")
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date()
+
+
+def check_events(data: dict, today: date | None = None) -> list[Problem]:
+    rel = "data/events.yaml"
+    out: list[Problem] = []
+    today = today or build_date()
+    source_ids = _source_ids(data, rel, out)
+    seen: set[str] = set()
+    for i, event in enumerate(data.get("events") or []):
+        if not isinstance(event, dict):
+            continue
+        at = ["events", i]
+        if event.get("id") in seen:
+            out.append(Problem(rel, pointer(at + ["id"]), "V-22", f"id {event.get('id')} が重複している"))
+        seen.add(event.get("id"))
+        try:
+            start, end = date.fromisoformat(str(event.get("start_date"))), date.fromisoformat(str(event.get("end_date")))
+            checked = date.fromisoformat(str(event.get("checked_on")))
+        except ValueError:
+            continue  # 日付の形は、スキーマ（V-01）が見る
+        if end < start:
+            out.append(Problem(rel, pointer(at + ["end_date"]), "V-22", "end_date が start_date より前"))
+        if event.get("source") not in source_ids:
+            out.append(Problem(rel, pointer(at + ["source"]), "V-07", f"source {event.get('source')} が sources にない"))
+        recheck = start - timedelta(days=EVENT_RECHECK_DAYS)
+        if today >= recheck and checked < recheck and end >= today:
+            out.append(Problem(rel, pointer(at + ["checked_on"]), "V-23",
+                               f"開催の{EVENT_RECHECK_DAYS}日前を過ぎたが、日程を確かめた日（{checked}）がそれより前のまま", "warning"))
     return out
 
 
