@@ -1,0 +1,165 @@
+---
+// 解説の図の枠（仕様書 7章、8.18）：見出し、場面（パネル）の並び、凡例、説明。工程・学習の図で共通に使う。
+// 場面は <li class="fig__panel"> に、SVG（class="fig__svg"）と、名前（fig__name）・説明（fig__note）を置く。
+// SVGの面と線は、下の共通のクラス（fig-wafer、fig-film など）で、仕様書4章の色にそろえる
+interface Props {
+  title: string;
+  caption: string; // 「図：…。模式図、本サイトで作成」
+  id: string;
+  columns?: 2 | 3;
+}
+const { title, caption, id, columns = 3 } = Astro.props;
+---
+
+<figure class="fig" aria-labelledby={`${id}-cap`}>
+  <p class="fig__title">{title}</p>
+  <ol class:list={['fig__panels', `fig__panels--${columns}`]}><slot /></ol>
+  <slot name="legend" />
+  <figcaption id={`${id}-cap`} class="fig__caption">{caption}</figcaption>
+</figure>
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  .fig {
+    margin: var(--space-5) 0 var(--space-6);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .fig__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  .fig__panels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (--tablet) {
+    .fig__panels--2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .fig__panels--3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .fig :global(.fig__panel) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .fig :global(.fig__svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--color-surface-sunken);
+  }
+  .fig :global(.fig__name) {
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-small-leading);
+  }
+  .fig :global(.fig__note) {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .fig :global(.fig__legend) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-small);
+  }
+  .fig :global(.fig__legend li) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .fig :global(.fig__key) {
+    width: var(--icon-size);
+    height: var(--icon-size);
+  }
+  .fig__caption {
+    margin-block-start: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  /* SVGの共通の面と線 */
+  .fig :global(.fig-wafer) {
+    fill: var(--chart-other);
+    stroke: var(--color-border-strong);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-film) {
+    fill: var(--color-primary-tint);
+    stroke: var(--color-primary);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-resist) {
+    fill: var(--color-warning-bg);
+    stroke: var(--color-warning);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-metal) {
+    fill: var(--color-text-muted);
+    stroke: var(--color-text);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-part) {
+    fill: var(--color-surface);
+    stroke: var(--color-text);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-line) {
+    fill: none;
+    stroke: var(--color-text);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-arrow) {
+    fill: none;
+    stroke: var(--color-primary);
+    stroke-width: var(--border-width-current);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-dash) {
+    fill: none;
+    stroke: var(--color-text-muted);
+    stroke-width: var(--icon-stroke);
+    stroke-dasharray: 4 3;
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-dot) {
+    fill: var(--color-text);
+  }
+  .fig :global(.fig-dot-alt) {
+    fill: var(--color-surface);
+    stroke: var(--color-primary);
+    stroke-width: var(--icon-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+  .fig :global(.fig-plasma) {
+    fill: var(--color-primary-tint);
+    stroke: var(--color-accent);
+    stroke-width: var(--icon-stroke);
+    stroke-dasharray: 6 4;
+    vector-effect: non-scaling-stroke;
+  }
+</style>

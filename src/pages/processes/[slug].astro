@@ -16,6 +16,9 @@ import { companyRows, loadSupply } from '../../lib/companies';
 import { loadProcessContent, loadTerms } from '../../lib/content';
 import { processFigures } from '../../lib/processFigures';
 
+// 工程の図：src/figures/process/{slug}.astro があればそれを、なければ processFigures（リソグラフィ）を使う（仕様書 7章）
+const figureModules = import.meta.glob<{ default: unknown }>('../../figures/process/*.astro', { eager: true });
+
 type P = { slug: string; name: string; stage: string; order: number; short_description?: string };
 export function getStaticPaths() {
   return (loadSupply().processes as P[]).map((p) => ({ params: { slug: p.slug }, props: { process: p } }));
@@ -27,6 +30,7 @@ const nameOf = (slug: string) => supply.processes.find((p) => p.slug === slug)?.
 const stageName = supply.categories.find((c) => c.slug === process.stage)?.name ?? process.stage;
 const content = loadProcessContent(process.slug, preview);
 const figure = processFigures[process.slug];
+const FigureFile = (figureModules[`../../figures/process/${process.slug}.astro`]?.default ?? null) as any;
 const rows = companyRows(preview).filter((r) => r.company.processes.includes(process.slug));
 const terms = loadTerms(preview).filter((t) => t.front.processes.includes(process.slug));
 const previous = (supply.flow ?? []).filter((f) => f.to === process.slug).map((f) => f.from);
@@ -63,7 +67,8 @@ const toc = [
 
   <section aria-labelledby="explanation">
     <h2 id="explanation">解説</h2>
-    {content && figure && <ProcessFigure figure={figure} id={`figure-${process.slug}`} />}
+    {content && FigureFile && <FigureFile />}
+    {content && !FigureFile && figure && <ProcessFigure figure={figure} id={`figure-${process.slug}`} />}
     {content ? (
       content.sections.map((section) => (
         <>

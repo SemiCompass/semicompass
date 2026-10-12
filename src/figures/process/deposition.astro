@@ -1,0 +1,52 @@
+---
+// 図：成膜の三つの方法（模式図）。CVD、PVD（スパッタリング）、ALD（工程ページ deposition の本文に合わせる）
+import FigureFrame from '../../components/FigureFrame.astro';
+const gas = [[40, 30], [90, 22], [140, 34], [65, 52], [120, 48], [165, 56]];
+const atoms = [[50, 52], [95, 44], [140, 58], [75, 74], [120, 70], [160, 80]];
+---
+
+<FigureFrame id="fig-deposition" title="成膜の三つの方法（模式図）" caption="図：CVDは原料のガスをウェーハの表面で反応させ、PVD（スパッタリング）は固体の材料からたたき出した原子を付着させ、ALDは原料のガスを交互に送って原子の層を一層ずつ重ねる。粒の大きさや数は簡単にした模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="CVD：原料のガスがウェーハの表面で反応し、膜になる">
+      {gas.map(([x, y]) => <g><circle class="fig-dot" cx={x} cy={y} r="4" /><circle class="fig-dot-alt" cx={x + 8} cy={y} r="4" /></g>)}
+      <path class="fig-arrow" d="M60 66v20m-5-6 5 6 5-6M130 66v20m-5-6 5 6 5-6" />
+      <rect class="fig-film" x="10" y="94" width="180" height="8" />
+      <rect class="fig-wafer" x="10" y="102" width="180" height="30" />
+    </svg>
+    <span class="fig__name">CVD（化学気相成長）</span>
+    <span class="fig__note">原料のガスを送り、熱やプラズマで表面に反応を起こして膜にする</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="PVD（スパッタリング）：上の固体の材料からたたき出された原子が、下のウェーハに付着する">
+      <rect class="fig-metal" x="30" y="8" width="140" height="16" />
+      <path class="fig-arrow" d="M70 40V28m-5 6 5-6 5 6M130 40V28m-5 6 5-6 5 6" />
+      {atoms.map(([x, y]) => <circle class="fig-dot" cx={x} cy={y} r="3.5" />)}
+      <path class="fig-dash" d="M95 28l-10 60M140 28l10 60" />
+      <rect class="fig-metal" x="10" y="94" width="180" height="8" />
+      <rect class="fig-wafer" x="10" y="102" width="180" height="30" />
+    </svg>
+    <span class="fig__name">PVD（スパッタリング）</span>
+    <span class="fig__note">プラズマのイオンを材料（ターゲット）に当て、たたき出した原子を付ける</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="ALD：二種類の原料のガスを交互に送り、原子の層を一層ずつ重ねる">
+      {[0, 1, 2, 3].map((row) => (
+        Array.from({ length: 15 }, (_, i) => (
+          <circle class={row % 2 === 0 ? 'fig-dot' : 'fig-dot-alt'} cx={17 + i * 12} cy={96 - row * 10} r="4.5" />
+        ))
+      ))}
+      <rect class="fig-wafer" x="10" y="102" width="180" height="30" />
+      <path class="fig-line" d="M30 20h50M120 20h50" />
+      <circle class="fig-dot" cx="55" cy="34" r="5" />
+      <circle class="fig-dot-alt" cx="145" cy="34" r="5" />
+      <path class="fig-arrow" d="M88 34h24m-6-5 6 5-6 5" />
+    </svg>
+    <span class="fig__name">ALD（原子層堆積）</span>
+    <span class="fig__note">二種類以上の原料のガスを交互に送り、原子の層を一層ずつ重ねる</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-film" x="3" y="8" width="18" height="8" /></svg>できる膜（絶縁膜など）</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-metal" x="3" y="8" width="18" height="8" /></svg>金属の材料・金属の膜</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><circle class="fig-dot" cx="9" cy="12" r="4" /><circle class="fig-dot-alt" cx="16" cy="12" r="4" /></svg>原料の分子・原子</li>
+  </ul>
+</FigureFrame>

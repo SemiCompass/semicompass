@@ -402,6 +402,16 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("2099年1月10日〜12日", main)
         self.assertIn("出典：各主催者の公式ページ", main)
 
+    def test_process_pages_have_figures(self):
+        # 工程の図（仕様書 7章）：src/figures/process/{slug}.astro がある工程は、その図を解説の最初に出す。図の説明（figcaption）を必ず付ける
+        dist = self.build("production")
+        for slug in ("etching", "deposition", "cmp", "dicing"):
+            html = self.read(dist, f"processes/{slug}/index.html")
+            figure = re.findall(r'<figure class="fig"[^>]*>(.*?)</figure>', html, re.S)
+            self.assertTrue(figure, slug)
+            self.assertIn('role="img"', figure[0], slug)
+            self.assertIn("模式図、本サイトで作成", figure[0], slug)
+
     def test_learn_index_without_pages_keeps_glossary_entry(self):
         html = self.read(self.build("production"), "index.html").split("<main")[1]
         self.assertIn('href="/glossary/"', html)
