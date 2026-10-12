@@ -1,21 +1,66 @@
-// 工程と用語の解説（content/processes、content/glossary）を読む（データ定義書 6.5、6.6）。ファイルがなければ、空。
+// 工程・用語・学習の解説（content/processes、content/glossary、content/learn）を読む（データ定義書 6.5、6.6、6.8）。ファイルがなければ、空。
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parse } from 'yaml';
 import type { Source } from './companies';
+
+// ---- 理解度チェック（データ定義書 6.11、要求定義書 FR-904）----
+// 本文の最後の「## 理解度チェック」を、問いの並びに分ける。形が崩れているものは、検査（V-24）で不合格になる。ここでは、読めたものだけを返す。
+export const QUIZ_HEADING = '理解度チェック';
+
+export interface QuizQuestion {
+  prompt: string;
+  choices: string[]; // 4つ
+  answer: number; // 1〜4
+  explanation: string;
+}
+
+/** 本文を、理解度チェックより前の部分と、問いの並びに分ける。チェックがなければ、questions は空 */
+export function splitQuiz(body: string): { rest: string; questions: QuizQuestion[] } {
+  const lines = body.replace(/\r\n/g, '\n').split('\n');
+  const start = lines.findIndex((l) => l.trim() === `## ${QUIZ_HEADING}`);
+  if (start < 0) return { rest: body, questions: [] };
+  const rest = lines.slice(0, start).join('\n');
+  const questions: QuizQuestion[] = [];
+  let current: { prompt: string[]; choices: string[]; answer: number; explanation: string } | null = null;
+  const flush = () => {
+    if (current && current.choices.length === 4 && current.answer >= 1 && current.answer <= 4 && current.explanation) {
+      questions.push({ prompt: current.prompt.join(''), choices: current.choices, answer: current.answer, explanation: current.explanation });
+    }
+  };
+  for (const raw of lines.slice(start + 1)) {
+    const line = raw.trim();
+    if (/^###\s+問[0-9０-９]+/.test(line)) {
+      flush();
+      current = { prompt: [], choices: [], answer: 0, explanation: '' };
+      continue;
+    }
+    if (!current || !line) continue;
+    const choice = /^([1-4])\.\s+(.+)$/.exec(line);
+    const answer = /^答え[：:]\s*([1-4])$/.exec(line);
+    const explanation = /^解説[：:]\s*(.+)$/.exec(line);
+    if (choice) current.choices.push(choice[2].trim());
+    else if (answer) current.answer = Number(answer[1]);
+    else if (explanation) current.explanation = explanation[1].trim();
+    else if (current.choices.length === 0) current.prompt.push(line);
+  }
+  flush();
+  return { rest, questions };
+}
 
 const root = process.cwd();
 
 export interface Markdown<F> {
   front: F;
   sections: { heading: string; paragraphs: string[] }[];
+  quiz: QuizQuestion[]; // 本文の最後の理解度チェック（データ定義書 6.11）。sections には含めない
 }
 
 export function parseMarkdown<F>(text: string): Markdown<F> {
   const match = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text.replace(/\r\n/g, '\n'));
   if (!match) throw new Error('front matter がない');
   const front = parse(match[1]) as F;
-  const body = match[2];
+  const { rest: body, questions: quiz } = splitQuiz(match[2]);
   const sections: Markdown<F>['sections'] = [];
   const blocks = body.split(/^## /m);
   const intro = blocks[0].trim();
@@ -24,7 +69,7 @@ export function parseMarkdown<F>(text: string): Markdown<F> {
     const [heading, ...rest] = block.split('\n');
     sections.push({ heading: heading.trim(), paragraphs: splitParagraphs(rest.join('\n')) });
   }
-  return { front, sections };
+  return { front, sections, quiz };
 }
 function splitParagraphs(text: string): string[] {
   return text.split(/\n{2,}/).map((p) => p.trim().replace(/\n/g, '')).filter(Boolean);
@@ -92,3 +137,46 @@ export function glossaryHeading(reading: string): string {
   return /^[A-Za-z]$/.test(first) ? first.toUpperCase() : 'その他';
 }
 export const GLOSSARY_HEADING_ORDER = [...ROWS.map(([h]) => `${h}行`), ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''), 'その他'];
+
+// ---- 半導体を学ぶ（データ定義書 6.8）：content/learn/path.yaml と content/learn/{分野}/{slug}.md ----
+export interface LearnUnit {
+  type: 'learn' | 'process' | 'term';
+  ref: string;
+}
+export interface LearnField {
+  no: number;
+  slug: string;
+  title: string;
+  summary: string;
+  units: LearnUnit[];
+}
+export interface LearnContent extends Common {
+  title: string;
+  description: string;
+  field: string;
+  processes?: string[];
+  related_terms?: string[];
+  companies?: string[];
+}
+export type LearnPage = Markdown<LearnContent> & { slug: string; field: string };
+
+export function loadLearnPath(): LearnField[] {
+  const path = resolve(root, 'content/learn/path.yaml');
+  if (!existsSync(path)) return [];
+  const data = parse(readFileSync(path, 'utf-8')) as { fields?: LearnField[] };
+  return [...(data.fields ?? [])].sort((a, b) => a.no - b.no);
+}
+
+/** 学習のページ（公開してよいものだけ）。分野のフォルダの名前を field とする */
+export function loadLearnPages(preview: boolean): LearnPage[] {
+  const base = resolve(root, 'content/learn');
+  if (!existsSync(base)) return [];
+  const pages: LearnPage[] = [];
+  for (const field of readdirSync(base, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort()) {
+    for (const file of files(`content/learn/${field}`)) {
+      const md = parseMarkdown<LearnContent>(readFileSync(resolve(base, field, file), 'utf-8'));
+      if (visible(md.front, preview)) pages.push({ ...md, slug: file.replace(/\.md$/, ''), field });
+    }
+  }
+  return pages;
+}

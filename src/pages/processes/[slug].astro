@@ -7,6 +7,7 @@ import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
 import SourceList from '../../components/SourceList.astro';
 import PageFeedback from '../../components/PageFeedback.astro';
+import Quiz from '../../components/Quiz.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import Tag from '../../components/Tag.astro';
 import ProcessFigure from '../../components/ProcessFigure.astro';
@@ -39,6 +40,7 @@ const toc = [
   { id: 'companies', label: 'この工程の企業' },
   { id: 'terms', label: '関係する用語' },
   { id: 'neighbors', label: '前後の工程' },
+  ...((content?.quiz.length ?? 0) > 0 ? [{ id: 'quiz-title', label: '理解度チェック' }] : []),
   ...(sources.length > 0 ? [{ id: 'sources-heading', label: '出典' }] : []),
 ];
 ---
@@ -102,6 +104,7 @@ const toc = [
     {previous.length === 0 && next.length === 0 && <p>前後の工程は、まだ設定されていません。</p>}
   </section>
 
+  {content && <Quiz questions={content.quiz} pageType="process" />}
   {sources.length > 0 && <SourceList sources={sources} heading="出典" />}
   <PageFeedback pageType="process" />
 </Page>

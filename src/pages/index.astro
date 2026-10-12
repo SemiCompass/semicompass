@@ -9,6 +9,7 @@ import StateMessage from '../components/StateMessage.astro';
 import Tag from '../components/Tag.astro';
 import Base from '../layouts/Base.astro';
 import { dateLabel, loadCompanies } from '../lib/companies';
+import { loadLearnPages } from '../lib/content';
 import { loadMenu } from '../lib/menu';
 import { loadNews } from '../lib/news';
 
@@ -26,7 +27,10 @@ const companyTags = (slugs: string[]) =>
 
 // 4つの入口（要件定義書 3.3 の3）：行き先、見出し、一文の説明、記号。企業名・証券コードの検索は、ヘッダーの検索欄を使う
 const entries = [
-  { href: '/glossary/', icon: 'book', title: '半導体を学ぶ', text: '用語から基本を知る' },
+  // 学習のページ（content/learn/）が1つもない間は、用語集へ（要件定義書 3.3）
+  loadLearnPages(preview).length > 0
+    ? { href: '/learn/', icon: 'book', title: '半導体を学ぶ', text: '基礎から順に学ぶ' }
+    : { href: '/glossary/', icon: 'book', title: '半導体を学ぶ', text: '用語から基本を知る' },
   { href: '/processes/', icon: 'flow', title: '工程を学ぶ', text: '設計から検査まで' },
   { href: '/news/', icon: 'newspaper', title: 'ニュースを読む', text: '背景と関わる企業' },
   { href: '/companies/', icon: 'building', title: '企業分析', text: '工程と業績で比べる' },

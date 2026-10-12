@@ -1,0 +1,156 @@
+---
+// 理解度チェック（要求定義書 FR-904、データ定義書 6.11、仕様書 8.17）：本文の最後に、4択の問いを1〜3問置く。
+// 選ぶと、正誤の印と解説を出す（src/scripts/quiz.ts）。JavaScriptが動かないときも、「答えと解説」を開いて読める。
+// 結果は、Cookieの利用に同意しているときだけ、GA4のイベント quiz_answer として送る（データ定義書 11.4）
+import Icon from './Icon.astro';
+import RichText from './RichText.astro';
+import type { QuizQuestion } from '../lib/content';
+
+interface Props {
+  questions: QuizQuestion[];
+  pageType: 'learn' | 'process' | 'term';
+}
+const { questions, pageType } = Astro.props;
+---
+
+{questions.length > 0 && (
+  <section class="quiz" aria-labelledby="quiz-title" data-quiz data-page-type={pageType}>
+    <h2 id="quiz-title">理解度チェック</h2>
+    <p class="quiz__lead">本文の内容から答えられる問いです。答えを選ぶと、正しいかどうかと解説が出ます。</p>
+    {questions.map((q, i) => (
+      <div class="quiz__item" data-quiz-item data-answer={q.answer} data-question={i + 1}>
+        <p class="quiz__no">問{i + 1}</p>
+        <p class="quiz__prompt" id={`quiz-q${i + 1}`}><RichText text={q.prompt} /></p>
+        <ol class="quiz__choices" aria-labelledby={`quiz-q${i + 1}`}>
+          {q.choices.map((c, j) => (
+            <li>
+              <button type="button" class="quiz__choice" data-choice={j + 1}>
+                <span class="quiz__mark" data-mark aria-hidden="true"></span>
+                <span class="quiz__label">{j + 1}. <RichText text={c} /></span>
+                <span class="quiz__result" data-result></span>
+              </button>
+            </li>
+          ))}
+        </ol>
+        <p class="quiz__status" data-status role="status"></p>
+        <details class="quiz__answer" data-explain>
+          <summary>答えと解説を見る</summary>
+          <p><strong>答え：{q.answer}. <RichText text={q.choices[q.answer - 1]} /></strong></p>
+          <p><RichText text={q.explanation} /></p>
+        </details>
+      </div>
+    ))}
+    <template data-icons>
+      <span data-icon="correct"><Icon name="check" /></span>
+      <span data-icon="wrong"><Icon name="error" /></span>
+    </template>
+  </section>
+)}
+
+<script>
+  import '../scripts/quiz';
+</script>
+
+<style>
+  .quiz {
+    margin-block: var(--space-7) 0;
+    padding-block-start: var(--space-4);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+  .quiz h2 {
+    margin-block-start: 0;
+  }
+  .quiz__lead {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .quiz__item {
+    margin-block-start: var(--space-5);
+  }
+  .quiz__no {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+  }
+  .quiz__prompt {
+    margin-block: var(--space-1) var(--space-3);
+    font-weight: var(--font-weight-bold);
+  }
+  .quiz__choices {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .quiz__choice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--target-min);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .quiz__choice:hover:not([disabled]) {
+    background: var(--color-primary-tint);
+  }
+  .quiz__choice[disabled] {
+    cursor: default;
+  }
+  .quiz__label {
+    flex: 1 1 auto;
+  }
+  .quiz__result {
+    flex: none;
+    white-space: nowrap;
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+  }
+  .quiz__choice[data-state="correct"] {
+    border-color: var(--color-success);
+    border-width: var(--border-width-current);
+    color: var(--color-success);
+  }
+  .quiz__choice[data-state="wrong"] {
+    border-color: var(--color-error);
+    border-width: var(--border-width-current);
+    background: var(--color-error-bg);
+    color: var(--color-error);
+  }
+  .quiz__mark:empty {
+    display: none;
+  }
+  .quiz__status:empty {
+    display: none;
+  }
+  .quiz__status {
+    margin-block: var(--space-2) 0;
+    font-weight: var(--font-weight-bold);
+  }
+  .quiz__answer {
+    margin-block-start: var(--space-3);
+    padding: var(--space-3);
+    background: var(--color-surface-sunken);
+  }
+  .quiz__answer summary {
+    min-height: var(--target-min);
+    display: flex;
+    align-items: center;
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+  }
+  .quiz__answer p {
+    margin-block: var(--space-2) 0;
+  }
+</style>

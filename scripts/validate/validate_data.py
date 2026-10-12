@@ -82,6 +82,8 @@ SCHEMAS = {
     "process": "schemas/content/process.schema.json",
     "news": "schemas/content/news.schema.json",
     "news-config": "schemas/config/news.schema.json",
+    "learn": "schemas/content/learn.schema.json",
+    "learn-path": "schemas/content/learn-path.schema.json",
 }
 OVERVIEW_HEADINGS = ["事業概要", "工程上の位置づけ"]  # データ定義書 6.4
 OVERVIEW_LENGTH = (300, 500)  # 「事業概要」の文字数の目安（V-12）
@@ -210,6 +212,10 @@ def kind_of(path: Path, root: Path) -> str | None:
         return "process"
     if rel.startswith("content/news/") and rel.endswith(".md") and rel.count("/") == 2:
         return "news"
+    if rel.startswith("content/learn/") and rel.endswith(".md") and rel.count("/") == 3:
+        return "learn"
+    if rel == "content/learn/path.yaml":
+        return "learn-path"
     if rel == "config/news.yaml":
         return "news-config"
     if rel == "config/explainer-sources.yaml":
@@ -230,7 +236,8 @@ def collect_files(root: Path) -> list[tuple[str, Path]]:
     files += [("term", p) for p in sorted((root / "content" / "glossary").glob("*.md"))]
     files += [("process", p) for p in sorted((root / "content" / "processes").glob("*.md"))]
     files += [("news", p) for p in sorted((root / "content" / "news").glob("*.md"))]
-    for kind, rel in (("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml"),
+    files += [("learn", p) for p in sorted((root / "content" / "learn").glob("*/*.md"))]
+    for kind, rel in (("learn-path", "content/learn/path.yaml"), ("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml"),
                       ("explainer-sources", "config/explainer-sources.yaml"), ("news-config", "config/news.yaml")):
         if (root / rel).is_file():
             files.append((kind, root / rel))
@@ -248,7 +255,7 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
         try:
             if kind == "auto":
                 data, pitfalls = load_json(path), []
-            elif kind in ("overview", "term", "process", "news"):
+            elif kind in ("overview", "term", "process", "news", "learn"):
                 data, pitfalls, bodies[rel] = load_markdown(path)
             else:
                 data, pitfalls = load_yaml(path)
@@ -281,6 +288,11 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     problems += check_process_pages(processes, supply, explainer, terms, names)
     problems += check_news({rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "news" and isinstance(d, dict)},
                            companies, supply)
+    learn_pages = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "learn" and isinstance(d, dict)}
+    learn_path = next((d for k, _, d in loaded.values() if k == "learn-path"), None)
+    problems += check_learn(learn_pages, learn_path, supply, terms, companies, explainer, names, root)
+    for rel, (_, body) in {**terms, **processes, **learn_pages}.items():  # V-24：理解度チェックの形
+        problems += check_quiz(rel, body)
     news_config = next((d for k, _, d in loaded.values() if k == "news-config"), None)
     if isinstance(news_config, dict):
         problems += check_news_config(news_config, companies)
@@ -622,8 +634,10 @@ def check_explainer_sources(config, supply) -> list[Problem]:
     supply_slugs = _slugs(supply, "processes")
     mvp = {i["slug"] for i in (supply or {}).get("processes", []) if isinstance(i, dict) and i.get("mvp") is True
            and isinstance(i.get("slug"), str)} if isinstance(supply, dict) else set()
-    for section, name_key in (("terms", "term"), ("processes", "process")):
+    for section, name_key in (("terms", "term"), ("processes", "process"), ("learn", "title")):
         table = config.get(section)
+        if section == "learn" and table is None:  # 学習のページ（データ定義書 6.8）は、運営者が指定したときだけ書く
+            continue
         if not isinstance(table, dict):
             out.append(Problem(rel, f"/{section}", "V-01", "slug をキーとするオブジェクトではない"))
             continue
@@ -642,6 +656,8 @@ def check_explainer_sources(config, supply) -> list[Problem]:
             for key in ("aliases", "keywords"):
                 if key in entry and not (isinstance(entry[key], list) and all(isinstance(w, str) and w.strip() for w in entry[key])):
                     out.append(Problem(rel, pointer(base + [key]), "V-01", "文字列の一覧ではない"))
+            if section == "learn" and not reviewed:  # 学習のページは、運営者が確かめる方式（CLAUDE.md 6.4）を指定するためだけに書く
+                out.append(Problem(rel, pointer(base + ["basis"]), "V-01", "learn の項目は basis: reviewed を指定する"))
             if section == "processes" and supply_slugs is not None and slug not in supply_slugs:
                 out.append(Problem(rel, pointer(base), "V-04", f"工程 {slug} が data/supply-chain.yaml にない"))
             sources = entry.get("sources", [] if reviewed else None)
@@ -800,8 +816,8 @@ def check_terms(terms: dict[str, tuple[dict, str]], supply, config, names: set[s
             _reviewed_checks(rel, "terms", slug, data, body, config, names or set(), out)
         elif isinstance(config, dict) and ((config.get("terms") or {}).get(slug) or {}).get("basis") == "reviewed":
             out.append(Problem(rel, "/basis", "V-04", "config/explainer-sources.yaml では basis: reviewed だが、ファイルは basis: reviewed でない", "warning"))
-        outside = _body_checks(rel, data, body, roles, out, reviewed)
-        _length_warning(rel, "(本文)", "本文", count_characters(outside), *TERM_LENGTH, out)
+        _body_checks(rel, data, body, roles, out, reviewed)
+        _length_warning(rel, "(本文)", "本文", count_characters(split_body(quiz_split(body)[0])[1]), *TERM_LENGTH, out)
         if isinstance(data.get("description"), str):
             _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
     for key, files in sorted(owners.items()):  # V-16：term と aliases の語は、用語集の全体で重複させない（同じファイルの中も含む）
@@ -838,6 +854,128 @@ def check_process_pages(pages: dict[str, tuple[dict, str]], supply, config, term
         _body_checks(rel, data, body, _source_roles(config, "processes", slug), out, reviewed)
         if isinstance(data.get("title"), str) and len(data["title"]) > TITLE_MAX:
             out.append(Problem(rel, "/title", "V-12", f"title が {len(data['title'])}字で、目安（{TITLE_MAX}字以内）を外れている", "warning"))
+        if isinstance(data.get("description"), str):
+            _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
+    return out
+
+
+# ---- 理解度チェック（データ定義書 6.11、V-24）と、半導体を学ぶ（データ定義書 6.8） ----
+
+QUIZ_HEADING = "理解度チェック"
+QUIZ_MAX = 3
+LEARN_LENGTH = (2000, 3000)  # 学習のページの本文の文字数の目安（V-12、データ定義書 6.8）
+_QUESTION = re.compile(r"^###[ \t]+問[0-9０-９]+[ \t]*$")
+_CHOICE = re.compile(r"^([1-4])\.[ \t]+(\S.*)$")
+_ANSWER = re.compile(r"^答え[：:][ \t]*([1-4])$")
+_EXPLANATION = re.compile(r"^解説[：:][ \t]*(\S.*)$")
+
+
+def quiz_split(body: str) -> tuple[str, list[str] | None]:
+    """本文を、理解度チェックより前の部分と、チェックの行（見出しの次の行から）に分ける。チェックがなければ None。"""
+    lines = body.split("\n")
+    for i, line in enumerate(lines):
+        if line.strip() == f"## {QUIZ_HEADING}":
+            return "\n".join(lines[:i]), lines[i + 1:]
+    return body, None
+
+
+def check_quiz(rel: str, body: str) -> list[Problem]:
+    """V-24：理解度チェックの形（1〜3問、選択肢4つ、答えが1〜4、解説がある、見出しが本文の最後）。"""
+    _, lines = quiz_split(body)
+    if lines is None:
+        return []
+    out: list[Problem] = []
+    at = f"(本文 {QUIZ_HEADING})"
+    questions: list[dict] = []
+    for raw in lines:
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("## ") or line.startswith("# "):
+            out.append(Problem(rel, at, "V-24", f"「{QUIZ_HEADING}」の後に見出し（{line}）がある。チェックは本文の最後に置く"))
+            return out
+        if _QUESTION.match(line):
+            questions.append({"prompt": [], "choices": [], "answer": None, "explanation": None})
+            continue
+        if not questions:
+            out.append(Problem(rel, at, "V-24", "最初の問いの前に、`### 問1` の見出しがない"))
+            return out
+        q = questions[-1]
+        if m := _CHOICE.match(line):
+            q["choices"].append(int(m.group(1)))
+        elif m := _ANSWER.match(line):
+            q["answer"] = int(m.group(1))
+        elif m := _EXPLANATION.match(line):
+            q["explanation"] = m.group(1)
+        elif not q["choices"]:
+            q["prompt"].append(line)
+        else:
+            out.append(Problem(rel, at, "V-24", f"問{len(questions)}に、形の決まっていない行がある（{line[:20]}）"))
+    if not 1 <= len(questions) <= QUIZ_MAX:
+        out.append(Problem(rel, at, "V-24", f"問いが {len(questions)}問ある（1〜{QUIZ_MAX}問）"))
+    for n, q in enumerate(questions, 1):
+        if not q["prompt"]:
+            out.append(Problem(rel, at, "V-24", f"問{n}に、問いの文がない"))
+        if q["choices"] != [1, 2, 3, 4]:
+            out.append(Problem(rel, at, "V-24", f"問{n}の選択肢が、1〜4の4つになっていない"))
+        if q["answer"] is None:
+            out.append(Problem(rel, at, "V-24", f"問{n}に「答え：1〜4」がない"))
+        if not q["explanation"]:
+            out.append(Problem(rel, at, "V-24", f"問{n}に「解説：」がない"))
+    return out
+
+
+def check_learn(pages: dict[str, tuple[dict, str]], path, supply, terms: dict[str, tuple[dict, str]],
+                companies: dict[str, dict], config, names: set[str], root: Path) -> list[Problem]:
+    """学習のページ（content/learn/{分野}/{slug}.md）と、並び（content/learn/path.yaml）の検査（データ定義書 6.8）。"""
+    out: list[Problem] = []
+    fields = [f for f in (path or {}).get("fields") or [] if isinstance(f, dict)] if isinstance(path, dict) else []
+    field_slugs = {f.get("slug") for f in fields}
+    process_slugs = _slugs(supply, "processes")
+    term_slugs = {Path(rel).stem for rel in terms}
+    company_slugs = {Path(rel).stem for rel in companies}
+    page_keys = {(Path(rel).parent.name, Path(rel).stem) for rel in pages}
+    if pages and path is None:
+        out.append(Problem("content/learn/path.yaml", "", "V-04", "学習のページがあるのに、content/learn/path.yaml がない"))
+    for i, field in enumerate(fields):
+        seen: set[tuple[str, str]] = set()
+        for j, unit in enumerate(field.get("units") or []):
+            if not isinstance(unit, dict):
+                continue
+            key = (unit.get("type"), unit.get("ref"))
+            at = pointer(["fields", i, "units", j])
+            if key in seen:
+                out.append(Problem("content/learn/path.yaml", at, "V-03", f"同じ単元（{key[0]} {key[1]}）が重複している"))
+            seen.add(key)
+            kind, ref = key
+            if kind == "learn" and (field.get("slug"), ref) not in page_keys:
+                out.append(Problem("content/learn/path.yaml", at, "V-04", f"学習のページ content/learn/{field.get('slug')}/{ref}.md がない"))
+            elif kind == "process" and process_slugs is not None and ref not in process_slugs:
+                out.append(Problem("content/learn/path.yaml", at, "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
+            elif kind == "term" and ref not in term_slugs:
+                out.append(Problem("content/learn/path.yaml", at, "V-04", f"用語 {ref} の原稿（content/glossary/）がない"))
+    for rel, (data, body) in pages.items():
+        folder, slug = Path(rel).parent.name, Path(rel).stem
+        if data.get("field") != folder:
+            out.append(Problem(rel, "/field", "V-02", f"置き場所のフォルダ（{folder}）と field（{data.get('field')}）が一致しない"))
+        if field_slugs and folder not in field_slugs:
+            out.append(Problem(rel, "/field", "V-04", f"分野 {folder} が content/learn/path.yaml にない"))
+        if not any((u or {}).get("type") == "learn" and (u or {}).get("ref") == slug
+                   for f in fields if f.get("slug") == folder for u in f.get("units") or []):
+            out.append(Problem(rel, "", "V-04", "content/learn/path.yaml の units に、このページがない（一覧に出ない）", "warning"))
+        for key, known, label in (("processes", process_slugs, "工程"), ("related_terms", term_slugs, "用語"), ("companies", company_slugs, "企業")):
+            for k, ref in enumerate(data.get(key) or []):
+                if known is not None and ref not in known:
+                    out.append(Problem(rel, pointer([key, k]), "V-04", f"{label} {ref} がない"))
+        if not (root / "src" / "figures" / "learn" / folder / f"{slug}.astro").is_file():
+            out.append(Problem(rel, "(図)", "V-24", f"図（src/figures/learn/{folder}/{slug}.astro）がない。学習のページには図を1つ以上置く"))
+        if quiz_split(body)[1] is None:
+            out.append(Problem(rel, "(本文)", "V-24", f"本文の最後に「{QUIZ_HEADING}」がない"))
+        reviewed = data.get("basis") == "reviewed"
+        if reviewed:
+            _reviewed_checks(rel, "learn", slug, data, body, config, names, out)
+        _body_checks(rel, data, body, _source_roles(config, "learn", slug), out, reviewed)
+        _length_warning(rel, "(本文)", "本文", count_characters(split_body(quiz_split(body)[0])[1]), *LEARN_LENGTH, out)
         if isinstance(data.get("description"), str):
             _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
     return out
