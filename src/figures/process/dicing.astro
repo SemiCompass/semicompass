@@ -1,0 +1,47 @@
+---
+// 図：ダイシングの流れ（模式図）。テープに貼る→切る→テープを引き伸ばす（工程ページ dicing の本文に合わせる）
+import FigureFrame from '../../components/FigureFrame.astro';
+const cols = [0, 1, 2, 3, 4];
+---
+
+<FigureFrame id="fig-dicing" title="ダイシングの流れ（模式図）" caption="図：ウェーハをテープに貼って固定し、チップの間の細い帯に沿って刃で切る。切った後にテープを引き伸ばすと、チップの間隔が広がり、ひとつずつ取り出しやすくなる。寸法は簡単にした模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="上から見たウェーハ：同じ回路のチップが縦横に並び、その間に切るための細い帯がある">
+      <circle class="fig-part" cx="100" cy="70" r="60" />
+      {[-2, -1, 0, 1].map((r) => cols.slice(0, 4).map((c) => (
+        <rect class="fig-film" x={60 + c * 20 + 2} y={70 + r * 20 + 2} width="16" height="16" />
+      )))}
+      <path class="fig-dash" d="M40 70h120M100 10v120" />
+    </svg>
+    <span class="fig__name">テープに貼る</span>
+    <span class="fig__note">チップが縦横に並んだウェーハを、専用のテープに貼って固定する</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="横から見たところ：回転する薄い刃が、チップの間の帯を切り、水を当てる">
+      <rect class="fig-line" x="10" y="102" width="180" height="6" />
+      {cols.map((c) => <rect class="fig-film" x={14 + c * 35} y="88" width="30" height="14" />)}
+      <circle class="fig-part" cx="116.5" cy="72" r="26" />
+      <path class="fig-arrow" d="M98 52a26 26 0 0 1 32-6" />
+      <circle class="fig-dot-alt" cx="150" cy="62" r="3" />
+      <circle class="fig-dot-alt" cx="158" cy="70" r="3" />
+      <circle class="fig-dot-alt" cx="166" cy="62" r="3" />
+    </svg>
+    <span class="fig__name">切る</span>
+    <span class="fig__note">回転する薄い刃（またはレーザ）で、帯に沿って縦と横に切る。水で削りくずを流し、熱を抑える</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="テープを引き伸ばしたところ：チップの間隔が広がる">
+      <rect class="fig-line" x="4" y="102" width="192" height="6" />
+      {cols.map((c) => <rect class="fig-film" x={8 + c * 39} y="88" width="28" height="14" />)}
+      <path class="fig-arrow" d="M60 124H10m6-5-6 5 6 5M140 124h50m-6-5 6 5-6 5" />
+    </svg>
+    <span class="fig__name">広げて取り出す</span>
+    <span class="fig__note">テープを引き伸ばすと、チップの間隔が広がり、ひとつずつ取り出しやすくなる</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-film" x="4" y="4" width="16" height="16" /></svg>チップ</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-dash" d="M2 12h20" /></svg>切る帯</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><circle class="fig-part" cx="12" cy="12" r="8" /></svg>刃</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><circle class="fig-dot-alt" cx="12" cy="12" r="4" /></svg>水</li>
+  </ul>
+</FigureFrame>
