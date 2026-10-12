@@ -1,0 +1,193 @@
+name: claude
+
+# Claudeへの指示（Claude Code GitHub連携。要件定義書 6.7、アーキテクチャ設計書 8.3、運用ルール書 7.3）。
+# 運営者が Issue か変更案のコメントに `@claude` と書いたときだけ動く。
+#   1. gate   … コメントした人が運営者かを確かめ、今月の予算（config/budgets.yaml の claude）を確かめる。秘密なし
+#   2. claude … Claude Code を動かす。作業用のブランチへの書き込みと、変更案・コメントの作成だけ。
+#               認証は Workload Identity Federation（環境 claude。APIキーは保存しない）。最後に利用額を計算する
+#   3. record … 利用額を ops-log の ops/ledger/ に追記する（Claude の実行とは別のジョブ）
+# 実行の記録（Claude の出力）は、ログ、成果物、要約に出さない（Actionsのログは公開）。
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: >-
+      contains(github.event.comment.body, '@claude') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+      github.event.comment.user.type == 'User'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    outputs:
+      ok: ${{ steps.check.outputs.ok }}
+      max_turns: ${{ steps.check.outputs.max_turns }}
+    steps:
+      - name: コメントした人が運営者か確かめる
+        id: who
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          USER_LOGIN: ${{ github.event.comment.user.login }}
+        run: |
+          case "$USER_LOGIN" in ''|*[!A-Za-z0-9-]*) echo "運営者ではないため、何もしない"; exit 1;; esac
+          permission=$(gh api "repos/${REPO}/collaborators/${USER_LOGIN}/permission" --jq '.permission' 2>/dev/null || echo none)
+          case "$permission" in
+            admin|maintain|write) ;;
+            *) echo "運営者ではないため、何もしない"; exit 1 ;;
+          esac
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: 依存を入れる（版は scripts/requirements.txt で固定）
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: 今月の利用額を読む（ops-log）
+        run: |
+          git clone --quiet --depth 1 --branch ops-log \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/ops-log" \
+            || mkdir -p "$RUNNER_TEMP/ops-log/ops/ledger"
+
+      - name: 予算を確かめる
+        id: check
+        run: |
+          mkdir -p "$RUNNER_TEMP/ops-log/ops/ledger"
+          "$RUNNER_TEMP/venv/bin/python" scripts/llm/claude_budget.py check \
+            --ledger-dir "$RUNNER_TEMP/ops-log/ops/ledger" | tee -a "$GITHUB_OUTPUT"
+
+      - name: 実行しないことを知らせる
+        if: steps.check.outputs.ok != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ steps.check.outputs.reason }}
+          NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/issues/${NUMBER}/comments" -f body="Claudeへの指示を実行しなかった：${REASON}"
+
+  claude:
+    needs: gate
+    if: needs.gate.outputs.ok == '1'
+    runs-on: ubuntu-24.04
+    environment: claude
+    timeout-minutes: 30
+    permissions:
+      contents: write        # 作業用のブランチへの書き込み（main は保護で取り込めない）
+      pull-requests: write
+      issues: write
+      id-token: write        # Claude API の ID連携と、Claude GitHub App の認証
+      actions: read          # 変更案の確認の結果を読む
+    outputs:
+      ledger: ${{ steps.cost.outputs.ledger }}
+      month: ${{ steps.cost.outputs.month }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      # 利用額の計算の道具を、Claude が作業を始める前に写しておく（作業中のファイルの変更の影響を受けないように）
+      - name: 利用額の計算の道具を用意する
+        run: |
+          tool="$RUNNER_TEMP/budget-tool"
+          mkdir -p "$tool/scripts" "$tool/config"
+          cp -r scripts/llm "$tool/scripts/llm"
+          cp config/budgets.yaml config/operations.yaml "$tool/config/"
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -r scripts/requirements.txt
+
+      - name: Claude Code を動かす
+        id: run
+        uses: anthropics/claude-code-action@1d6de8cb0c237e7c15e9e1bdf973826ebae490cc # v1.0.248
+        with:
+          anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          anthropic_workspace_id: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          claude_args: >-
+            --model claude-sonnet-5-5
+            --max-turns ${{ needs.gate.outputs.max_turns }}
+          # CLAUDE.md 2章の7と4章で変えない場所。読むことはできる
+          settings: |
+            {
+              "permissions": {
+                "deny": [
+                  "Edit(./.github/**)", "Write(./.github/**)",
+                  "Edit(./schemas/**)", "Write(./schemas/**)",
+                  "Edit(./scripts/factcheck/**)", "Write(./scripts/factcheck/**)",
+                  "Edit(./config/budgets.yaml)", "Write(./config/budgets.yaml)",
+                  "Edit(./CLAUDE.md)", "Write(./CLAUDE.md)",
+                  "Edit(./CODEOWNERS)", "Write(./CODEOWNERS)",
+                  "Edit(./LICENSE)", "Write(./LICENSE)",
+                  "Edit(./data/auto/**)", "Write(./data/auto/**)",
+                  "Edit(./docs/**)", "Write(./docs/**)",
+                  "Edit(./content/essays/**)", "Write(./content/essays/**)"
+                ]
+              }
+            }
+
+      # 利用額の計算。出力は ledger の1行（トークン数と金額。Claude の出力の文は含まない）
+      - name: 利用額を計算する
+        id: cost
+        if: always() && steps.run.outputs.execution_file != ''
+        env:
+          EXECUTION_FILE: ${{ steps.run.outputs.execution_file }}
+          SUBJECT: "#${{ github.event.issue.number || github.event.pull_request.number }}"
+        run: |
+          out="$RUNNER_TEMP/ledger.jsonl"
+          "$RUNNER_TEMP/venv/bin/python" "$RUNNER_TEMP/budget-tool/scripts/llm/claude_budget.py" record \
+            --execution-file "$EXECUTION_FILE" --model claude-sonnet-5-5 \
+            --run-id "$GITHUB_RUN_ID" --subject "$SUBJECT" --out "$out" > "$RUNNER_TEMP/cost.txt"
+          cat "$RUNNER_TEMP/cost.txt"
+          grep '^month=' "$RUNNER_TEMP/cost.txt" >> "$GITHUB_OUTPUT"
+          echo "ledger=$(tail -n 1 "$out")" >> "$GITHUB_OUTPUT"
+
+  record:
+    needs: claude
+    if: ${{ !cancelled() && needs.claude.outputs.ledger != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: ops-log-write
+      cancel-in-progress: false
+    steps:
+      - name: 利用額を ops-log に追記する
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LEDGER: ${{ needs.claude.outputs.ledger }}
+          MONTH: ${{ needs.claude.outputs.month }}
+        run: |
+          if ! [[ "$MONTH" =~ ^[0-9]{4}-[0-9]{2}$ ]]; then echo "月が正しくない"; exit 1; fi
+          month="$MONTH"
+          printf '%s' "$LEDGER" | jq -e 'type == "object" and .agent == "claude"' > /dev/null || { echo "記録の形が正しくない"; exit 1; }
+          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          dir="$RUNNER_TEMP/ops-log"
+          if git ls-remote --exit-code --heads "$url" ops-log >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch ops-log "$url" "$dir"
+          else
+            git init --quiet "$dir"
+            git -C "$dir" checkout --quiet --orphan ops-log
+            git -C "$dir" remote add origin "$url"
+          fi
+          mkdir -p "$dir/ops/ledger"
+          printf '%s\n' "$LEDGER" | jq -c . >> "$dir/ops/ledger/${month}.jsonl"
+          git -C "$dir" config user.name "github-actions[bot]"
+          git -C "$dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$dir" add ops/ledger
+          git -C "$dir" commit --quiet -m "利用額の記録（claude、実行 ${GITHUB_RUN_ID}）"
+          git -C "$dir" push --quiet origin ops-log
