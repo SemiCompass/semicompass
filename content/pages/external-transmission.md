@@ -4,6 +4,23 @@ description: このサイトから外部のサービスに送られる情報と�
 path: /external-transmission/
 updated_at: '2026-10-12'
 draft: false
+# 本文のリンク先（事実確認の出典の一覧。画面には出さない）
+sources:
+  - id: S1
+    title: "プライバシー ポリシー"
+    publisher: "Google LLC"
+    url: "https://policies.google.com/privacy"
+    accessed_on: "2026-10-12"
+  - id: S2
+    title: "Google のサービスを使用するサイトやアプリから収集した情報の Google による使用"
+    publisher: "Google LLC"
+    url: "https://policies.google.com/technologies/partner-sites"
+    accessed_on: "2026-10-12"
+  - id: S3
+    title: "Google アナリティクス オプトアウト アドオン"
+    publisher: "Google LLC"
+    url: "https://tools.google.com/dlpage/gaoptout?hl=ja"
+    accessed_on: "2026-10-12"
 ---
 
 ## 送信先と送信される情報
