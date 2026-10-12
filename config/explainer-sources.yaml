@@ -277,3 +277,6 @@ learn:
   pn-junction:
     title: pn接合とダイオード
     basis: reviewed
+  mosfet:
+    title: MOS構造とMOSFETの動き
+    basis: reviewed
