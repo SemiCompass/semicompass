@@ -265,26 +265,23 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("role=\"search\"", html)  # 企業名・証券コードの検索は、ヘッダーの検索欄
         self.assertIn("新着のニュース解説", html)
 
-    def test_home_has_process_map_and_semiconductor_sales_chart(self):
-        # 半導体ができるまで（スマートフォンは段階の要約、タブレット以上は全体図）と、半導体関連の売上高の上位10社（仕様書 9.1 の4・5）
+    def test_home_has_no_process_map_or_sales_chart(self):
+        # トップは、説明・4つの入口・新着のニュース解説だけ（運営者の判断。工程の全体図と売上高の上位10社は、工程の一覧と企業一覧で見る）
         html = self.read(self.build("production"), "index.html")
         main = html.split("<main")[1]
-        self.assertIn("半導体ができるまで", main)
-        self.assertEqual(main.count('class="stage-summary__item"'), 5)  # 設計、材料、前工程、後工程、工場設備
-        self.assertIn('class="map-svg map-svg--wide"', main)
-        self.assertIn('href="/processes/#p-', main)  # 全体図の箱は、工程の一覧のページの工程へ
-        self.assertNotIn('href="#p-', main)
-        self.assertIn("半導体関連の売上高（最新の通期）の上位10社", main)
-        self.assertIn("出典：有価証券報告書", main)
+        self.assertNotIn("半導体ができるまで", main)
+        self.assertNotIn('class="map-svg', main)
+        self.assertNotIn("上位10社", main)
+        self.assertNotIn('class="facilities-band"', main)
         self.assertIn("ニュースを読む", main)
         self.assertNotIn("ニュース・テーマを読む", main)
 
-    def test_facilities_band_on_home_and_processes(self):
-        # 工場設備（分類 facilities）：特定の工程ではなく工場全体を支える会社。全体図の下の帯から、分類の企業の一覧へ
+    def test_facilities_band_on_processes(self):
+        # 工場設備（分類 facilities）：特定の工程ではなく工場全体を支える会社。工程の一覧の全体図の下の帯から、分類の企業の一覧へ
         dist = self.build("production")
         n = sum(1 for c in self.companies if "facilities" in (c.get("categories") or []))
         self.assertGreater(n, 0)
-        for page in ("index.html", "processes/index.html"):
+        for page in ("processes/index.html",):
             main = self.read(dist, page).split("<main")[1]
             self.assertIn('class="facilities-band" href="/companies/process/facilities/"', main, page)
             self.assertIn(f"{n}社", main, page)
