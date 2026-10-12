@@ -1,0 +1,41 @@
+---
+// 図：CMOSインバーターの動き（模式図）。上がpMOS（電源の側）、下がnMOS（接地の側）。入のトランジスタを閉じたスイッチで描く（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const panels = [
+  { key: 'in1', input: '1', output: '0', pOn: false, nOn: true, name: '入力が1のとき', note: 'nMOSが入、pMOSが切。出力は接地の側につながり、0になる' },
+  { key: 'in0', input: '0', output: '1', pOn: true, nOn: false, name: '入力が0のとき', note: 'pMOSが入、nMOSが切。出力は電源の側につながり、1になる' },
+];
+const sw = (on: boolean, y: number) => (on ? `M120 ${y}v28` : `M120 ${y}l14 22`);
+---
+
+<FigureFrame id="fig-cmos-inverter" columns={2} title="CMOSインバーターの動き（模式図）" caption="図：上のpMOSは電源の側に、下のnMOSは接地の側につながり、二つのゲートをつないだ点が入力、二つの間の点が出力になる。入になったトランジスタを閉じたスイッチ、切を開いたスイッチで描いた。どちらか一方が必ず切なので、電源から接地へ電気が流れ続けない。模式図、本サイトで作成">
+  {panels.map((p) => (
+    <li class="fig__panel">
+      <svg class="fig__svg" viewBox="0 0 200 170" role="img" aria-label={`${p.name}：${p.note}`}>
+        <path class="fig-line" d="M60 14h120M60 156h120" />
+        <text class="fig-text" x="40" y="18" font-size="10" text-anchor="middle">電源</text>
+        <text class="fig-text" x="40" y="160" font-size="10" text-anchor="middle">接地</text>
+        <path class="fig-line" d="M120 14v20M120 62v22M120 84v22M120 134v22" />
+        <rect class="fig-part" x="104" y="30" width="32" height="36" />
+        <rect class="fig-part" x="104" y="102" width="32" height="36" />
+        <path class={p.pOn ? 'fig-arrow' : 'fig-line'} d={sw(p.pOn, 34)} />
+        <path class={p.nOn ? 'fig-arrow' : 'fig-line'} d={sw(p.nOn, 106)} />
+        <text class="fig-text" x="152" y="52" font-size="10">pMOS</text>
+        <text class="fig-text" x="152" y="124" font-size="10">nMOS</text>
+        <path class="fig-line" d="M104 48H80v72h24M80 84H30" />
+        <circle class="fig-dot" cx="120" cy="84" r="3" />
+        <path class="fig-line" d="M120 84h20" />
+        <text class="fig-text" x="22" y="78" font-size="10" text-anchor="middle">入力</text>
+        <text class="fig-strong" x="22" y="98" font-size="14" text-anchor="middle">{p.input}</text>
+        <text class="fig-text" x="168" y="78" font-size="10" text-anchor="middle">出力</text>
+        <text class="fig-strong" x="168" y="98" font-size="14" text-anchor="middle">{p.output}</text>
+      </svg>
+      <span class="fig__name">{p.name}</span>
+      <span class="fig__note">{p.note}</span>
+    </li>
+  ))}
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-arrow" d="M12 3v18" /></svg>入（閉じたスイッチ）</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-line" d="M8 3l10 16" /></svg>切（開いたスイッチ）</li>
+  </ul>
+</FigureFrame>
