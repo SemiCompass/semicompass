@@ -355,8 +355,10 @@ class PagesBuildTest(unittest.TestCase):
         for field in tree["fields"]:
             if field["slug"] == "basics":
                 field["units"] = [{"type": "learn", "ref": "test-page"}]  # リポジトリの学習のページは写さない（下の content/learn/basics/ を置き換える）
+                field.pop("sections", None)
             elif field["slug"] == "industry":
                 field["units"] = []  # 単元のない分野の表示（準備中）を確かめるため、空にする
+                field.pop("sections", None)
         path = yaml.safe_dump(tree, allow_unicode=True, sort_keys=False)
         extra = {
             "content/learn/path.yaml": path,
@@ -371,7 +373,7 @@ class PagesBuildTest(unittest.TestCase):
         # 半導体を学ぶ（FR-901、FR-904）：一覧に分野と単元、学習のページに図・本文・理解度チェック、トップの入口は /learn/ へ
         dist = self.learn_site()
         index = self.read(dist, "learn/index.html")
-        self.assertIn("1. 半導体の基礎", index)
+        self.assertIn("1. 半導体工学の基礎", index)
         self.assertIn('href="/learn/basics/test-page/"', index)
         self.assertIn("この分野のページは、準備中です。", index)  # 単元のない分野は、準備中と示す
         page = self.read(dist, "learn/basics/test-page/index.html")
@@ -393,8 +395,12 @@ class PagesBuildTest(unittest.TestCase):
         slug = self.processes[0]["slug"]
         tree = yaml.safe_load((ROOT / "content" / "learn" / "path.yaml").read_text(encoding="utf-8"))
         for field in tree["fields"]:
-            field["units"] = {"basics": [{"type": "learn", "ref": "path-a"}], "devices": [{"type": "learn", "ref": "path-b"}],
-                              "process": [{"type": "process", "ref": slug}]}.get(field["slug"], [])
+            # 分野2には、別のフォルダ（devices）のページを folder で並べる。分野4は、小分け（sections）の中に工程を並べる
+            field.pop("sections", None)
+            field["units"] = {"basics": [{"type": "learn", "ref": "path-a"}],
+                              "materials": [{"type": "learn", "ref": "path-b", "folder": "devices"}]}.get(field["slug"], [])
+            if field["slug"] == "process":
+                field["sections"] = [{"slug": "front-end", "title": "試験の小分け", "units": [{"type": "process", "ref": slug}]}]
         def page(field: str, name: str) -> str:
             return (f"---\ntitle: {name}\nfield: {field}\ndescription: 試験用の説明である。\npublished_at: '2026-01-01'\nai_generated: true\n"
                     f"sources:\n  - id: S1\n    title: 例\n    publisher: 例\n    url: https://example.com/a\n    accessed_on: '2026-01-01'\n"
@@ -407,10 +413,14 @@ class PagesBuildTest(unittest.TestCase):
                       "src/figures/learn/basics/path-a.astro": figure, "src/figures/learn/devices/path-b.astro": figure})
         dist = self.build_with("learnpath", "production", extra=extra)
         first = self.read(dist, "learn/basics/path-a/index.html")
-        self.assertIn("次の分野（2. デバイス）の最初のページ：", first)
+        self.assertIn("次の分野（2. 結晶工学と半導体材料）の最初のページ：", first)
         self.assertIn('href="/learn/devices/path-b/"', first)
         second = self.read(dist, "learn/devices/path-b/index.html")
-        self.assertIn("前の分野（1. 半導体の基礎）の最後のページ：", second)
+        self.assertIn("前の分野（1. 半導体工学の基礎）の最後のページ：", second)
+        self.assertIn("結晶工学と半導体材料", second.split('aria-label="パンくずリスト"')[1].split("</nav>")[0])  # パンくずは並べた分野（フォルダの devices ではない）
+        index = self.read(dist, "learn/index.html")
+        self.assertIn("試験の小分け", index)
+        self.assertIn(f'href="/processes/{slug}/"', index.split("試験の小分け")[1])
         self.assertIn(f'href="/processes/{slug}/"', second.split('id="next-read"')[1])
         last = self.read(dist, f"processes/{slug}/index.html")
         nav = last.split('id="learn-order"')[1].split("</nav>")[0]

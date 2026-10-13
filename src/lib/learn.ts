@@ -1,7 +1,7 @@
 // 半導体を学ぶ（要求定義書 FR-901、データ定義書 6.8）：分野と単元の並び（content/learn/path.yaml）から、一覧と前後のリンクを作る。
 // まだページのない単元は、一覧にも前後のリンクにも出さない。
 import { loadSupply } from './companies';
-import { loadLearnPages, loadLearnPath, loadTerms, type LearnField, type LearnPage, type LearnUnit } from './content';
+import { loadLearnPages, loadLearnPath, loadTerms, type LearnField, type LearnPage, type LearnSection, type LearnUnit } from './content';
 
 export interface UnitLink {
   href: string;
@@ -10,13 +10,27 @@ export interface UnitLink {
   kind: '学習' | '工程' | '用語';
 }
 
-export function learnIndex(preview: boolean): { field: LearnField; units: UnitLink[] }[] {
+export interface SectionIndex {
+  section: LearnSection;
+  units: UnitLink[];
+}
+export interface FieldIndex {
+  field: LearnField;
+  /** 分野の小分けの前に並べる単元 */
+  lead: UnitLink[];
+  sections: SectionIndex[];
+  /** 分野の全単元（lead と各小分けを、並びの順に） */
+  units: UnitLink[];
+}
+
+export function learnIndex(preview: boolean): FieldIndex[] {
   const pages = loadLearnPages(preview);
   const terms = loadTerms(preview);
   const processes = loadSupply().processes as { slug: string; name: string; short_description?: string }[];
   const resolveUnit = (field: LearnField, unit: LearnUnit): UnitLink | null => {
     if (unit.type === 'learn') {
-      const page = pages.find((p) => p.field === field.slug && p.slug === unit.ref);
+      const folder = unit.folder ?? field.slug;
+      const page = pages.find((p) => p.field === folder && p.slug === unit.ref);
       return page ? { href: learnHref(page), title: page.front.title, summary: page.front.description, kind: '学習' } : null;
     }
     if (unit.type === 'process') {
@@ -26,10 +40,18 @@ export function learnIndex(preview: boolean): { field: LearnField; units: UnitLi
     const t = terms.find((x) => x.slug === unit.ref);
     return t ? { href: `/glossary/${t.slug}/`, title: t.front.term, summary: t.front.short_definition, kind: '用語' } : null;
   };
-  return loadLearnPath().map((field) => ({
-    field,
-    units: field.units.map((u) => resolveUnit(field, u)).filter((u): u is UnitLink => u !== null),
-  }));
+  const resolve = (field: LearnField, units: LearnUnit[]) =>
+    units.map((u) => resolveUnit(field, u)).filter((u): u is UnitLink => u !== null);
+  return loadLearnPath().map((field) => {
+    const lead = resolve(field, field.units);
+    const sections = (field.sections ?? []).map((section) => ({ section, units: resolve(field, section.units) }));
+    return { field, lead, sections, units: [...lead, ...sections.flatMap((s) => s.units)] };
+  });
+}
+
+/** そのページ（href）を並べた分野。パンくずリストと、一覧の分野へのリンクに使う */
+export function fieldOf(preview: boolean, href: string): LearnField | undefined {
+  return learnIndex(preview).find((e) => e.units.some((u) => u.href === href))?.field;
 }
 
 export const learnHref = (page: Pick<LearnPage, 'field' | 'slug'>) => `/learn/${page.field}/${page.slug}/`;

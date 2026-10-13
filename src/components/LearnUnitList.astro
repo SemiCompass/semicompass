@@ -1,0 +1,49 @@
+---
+// 半導体を学ぶの一覧（/learn/）で、分野や小分けの単元を並べる一覧（仕様書 8.18）
+import type { UnitLink } from '../lib/learn';
+
+interface Props {
+  units: UnitLink[];
+}
+const { units } = Astro.props;
+---
+
+<ol class="learn-units">
+  {units.map((u) => (
+    <li class="learn-units__item">
+      <a class="learn-units__title" href={u.href}>{u.title}</a>
+      {u.summary && <span class="learn-units__summary">{u.summary}</span>}
+    </li>
+  ))}
+</ol>
+
+<style>
+  .learn-units {
+    max-width: var(--content-max-width);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    list-style: none;
+    counter-reset: unit;
+  }
+  .learn-units__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .learn-units__title {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-lead-leading);
+  }
+  .learn-units__summary {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+</style>

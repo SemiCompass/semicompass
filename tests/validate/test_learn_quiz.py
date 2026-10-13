@@ -92,6 +92,29 @@ class LearnPageTest(Base):
             yaml.safe_dump(path_yaml([{"type": "learn", "ref": "missing"}]), allow_unicode=True), encoding="utf-8")
         self.has(self.check(), "V-04", "missing", file="content/learn/path.yaml")
 
+    def test_page_in_other_folder_listed_with_folder_and_sections(self):
+        # 9分野への組み替え（データ定義書 6.8）：別のフォルダのページは folder で、分野の小分けは sections で並べる
+        rel = self.write_learn(field="devices", unit=False)
+        tree = {"schema_version": 1, "fields": [
+            {"no": 1, "slug": "basics", "title": "半導体工学の基礎", "summary": "基礎を学ぶ。", "units": [],
+             "sections": [{"slug": "transistor", "title": "トランジスタ",
+                           "units": [{"type": "learn", "ref": "what-is-semiconductor", "folder": "devices"}]}]}]}
+        (self.root / "content" / "learn" / "path.yaml").write_text(yaml.safe_dump(tree, allow_unicode=True), encoding="utf-8")
+        problems = self.check()
+        self.assertEqual(self.errors(rel), [])
+        self.assertFalse([p for p in problems if p.file == rel and "units に、このページがない" in p.message])
+
+    def test_folder_mismatch_and_duplicate_unit(self):
+        self.write_learn()
+        tree = {"schema_version": 1, "fields": [
+            {"no": 1, "slug": "basics", "title": "半導体工学の基礎", "summary": "基礎を学ぶ。",
+             "units": [{"type": "learn", "ref": "what-is-semiconductor"}, {"type": "learn", "ref": "what-is-semiconductor", "folder": "power"}],
+             "sections": [{"slug": "a", "title": "小分け", "units": [{"type": "learn", "ref": "what-is-semiconductor"}]}]}]}
+        (self.root / "content" / "learn" / "path.yaml").write_text(yaml.safe_dump(tree, allow_unicode=True), encoding="utf-8")
+        problems = self.check()
+        self.has(problems, "V-04", "content/learn/power/what-is-semiconductor.md", file="content/learn/path.yaml")
+        self.has(problems, "V-03", "重複", file="content/learn/path.yaml")
+
 
 if __name__ == "__main__":
     unittest.main()

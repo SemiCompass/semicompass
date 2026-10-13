@@ -938,38 +938,50 @@ def check_learn(pages: dict[str, tuple[dict, str]], path, supply, terms: dict[st
     """学習のページ（content/learn/{分野}/{slug}.md）と、並び（content/learn/path.yaml）の検査（データ定義書 6.8）。"""
     out: list[Problem] = []
     fields = [f for f in (path or {}).get("fields") or [] if isinstance(f, dict)] if isinstance(path, dict) else []
-    field_slugs = {f.get("slug") for f in fields}
     process_slugs = _slugs(supply, "processes")
     term_slugs = {Path(rel).stem for rel in terms}
     company_slugs = {Path(rel).stem for rel in companies}
     page_keys = {(Path(rel).parent.name, Path(rel).stem) for rel in pages}
     if pages and path is None:
         out.append(Problem("content/learn/path.yaml", "", "V-04", "学習のページがあるのに、content/learn/path.yaml がない"))
+    listed: set[tuple[str, str]] = set()  # path.yaml に並べた学習のページ（フォルダ、slug）
+    seen: set[tuple[str, str, str]] = set()
     for i, field in enumerate(fields):
-        seen: set[tuple[str, str]] = set()
-        for j, unit in enumerate(field.get("units") or []):
-            if not isinstance(unit, dict):
+        # 分野の units と、小分け（sections）の units を、この順で見る（データ定義書 6.8）
+        groups = [(["fields", i, "units"], field.get("units") or [])]
+        section_slugs: set[str] = set()
+        for k, section in enumerate(field.get("sections") or []):
+            if not isinstance(section, dict):
                 continue
-            key = (unit.get("type"), unit.get("ref"))
-            at = pointer(["fields", i, "units", j])
-            if key in seen:
-                out.append(Problem("content/learn/path.yaml", at, "V-03", f"同じ単元（{key[0]} {key[1]}）が重複している"))
-            seen.add(key)
-            kind, ref = key
-            if kind == "learn" and (field.get("slug"), ref) not in page_keys:
-                out.append(Problem("content/learn/path.yaml", at, "V-04", f"学習のページ content/learn/{field.get('slug')}/{ref}.md がない"))
-            elif kind == "process" and process_slugs is not None and ref not in process_slugs:
-                out.append(Problem("content/learn/path.yaml", at, "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
-            elif kind == "term" and ref not in term_slugs:
-                out.append(Problem("content/learn/path.yaml", at, "V-04", f"用語 {ref} の原稿（content/glossary/）がない"))
+            if section.get("slug") in section_slugs:
+                out.append(Problem("content/learn/path.yaml", pointer(["fields", i, "sections", k, "slug"]), "V-03",
+                                   f"同じ小分けの slug（{section.get('slug')}）が重複している"))
+            section_slugs.add(section.get("slug"))
+            groups.append((["fields", i, "sections", k, "units"], section.get("units") or []))
+        for base, units in groups:
+            for j, unit in enumerate(units):
+                if not isinstance(unit, dict):
+                    continue
+                kind, ref = unit.get("type"), unit.get("ref")
+                folder = unit.get("folder") or field.get("slug")
+                key = (kind, folder if kind == "learn" else "", ref)
+                at = pointer([*base, j])
+                if key in seen:
+                    out.append(Problem("content/learn/path.yaml", at, "V-03", f"同じ単元（{kind} {ref}）が重複している（1つの単元は1か所にだけ並べる）"))
+                seen.add(key)
+                if kind == "learn":
+                    listed.add((folder, ref))
+                    if (folder, ref) not in page_keys:
+                        out.append(Problem("content/learn/path.yaml", at, "V-04", f"学習のページ content/learn/{folder}/{ref}.md がない"))
+                elif kind == "process" and process_slugs is not None and ref not in process_slugs:
+                    out.append(Problem("content/learn/path.yaml", at, "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
+                elif kind == "term" and ref not in term_slugs:
+                    out.append(Problem("content/learn/path.yaml", at, "V-04", f"用語 {ref} の原稿（content/glossary/）がない"))
     for rel, (data, body) in pages.items():
         folder, slug = Path(rel).parent.name, Path(rel).stem
         if data.get("field") != folder:
             out.append(Problem(rel, "/field", "V-02", f"置き場所のフォルダ（{folder}）と field（{data.get('field')}）が一致しない"))
-        if field_slugs and folder not in field_slugs:
-            out.append(Problem(rel, "/field", "V-04", f"分野 {folder} が content/learn/path.yaml にない"))
-        if not any((u or {}).get("type") == "learn" and (u or {}).get("ref") == slug
-                   for f in fields if f.get("slug") == folder for u in f.get("units") or []):
+        if (folder, slug) not in listed:
             out.append(Problem(rel, "", "V-04", "content/learn/path.yaml の units に、このページがない（一覧に出ない）", "warning"))
         for key, known, label in (("processes", process_slugs, "工程"), ("related_terms", term_slugs, "用語"), ("companies", company_slugs, "企業")):
             for k, ref in enumerate(data.get(key) or []):
