@@ -331,3 +331,9 @@ learn:
   automation:
     title: 止めずに動かす：ウェーハの搬送と工場の自動化
     basis: reviewed
+  analog:
+    title: 連続した信号を扱う：アナログ半導体
+    basis: reviewed
+  mems-sensor:
+    title: 感じて、動く：センサーとMEMS
+    basis: reviewed
