@@ -349,3 +349,9 @@ learn:
   processor:
     title: 命令を実行する：プロセッサーの仕組み
     basis: reviewed
+  rf:
+    title: 電波を扱う：通信用の半導体
+    basis: reviewed
+  energy-environment:
+    title: 電力と環境：工場が向き合う課題
+    basis: reviewed
