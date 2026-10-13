@@ -27,6 +27,7 @@ fields:
     summary: スイッチとしてのトランジスタが、どのように計算をするのかを学びます。
     units:
       - { type: learn, ref: cmos-inverter }
+      - { type: learn, ref: gates-and-memory }
   - "no": 4
     slug: silicon
     title: シリコンとウェーハ
@@ -68,3 +69,4 @@ fields:
     summary: 設計専業、受託製造、一貫生産などの役割の違いと、サプライチェーンの中の日本企業を学びます。
     units:
       - { type: learn, ref: roles }
+      - { type: learn, ref: supply-chain-view }
