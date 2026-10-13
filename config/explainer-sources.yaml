@@ -367,3 +367,9 @@ learn:
   resolution:
     title: どこまで細かく写せるか：露光の細かさの考え方
     basis: reviewed
+  plasma-process:
+    title: 電気を帯びたガスで削り、付ける：プラズマを使う工程
+    basis: reviewed
+  failure-analysis:
+    title: 壊れた理由を突き止める：故障解析
+    basis: reviewed

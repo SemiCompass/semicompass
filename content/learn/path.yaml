@@ -55,6 +55,7 @@ fields:
       - { type: process, ref: lithography }
       - { type: learn, ref: resolution }
       - { type: process, ref: etching }
+      - { type: learn, ref: plasma-process }
       - { type: learn, ref: doping-and-anneal }
       - { type: process, ref: cmp }
       - { type: learn, ref: interconnect }
@@ -70,6 +71,7 @@ fields:
       - { type: learn, ref: test-and-reliability }
       - { type: learn, ref: inspection }
       - { type: learn, ref: reliability-tests }
+      - { type: learn, ref: failure-analysis }
   - "no": 7
     slug: facilities
     title: 工場を支える技術

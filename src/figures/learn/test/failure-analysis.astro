@@ -1,0 +1,39 @@
+---
+// 図：故障解析の進め方と、層を掘り下げて断面を見る様子（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const steps = ['電気で症状を確かめる', '壊れた場所を探す', '外から調べる', '開けて、削って見る', '原因を製造・設計に戻す'];
+---
+
+<FigureFrame id="fig-fa" columns={2} title="故障解析の進め方（模式図）" caption="図：左は、故障解析の進め方。電気で症状を確かめ、熱や光で壊れた場所を探し、開ける前に外から調べ、開けて削って見て、分かった原因を製造と設計に戻す。右は、壊れた場所の断面を見る様子。細く絞ったイオンの線で、その場所だけを削って断面を出し、電子顕微鏡で拡大して見る。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="故障解析の進め方：症状、場所、外から調べる、開けて見る、原因を戻す">
+      {steps.map((s, i) => (
+        <>
+          <rect class={i === 4 ? 'fig-film' : 'fig-part'} x="24" y={4 + i * 29} width="152" height="21" />
+          <text class="fig-text" x="100" y={18 + i * 29} font-size="8" text-anchor="middle">{s}</text>
+          {i < steps.length - 1 && <path class="fig-arrow" d={`M100 ${26 + i * 29}v6M97 ${29 + i * 29}l3 3 3-3`} />}
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">進め方</span>
+    <span class="fig__note">手がかりを集めて、少しずつ場所を絞り込む</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="細く絞ったイオンの線でその場所だけを削り、断面を電子顕微鏡で見る">
+      <rect class="fig-film" x="20" y="50" width="160" height="16" />
+      <rect class="fig-film" x="20" y="66" width="160" height="16" />
+      <rect class="fig-film" x="20" y="82" width="160" height="16" />
+      <rect class="fig-wafer" x="20" y="98" width="160" height="30" />
+      <path class="fig-metal" d="M30 56h40v5H30zM90 72h50v5H90zM40 88h30v5H40zM120 88h40v5h-40z" />
+      <path class="fig-part" d="M84 50h32v62H84z" />
+      <circle class="fig-resist" cx="116" cy="90" r="4" />
+      <path class="fig-arrow" d="M100 10v34M96 38l4 6 4-6" />
+      <text class="fig-text" x="104" y="20" font-size="7.5">細く絞ったイオンの線</text>
+      <path class="fig-dash" d="M160 42L120 86" />
+      <text class="fig-text" x="196" y="38" font-size="7.5" text-anchor="end">電子顕微鏡で見る</text>
+      <text class="fig-text" x="100" y="142" font-size="7.5" text-anchor="middle">削って出した断面（丸は異物）</text>
+    </svg>
+    <span class="fig__name">断面を出して見る</span>
+    <span class="fig__note">その場所だけを削って、中の様子を確かめる</span>
+  </li>
+</FigureFrame>
