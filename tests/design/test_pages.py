@@ -374,11 +374,16 @@ class PagesBuildTest(unittest.TestCase):
         dist = self.learn_site()
         index = self.read(dist, "learn/index.html")
         self.assertIn("1. 半導体工学の基礎", index)
-        self.assertIn('href="/learn/basics/test-page/"', index)
-        self.assertIn("この分野のページは、準備中です。", index)  # 単元のない分野は、準備中と示す
+        self.assertIn('href="/learn/basics/"', index)  # 一覧には9分野の入口を並べ、分野のページへ進む（仕様書 8.18）
+        self.assertEqual(index.split("<main")[1].count('class="learn-field-entry"'), 9)
+        self.assertIn("準備中", index.split('href="/learn/industry/"')[1].split("</a>")[0])  # 単元のない分野の入口は、準備中と示す
+        field = self.read(dist, "learn/basics/index.html")
+        self.assertIn('href="/learn/basics/test-page/"', field)
+        self.assertIn("次の分野：", field)
+        self.assertIn("この分野のページは、準備中です。", self.read(dist, "learn/industry/index.html"))
         page = self.read(dist, "learn/basics/test-page/index.html")
         self.assertIn("learn-figure-test", page)
-        self.assertIn('href="/learn/#field-basics"', page)
+        self.assertIn('href="/learn/basics/"', page)  # パンくずリストの分野は、分野のページへ
         quiz = re.findall(r'<section class="quiz"[^>]*data-quiz[^>]*>(.*?)</section>', page, re.S)[0]
         self.assertEqual(quiz.count('data-choice='), 4)
         self.assertIn('data-answer="3"', page)
@@ -418,9 +423,9 @@ class PagesBuildTest(unittest.TestCase):
         second = self.read(dist, "learn/devices/path-b/index.html")
         self.assertIn("前の分野（1. 半導体工学の基礎）の最後のページ：", second)
         self.assertIn("結晶工学と半導体材料", second.split('aria-label="パンくずリスト"')[1].split("</nav>")[0])  # パンくずは並べた分野（フォルダの devices ではない）
-        index = self.read(dist, "learn/index.html")
+        index = self.read(dist, "learn/process/index.html")
         self.assertIn("試験の小分け", index)
-        self.assertIn(f'href="/processes/{slug}/"', index.split("試験の小分け")[1])
+        self.assertIn(f'href="/processes/{slug}/"', index.split('id="section-front-end"')[1])
         self.assertIn(f'href="/processes/{slug}/"', second.split('id="next-read"')[1])
         last = self.read(dist, f"processes/{slug}/index.html")
         nav = last.split('id="learn-order"')[1].split("</nav>")[0]

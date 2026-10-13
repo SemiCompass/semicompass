@@ -1,9 +1,8 @@
 ---
-// 半導体を学ぶ（/learn/。要求定義書 FR-901、要件定義書 FR-901）：分野ごとに、できている単元を並べる。
-// ページはできたものから順に増やす。単元がまだない分野は「準備中」とし、完成しているように見せない（MV-08）
+// 半導体を学ぶ（/learn/。要求定義書 FR-901、要件定義書 FR-901、仕様書 8.18）：研究分野の9分野の入口を並べる。
+// 入口から分野のページ（/learn/{分野}/）へ進み、その分野の単元を体系の順に学ぶ。単元がまだない分野は「準備中」とする（MV-08）
 import { BUILD_ENV } from 'astro:env/server';
 import Page from '../../layouts/Page.astro';
-import UnitList from '../../components/LearnUnitList.astro';
 import { learnIndex } from '../../lib/learn';
 
 const index = learnIndex(BUILD_ENV === 'preview');
@@ -14,39 +13,77 @@ const index = learnIndex(BUILD_ENV === 'preview');
   heading="半導体を学ぶ"
   description="半導体工学の基礎から、材料、設計、製造、パワー半導体、センサー、通信、業界までを、研究分野ごとに順に学べます。"
   breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '半導体を学ぶ' }]}
-  toc={index.map(({ field }) => ({ id: `field-${field.slug}`, label: field.title }))}
+  wide
 >
-  <p class="lead measure">半導体工学の基礎から、結晶と材料、デバイスの設計、製造、パワー半導体、センサー、通信、業界までを、研究分野ごとに順に学べます。各ページの最後に、内容を確かめる問いがあります。ページは、順に増やしています。</p>
-  {index.map(({ field, units, lead, sections }) => (
-    <section aria-labelledby={`field-${field.slug}`} class="learn-field">
-      <h2 id={`field-${field.slug}`}>{field.no}. {field.title}</h2>
-      <p class="measure">{field.summary}</p>
-      {units.length > 0 ? (
-        <>
-          {lead.length > 0 && <UnitList units={lead} />}
-          {sections.filter((s) => s.units.length > 0).map(({ section, units: su }) => (
-            <section aria-labelledby={`section-${field.slug}-${section.slug}`} class="learn-section">
-              <h3 id={`section-${field.slug}-${section.slug}`}>{section.title}</h3>
-              {section.summary && <p class="measure">{section.summary}</p>}
-              <UnitList units={su} />
-            </section>
-          ))}
-        </>
-      ) : (
-        <p class="learn-field__pending">この分野のページは、準備中です。</p>
-      )}
-    </section>
-  ))}
+  <p class="lead measure">半導体工学の基礎から、結晶と材料、デバイスの設計、製造、パワー半導体、センサー、通信、業界までを、研究分野ごとに順に学べます。分野を選ぶと、その分野のページが学ぶ順に並んでいます。各ページの最後に、内容を確かめる問いがあります。ページは、順に増やしています。</p>
+  <nav aria-label="分野を選ぶ" class="learn-fields">
+    <ul class="learn-fields__list">
+      {index.map(({ field, units }) => (
+        <li>
+          <a class="learn-field-entry" href={`/learn/${field.slug}/`}>
+            <span class="learn-field-entry__title">{field.no}. {field.title}</span>
+            <span class="learn-field-entry__text">{field.summary}</span>
+            <span class="learn-field-entry__text">{units.length > 0 ? `${units.length}ページ` : '準備中'}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
 </Page>
 
 <style>
-  .learn-field {
-    margin-block-start: var(--space-7);
+  @import "../../styles/breakpoints.css";
+  .learn-fields {
+    margin-block-start: var(--space-6);
   }
-  .learn-section {
-    margin-block-start: var(--space-5);
+  .learn-fields__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  .learn-field__pending {
+  @media (--tablet) {
+    .learn-fields__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (--pc) {
+    .learn-fields__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .learn-fields__list li {
+    display: flex;
+  }
+  .learn-field-entry {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+    min-height: var(--target-min);
+    padding: var(--space-3);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .learn-field-entry:hover {
+    background: var(--color-primary-tint);
+  }
+  .learn-field-entry__title {
+    color: var(--color-primary);
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-lead-leading);
+    letter-spacing: var(--text-lead-tracking);
+  }
+  .learn-field-entry__text {
     color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
   }
 </style>
