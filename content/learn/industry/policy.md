@@ -3,7 +3,7 @@ title: 国はなぜ半導体を支えるのか：政策の考え方と仕組み
 field: industry
 description: 国が半導体の生産や研究開発を支える理由と、その仕組みを、経済産業省と財務省の資料をもとに説明する。経済安全保障の考え方、三つの基金、支援の例、投資を呼び込む枠組み、政策の情報を読むときの注意を扱う。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-13'
 ai_generated: true
 sources:

@@ -3,7 +3,10 @@ title: エネルギーの段で考える：バンドとバンドギャップ
 field: basics
 description: 金属、絶縁体、半導体の違いを、電子がとれるエネルギーの帯（バンド）と帯の間のすき間（バンドギャップ）で説明する。熱や光で電子がすき間を越える仕組み、n型とp型の見方、材料によるすき間の違いと使い分けを扱う。
 basis: reviewed
-draft: true
+reviewed_on: '2026-10-13'
+review_methods:
+- operator_knowledge
+draft: false
 published_at: '2026-10-13'
 ai_generated: true
 sources: []

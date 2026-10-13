@@ -5,7 +5,10 @@ description: 半導体の中で電気を運ぶ「電子」と「正孔」の働�
 related_terms:
 - silicon-wafer
 basis: reviewed
-draft: true
+reviewed_on: '2026-10-13'
+review_methods:
+- operator_knowledge
+draft: false
 published_at: '2026-10-12'
 ai_generated: true
 sources: []
