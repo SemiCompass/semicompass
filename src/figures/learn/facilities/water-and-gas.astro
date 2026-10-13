@@ -1,0 +1,46 @@
+---
+// 図：超純水を作る流れと、特殊なガスを安全に扱う流れ（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const water = ['もとの水', 'ろ過', '逆浸透', 'イオン交換', '紫外線', '細かいフィルター', '装置へ'];
+const gas = [
+  { name: 'ガスキャビネット', sub: '空気を吸い出す' },
+  { name: '配管', sub: '漏れを検知して止める' },
+  { name: '装置', sub: '成膜・エッチングなど' },
+  { name: '除害装置', sub: '無害にしてから出す' },
+];
+---
+
+<FigureFrame id="fig-water-gas" columns={2} title="超純水とガスの流れ（模式図）" caption="図：左は、超純水を作る処理の順番。ろ過、逆浸透、イオン交換、紫外線、細かいフィルターの順に重ね、できた水は配管を回り続けるように流す。右は、特殊なガスを安全に扱う流れ。専用の箱から配管で装置へ届け、使った後は除害装置で無害にしてから外へ出す。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="超純水を作る流れ：もとの水、ろ過、逆浸透、イオン交換、紫外線、細かいフィルターの順に処理して装置へ送る">
+      {water.map((w, i) => (
+        <>
+          <rect class={i === 0 || i === water.length - 1 ? 'fig-part' : 'fig-film'} x="40" y={4 + i * 20} width="96" height="15" />
+          <text class="fig-text" x="88" y={15 + i * 20} font-size="8" text-anchor="middle">{w}</text>
+          {i < water.length - 1 && <path class="fig-arrow" d={`M88 ${19 + i * 20}v5`} />}
+        </>
+      ))}
+      <path class="fig-dash" d="M136 131h30V71h-30" />
+      <text class="fig-text" x="170" y="104" font-size="8">回し</text>
+      <text class="fig-text" x="170" y="114" font-size="8">続ける</text>
+    </svg>
+    <span class="fig__name">超純水をつくる</span>
+    <span class="fig__note">処理を何段階も重ね、できた水は止めずに回し続ける</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="特殊なガスの流れ：ガスキャビネットから配管で装置へ届け、使った後は除害装置で無害にしてから出す">
+      {gas.map((g, i) => (
+        <>
+          <rect class={i === 2 ? 'fig-film' : 'fig-part'} x="30" y={6 + i * 34} width="140" height="26" />
+          <text class="fig-strong" x="100" y={17 + i * 34} font-size="8" text-anchor="middle">{g.name}</text>
+          <text class="fig-text" x="100" y={27 + i * 34} font-size="7.5" text-anchor="middle">{g.sub}</text>
+          {i < gas.length - 1 && <path class="fig-arrow" d={`M100 ${33 + i * 34}v6M97 ${36 + i * 34}l3 3 3-3`} />}
+        </>
+      ))}
+      <path class="fig-arrow" d="M170 121h18M182 115l6 6-6 6" />
+      <text class="fig-text" x="186" y="140" font-size="8" text-anchor="end">外へ</text>
+    </svg>
+    <span class="fig__name">特殊なガスを安全に扱う</span>
+    <span class="fig__note">漏らさず、使った後も無害にしてから出す</span>
+  </li>
+</FigureFrame>

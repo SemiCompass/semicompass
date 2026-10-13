@@ -1,0 +1,28 @@
+---
+// 図：ウェーハの種類の断面（模式図）。磨いたウェーハ、エピタキシャルウェーハ、SOIウェーハ（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const panels = [
+  { key: 'polished', name: '磨いたウェーハ', note: '単結晶をそのまま切り分け、表面を磨いたもの', layers: [{ cls: 'fig-wafer', y: 40, h: 80, label: '単結晶のシリコン' }] },
+  { key: 'epi', name: 'エピタキシャルウェーハ', note: '表面に、同じ並びの単結晶の膜を育てたもの', layers: [{ cls: 'fig-film', y: 40, h: 18, label: '育てた単結晶の膜' }, { cls: 'fig-wafer', y: 58, h: 62, label: '下のウェーハ' }] },
+  { key: 'soi', name: 'SOIウェーハ', note: '薄いシリコンの層の下に、絶縁膜をはさんだもの', layers: [{ cls: 'fig-film', y: 40, h: 14, label: '薄いシリコンの層' }, { cls: 'fig-resist', y: 54, h: 12, label: '埋め込んだ絶縁膜' }, { cls: 'fig-wafer', y: 66, h: 54, label: '支えのシリコン' }] },
+];
+---
+
+<FigureFrame id="fig-wafer-types" columns={3} title="ウェーハの種類（断面の模式図）" caption="図：ウェーハの断面。左は、単結晶を切り分けて磨いたウェーハ。中は、表面に同じ並びの単結晶の膜を育てたエピタキシャルウェーハ。右は、トランジスタを作る薄いシリコンの層の下に絶縁膜をはさんだSOIウェーハ。層の厚さの比は実際と異なる。模式図、本サイトで作成">
+  {panels.map((p) => (
+    <li class="fig__panel">
+      <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label={`${p.name}：${p.note}`}>
+        <text class="fig-text" x="100" y="28" font-size="9" text-anchor="middle">トランジスタを作る面</text>
+        <path class="fig-arrow" d="M100 31v6M97 34l3 3 3-3" />
+        {p.layers.map((l) => (
+          <>
+            <rect class={l.cls} x="20" y={l.y} width="160" height={l.h} />
+            <text class="fig-text" x="100" y={l.y + l.h / 2 + 3} font-size="9" text-anchor="middle">{l.label}</text>
+          </>
+        ))}
+      </svg>
+      <span class="fig__name">{p.name}</span>
+      <span class="fig__note">{p.note}</span>
+    </li>
+  ))}
+</FigureFrame>
