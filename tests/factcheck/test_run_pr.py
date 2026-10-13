@@ -130,6 +130,18 @@ class FetchTest(unittest.TestCase):
         page = '<html><head><meta charset="Shift_JIS"></head><body><p>売上高</p></body></html>'
         self.assertIn("売上高", run_pr.to_text(page.encode("utf-8"), "text/html; charset=utf-8"))
 
+    def test_aes_encrypted_pdf_can_be_read(self):
+        # 官公庁の資料には、利用者のパスワードなしで、印刷や編集だけを制限するためにAESで暗号化したPDFがある。
+        # pypdf は、その復号に cryptography を使う（scripts/requirements.txt）。ないと DependencyError になり、出典を照合できない
+        import io
+        from pypdf import PdfWriter
+        writer = PdfWriter()
+        writer.add_blank_page(100, 100)
+        writer.encrypt(user_password="", owner_password="owner", algorithm="AES-128")
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        self.assertIsInstance(run_pr.to_text(buffer.getvalue(), "application/pdf"), str)
+
     def test_sources_of_news(self):
         self.assertEqual(run_pr.sources_of({"source_article": {"url": "https://x.example/a"}}), [("S1", "https://x.example/a")])
 
