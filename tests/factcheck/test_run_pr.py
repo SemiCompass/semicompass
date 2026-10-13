@@ -109,6 +109,27 @@ class FetchTest(unittest.TestCase):
         self.assertIn("1,200億円", text)
         self.assertNotIn("var a", text)
 
+    def test_html_shift_jis_meta_charset(self):
+        # HTTPの見出しに文字コードがなく、<meta> にだけ Shift_JIS と書かれた日本語のページ（古い官公庁・団体のページに多い）
+        page = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS"></head><body><p>1947年にトランジスタが発明された。</p></body></html>'
+        text = run_pr.to_text(page.encode("cp932"), "text/html")
+        self.assertIn("1947年", text)
+        source = fc.make_source("S1", text)
+        self.assertIn((1947,), source.date_keys)
+
+    def test_html_meta_charset_short_form(self):
+        page = '<html><head><meta charset="euc-jp"></head><body><p>東京通信工業</p></body></html>'
+        self.assertIn("東京通信工業", run_pr.to_text(page.encode("euc-jp"), "text/html"))
+
+    def test_html_without_any_charset_falls_back_to_cp932(self):
+        page = "<html><body><p>半導体の売上高は1,200億円</p></body></html>"
+        self.assertIn("1,200億円", run_pr.to_text(page.encode("cp932"), ""))
+        self.assertIn("1,200億円", run_pr.to_text(page.encode("utf-8"), ""))
+
+    def test_header_charset_wins_over_meta(self):
+        page = '<html><head><meta charset="Shift_JIS"></head><body><p>売上高</p></body></html>'
+        self.assertIn("売上高", run_pr.to_text(page.encode("utf-8"), "text/html; charset=utf-8"))
+
     def test_sources_of_news(self):
         self.assertEqual(run_pr.sources_of({"source_article": {"url": "https://x.example/a"}}), [("S1", "https://x.example/a")])
 
