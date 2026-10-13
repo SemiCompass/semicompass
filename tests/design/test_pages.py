@@ -355,6 +355,8 @@ class PagesBuildTest(unittest.TestCase):
         for field in tree["fields"]:
             if field["slug"] == "basics":
                 field["units"] = [{"type": "learn", "ref": "test-page"}]  # リポジトリの学習のページは写さない（下の content/learn/basics/ を置き換える）
+            elif field["slug"] == "industry":
+                field["units"] = []  # 単元のない分野の表示（準備中）を確かめるため、空にする
         path = yaml.safe_dump(tree, allow_unicode=True, sort_keys=False)
         extra = {
             "content/learn/path.yaml": path,
