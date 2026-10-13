@@ -1,0 +1,30 @@
+---
+// 半導体を学ぶの順で、前と次に読むページ（要求定義書 FR-901、要件定義書 AT-09）。学習のページと、学習の順に入っている工程ページで使う。
+// 分野の境目では、次の分野の名前を添える。最後の単元では、業績（企業分析）とニュース解説の入口を示す
+import type { PathStep } from '../lib/learn';
+
+interface Props {
+  id: string;
+  heading: string;
+  previous?: PathStep;
+  next?: PathStep;
+  isLast: boolean;
+}
+const { id, heading, previous, next, isLast } = Astro.props;
+const fieldName = (s: PathStep) => `${s.field.no}. ${s.field.title}`;
+---
+
+<nav aria-labelledby={id} class="learn-next">
+  <h2 id={id}>{heading}</h2>
+  <ul>
+    {previous && (
+      <li>{previous.crossesField ? `前の分野（${fieldName(previous)}）の最後のページ：` : '前のページ：'}<a href={previous.link.href}>{previous.link.title}</a></li>
+    )}
+    {next && (
+      <li>{next.crossesField ? `次の分野（${fieldName(next)}）の最初のページ：` : '次のページ：'}<a href={next.link.href}>{next.link.title}</a></li>
+    )}
+    {isLast && (
+      <li>学んだことを、企業とニュースで確かめる：<a href="/companies/">企業分析（業績）</a>、<a href="/news/">ニュース解説</a></li>
+    )}
+  </ul>
+</nav>
