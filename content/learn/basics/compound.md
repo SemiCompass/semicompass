@@ -3,7 +3,10 @@ title: シリコン以外の半導体：化合物半導体
 field: basics
 description: 二つ以上の元素を組み合わせて作る化合物半導体が、シリコンとどう違い、どんな場面で使われるのかを説明する。周期表での元素の組み合わせ方、電子の動きやすさとバンドギャップの違い、光を出す性質、作る難しさと使い分けを扱う。
 basis: reviewed
-draft: true
+reviewed_on: '2026-10-13'
+review_methods:
+- operator_knowledge
+draft: false
 published_at: '2026-10-13'
 ai_generated: true
 sources: []

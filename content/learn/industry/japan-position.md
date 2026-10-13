@@ -5,7 +5,7 @@ description: 世界の半導体の中で日本の位置がどう変わってき�
 related_terms:
 - foundry
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-13'
 ai_generated: true
 sources:

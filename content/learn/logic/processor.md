@@ -5,7 +5,10 @@ description: 論理ゲートと記憶の回路を組み合わせて作るプロ�
 related_terms:
 - hbm
 basis: reviewed
-draft: true
+reviewed_on: '2026-10-13'
+review_methods:
+- operator_knowledge
+draft: false
 published_at: '2026-10-13'
 ai_generated: true
 sources: []
