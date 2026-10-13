@@ -26,7 +26,12 @@
         "process",
         "test",
         "facilities",
-        "industry"
+        "industry",
+        "materials",
+        "design",
+        "power",
+        "sensors",
+        "communication"
       ]
     },
     "processes": {
