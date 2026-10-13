@@ -1,0 +1,44 @@
+---
+// 図：半導体産業の歩みの年表（模式図）。年と出来事は、本文と同じ出典（日本半導体歴史館）による（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const events = [
+  { year: '1947年', text: 'トランジスタの発明' },
+  { year: '1953年', text: '日本で生産が始まる' },
+  { year: '1958年', text: 'ICの発明' },
+  { year: '1961年', text: '国産で初めてのIC' },
+  { year: '1981年', text: 'DRAMで日本が首位' },
+  { year: '2003年', text: '日本の会社の事業の統合' },
+  { year: '2008年', text: '受託製造の会社の成長' },
+];
+---
+
+<FigureFrame id="fig-history" columns={2} title="半導体産業の歩み（年表）" caption="図：本文で取り上げた主な出来事を、年の順に並べた年表。年と出来事は、日本半導体歴史館の資料による。本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="1947年のトランジスタの発明から1961年の国産で初めてのICまで">
+      <path class="fig-line" d="M40 14v124" />
+      {events.slice(0, 4).map((e, i) => (
+        <>
+          <circle class="fig-dot" cx="40" cy={26 + i * 34} r="4" />
+          <text class="fig-strong" x="34" y={30 + i * 34} font-size="8" text-anchor="end">{e.year.replace('年', '')}</text>
+          <text class="fig-text" x="52" y={30 + i * 34} font-size="8">{e.text}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">発明と、日本の始まり</span>
+    <span class="fig__note">トランジスタとICが生まれ、日本でも生産が始まる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="1981年のDRAMでの日本の首位から、2003年の事業の統合、2008年の受託製造の会社の成長まで">
+      <path class="fig-line" d="M40 14v124" />
+      {events.slice(4).map((e, i) => (
+        <>
+          <circle class="fig-dot" cx="40" cy={30 + i * 44} r="4" />
+          <text class="fig-strong" x="34" y={34 + i * 44} font-size="8" text-anchor="end">{e.year.replace('年', '')}</text>
+          <text class="fig-text" x="52" y={34 + i * 44} font-size="8">{e.text}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">躍進と、分業の時代</span>
+    <span class="fig__note">DRAMでの躍進のあと、事業の組み替えと分業が進む</span>
+  </li>
+</FigureFrame>
