@@ -18,6 +18,11 @@ sources:
     publisher: Symposium on VLSI Technology and Circuits
     url: https://www.vlsisymposium.org/features/greeting.html
     accessed_on: '2026-10-13'
+  - id: S4
+    title: 展示会概要（ネプコン ジャパン 2027）
+    publisher: RX Japan
+    url: https://www.nepconjapan.jp/tokyo/ja-jp/about.html
+    accessed_on: '2026-10-13'
 events:
   - id: semicon-japan-2026
     name: SEMICON Japan 2026
@@ -30,6 +35,28 @@ events:
     url: https://semiconjapan.org/
     source: S1
     checked_on: '2026-10-12'
+  - id: isp-2027
+    name: 第28回 半導体・センサ パッケージング展（ISP。ネプコン ジャパン 2027 の構成展）
+    kind: exhibition
+    start_date: '2027-02-17'
+    end_date: '2027-02-19'
+    venue: 東京ビッグサイト
+    city: 東京都江東区
+    organizer: RX Japan
+    url: https://www.nepconjapan.jp/tokyo/ja-jp/about/isp.html
+    source: S4
+    checked_on: '2026-10-13'
+  - id: pdm-2027
+    name: 第4回 パワーデバイス＆モジュール EXPO（ネプコン ジャパン 2027 の構成展）
+    kind: exhibition
+    start_date: '2027-02-17'
+    end_date: '2027-02-19'
+    venue: 東京ビッグサイト
+    city: 東京都江東区
+    organizer: RX Japan
+    url: https://www.nepconjapan.jp/tokyo/ja-jp/about/pdm.html
+    source: S4
+    checked_on: '2026-10-13'
   - id: jsap-spring-2027
     name: 応用物理学会 春季学術講演会（2027年）
     kind: conference
