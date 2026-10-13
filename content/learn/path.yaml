@@ -33,6 +33,7 @@ fields:
     summary: 半導体の材料であるシリコンの結晶と、ウェーハができるまでを学びます。
     units:
       - { type: learn, ref: crystal }
+      - { type: learn, ref: wafer-types }
   - "no": 5
     slug: process
     title: 製造工程
@@ -60,6 +61,7 @@ fields:
     summary: クリーンルーム、超純水、ガス、搬送など、工場全体を支える技術を学びます。
     units:
       - { type: learn, ref: clean-room }
+      - { type: learn, ref: water-and-gas }
   - "no": 8
     slug: industry
     title: 業界の構造と企業

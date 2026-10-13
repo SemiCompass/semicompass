@@ -307,3 +307,9 @@ learn:
   roles:
     title: 分業でつくる：半導体業界の役割分担
     basis: reviewed
+  wafer-types:
+    title: ウェーハの表面を整える：エピタキシャルウェーハとSOI
+    basis: reviewed
+  water-and-gas:
+    title: 工場に届ける：超純水と、ガス・薬液
+    basis: reviewed
