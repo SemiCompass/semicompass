@@ -34,13 +34,29 @@ export function learnIndex(preview: boolean): { field: LearnField; units: UnitLi
 
 export const learnHref = (page: Pick<LearnPage, 'field' | 'slug'>) => `/learn/${page.field}/${page.slug}/`;
 
-/** 同じ分野の中の、前と次の単元（ページのあるものだけで数える） */
-export function neighbors(preview: boolean, page: LearnPage): { previous?: UnitLink; next?: UnitLink } {
-  const entry = learnIndex(preview).find((e) => e.field.slug === page.field);
-  if (!entry) return {};
-  const at = entry.units.findIndex((u) => u.href === learnHref(page));
-  if (at < 0) return {};
-  return { previous: entry.units[at - 1], next: entry.units[at + 1] };
+export interface PathStep {
+  link: UnitLink;
+  field: LearnField;
+  /** 今のページと分野が違う（分野の境目をまたぐ） */
+  crossesField: boolean;
+}
+
+/**
+ * 学習の順（content/learn/path.yaml の分野と単元の並び）での、前と次の単元（ページのあるものだけで数える）。
+ * 分野の最後の単元の「次」は、次の分野の最初の単元とする。最初から最後まで、次の案内だけでたどれるようにするため（要件定義書 AT-09）。
+ * href が学習の順にないとき（学習の順に入っていない工程ページなど）は、inPath を false にする。
+ */
+export function pathNeighbors(preview: boolean, href: string): { inPath: boolean; isLast: boolean; previous?: PathStep; next?: PathStep } {
+  const flat = learnIndex(preview).flatMap((e) => e.units.map((link) => ({ link, field: e.field })));
+  const at = flat.findIndex((u) => u.link.href === href);
+  if (at < 0) return { inPath: false, isLast: false };
+  const here = flat[at].field.slug;
+  const step = (u?: { link: UnitLink; field: LearnField }) => (u ? { ...u, crossesField: u.field.slug !== here } : undefined);
+  return { inPath: true, isLast: at === flat.length - 1, previous: step(flat[at - 1]), next: step(flat[at + 1]) };
+}
+
+export function neighbors(preview: boolean, page: LearnPage) {
+  return pathNeighbors(preview, learnHref(page));
 }
 
 /** 学習のページの図（src/figures/learn/{分野}/{slug}.astro）。本サイトで作るSVGの図（仕様書 7章） */

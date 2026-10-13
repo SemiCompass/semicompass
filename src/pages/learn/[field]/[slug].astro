@@ -6,6 +6,7 @@ import CompanyTable from '../../../components/CompanyTable.astro';
 import Quiz from '../../../components/Quiz.astro';
 import RichText from '../../../components/RichText.astro';
 import SourceList from '../../../components/SourceList.astro';
+import LearnPathNav from '../../../components/LearnPathNav.astro';
 import Page from '../../../layouts/Page.astro';
 import { companyRows, loadSupply } from '../../../lib/companies';
 import { loadLearnPages, loadLearnPath, loadTerms, type LearnPage } from '../../../lib/content';
@@ -22,7 +23,8 @@ const supply = loadSupply() as ReturnType<typeof loadSupply> & { processes: { sl
 const processes = (f.processes ?? []).map((slug) => supply.processes.find((p) => p.slug === slug)).filter((p) => p !== undefined);
 const terms = loadTerms(preview).filter((t) => (f.related_terms ?? []).includes(t.slug));
 const rows = companyRows(preview).filter((r) => (f.companies ?? []).includes(r.company.slug));
-const { previous, next } = neighbors(preview, page);
+const { previous, next, isLast } = neighbors(preview, page);
+const hasNav = Boolean(previous || next || isLast);
 const Figure = learnFigure(page) as any;
 const sources = (f.sources ?? []).map((s) => ({
   number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on, accessedOn: s.accessed_on, pages: s.pages,
@@ -32,7 +34,7 @@ const toc = [
   ...headed.map((s, i) => ({ id: `s${i}`, label: s.heading })),
   ...(rows.length > 0 ? [{ id: 'companies', label: 'この技術に関わる企業' }] : []),
   ...(processes.length + terms.length > 0 ? [{ id: 'related', label: '関係する工程と用語' }] : []),
-  ...(previous || next ? [{ id: 'next-read', label: '次に読む' }] : []),
+  ...(hasNav ? [{ id: 'next-read', label: '次に読む' }] : []),
   ...(page.quiz.length > 0 ? [{ id: 'quiz-title', label: '理解度チェック' }] : []),
   ...(sources.length > 0 ? [{ id: 'sources-heading', label: '出典' }] : []),
 ];
@@ -79,15 +81,7 @@ const toc = [
     </section>
   )}
 
-  {(previous || next) && (
-    <nav aria-labelledby="next-read" class="learn-next">
-      <h2 id="next-read">次に読む</h2>
-      <ul>
-        {previous && <li>前のページ：<a href={previous.href}>{previous.title}</a></li>}
-        {next && <li>次のページ：<a href={next.href}>{next.title}</a></li>}
-      </ul>
-    </nav>
-  )}
+  {hasNav && <LearnPathNav id="next-read" heading="次に読む" previous={previous} next={next} isLast={isLast} />}
 
   <Quiz questions={page.quiz} pageType="learn" />
   {sources.length > 0 && <SourceList sources={sources} heading="出典" />}

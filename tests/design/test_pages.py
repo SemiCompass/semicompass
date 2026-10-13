@@ -387,6 +387,40 @@ class PagesBuildTest(unittest.TestCase):
         term = self.read(dist, "glossary/cmp/index.html")
         self.assertIn('data-quiz data-page-type="term"', term)
 
+    def test_learn_path_can_be_followed_to_the_end(self):
+        # 要件定義書 AT-09：最初のページから、次の案内だけで最後までたどれ、最後に業績とニュース解説の入口に着く。
+        # 分野の境目では次の分野の最初のページへ、学習の順に入った工程ページにも学習の前後を出す
+        slug = self.processes[0]["slug"]
+        tree = yaml.safe_load((ROOT / "content" / "learn" / "path.yaml").read_text(encoding="utf-8"))
+        for field in tree["fields"]:
+            field["units"] = {"basics": [{"type": "learn", "ref": "path-a"}], "devices": [{"type": "learn", "ref": "path-b"}],
+                              "process": [{"type": "process", "ref": slug}]}.get(field["slug"], [])
+        def page(field: str, name: str) -> str:
+            return (f"---\ntitle: {name}\nfield: {field}\ndescription: 試験用の説明である。\npublished_at: '2026-01-01'\nai_generated: true\n"
+                    f"sources:\n  - id: S1\n    title: 例\n    publisher: 例\n    url: https://example.com/a\n    accessed_on: '2026-01-01'\n"
+                    f"---\n## 節\n\n試験用の本文である[S1]。\n")
+        figure = '<figure><svg role="img" aria-label="図" viewBox="0 0 10 10"></svg><figcaption>図。模式図、本サイトで作成</figcaption></figure>\n'
+        extra = {"content/learn/path.yaml": yaml.safe_dump(tree, allow_unicode=True, sort_keys=False)}
+        for name in [p.relative_to(ROOT).as_posix() for p in (ROOT / "content" / "learn").glob("*/*.md")]:
+            extra[name] = "---\ntitle: 下書き\nfield: x\ndescription: 下書き\ndraft: true\npublished_at: '2026-01-01'\nai_generated: true\n---\n## 節\n\n下書き。\n"
+        extra.update({"content/learn/basics/path-a.md": page("basics", "試験の一つ目"), "content/learn/devices/path-b.md": page("devices", "試験の二つ目"),
+                      "src/figures/learn/basics/path-a.astro": figure, "src/figures/learn/devices/path-b.astro": figure})
+        dist = self.build_with("learnpath", "production", extra=extra)
+        first = self.read(dist, "learn/basics/path-a/index.html")
+        self.assertIn("次の分野（2. デバイス）の最初のページ：", first)
+        self.assertIn('href="/learn/devices/path-b/"', first)
+        second = self.read(dist, "learn/devices/path-b/index.html")
+        self.assertIn("前の分野（1. 半導体の基礎）の最後のページ：", second)
+        self.assertIn(f'href="/processes/{slug}/"', second.split('id="next-read"')[1])
+        last = self.read(dist, f"processes/{slug}/index.html")
+        nav = last.split('id="learn-order"')[1].split("</nav>")[0]
+        self.assertIn("半導体を学ぶの順で読む", last)
+        self.assertIn('href="/learn/devices/path-b/"', nav)
+        self.assertIn('href="/companies/"', nav)
+        self.assertIn('href="/news/"', nav)
+        other = next(p["slug"] for p in self.processes[1:])
+        self.assertNotIn('id="learn-order"', self.read(dist, f"processes/{other}/index.html"))  # 学習の順にない工程には出さない
+
     def test_home_lists_upcoming_events_only(self):
         # 近く開かれる技術系のイベント（要件定義書 3.3 の5）：終わったものは出さず、開催日の近い順に最大5件
         events = [{"id": f"e{i}", "name": f"試験の展示会{i}", "kind": "exhibition", "start_date": f"2099-0{i}-10", "end_date": f"2099-0{i}-12",

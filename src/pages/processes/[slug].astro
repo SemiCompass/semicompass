@@ -11,9 +11,11 @@ import Quiz from '../../components/Quiz.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import Tag from '../../components/Tag.astro';
 import ProcessFigure from '../../components/ProcessFigure.astro';
+import LearnPathNav from '../../components/LearnPathNav.astro';
 import Page from '../../layouts/Page.astro';
 import { companyRows, loadSupply } from '../../lib/companies';
 import { loadProcessContent, loadTerms } from '../../lib/content';
+import { pathNeighbors } from '../../lib/learn';
 import { processFigures } from '../../lib/processFigures';
 
 // 工程の図：src/figures/process/{slug}.astro があればそれを、なければ processFigures（リソグラフィ）を使う（仕様書 7章）
@@ -35,6 +37,8 @@ const rows = companyRows(preview).filter((r) => r.company.processes.includes(pro
 const terms = loadTerms(preview).filter((t) => t.front.processes.includes(process.slug));
 const previous = (supply.flow ?? []).filter((f) => f.to === process.slug).map((f) => f.from);
 const next = (supply.flow ?? []).filter((f) => f.from === process.slug).map((f) => f.to);
+// 学習の順（content/learn/path.yaml）に入っている工程は、学習の前後のページも示す（要件定義書 AT-09）
+const learnPath = pathNeighbors(preview, `/processes/${process.slug}/`);
 const sources = (content?.front.sources ?? []).map((s) => ({
   number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on, accessedOn: s.accessed_on, pages: s.pages,
 }));
@@ -44,6 +48,7 @@ const toc = [
   { id: 'companies', label: 'この工程の企業' },
   { id: 'terms', label: '関係する用語' },
   { id: 'neighbors', label: '前後の工程' },
+  ...(learnPath.inPath ? [{ id: 'learn-order', label: '半導体を学ぶの順で読む' }] : []),
   ...((content?.quiz.length ?? 0) > 0 ? [{ id: 'quiz-title', label: '理解度チェック' }] : []),
   ...(sources.length > 0 ? [{ id: 'sources-heading', label: '出典' }] : []),
 ];
@@ -108,6 +113,10 @@ const toc = [
     </ul>
     {previous.length === 0 && next.length === 0 && <p>前後の工程は、まだ設定されていません。</p>}
   </section>
+
+  {learnPath.inPath && (
+    <LearnPathNav id="learn-order" heading="半導体を学ぶの順で読む" previous={learnPath.previous} next={learnPath.next} isLast={learnPath.isLast} />
+  )}
 
   {content && <Quiz questions={content.quiz} pageType="process" />}
   {sources.length > 0 && <SourceList sources={sources} heading="出典" />}
