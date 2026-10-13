@@ -415,7 +415,12 @@ class PagesBuildTest(unittest.TestCase):
             self.assertIn("模式図、本サイトで作成", figure[0], slug)
 
     def test_learn_index_without_pages_keeps_glossary_entry(self):
-        html = self.read(self.build("production"), "index.html").split("<main")[1]
+        # 学習のページが1つもない間は、トップの入口を用語集へ（要件定義書 3.3）。リポジトリの学習のページは公開済みのため、
+        # 作業用のコピーから content/learn/{分野}/*.md を除いて確かめる
+        work = make_site()
+        for page in (work / "content" / "learn").glob("*/*.md"):
+            page.unlink()
+        html = self.read(self._built("nolearn-production", "production", work), "index.html").split("<main")[1]
         self.assertIn('href="/glossary/"', html)
         self.assertNotIn('href="/learn/"', html)
 
