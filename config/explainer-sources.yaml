@@ -325,3 +325,9 @@ learn:
   doping-and-anneal:
     title: 性質を作り込む：イオン注入と熱処理
     basis: reviewed
+  energy-band:
+    title: エネルギーの段で考える：バンドとバンドギャップ
+    basis: reviewed
+  automation:
+    title: 止めずに動かす：ウェーハの搬送と工場の自動化
+    basis: reviewed
