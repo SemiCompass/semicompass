@@ -1,0 +1,43 @@
+---
+// 図：温度の変化で材料の境目に力がかかる様子と、静電気を逃がす保護の回路（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const balls = [44, 72, 100, 128, 156];
+---
+
+<FigureFrame id="fig-reliability" columns={2} title="信頼性の試験で調べる壊れ方（模式図）" caption="図：左は、温度の変化をくり返す試験で調べる壊れ方。チップと基板は温まったときの伸び方が違い（矢印の長さの違い）、間のつなぎ目に力がかかって、ひび（ギザギザの線）が入ることがある。右は、静電気から守る保護の回路。電極から入った静電気を、中の回路に届く前に、保護の回路が安全な道へ逃がす。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="チップと基板の伸び方の違いで、間のつなぎ目に力がかかり、ひびが入る">
+      <rect class="fig-film" x="30" y="40" width="140" height="26" />
+      <text class="fig-text" x="100" y="57" font-size="8" text-anchor="middle">チップ（パッケージ）</text>
+      {balls.map((x) => <circle class="fig-part" cx={x} cy="74" r="7" />)}
+      <rect class="fig-wafer" x="14" y="82" width="172" height="26" />
+      <text class="fig-text" x="100" y="99" font-size="8" text-anchor="middle">基板</text>
+      <path class="fig-arrow" d="M100 30h30M124 24l6 6-6 6M100 30H70M76 24l-6 6 6 6" />
+      <path class="fig-arrow" d="M100 120h70M164 114l6 6-6 6M100 120H30M36 114l-6 6 6 6" />
+      <path class="fig-line" d="M150 70l6 3-4 3 6 3" />
+      <text class="fig-text" x="100" y="16" font-size="8" text-anchor="middle">伸び方が小さい</text>
+      <text class="fig-text" x="100" y="140" font-size="8" text-anchor="middle">伸び方が大きい</text>
+    </svg>
+    <span class="fig__name">温度の変化で、つなぎ目に力がかかる</span>
+    <span class="fig__note">くり返すと、つなぎ目にひびが入ることがある</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="電極から入った静電気を、保護の回路が中の回路に届く前に安全な道へ逃がす">
+      <rect class="fig-metal" x="10" y="56" width="26" height="22" />
+      <text class="fig-text" x="23" y="94" font-size="8" text-anchor="middle">電極</text>
+      <path class="fig-line" d="M36 67h112" />
+      <rect class="fig-film" x="60" y="54" width="44" height="26" />
+      <text class="fig-text" x="82" y="71" font-size="8" text-anchor="middle">保護の回路</text>
+      <rect class="fig-part" x="148" y="46" width="44" height="42" />
+      <text class="fig-text" x="170" y="64" font-size="8" text-anchor="middle">中の</text>
+      <text class="fig-text" x="170" y="76" font-size="8" text-anchor="middle">回路</text>
+      <path class="fig-arrow" d="M14 30h30l-6-6M44 30l-6 6" />
+      <text class="fig-text" x="10" y="20" font-size="8">静電気</text>
+      <path class="fig-arrow" d="M82 82v34M78 110l4 6 4-6" />
+      <path class="fig-line" d="M66 122h32M71 127h22" />
+      <text class="fig-text" x="100" y="142" font-size="8" text-anchor="middle">安全な道へ逃がす</text>
+    </svg>
+    <span class="fig__name">静電気から守る</span>
+    <span class="fig__note">中の回路の薄い絶縁膜を、高い電圧から守る</span>
+  </li>
+</FigureFrame>

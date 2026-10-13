@@ -1,0 +1,53 @@
+---
+// 図：多層配線の断面と、銅の配線の作り方の3段階（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const layers = [
+  { y: 98, h: 6, w: 8, gap: 10 },
+  { y: 80, h: 7, w: 10, gap: 14 },
+  { y: 58, h: 10, w: 18, gap: 22 },
+  { y: 30, h: 14, w: 30, gap: 30 },
+];
+const steps = [
+  { y: 6, name: '溝を掘る' },
+  { y: 52, name: '銅を埋める' },
+  { y: 98, name: '磨いて平らにする' },
+];
+---
+
+<FigureFrame id="fig-interconnect" columns={2} title="多層配線と、銅の配線の作り方（模式図）" caption="図：左は、多層配線の断面。下にトランジスタがあり、その上に配線の層が重なる。下の層ほど細く、上の層ほど太い。層と層は、縦の通り道（ビア）でつながる。右は、銅の配線の作り方。絶縁膜に溝を掘り、表面全体に銅を付けて溝を埋め、はみ出した銅を磨いて取り除くと、溝の中にだけ銅が残る。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="多層配線の断面：下にトランジスタ、その上に下ほど細く上ほど太い配線の層が重なり、ビアでつながる">
+      <rect class="fig-film" x="14" y="24" width="172" height="90" />
+      {layers.map((l) => {
+        const xs: number[] = [];
+        for (let x = 20; x + l.w <= 180; x += l.w + l.gap) xs.push(x);
+        return xs.map((x) => <rect class="fig-metal" x={x} y={l.y} width={l.w} height={l.h} />);
+      })}
+      <path class="fig-metal" d="M50 87h4v11h-4zM34 68h4v12h-4zM70 44h5v14h-5zM110 68h4v12h-4z" />
+      <rect class="fig-wafer" x="14" y="114" width="172" height="22" />
+      {[30, 70, 110, 150].map((x) => <rect class="fig-part" x={x} y="108" width="18" height="10" />)}
+      <text class="fig-text" x="100" y="132" font-size="8" text-anchor="middle">トランジスタ（シリコン）</text>
+      <text class="fig-text" x="100" y="16" font-size="8" text-anchor="middle">上ほど太い配線</text>
+    </svg>
+    <span class="fig__name">多層配線</span>
+    <span class="fig__note">下は近くをつなぐ細い配線、上は遠くをつなぐ太い配線</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="銅の配線の作り方：溝を掘る、銅を埋める、磨いて平らにする">
+      {steps.map((s, i) => (
+        <>
+          <text class="fig-text" x="8" y={s.y + 20} font-size="8">{s.name}</text>
+          <rect class="fig-film" x="96" y={s.y + 12} width="96" height="22" />
+          <rect class="fig-wafer" x="96" y={s.y + 34} width="96" height="6" />
+          {[108, 140, 172].map((x) => (
+            <rect class={i === 0 ? 'fig-part' : 'fig-metal'} x={x - 8} y={s.y + 12} width="14" height="14" />
+          ))}
+          {i === 1 && <rect class="fig-metal" x="96" y={s.y + 4} width="96" height="8" />}
+          {i < steps.length - 1 && <path class="fig-arrow" d={`M144 ${s.y + 41}v5M141 ${s.y + 43}l3 3 3-3`} />}
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">溝に銅を埋め込む</span>
+    <span class="fig__note">はみ出した銅を磨き取ると、溝の中にだけ銅が残る</span>
+  </li>
+</FigureFrame>

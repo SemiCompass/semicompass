@@ -51,6 +51,7 @@ fields:
       - { type: process, ref: etching }
       - { type: learn, ref: doping-and-anneal }
       - { type: process, ref: cmp }
+      - { type: learn, ref: interconnect }
       - { type: process, ref: dicing }
       - { type: process, ref: packaging }
       - { type: process, ref: final-test }
@@ -61,6 +62,7 @@ fields:
     units:
       - { type: learn, ref: test-and-reliability }
       - { type: learn, ref: inspection }
+      - { type: learn, ref: reliability-tests }
   - "no": 7
     slug: facilities
     title: 工場を支える技術
