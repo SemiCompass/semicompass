@@ -22,6 +22,8 @@ fields:
       - { type: learn, ref: memory }
       - { type: learn, ref: power }
       - { type: learn, ref: image-sensor }
+      - { type: learn, ref: analog }
+      - { type: learn, ref: mems-sensor }
   - "no": 3
     slug: logic
     title: 論理回路

@@ -1,0 +1,45 @@
+---
+// 図：動きを感じるMEMSのセンサー（上から見た図）と、あとで取り除く層で部品を浮かせる作り方（断面）（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const combs = [56, 68, 80, 92, 104];
+---
+
+<FigureFrame id="fig-mems" columns={2} title="MEMSのセンサーの仕組み（模式図）" caption="図：左は、動きを感じるセンサーを上から見た図。細い梁（ジグザグの線）で支えたおもりに、くしの歯のような電極が付き、枠の側の電極と向かい合う。動くとおもりがずれ、電極の間の距離が変わる。右は、部品を浮かせる作り方の断面。上は、あとで取り除く層の上に部品の層を作ったところ。下は、取り除く層を溶かして、部品が浮いたところ。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="動きを感じるセンサー：梁で支えたおもりの電極が、枠の電極と向かい合い、動くと距離が変わる">
+      <rect class="fig-line" x="10" y="10" width="180" height="130" />
+      <rect class="fig-film" x="60" y="44" width="80" height="62" />
+      <text class="fig-text" x="100" y="79" font-size="8" text-anchor="middle">おもり</text>
+      <path class="fig-line" d="M10 75h8l4-6 4 12 4-12 4 12 4-6h22M190 75h-8l-4-6-4 12-4-12-4 12-4-6h-22" />
+      {combs.map((x) => (
+        <>
+          <path class="fig-arrow" d={`M${x + 4} 44v-14`} />
+          <path class="fig-line" d={`M${x + 10} 14v22`} />
+          <path class="fig-arrow" d={`M${x + 4} 106v14`} />
+          <path class="fig-line" d={`M${x + 10} 136v-22`} />
+        </>
+      ))}
+      <text class="fig-text" x="166" y="30" font-size="7.5" text-anchor="middle">電極</text>
+    </svg>
+    <span class="fig__name">動きを感じるセンサー</span>
+    <span class="fig__note">おもりのずれを、電極の間の電気の量の変化で測る</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="あとで取り除く層の上に部品を作り、その層を溶かすと、部品が浮いて残る">
+      <text class="fig-text" x="10" y="14" font-size="8">取り除く前</text>
+      <rect class="fig-wafer" x="20" y="50" width="160" height="16" />
+      <rect class="fig-resist" x="50" y="38" width="110" height="12" />
+      <rect class="fig-film" x="40" y="26" width="120" height="12" />
+      <rect class="fig-film" x="40" y="38" width="10" height="12" />
+      <text class="fig-text" x="104" y="47" font-size="7.5" text-anchor="middle">取り除く層</text>
+      <path class="fig-arrow" d="M100 72v10M96 78l4 4 4-4" />
+      <text class="fig-text" x="10" y="98" font-size="8">取り除いた後</text>
+      <rect class="fig-wafer" x="20" y="130" width="160" height="16" />
+      <rect class="fig-film" x="40" y="106" width="120" height="12" />
+      <rect class="fig-film" x="40" y="118" width="10" height="12" />
+      <text class="fig-text" x="104" y="127" font-size="7.5" text-anchor="middle">すき間（浮いた部品）</text>
+    </svg>
+    <span class="fig__name">部品を浮かせる</span>
+    <span class="fig__note">足場の層を溶かして、動けるすき間を作る</span>
+  </li>
+</FigureFrame>
