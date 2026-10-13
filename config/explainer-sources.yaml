@@ -361,3 +361,9 @@ learn:
   optoelectronics:
     title: 光を出す、光を受ける：LEDと半導体レーザー
     basis: reviewed
+  design-flow:
+    title: 働きを形にする：チップの設計の流れ
+    basis: reviewed
+  resolution:
+    title: どこまで細かく写せるか：露光の細かさの考え方
+    basis: reviewed

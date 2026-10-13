@@ -1,0 +1,38 @@
+---
+// 図：チップの設計の流れと、配置と配線（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const steps = ['仕様を決める', '働きを言葉で書く', '論理ゲートに直す', '配置と配線', '図面のデータ'];
+const cells = [
+  { x: 24, y: 24 }, { x: 70, y: 24 }, { x: 120, y: 24 },
+  { x: 40, y: 70 }, { x: 96, y: 70 }, { x: 144, y: 70 },
+  { x: 24, y: 112 }, { x: 80, y: 112 }, { x: 134, y: 112 },
+];
+---
+
+<FigureFrame id="fig-design-flow" columns={2} title="チップの設計の流れ（模式図）" caption="図：左は、設計の流れ。仕様を決め、働きを専用の言葉で書き、設計の道具で論理ゲートの組み合わせに直し、配置と配線を決めて、製造に使う図面のデータにする。各段階で、正しく動くか、決まりを守っているかを確かめる（点線）。右は、配置と配線のイメージ。論理ゲートの部品（四角）を置き、その間を配線（線）でつなぐ。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="設計の流れ：仕様、働きを言葉で書く、論理ゲートに直す、配置と配線、図面のデータ。各段階で確かめる">
+      {steps.map((s, i) => (
+        <>
+          <rect class={i === 4 ? 'fig-film' : 'fig-part'} x="20" y={6 + i * 28} width="112" height="20" />
+          <text class="fig-text" x="76" y={20 + i * 28} font-size="8" text-anchor="middle">{s}</text>
+          {i < steps.length - 1 && <path class="fig-arrow" d={`M76 ${27 + i * 28}v6M73 ${30 + i * 28}l3 3 3-3`} />}
+        </>
+      ))}
+      <path class="fig-dash" d="M146 10v130" />
+      {[16, 44, 72, 100, 128].map((y) => <path class="fig-dash" d={`M134 ${y}h12`} />)}
+      <text class="fig-text" x="152" y="70" font-size="8">各段階で</text>
+      <text class="fig-text" x="152" y="82" font-size="8">確かめる</text>
+    </svg>
+    <span class="fig__name">設計の流れ</span>
+    <span class="fig__note">大まかな働きから、細かい形へと進む</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="配置と配線：論理ゲートの部品を置き、その間を配線でつなぐ">
+      <path class="fig-arrow" d="M46 36v22h16v12M92 36v8h66v26M62 82v20h40v10M118 82v8h38v22M166 82v14h-120v16" />
+      {cells.map((c) => <rect class="fig-part" x={c.x} y={c.y} width="32" height="20" />)}
+    </svg>
+    <span class="fig__name">配置と配線</span>
+    <span class="fig__note">つながりの多い部品は、近くに置く</span>
+  </li>
+</FigureFrame>

@@ -35,6 +35,7 @@ fields:
       - { type: learn, ref: cmos-inverter }
       - { type: learn, ref: gates-and-memory }
       - { type: learn, ref: processor }
+      - { type: learn, ref: design-flow }
   - "no": 4
     slug: silicon
     title: シリコンとウェーハ
@@ -52,6 +53,7 @@ fields:
       - { type: process, ref: cleaning }
       - { type: process, ref: deposition }
       - { type: process, ref: lithography }
+      - { type: learn, ref: resolution }
       - { type: process, ref: etching }
       - { type: learn, ref: doping-and-anneal }
       - { type: process, ref: cmp }

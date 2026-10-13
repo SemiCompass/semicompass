@@ -1,0 +1,40 @@
+---
+// 図：写せる細かさを決める三つの要素と、二回に分けて写す方法（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const factors = [
+  { y: 10, name: '光の波長', dir: '短くする' },
+  { y: 54, name: 'レンズが光を集める力', dir: '大きくする' },
+  { y: 98, name: '工程の工夫', dir: '重ねる' },
+];
+const lines = [30, 50, 70, 90, 110, 130, 150, 170];
+---
+
+<FigureFrame id="fig-resolution" columns={2} title="写せる細かさと、分けて写す方法（模式図）" caption="図：左は、写せる細かさを決める三つの要素と、細かくするための向き。右は、二回に分けて写す方法。一本おきの二組に分け、一組目（濃い線）と二組目（薄い線）をそれぞれ写すと、合わせて細かい間隔の線ができる。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="写せる細かさを決める三つの要素：光の波長を短く、レンズが光を集める力を大きく、工程の工夫を重ねる">
+      {factors.map((f) => (
+        <>
+          <rect class="fig-part" x="8" y={f.y} width="104" height="34" />
+          <text class="fig-text" x="60" y={f.y + 21} font-size="8" text-anchor="middle">{f.name}</text>
+          <path class="fig-arrow" d={`M114 ${f.y + 17}h14M122 ${f.y + 13}l6 4-6 4`} />
+          <rect class="fig-film" x="132" y={f.y} width="60" height="34" />
+          <text class="fig-text" x="162" y={f.y + 21} font-size="8" text-anchor="middle">{f.dir}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">細かさを決める三つの要素</span>
+    <span class="fig__note">どれかを進めると、より細かい形を写せる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="一本おきの二組に分けて二回写すと、合わせて細かい間隔の線ができる">
+      <text class="fig-text" x="10" y="16" font-size="8">一回目</text>
+      {lines.filter((_, i) => i % 2 === 0).map((x) => <rect class="fig-metal" x={x - 4} y="22" width="8" height="26" />)}
+      <text class="fig-text" x="10" y="64" font-size="8">二回目</text>
+      {lines.filter((_, i) => i % 2 === 1).map((x) => <rect class="fig-film" x={x - 4} y="70" width="8" height="26" />)}
+      <text class="fig-text" x="10" y="112" font-size="8">合わせると</text>
+      {lines.map((x, i) => <rect class={i % 2 === 0 ? 'fig-metal' : 'fig-film'} x={x - 4} y="118" width="8" height="26" />)}
+    </svg>
+    <span class="fig__name">二回に分けて写す</span>
+    <span class="fig__note">一回ごとの間隔は広いので、それぞれは写せる</span>
+  </li>
+</FigureFrame>
