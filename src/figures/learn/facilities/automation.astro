@@ -1,0 +1,47 @@
+---
+// 図：天井の軌道による搬送と、工場全体を管理する仕組みの情報の流れ（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const tools = [
+  { x: 14, name: '成膜' },
+  { x: 76, name: '露光' },
+  { x: 138, name: 'エッチング' },
+];
+---
+
+<FigureFrame id="fig-automation" columns={2} title="搬送と、工場の管理（模式図）" caption="図：左は、天井の軌道を走る運搬の機械が、ウェーハを入れた容器をつり下ろして、装置の入り口に置く様子。右は、工場全体を管理する仕組みと装置のあいだの情報の流れ。管理の仕組みが運ぶ先と処理の条件を決めて伝え、装置は処理の記録と装置の値を返す。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="天井の軌道を走る運搬の機械が、容器をつり下ろして装置の入り口に置く">
+      <path class="fig-line" d="M6 18h188" />
+      <text class="fig-text" x="10" y="12" font-size="8">天井の軌道</text>
+      <rect class="fig-part" x="84" y="20" width="32" height="14" />
+      <path class="fig-arrow" d="M150 26h30M174 20l6 6-6 6" />
+      <path class="fig-dash" d="M100 34v40" />
+      <rect class="fig-film" x="90" y="74" width="20" height="16" />
+      <text class="fig-text" x="118" y="60" font-size="8">容器をつり下ろす</text>
+      {tools.map((t) => (
+        <>
+          <rect class="fig-part" x={t.x} y="92" width="48" height="44" />
+          <text class="fig-text" x={t.x + 24} y="118" font-size="8" text-anchor="middle">{t.name}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">天井を走って運ぶ</span>
+    <span class="fig__note">容器ごと、装置から装置へ機械が運ぶ</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="管理の仕組みが運ぶ先と処理の条件を装置に伝え、装置が処理の記録と値を返す">
+      <rect class="fig-film" x="40" y="10" width="120" height="34" />
+      <text class="fig-strong" x="100" y="31" font-size="8" text-anchor="middle">工場全体を管理する仕組み</text>
+      <rect class="fig-part" x="40" y="104" width="120" height="34" />
+      <text class="fig-strong" x="100" y="125" font-size="8" text-anchor="middle">装置</text>
+      <path class="fig-arrow" d="M76 46v54M72 94l4 6 4-6" />
+      <path class="fig-arrow" d="M124 100V46M120 52l4-6 4 6" />
+      <text class="fig-text" x="70" y="70" font-size="7.5" text-anchor="end">運ぶ先</text>
+      <text class="fig-text" x="70" y="82" font-size="7.5" text-anchor="end">処理の条件</text>
+      <text class="fig-text" x="130" y="70" font-size="7.5">処理の記録</text>
+      <text class="fig-text" x="130" y="82" font-size="7.5">装置の値</text>
+    </svg>
+    <span class="fig__name">決めて、記録する</span>
+    <span class="fig__note">記録は、不良の原因を絞り込むのに使う</span>
+  </li>
+</FigureFrame>

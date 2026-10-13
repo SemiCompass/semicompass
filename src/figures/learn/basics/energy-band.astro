@@ -1,0 +1,59 @@
+---
+// 図：金属・半導体・絶縁体のバンド（模式図）。縦はエネルギー、帯は電子がとれるエネルギーの範囲（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const panels = [
+  { key: 'metal', name: '金属', note: '帯が埋まりきっておらず、すき間を越えなくても電子が動ける', gap: 0 },
+  { key: 'semi', name: '半導体', note: 'すき間が中くらい。熱や光で一部の電子が越える', gap: 30 },
+  { key: 'insul', name: '絶縁体', note: 'すき間が大きく、電子がほとんど越えられない', gap: 64 },
+];
+const dots = [56, 72, 88, 104, 120, 136];
+---
+
+<FigureFrame id="fig-energy-band" columns={3} title="金属・半導体・絶縁体のバンド（模式図）" caption="図：縦がエネルギーで、帯は電子がとれるエネルギーの範囲。下の帯（価電子帯）は電子で埋まり、上の帯（伝導帯）との間にすき間（バンドギャップ）がある。半導体では、熱や光で一部の電子がすき間を越えて伝導帯に上がり、価電子帯に正孔（縁取りの丸）が残る。すき間の大きさの比は実際と異なる。模式図、本サイトで作成">
+  {panels.map((p) => {
+    const vTop = p.gap === 0 ? 70 : 104;
+    const cBot = vTop - p.gap;
+    return (
+      <li class="fig__panel">
+        <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`${p.name}：${p.note}`}>
+          <path class="fig-line" d="M24 150V12M20 18l4-6 4 6" />
+          <text class="fig-text" x="30" y="156" font-size="8">（上ほどエネルギーが高い）</text>
+          {p.gap === 0 ? (
+            <>
+              <rect class="fig-film" x="44" y="30" width="112" height="110" />
+              <rect class="fig-wafer" x="44" y="76" width="112" height="64" />
+              <text class="fig-text" x="100" y="54" font-size="8" text-anchor="middle">空いている</text>
+              <text class="fig-text" x="100" y="112" font-size="8" text-anchor="middle">電子が入っている</text>
+            </>
+          ) : (
+            <>
+              <rect class="fig-film" x="44" y={cBot - 28} width="112" height="28" />
+              <text class="fig-text" x="100" y={cBot - 11} font-size="8" text-anchor="middle">伝導帯</text>
+              <rect class="fig-wafer" x="44" y={vTop} width="112" height="36" />
+              <text class="fig-text" x="100" y={vTop + 31} font-size="8" text-anchor="middle">価電子帯</text>
+              <text class="fig-text" x="162" y={(vTop + cBot) / 2 + 3} font-size="8">すき間</text>
+              <path class="fig-dash" d={`M44 ${cBot}h112M44 ${vTop}h112`} />
+            </>
+          )}
+          {p.key === 'semi' && (
+            <>
+              <circle class="fig-dot" cx="80" cy={cBot - 6} r="3" />
+              <circle class="fig-dot" cx="120" cy={cBot - 6} r="3" />
+              <circle class="fig-dot-alt" cx="80" cy={vTop + 8} r="3.5" />
+              <circle class="fig-dot-alt" cx="120" cy={vTop + 8} r="3.5" />
+              <path class="fig-arrow" d={`M88 ${vTop - 2}V${cBot + 2}M84 ${cBot + 8}l4-6 4 6`} />
+              <text class="fig-text" x="96" y={(vTop + cBot) / 2 + 3} font-size="7">熱・光</text>
+            </>
+          )}
+          {p.key !== 'metal' && dots.map((x) => (p.key === 'semi' && (x === 72 || x === 120) ? null : <circle class="fig-dot" cx={x} cy={vTop + 18} r="3" />))}
+        </svg>
+        <span class="fig__name">{p.name}</span>
+        <span class="fig__note">{p.note}</span>
+      </li>
+    );
+  })}
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><circle class="fig-dot" cx="12" cy="12" r="5" /></svg>電子</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><circle class="fig-dot-alt" cx="12" cy="12" r="6" /></svg>正孔</li>
+  </ul>
+</FigureFrame>
