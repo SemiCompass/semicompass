@@ -6,7 +6,7 @@ related_terms:
 - foundry
 - fabless
 basis: sources
-draft: false
+draft: true
 published_at: '2026-10-13'
 ai_generated: true
 sources:

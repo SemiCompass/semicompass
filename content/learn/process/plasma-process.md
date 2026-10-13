@@ -11,10 +11,7 @@ related_terms:
 - cvd
 - sputtering
 basis: reviewed
-reviewed_on: '2026-10-13'
-review_methods:
-- operator_knowledge
-draft: false
+draft: true
 published_at: '2026-10-13'
 ai_generated: true
 sources: []

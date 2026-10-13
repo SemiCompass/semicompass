@@ -3,10 +3,7 @@ title: 需要の波を読む：市況の考え方
 field: industry
 description: 半導体の需要が増えたり減ったりする波が、なぜ生まれるのかを一般的な仕組みとして説明する。工場をつくるまでの時間差、在庫の積み増しと調整、用途ごとの需要の違い、価格の動きやすい製品と動きにくい製品、波を読むときの手がかりを扱う。
 basis: reviewed
-reviewed_on: '2026-10-13'
-review_methods:
-- operator_knowledge
-draft: false
+draft: true
 published_at: '2026-10-13'
 ai_generated: true
 sources: []
