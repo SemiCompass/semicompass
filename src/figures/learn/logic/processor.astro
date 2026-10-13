@@ -1,0 +1,53 @@
+---
+// 図：パイプライン（作業を重ねる）と、キャッシュとメモリの階層（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const stages = ['取り出す', '読み解く', '実行する', '書き戻す'];
+const short = ['取', '読', '実', '書'];
+const levels = [
+  { y: 14, w: 44, name: 'コアの中', note: '' },
+  { y: 44, w: 80, name: 'キャッシュ', note: '' },
+  { y: 74, w: 116, name: '外のメモリ（DRAM）', note: '' },
+  { y: 104, w: 140, name: '保存（フラッシュ）', note: '' },
+];
+---
+
+<FigureFrame id="fig-processor" columns={2} title="プロセッサーを速くする工夫（模式図）" caption="図：左は、パイプライン。横が時間の流れで、各行が一つの命令。取り出す・読み解く・実行する・書き戻すの各段階が、別々の命令を同時に受け持つ。右は、記憶の階層。上ほど速く小さく、下ほど遅く大きい。プロセッサーは、よく使う値をキャッシュに置いて、外のメモリまで取りに行く回数を減らす。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="パイプライン：各段階が別々の命令を同時に受け持つ">
+      {[0, 1, 2, 3].map((r) => (
+        <>
+          <text class="fig-text" x="8" y={38 + r * 24} font-size="8">命令{['一', '二', '三', '四'][r]}</text>
+          {short.map((s, c) => (
+            <>
+              <rect class={c === 2 ? 'fig-film' : 'fig-part'} x={46 + (r + c) * 20} y={26 + r * 24} width="20" height="18" />
+              <text class="fig-text" x={56 + (r + c) * 20} y={39 + r * 24} font-size="8" text-anchor="middle">{s}</text>
+            </>
+          ))}
+        </>
+      ))}
+      <path class="fig-line" d="M46 126h148M188 122l6 4-6 4" />
+      <text class="fig-text" x="190" y="142" font-size="8" text-anchor="end">時間</text>
+      <text class="fig-text" x="46" y="10" font-size="7.5">{stages.slice(0, 2).map((s, i) => `${short[i]}＝${s}`).join('　')}</text>
+      <text class="fig-text" x="46" y="20" font-size="7.5">{stages.slice(2).map((s, i) => `${short[i + 2]}＝${s}`).join('　')}</text>
+    </svg>
+    <span class="fig__name">作業を重ねる（パイプライン）</span>
+    <span class="fig__note">それぞれの段階が、別々の命令を同時に受け持つ</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="記憶の階層：上ほど速く小さく、下ほど遅く大きい">
+      {levels.map((l, i) => (
+        <>
+          <rect class={i === 1 ? 'fig-film' : 'fig-part'} x={110 - l.w / 2} y={l.y} width={l.w} height="24" />
+          <text class="fig-text" x="110" y={l.y + 15} font-size="7.5" text-anchor="middle">{l.name}</text>
+        </>
+      ))}
+      <text class="fig-text" x="4" y="22" font-size="7">速い</text>
+      <text class="fig-text" x="4" y="32" font-size="7">小さい</text>
+      <text class="fig-text" x="4" y="112" font-size="7">遅い</text>
+      <text class="fig-text" x="4" y="122" font-size="7">大きい</text>
+      <path class="fig-line" d="M12 38v62" />
+    </svg>
+    <span class="fig__name">記憶の階層</span>
+    <span class="fig__note">よく使う値は、速いキャッシュに置く</span>
+  </li>
+</FigureFrame>

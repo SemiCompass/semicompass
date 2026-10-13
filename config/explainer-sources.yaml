@@ -343,3 +343,9 @@ learn:
   reliability-tests:
     title: 厳しい条件で確かめる：信頼性の試験
     basis: reviewed
+  advanced-packaging:
+    title: 並べて、重ねる：先端パッケージ
+    basis: reviewed
+  processor:
+    title: 命令を実行する：プロセッサーの仕組み
+    basis: reviewed
