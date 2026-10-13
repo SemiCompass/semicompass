@@ -1,0 +1,40 @@
+---
+// 図：需要と供給の時間差で波が生まれる様子と、在庫の積み増しと調整（模式図、数値なし）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const demand = Array.from({ length: 41 }, (_, k) => `${20 + k * 4},${(70 - 30 * Math.sin((2 * Math.PI * k) / 40)).toFixed(1)}`).join(' ');
+const supply = Array.from({ length: 41 }, (_, k) => `${20 + k * 4},${(70 - 34 * Math.sin((2 * Math.PI * (k - 7)) / 40)).toFixed(1)}`).join(' ');
+const stages = [
+  { y: 10, name: '機器を使う人の需要', amp: 6 },
+  { y: 54, name: '機器のメーカーの注文', amp: 12 },
+  { y: 98, name: 'チップの会社への注文', amp: 18 },
+];
+const wave = (y: number, a: number) => Array.from({ length: 31 }, (_, k) => `${90 + k * 3.4},${(y + 20 - a * Math.sin((2 * Math.PI * k) / 30)).toFixed(1)}`).join(' ');
+---
+
+<FigureFrame id="fig-demand-cycle" columns={2} title="需要の波が生まれる仕組み（模式図）" caption="図：左は、需要（線）と供給（太い線）の時間差。供給は需要に遅れて動くので、足りない時期と余る時期が交互に生まれる。右は、在庫の積み増しと調整で、サプライチェーンの上流ほど注文の揺れが大きくなる様子。どちらも目盛りのない模式図で、実際の数値ではない。本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="供給が需要に遅れて動き、足りない時期と余る時期が交互に生まれる">
+      <path class="fig-line" d="M20 120h170M20 120V20" />
+      <polyline class="fig-line" points={demand} />
+      <polyline class="fig-arrow" points={supply} />
+      <text class="fig-text" x="40" y="30" font-size="7.5">足りない</text>
+      <text class="fig-text" x="104" y="116" font-size="7.5">余る</text>
+      <text class="fig-text" x="188" y="136" font-size="8" text-anchor="end">時間</text>
+      <text class="fig-text" x="24" y="16" font-size="7.5">量</text>
+    </svg>
+    <span class="fig__name">供給が遅れて動く</span>
+    <span class="fig__note">細い線が需要、太い線が供給</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="サプライチェーンの上流ほど、注文の揺れが大きくなる">
+      {stages.map((s) => (
+        <>
+          <text class="fig-text" x="6" y={s.y + 23} font-size="7">{s.name}</text>
+          <polyline class="fig-arrow" points={wave(s.y, s.amp)} />
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">上流ほど揺れが大きい</span>
+    <span class="fig__note">在庫の積み増しと調整が、揺れを大きくする</span>
+  </li>
+</FigureFrame>
