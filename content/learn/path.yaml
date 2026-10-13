@@ -31,6 +31,7 @@ fields:
     units:
       - { type: learn, ref: cmos-inverter }
       - { type: learn, ref: gates-and-memory }
+      - { type: learn, ref: processor }
   - "no": 4
     slug: silicon
     title: シリコンとウェーハ
@@ -54,6 +55,7 @@ fields:
       - { type: learn, ref: interconnect }
       - { type: process, ref: dicing }
       - { type: process, ref: packaging }
+      - { type: learn, ref: advanced-packaging }
       - { type: process, ref: final-test }
   - "no": 6
     slug: test
