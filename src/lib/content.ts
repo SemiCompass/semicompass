@@ -142,6 +142,14 @@ export const GLOSSARY_HEADING_ORDER = [...ROWS.map(([h]) => `${h}行`), ...'ABCD
 export interface LearnUnit {
   type: 'learn' | 'process' | 'term';
   ref: string;
+  /** learn のページが、分野と別のフォルダ（content/learn/{folder}/）にあるとき。公開済みのURLを変えずに分野を組み替えるため */
+  folder?: string;
+}
+export interface LearnSection {
+  slug: string;
+  title: string;
+  summary?: string;
+  units: LearnUnit[];
 }
 export interface LearnField {
   no: number;
@@ -149,6 +157,8 @@ export interface LearnField {
   title: string;
   summary: string;
   units: LearnUnit[];
+  /** 分野の中の小分け（任意）。units の後に、この順で並べる */
+  sections?: LearnSection[];
 }
 export interface LearnContent extends Common {
   title: string;

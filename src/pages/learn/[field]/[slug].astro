@@ -10,7 +10,7 @@ import LearnPathNav from '../../../components/LearnPathNav.astro';
 import Page from '../../../layouts/Page.astro';
 import { companyRows, loadSupply } from '../../../lib/companies';
 import { loadLearnPages, loadLearnPath, loadTerms, type LearnPage } from '../../../lib/content';
-import { learnFigure, neighbors } from '../../../lib/learn';
+import { fieldOf, learnFigure, learnHref, neighbors } from '../../../lib/learn';
 
 export function getStaticPaths() {
   return loadLearnPages(BUILD_ENV === 'preview').map((page) => ({ params: { field: page.field, slug: page.slug }, props: { page } }));
@@ -18,7 +18,8 @@ export function getStaticPaths() {
 const { page } = Astro.props as { page: LearnPage };
 const preview = BUILD_ENV === 'preview';
 const f = page.front;
-const field = loadLearnPath().find((x) => x.slug === page.field);
+// 分野は、path.yaml でこのページを並べた分野（フォルダと違うことがある。公開済みのURLを変えずに組み替えたため）
+const field = fieldOf(preview, learnHref(page)) ?? loadLearnPath().find((x) => x.slug === page.field);
 const supply = loadSupply() as ReturnType<typeof loadSupply> & { processes: { slug: string; name: string }[] };
 const processes = (f.processes ?? []).map((slug) => supply.processes.find((p) => p.slug === slug)).filter((p) => p !== undefined);
 const terms = loadTerms(preview).filter((t) => (f.related_terms ?? []).includes(t.slug));
@@ -47,7 +48,7 @@ const toc = [
   breadcrumbs={[
     { label: 'ホーム', href: '/' },
     { label: '半導体を学ぶ', href: '/learn/' },
-    { label: field?.title ?? page.field, href: `/learn/#field-${page.field}` },
+    { label: field?.title ?? page.field, href: `/learn/#field-${field?.slug ?? page.field}` },
     { label: f.title },
   ]}
   toc={toc}
