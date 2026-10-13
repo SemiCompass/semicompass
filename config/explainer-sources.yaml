@@ -313,3 +313,9 @@ learn:
   water-and-gas:
     title: 工場に届ける：超純水と、ガス・薬液
     basis: reviewed
+  gates-and-memory:
+    title: 組み合わせて計算し、覚える：論理ゲートと記憶の回路
+    basis: reviewed
+  supply-chain-view:
+    title: 会社の位置を読む：サプライチェーンの見方
+    basis: reviewed

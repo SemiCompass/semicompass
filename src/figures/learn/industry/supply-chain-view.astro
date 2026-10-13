@@ -1,0 +1,56 @@
+---
+// 図：サプライチェーンの位置と、需要の波の受け方（模式図）。会社全体の中の事業の区分（模式図、数値なし）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const chain = [
+  { y: 8, name: '製造装置の会社', note: '設備投資の計画の影響を受けやすい' },
+  { y: 8, name: '材料の会社', note: '工場の稼働の影響を受けやすい', right: true },
+  { y: 62, name: 'チップを作る会社', note: '機器の需要の影響を受けやすい' },
+  { y: 112, name: '電子機器・自動車などのメーカー', note: '' },
+];
+const segments = [
+  { w: 70, name: '事業A', semi: false },
+  { w: 50, name: '半導体に関わる事業', semi: true },
+  { w: 40, name: '事業C', semi: false },
+];
+---
+
+<FigureFrame id="fig-supply-chain-view" columns={2} title="会社の位置を読む観点（模式図）" caption="図：左は、サプライチェーンの中の位置と、需要の波の受け方の違い。装置の会社は設備投資の計画、材料の会社は工場の稼働、チップを作る会社は機器の需要の影響を受けやすい。右は、多くの事業を持つ会社で、決算の資料の事業の区分（セグメント）から、半導体に関わる事業の大きさを見る考え方。区分の大きさは仮のもので、数値ではない。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="製造装置の会社と材料の会社が、チップを作る会社に売り、チップを作る会社が機器のメーカーに売る">
+      <rect class="fig-part" x="6" y="8" width="90" height="34" />
+      <text class="fig-strong" x="51" y="22" font-size="8" text-anchor="middle">製造装置の会社</text>
+      <text class="fig-text" x="51" y="35" font-size="7" text-anchor="middle">設備投資の計画</text>
+      <rect class="fig-part" x="104" y="8" width="90" height="34" />
+      <text class="fig-strong" x="149" y="22" font-size="8" text-anchor="middle">材料の会社</text>
+      <text class="fig-text" x="149" y="35" font-size="7" text-anchor="middle">工場の稼働</text>
+      <path class="fig-arrow" d="M51 44v14M47 54l4 4 4-4M149 44v14M145 54l4 4 4-4" />
+      <rect class="fig-film" x="6" y="62" width="188" height="34" />
+      <text class="fig-strong" x="100" y="76" font-size="8" text-anchor="middle">チップを作る会社</text>
+      <text class="fig-text" x="100" y="89" font-size="7" text-anchor="middle">機器の需要</text>
+      <path class="fig-arrow" d="M100 98v10M96 104l4 4 4-4" />
+      <rect class="fig-part" x="26" y="112" width="148" height="28" />
+      <text class="fig-text" x="100" y="130" font-size="8" text-anchor="middle">電子機器・自動車などのメーカー</text>
+    </svg>
+    <span class="fig__name">位置と、波の受け方</span>
+    <span class="fig__note">箱の下の文字は、影響を受けやすいもの</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="多くの事業を持つ会社の売上を事業の区分に分け、半導体に関わる事業の大きさを見る">
+      <text class="fig-text" x="100" y="34" font-size="9" text-anchor="middle">会社全体の売上（事業の区分ごと）</text>
+      {segments.map((s, i) => {
+        const x = 20 + segments.slice(0, i).reduce((a, b) => a + b.w, 0);
+        return (
+          <>
+            <rect class={s.semi ? 'fig-film' : 'fig-part'} x={x} y="46" width={s.w} height="40" />
+            <text class={s.semi ? 'fig-strong' : 'fig-text'} x={x + s.w / 2} y="70" font-size="8" text-anchor="middle">{s.semi ? '半導体' : s.name}</text>
+          </>
+        );
+      })}
+      <path class="fig-arrow" d="M115 92v14" />
+      <text class="fig-text" x="115" y="120" font-size="8" text-anchor="middle">区分に含まれる製品の説明も</text>
+      <text class="fig-text" x="115" y="132" font-size="8" text-anchor="middle">合わせて読む</text>
+    </svg>
+    <span class="fig__name">会社全体の中の半導体</span>
+    <span class="fig__note">区分の分け方は、会社ごとに違う</span>
+  </li>
+</FigureFrame>

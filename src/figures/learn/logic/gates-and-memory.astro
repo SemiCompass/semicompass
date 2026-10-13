@@ -1,0 +1,52 @@
+---
+// 図：CMOSのNANDゲート（入力が両方とも1のとき）と、二つのインバーターを輪にした覚える回路（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-gates" columns={2} title="NANDゲートと、覚える回路（模式図）" caption="図：左は、CMOSのNANDゲートで、入力が両方とも1のとき。上の並列の二つのpMOSは切（開いたスイッチ）、下の直列の二つのnMOSは入（閉じたスイッチ）になり、出力は接地の側につながって0になる。右は、二つのインバーターを輪のようにつないだ回路。一つ目の出力を二つ目が反対にして一つ目へ戻すので、0か1の状態を保ち続ける。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 170" role="img" aria-label="NANDゲートで入力が両方とも1のとき：並列のpMOSは二つとも切、直列のnMOSは二つとも入になり、出力は0">
+      <path class="fig-line" d="M40 12h120M40 162h120" />
+      <text class="fig-text" x="24" y="16" font-size="9" text-anchor="middle">電源</text>
+      <text class="fig-text" x="24" y="166" font-size="9" text-anchor="middle">接地</text>
+      <path class="fig-line" d="M70 12v12M130 12v12M70 52v12M130 52v12M70 64h60M100 64v14" />
+      <rect class="fig-part" x="56" y="22" width="28" height="32" />
+      <rect class="fig-part" x="116" y="22" width="28" height="32" />
+      <path class="fig-line" d="M70 26l12 20M130 26l12 20" />
+      <circle class="fig-dot" cx="100" cy="72" r="3" />
+      <path class="fig-line" d="M100 72h40" />
+      <text class="fig-text" x="162" y="68" font-size="9" text-anchor="middle">出力</text>
+      <text class="fig-strong" x="162" y="84" font-size="14" text-anchor="middle">0</text>
+      <rect class="fig-part" x="86" y="80" width="28" height="30" />
+      <rect class="fig-part" x="86" y="118" width="28" height="30" />
+      <path class="fig-arrow" d="M100 82v26M100 120v26" />
+      <path class="fig-line" d="M100 110v8M100 148v14" />
+      <text class="fig-text" x="40" y="44" font-size="8" text-anchor="end">pMOS</text>
+      <text class="fig-text" x="80" y="118" font-size="8" text-anchor="end">nMOS</text>
+      <text class="fig-text" x="22" y="96" font-size="9" text-anchor="middle">入力</text>
+      <text class="fig-strong" x="22" y="112" font-size="12" text-anchor="middle">1・1</text>
+    </svg>
+    <span class="fig__name">NANDゲート（入力が両方とも1）</span>
+    <span class="fig__note">並列のpMOSは両方とも切、直列のnMOSは両方とも入。出力は0</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 170" role="img" aria-label="二つのインバーターを輪にした回路：一つ目の出力1を二つ目が0にして一つ目に戻し、状態を保ち続ける">
+      <path class="fig-part" d="M70 40v36l30-18z" />
+      <circle class="fig-part" cx="104" cy="58" r="4" />
+      <path class="fig-part" d="M130 130v-36l-30 18z" />
+      <circle class="fig-part" cx="96" cy="112" r="4" />
+      <path class="fig-arrow" d="M108 58h42v54h-20" />
+      <path class="fig-arrow" d="M92 112H50V58h20" />
+      <text class="fig-strong" x="158" y="88" font-size="14">1</text>
+      <text class="fig-strong" x="34" y="88" font-size="14">0</text>
+      <text class="fig-text" x="85" y="34" font-size="9" text-anchor="middle">インバーター1</text>
+      <text class="fig-text" x="115" y="146" font-size="9" text-anchor="middle">インバーター2</text>
+    </svg>
+    <span class="fig__name">覚える回路</span>
+    <span class="fig__note">出力を入力に戻すので、0か1の状態が続く</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-arrow" d="M12 3v18" /></svg>入（閉じたスイッチ）・信号の流れ</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-line" d="M8 3l10 16" /></svg>切（開いたスイッチ）</li>
+  </ul>
+</FigureFrame>
