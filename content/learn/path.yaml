@@ -81,6 +81,7 @@ fields:
       - { type: learn, ref: water-and-gas }
       - { type: learn, ref: automation }
       - { type: learn, ref: energy-environment }
+      - { type: learn, ref: building-a-fab }
   - "no": 8
     slug: industry
     title: 業界の構造と企業
@@ -88,3 +89,4 @@ fields:
     units:
       - { type: learn, ref: roles }
       - { type: learn, ref: supply-chain-view }
+      - { type: learn, ref: demand-cycle }

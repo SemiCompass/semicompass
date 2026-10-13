@@ -1,0 +1,41 @@
+---
+// 図：半導体の工場の建物の断面と、建ててから量産までの流れ（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const floors = [
+  { y: 18, h: 26, cls: 'fig-part', name: '空気を送る機械・フィルター' },
+  { y: 44, h: 40, cls: 'fig-film', name: 'クリーンルーム（装置を置く）' },
+  { y: 84, h: 22, cls: 'fig-part', name: '床下（空気を戻す）' },
+  { y: 106, h: 24, cls: 'fig-part', name: '配管・配線の階' },
+];
+const steps = ['場所を選ぶ', '建物を建てる', '装置を入れて立ち上げる', '歩留まりを上げる', '量産へ'];
+---
+
+<FigureFrame id="fig-building-fab" columns={2} title="工場の建物と、動き出すまで（模式図）" caption="図：左は、工場の建物の断面。クリーンルームの階を、上の空気を送る設備の階と、下の床下や配管・配線の階ではさむ。右は、場所を選んでから量産までの流れ。装置を立ち上げた後も、歩留まりを上げてから作る量を増やす。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="工場の建物の断面：クリーンルームの階を、上の空気の設備の階と、下の床下や配管の階ではさむ">
+      <path class="fig-line" d="M14 18l86-12 86 12" />
+      {floors.map((f) => (
+        <>
+          <rect class={f.cls} x="14" y={f.y} width="172" height={f.h} />
+          <text class="fig-text" x="100" y={f.y + f.h / 2 + 3} font-size="7.5" text-anchor="middle">{f.name}</text>
+        </>
+      ))}
+      <rect class="fig-wafer" x="6" y="130" width="188" height="10" />
+    </svg>
+    <span class="fig__name">建物の断面</span>
+    <span class="fig__note">床は重い装置を載せられ、揺れが伝わりにくい</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="場所を選ぶ、建物を建てる、装置を入れて立ち上げる、歩留まりを上げる、量産へ">
+      {steps.map((s, i) => (
+        <>
+          <rect class={i === 4 ? 'fig-film' : 'fig-part'} x="24" y={4 + i * 29} width="152" height="21" />
+          <text class="fig-text" x="100" y={18 + i * 29} font-size="8" text-anchor="middle">{s}</text>
+          {i < steps.length - 1 && <path class="fig-arrow" d={`M100 ${26 + i * 29}v6M97 ${29 + i * 29}l3 3 3-3`} />}
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">動き出すまでの流れ</span>
+    <span class="fig__note">装置が動いても、すぐには量産しない</span>
+  </li>
+</FigureFrame>

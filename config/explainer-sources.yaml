@@ -373,3 +373,9 @@ learn:
   failure-analysis:
     title: 壊れた理由を突き止める：故障解析
     basis: reviewed
+  demand-cycle:
+    title: 需要の波を読む：市況の考え方
+    basis: reviewed
+  building-a-fab:
+    title: 工場を建てて動かすまで
+    basis: reviewed
