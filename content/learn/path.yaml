@@ -12,6 +12,7 @@ fields:
       - { type: learn, ref: electrons-and-holes }
       - { type: learn, ref: pn-junction }
       - { type: learn, ref: energy-band }
+      - { type: learn, ref: compound }
   - "no": 2
     slug: devices
     title: デバイス
@@ -25,6 +26,7 @@ fields:
       - { type: learn, ref: analog }
       - { type: learn, ref: mems-sensor }
       - { type: learn, ref: rf }
+      - { type: learn, ref: optoelectronics }
   - "no": 3
     slug: logic
     title: 論理回路

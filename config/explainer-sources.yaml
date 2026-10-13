@@ -355,3 +355,9 @@ learn:
   energy-environment:
     title: 電力と環境：工場が向き合う課題
     basis: reviewed
+  compound:
+    title: シリコン以外の半導体：化合物半導体
+    basis: reviewed
+  optoelectronics:
+    title: 光を出す、光を受ける：LEDと半導体レーザー
+    basis: reviewed
