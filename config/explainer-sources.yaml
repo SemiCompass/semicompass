@@ -337,3 +337,9 @@ learn:
   mems-sensor:
     title: 感じて、動く：センサーとMEMS
     basis: reviewed
+  interconnect:
+    title: トランジスタをつなぐ：配線と多層配線
+    basis: reviewed
+  reliability-tests:
+    title: 厳しい条件で確かめる：信頼性の試験
+    basis: reviewed
