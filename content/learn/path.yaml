@@ -91,3 +91,4 @@ fields:
       - { type: learn, ref: supply-chain-view }
       - { type: learn, ref: demand-cycle }
       - { type: learn, ref: history }
+      - { type: learn, ref: policy }
