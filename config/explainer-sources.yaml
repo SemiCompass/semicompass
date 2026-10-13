@@ -319,3 +319,9 @@ learn:
   supply-chain-view:
     title: 会社の位置を読む：サプライチェーンの見方
     basis: reviewed
+  inspection:
+    title: 小さな欠陥を見つける：検査と測定の仕組み
+    basis: reviewed
+  doping-and-anneal:
+    title: 性質を作り込む：イオン注入と熱処理
+    basis: reviewed

@@ -46,6 +46,7 @@ fields:
       - { type: process, ref: deposition }
       - { type: process, ref: lithography }
       - { type: process, ref: etching }
+      - { type: learn, ref: doping-and-anneal }
       - { type: process, ref: cmp }
       - { type: process, ref: dicing }
       - { type: process, ref: packaging }
@@ -56,6 +57,7 @@ fields:
     summary: できた半導体を確かめる方法と、長く使えることを確かめる考え方を学びます。
     units:
       - { type: learn, ref: test-and-reliability }
+      - { type: learn, ref: inspection }
   - "no": 7
     slug: facilities
     title: 工場を支える技術

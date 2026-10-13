@@ -1,0 +1,42 @@
+---
+// 図：散らばる光で欠陥を見つける仕組みと、隣のチップと比べて違いを探す方法（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const chips = [20, 76, 132];
+const lines = [10, 22, 34];
+---
+
+<FigureFrame id="fig-inspection" columns={2} title="欠陥を見つける二つの方法（模式図）" caption="図：左は、平らな表面に光を当てたとき。きれいな場所では光は決まった向きにはね返るが、ごみがあると光の一部が散らばり、その光をとらえてごみを見つける。右は、同じ設計の三つのチップの同じ場所を比べる方法。真ん中のチップだけに違い（丸で囲んだ所）があるので、そこを欠陥の候補として記録する。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="光を当てると、ごみのある場所で光の一部が散らばり、それをとらえる">
+      <rect class="fig-wafer" x="10" y="110" width="180" height="20" />
+      <path class="fig-arrow" d="M30 40L90 108" />
+      <path class="fig-arrow" d="M90 108L150 40" />
+      <circle class="fig-resist" cx="96" cy="106" r="5" />
+      <path class="fig-dash" d="M96 100L70 60M96 100L100 54M96 100L124 64M96 100L60 90" />
+      <rect class="fig-part" x="88" y="24" width="28" height="18" />
+      <text class="fig-text" x="102" y="18" font-size="8" text-anchor="middle">散らばる光をとらえる</text>
+      <text class="fig-text" x="22" y="34" font-size="8">当てる光</text>
+      <text class="fig-text" x="150" y="34" font-size="8">はね返る光</text>
+      <text class="fig-text" x="100" y="144" font-size="8" text-anchor="middle">ウェーハ（○はごみ）</text>
+    </svg>
+    <span class="fig__name">散らばる光で見つける</span>
+    <span class="fig__note">ごみそのものが見えなくても、散らばる光で場所が分かる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="同じ設計の三つのチップの同じ場所を比べると、真ん中のチップだけに違いがある">
+      {chips.map((x, i) => (
+        <>
+          <rect class="fig-part" x={x} y="40" width="48" height="56" />
+          {lines.map((y) => <rect class="fig-metal" x={x + 6} y={40 + 8 + y} width="36" height="5" />)}
+          {i === 1 && <path class="fig-metal" d={`M${x + 22} 58h5v12h-5z`} />}
+          <text class="fig-text" x={x + 24} y="112" font-size="8" text-anchor="middle">{['チップA', 'チップB', 'チップC'][i]}</text>
+        </>
+      ))}
+      <circle class="fig-dash" cx="100" cy="64" r="12" />
+      <text class="fig-text" x="100" y="30" font-size="8" text-anchor="middle">同じ場所を比べる</text>
+      <text class="fig-text" x="100" y="134" font-size="8" text-anchor="middle">Bだけ違う → 欠陥の候補</text>
+    </svg>
+    <span class="fig__name">隣と比べて、違いを探す</span>
+    <span class="fig__note">同じはずの像の違いを、欠陥の候補として記録する</span>
+  </li>
+</FigureFrame>
