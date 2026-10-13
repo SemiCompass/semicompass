@@ -24,6 +24,7 @@ fields:
       - { type: learn, ref: image-sensor }
       - { type: learn, ref: analog }
       - { type: learn, ref: mems-sensor }
+      - { type: learn, ref: rf }
   - "no": 3
     slug: logic
     title: 論理回路
@@ -73,6 +74,7 @@ fields:
       - { type: learn, ref: clean-room }
       - { type: learn, ref: water-and-gas }
       - { type: learn, ref: automation }
+      - { type: learn, ref: energy-environment }
   - "no": 8
     slug: industry
     title: 業界の構造と企業

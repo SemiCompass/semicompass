@@ -1,0 +1,51 @@
+---
+// 図：通信用の半導体の流れと、フィルターの通し方（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const curve = Array.from({ length: 41 }, (_, k) => {
+  const x = 20 + k * 4;
+  const d = (x - 100) / 18;
+  return `${x},${(110 - 80 * Math.exp(-d * d * d * d)).toFixed(1)}`;
+}).join(' ');
+---
+
+<FigureFrame id="fig-rf" columns={2} title="電波を扱う部品の流れ（模式図）" caption="図：左は、アンテナとデジタルの回路の間の部品の流れ。スイッチで送ると受けるを切り替え、送るときは増幅器で信号を大きくし、受けるときはフィルターでほしい周波数だけを通してから、雑音を加えない増幅器で大きくする。周波数を変える回路が、デジタルの回路とつなぐ。右は、フィルターの通し方。決まった周波数の範囲だけを通し、それ以外は通しにくい。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="アンテナ、スイッチ、送る増幅器と受ける側のフィルターと増幅器、周波数を変える回路、デジタルの回路の流れ">
+      <path class="fig-line" d="M18 20v26M10 12l8 8 8-8" />
+      <rect class="fig-part" x="6" y="46" width="26" height="58" />
+      <text class="fig-text" x="19" y="73" font-size="7.5" text-anchor="middle">スイ</text>
+      <text class="fig-text" x="19" y="83" font-size="7.5" text-anchor="middle">ッチ</text>
+      <rect class="fig-film" x="44" y="36" width="58" height="22" />
+      <text class="fig-text" x="73" y="50" font-size="7.5" text-anchor="middle">送る増幅器</text>
+      <rect class="fig-part" x="44" y="92" width="44" height="22" />
+      <text class="fig-text" x="66" y="106" font-size="7.5" text-anchor="middle">フィルター</text>
+      <rect class="fig-film" x="94" y="92" width="44" height="22" />
+      <text class="fig-text" x="116" y="102" font-size="7" text-anchor="middle">受ける</text>
+      <text class="fig-text" x="116" y="111" font-size="7" text-anchor="middle">増幅器</text>
+      <rect class="fig-part" x="146" y="36" width="48" height="78" />
+      <text class="fig-text" x="170" y="68" font-size="7.5" text-anchor="middle">周波数を</text>
+      <text class="fig-text" x="170" y="80" font-size="7.5" text-anchor="middle">変える</text>
+      <text class="fig-text" x="170" y="92" font-size="7.5" text-anchor="middle">回路</text>
+      <path class="fig-arrow" d="M146 47h-44" />
+      <path class="fig-arrow" d="M44 47H32M38 43l-6 4 6 4" />
+      <path class="fig-arrow" d="M32 103h12M88 103h6M138 103h8M140 99l6 4-6 4" />
+      <path class="fig-line" d="M170 114v14" />
+      <text class="fig-text" x="194" y="140" font-size="7.5" text-anchor="end">デジタルの回路へ</text>
+      <text class="fig-text" x="30" y="16" font-size="7.5">アンテナ</text>
+    </svg>
+    <span class="fig__name">送ると受けるの流れ</span>
+    <span class="fig__note">上は送る道、下は受ける道</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="フィルターは決まった周波数の範囲だけを通し、それ以外は通しにくい">
+      <path class="fig-line" d="M20 116h168M20 116V14" />
+      <polyline class="fig-arrow" points={curve} />
+      <path class="fig-dash" d="M82 24v92M118 24v92" />
+      <text class="fig-text" x="100" y="20" font-size="8" text-anchor="middle">通す範囲</text>
+      <text class="fig-text" x="186" y="132" font-size="8" text-anchor="end">周波数</text>
+      <text class="fig-text" x="24" y="12" font-size="8">通りやすさ</text>
+    </svg>
+    <span class="fig__name">フィルターの通し方</span>
+    <span class="fig__note">ほしい周波数だけを通し、ほかは通しにくい</span>
+  </li>
+</FigureFrame>
