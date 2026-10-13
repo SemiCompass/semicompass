@@ -1,0 +1,65 @@
+---
+// 分野のページ（/learn/{分野}/。要件定義書 FR-901、仕様書 8.18）：その分野の単元を、小分けごとに体系の順に並べる。
+// 最後に前後の分野へのリンクを置く。単元がまだない分野は「準備中」と示す（MV-08）
+import { BUILD_ENV } from 'astro:env/server';
+import UnitList from '../../../components/LearnUnitList.astro';
+import Page from '../../../layouts/Page.astro';
+import { learnIndex, type FieldIndex } from '../../../lib/learn';
+
+export function getStaticPaths() {
+  const index = learnIndex(BUILD_ENV === 'preview');
+  return index.map((entry, i) => ({
+    params: { field: entry.field.slug },
+    props: { entry, previous: index[i - 1]?.field, next: index[i + 1]?.field },
+  }));
+}
+const { entry, previous, next } = Astro.props as {
+  entry: FieldIndex;
+  previous?: FieldIndex['field'];
+  next?: FieldIndex['field'];
+};
+const { field, lead, sections, units } = entry;
+const shown = sections.filter((s) => s.units.length > 0);
+const toc = shown.length > 0 ? shown.map(({ section }) => ({ id: `section-${section.slug}`, label: section.title })) : [];
+const name = (f: FieldIndex['field']) => `${f.no}. ${f.title}`;
+---
+
+<Page
+  title={`${field.title}｜半導体を学ぶ｜SemiCompass`}
+  heading={name(field)}
+  description={field.summary}
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '半導体を学ぶ', href: '/learn/' }, { label: field.title }]}
+  toc={toc}
+>
+  <p class="lead measure">{field.summary}</p>
+  {units.length > 0 ? (
+    <>
+      {lead.length > 0 && <UnitList units={lead} />}
+      {shown.map(({ section, units: su }) => (
+        <section aria-labelledby={`section-${section.slug}`} class="learn-section">
+          <h2 id={`section-${section.slug}`}>{section.title}</h2>
+          {section.summary && <p class="measure">{section.summary}</p>}
+          <UnitList units={su} />
+        </section>
+      ))}
+    </>
+  ) : (
+    <p class="learn-field__pending">この分野のページは、準備中です。</p>
+  )}
+  <nav aria-label="前後の分野" class="learn-field-nav">
+    <ul>
+      {previous && <li>前の分野：<a href={`/learn/${previous.slug}/`}>{name(previous)}</a></li>}
+      {next && <li>次の分野：<a href={`/learn/${next.slug}/`}>{name(next)}</a></li>}
+    </ul>
+  </nav>
+</Page>
+
+<style>
+  .learn-section,
+  .learn-field-nav {
+    margin-block-start: var(--space-7);
+  }
+  .learn-field__pending {
+    color: var(--color-text-muted);
+  }
+</style>

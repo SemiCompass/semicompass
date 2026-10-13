@@ -48,7 +48,7 @@ const toc = [
   breadcrumbs={[
     { label: 'ホーム', href: '/' },
     { label: '半導体を学ぶ', href: '/learn/' },
-    { label: field?.title ?? page.field, href: `/learn/#field-${field?.slug ?? page.field}` },
+    { label: field?.title ?? page.field, href: `/learn/${field?.slug ?? page.field}/` },
     { label: f.title },
   ]}
   toc={toc}
