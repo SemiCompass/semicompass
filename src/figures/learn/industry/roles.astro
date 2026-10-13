@@ -1,0 +1,56 @@
+---
+// 図：半導体業界の役割分担（模式図）。左は会社の形が受け持つ範囲、右はチップを作る会社を支える役割（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const cols = [
+  { x: 70, w: 40, name: '設計' },
+  { x: 112, w: 40, name: '前工程' },
+  { x: 154, w: 40, name: '後工程' },
+];
+const rows = [
+  { y: 34, name: '一貫生産', from: 0, to: 2 },
+  { y: 62, name: '設計専業', from: 0, to: 0 },
+  { y: 90, name: '受託製造', from: 1, to: 1 },
+  { y: 118, name: '後工程の受託', from: 2, to: 2 },
+];
+const supports = [
+  { x: 10, name: '製造装置' },
+  { x: 72, name: '材料' },
+  { x: 134, name: '設計の道具' },
+];
+---
+
+<FigureFrame id="fig-roles" columns={2} title="半導体業界の役割分担（模式図）" caption="図：左は、会社の形ごとに受け持つ範囲。一貫生産は設計から後工程まで、設計専業は設計、受託製造は前工程、後工程の受託は組み立てとテストを受け持つ。右は、チップを作る会社を、製造装置、材料、設計の道具の会社が支える関係。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="一貫生産は設計から後工程まで、設計専業は設計、受託製造は前工程、後工程の受託は後工程を受け持つ">
+      {cols.map((c) => <text class="fig-strong" x={c.x + c.w / 2} y="20" font-size="9" text-anchor="middle">{c.name}</text>)}
+      {cols.map((c) => <path class="fig-dash" d={`M${c.x} 26v116`} />)}
+      <path class="fig-dash" d="M196 26v116" />
+      {rows.map((r) => (
+        <>
+          <text class="fig-text" x="64" y={r.y + 13} font-size="8" text-anchor="end">{r.name}</text>
+          <rect class="fig-film" x={cols[r.from].x + 2} y={r.y} width={cols[r.to].x + cols[r.to].w - cols[r.from].x - 4} height="20" />
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">会社の形と、受け持つ範囲</span>
+    <span class="fig__note">一つの会社がすべてを受け持つ形と、分けて受け持つ形がある</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="製造装置、材料、設計の道具の会社が、チップを作る会社を支え、チップは電子機器のメーカーへ届く">
+      {supports.map((s) => (
+        <>
+          <rect class="fig-part" x={s.x} y="10" width="56" height="26" />
+          <text class="fig-text" x={s.x + 28} y="27" font-size="8" text-anchor="middle">{s.name}</text>
+          <path class="fig-arrow" d={`M${s.x + 28} 38v18M${s.x + 24} 52l4 4 4-4`} />
+        </>
+      ))}
+      <rect class="fig-film" x="10" y="60" width="180" height="30" />
+      <text class="fig-strong" x="100" y="79" font-size="9" text-anchor="middle">チップを作る会社</text>
+      <path class="fig-arrow" d="M100 92v18M96 106l4 4 4-4" />
+      <rect class="fig-part" x="40" y="114" width="120" height="26" />
+      <text class="fig-text" x="100" y="131" font-size="8" text-anchor="middle">電子機器などのメーカー</text>
+    </svg>
+    <span class="fig__name">作る会社を支える役割</span>
+    <span class="fig__note">装置、材料、設計の道具のどれが欠けても、チップは作れない</span>
+  </li>
+</FigureFrame>

@@ -64,4 +64,5 @@ fields:
     slug: industry
     title: 業界の構造と企業
     summary: 設計専業、受託製造、一貫生産などの役割の違いと、サプライチェーンの中の日本企業を学びます。
-    units: []
+    units:
+      - { type: learn, ref: roles }
