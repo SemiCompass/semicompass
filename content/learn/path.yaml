@@ -92,3 +92,4 @@ fields:
       - { type: learn, ref: demand-cycle }
       - { type: learn, ref: history }
       - { type: learn, ref: policy }
+      - { type: learn, ref: japan-position }
