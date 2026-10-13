@@ -43,8 +43,13 @@
               "power",
               "sensors",
               "communication",
-              "industry"
-            ]
+              "industry",
+              "devices",
+              "logic",
+              "silicon",
+              "facilities"
+            ],
+            "description": "分野のslug。運用ルール書4.2の9分野（basics、materials、design、process、test、power、sensors、communication、industry）を使う。組み替えの途中のため、以前の分野（devices、logic、silicon、facilities）も当面は受け付ける"
           },
           "title": {
             "type": "string",
