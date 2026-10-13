@@ -141,16 +141,39 @@ class _Text(html.parser.HTMLParser):
             self.parts.append(data)
 
 
+_META_CHARSET = re.compile(rb"<meta[^>]+charset\s*=\s*[\"']?([A-Za-z0-9_-]+)", re.I)
+# Shift_JIS と書かれたページも、機種依存の文字（丸数字など）を読めるように cp932 として読む
+_CHARSET_ALIASES = {"shift_jis": "cp932", "shift-jis": "cp932", "sjis": "cp932", "x-sjis": "cp932", "windows-31j": "cp932"}
+
+
+def sniff_charset(data: bytes, content_type: str) -> str:
+    """文字コードを決める。HTTPの Content-Type の charset、HTMLの先頭の <meta> の charset の順に見る。
+    どちらにもなければ、UTF-8 で厳密に読めるかを試し、読めなければ cp932（日本語の古いページに多い）とする。"""
+    m = re.search(r"charset=([\w-]+)", content_type, re.I)
+    found = m[1] if m else None
+    if not found:
+        mm = _META_CHARSET.search(data[:4096])
+        found = mm[1].decode("ascii") if mm else None
+    if found:
+        name = _CHARSET_ALIASES.get(found.lower(), found)
+        try:
+            "".encode(name)
+            return name
+        except LookupError:
+            pass
+    try:
+        data.decode("utf-8")
+        return "utf-8"
+    except UnicodeDecodeError:
+        return "cp932"
+
+
 def to_text(data: bytes, content_type: str) -> str:
     if data[:5] == b"%PDF-" or "pdf" in content_type.lower():
         from pypdf import PdfReader
         reader = PdfReader(io.BytesIO(data))
         return "\n".join((page.extract_text() or "") for page in reader.pages)
-    charset = "utf-8"
-    m = re.search(r"charset=([\w-]+)", content_type, re.I)
-    if m:
-        charset = m[1]
-    text = data.decode(charset, errors="replace")
+    text = data.decode(sniff_charset(data, content_type), errors="replace")
     if "html" in content_type.lower() or "<html" in text[:2000].lower():
         parser = _Text()
         parser.feed(text)
