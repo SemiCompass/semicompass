@@ -1,0 +1,47 @@
+---
+// 図：シリコンウェーハの製造の流れ（模式図）。工程ページ wafer の本文に合わせる
+import FigureFrame from '../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-wafer" title="シリコンウェーハができるまで（模式図）" caption="図：溶かしたシリコンに種結晶を触れさせて引き上げ、単結晶インゴットを育てる。インゴットを薄い板に切り出し、表面を鏡のように研磨してウェーハにする。寸法は簡単にした模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="引き上げ：るつぼで溶かしたシリコンに種結晶を触れさせ、回しながらゆっくり引き上げると、下に単結晶が育つ">
+      <path class="fig-part" d="M50 96h100v30H50z" />
+      <path class="fig-film" d="M56 100h88v20H56z" />
+      <path class="fig-line" d="M100 8v18" />
+      <path class="fig-wafer" d="M90 26h20v12l6 8v50H84V46l6-8z" />
+      <path class="fig-arrow" d="M124 40V14m-5 6 5-6 5 6" />
+      <text class="fig-text" x="130" y="30" font-size="9">引き上げる</text>
+      <text class="fig-text" x="60" y="136" font-size="9">溶かしたシリコン</text>
+    </svg>
+    <span class="fig__name">単結晶を育てる</span>
+    <span class="fig__note">種結晶と同じ向きにそろった単結晶インゴットができる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="切り出し：外周を研削して直径をそろえた円柱のインゴットを、ワイヤソーなどで薄い板に切り出す">
+      <path class="fig-wafer" d="M40 50h96v40H40z" />
+      <path class="fig-dash" d="M64 44v52M88 44v52M112 44v52" />
+      <path class="fig-wafer" d="M150 50h6v40h-6zM166 50h6v40h-6z" />
+      <path class="fig-arrow" d="M138 70h8m-4-4 4 4-4 4" />
+    </svg>
+    <span class="fig__name">薄い板に切り出す</span>
+    <span class="fig__note">インゴットを薄く切り、縁の面取りや両面の加工で厚みと平らさをそろえる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="研磨：研磨パッドとスラリーで表面を鏡のように磨き、洗浄と検査をしてウェーハが仕上がる">
+      <path class="fig-film" d="M30 92h140v12H30z" />
+      <path class="fig-wafer" d="M60 78h80v14H60z" />
+      <circle class="fig-dot-alt" cx="50" cy="88" r="3" />
+      <circle class="fig-dot-alt" cx="150" cy="88" r="3" />
+      <path class="fig-arrow" d="M100 50v22m-5-6 5 6 5-6" />
+      <path class="fig-arrow" d="M40 116c20 8 100 8 120 0" />
+    </svg>
+    <span class="fig__name">鏡のように磨く</span>
+    <span class="fig__note">表面を研磨し、洗浄して粒子や汚れを除き、傷や平坦度を検査する</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-wafer" x="3" y="8" width="18" height="8" /></svg>シリコン（単結晶・ウェーハ）</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-film" x="3" y="8" width="18" height="8" /></svg>溶かしたシリコン・研磨パッド</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><circle class="fig-dot-alt" cx="12" cy="12" r="4" /></svg>スラリー</li>
+  </ul>
+</FigureFrame>
