@@ -1,0 +1,46 @@
+---
+// 図：洗浄の装置の方式（模式図）。工程ページ cleaning の本文に合わせる
+import FigureFrame from '../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-cleaning" title="洗浄の方式（模式図）" caption="図：複数枚のウェーハをまとめて薬液槽に浸すバッチ式と、一枚ずつ回転させながら薬液をかける枚葉式。薬液で汚れを落とした後、超純水ですすぎ、乾燥させる。寸法は簡単にした模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="バッチ式：複数枚のウェーハを立てて並べ、まとめて薬液槽に浸す">
+      <path class="fig-line" d="M40 50v76h120V50" />
+      <path class="fig-film" d="M41 70h118v55H41z" />
+      <path class="fig-wafer" d="M62 40h6v70h-6zM82 40h6v70h-6zM102 40h6v70h-6zM122 40h6v70h-6z" />
+    </svg>
+    <span class="fig__name">バッチ式</span>
+    <span class="fig__note">複数枚のウェーハを、まとめて薬液槽に浸す</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="枚葉式：一枚のウェーハを回転させながら、上から薬液をかける">
+      <path class="fig-wafer" d="M40 90h120v8H40z" />
+      <path class="fig-line" d="M100 98v26" />
+      <path class="fig-line" d="M100 20v24" />
+      <circle class="fig-dot-alt" cx="100" cy="56" r="3" />
+      <circle class="fig-dot-alt" cx="100" cy="70" r="3" />
+      <path class="fig-arrow" d="M60 116c16 8 64 8 80 0" />
+    </svg>
+    <span class="fig__name">枚葉式</span>
+    <span class="fig__note">一枚ずつ回転させながら、薬液をかける</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="洗浄の流れ：薬液で汚れを溶かしたり浮かせたりし、超純水ですすぎ、乾燥させる">
+      <rect class="fig-film" x="14" y="56" width="48" height="28" />
+      <rect class="fig-part" x="76" y="56" width="48" height="28" />
+      <rect class="fig-part" x="138" y="56" width="48" height="28" />
+      <path class="fig-arrow" d="M63 70h11m-4-4 4 4-4 4M125 70h11m-4-4 4 4-4 4" />
+      <text class="fig-text" x="38" y="100" font-size="9" text-anchor="middle">薬液</text>
+      <text class="fig-text" x="100" y="100" font-size="9" text-anchor="middle">すすぎ</text>
+      <text class="fig-text" x="162" y="100" font-size="9" text-anchor="middle">乾燥</text>
+    </svg>
+    <span class="fig__name">洗浄の流れ</span>
+    <span class="fig__note">薬液で汚れを落とした後、超純水ですすぎ、乾燥させる</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-wafer" x="3" y="8" width="18" height="8" /></svg>ウェーハ</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-film" x="3" y="8" width="18" height="8" /></svg>薬液</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><circle class="fig-dot-alt" cx="12" cy="12" r="4" /></svg>かける薬液</li>
+  </ul>
+</FigureFrame>
