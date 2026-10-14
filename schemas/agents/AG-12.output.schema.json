@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/agents/AG-12.output.schema.json",
+  "title": "AG-12 IR分析エージェントの出力（IR重要ポイントの下書き）",
+  "description": "データ定義書（第1段階）9.5。AG-12が、1社1期について原資料束（決算短信、決算説明資料、取引所の開示など、IR用の許可の一覧にある資料だけ）から返す出力。プログラムが、この出力から content/ir-points/ のファイル（schemas/content/ir-point）の本文の3つの見出しに書き直す。会社が示した事実と見通しだけを書き、株価への影響や売り買いの判断は書かない（CLAUDE.md 6.2）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "performance_summary",
+    "outlook",
+    "highlights",
+    "uses_quarterly_figures"
+  ],
+  "properties": {
+    "performance_summary": {
+      "description": "業績の要点（100字以内。要求定義書FR-307）",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "source_ids"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "source_ids": {
+          "description": "根拠にした原資料束の資料の番号（S1〜）。1件以上",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^S[0-9]+$"
+          }
+        }
+      }
+    },
+    "outlook": {
+      "description": "今期見通し（80字以内。要求定義書FR-307）",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "source_ids"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "source_ids": {
+          "description": "根拠にした原資料束の資料の番号（S1〜）。1件以上",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^S[0-9]+$"
+          }
+        }
+      }
+    },
+    "highlights": {
+      "description": "注目材料（会社が示した受注、新製品、設備投資など）（70字以内。要求定義書FR-307）",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "source_ids"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 70
+        },
+        "source_ids": {
+          "description": "根拠にした原資料束の資料の番号（S1〜）。1件以上",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^S[0-9]+$"
+          }
+        }
+      }
+    },
+    "uses_quarterly_figures": {
+      "description": "第1・第3四半期の数値を使ったか",
+      "type": "boolean"
+    }
+  }
+}
