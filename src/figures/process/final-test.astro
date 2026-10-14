@@ -1,0 +1,47 @@
+---
+// 図：最終検査の仕組み（模式図）。工程ページ final-test の本文に合わせる
+import FigureFrame from '../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-final-test" title="最終検査の仕組み（模式図）" caption="図：半導体テスタから製品の端子へ電気信号を与え、出てきた信号を期待値と比べて合否を判定する。結果に応じて良品と不良品に分け、性能で等級に分けることもある。寸法は簡単にした模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="接続：ハンドラが製品を運び、テストソケットを通して半導体テスタにつなぐ">
+      <rect class="fig-part" x="24" y="40" width="56" height="60" />
+      <rect class="fig-film" x="120" y="80" width="56" height="16" />
+      <rect class="fig-wafer" x="132" y="64" width="32" height="16" />
+      <path class="fig-line" d="M80 60h20v28h20" />
+      <text class="fig-text" x="52" y="114" font-size="9" text-anchor="middle">テスタ</text>
+      <text class="fig-text" x="148" y="112" font-size="9" text-anchor="middle">ソケット</text>
+    </svg>
+    <span class="fig__name">テスタにつなぐ</span>
+    <span class="fig__note">製品をソケットに接触させ、テスタとつなぐ</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="判定：与えた信号に対して出てきた信号を、あらかじめ決めた期待値と比べる">
+      <path class="fig-line" d="M20 50h20v-16h20v16h20v-16h20v16h20" />
+      <path class="fig-dash" d="M20 100h20v-16h20v16h20v-16h20v16h20" />
+      <path class="fig-arrow" d="M160 60v22m-5-6 5 6 5-6" />
+      <text class="fig-text" x="130" y="46" font-size="9">出てきた信号</text>
+      <text class="fig-text" x="130" y="116" font-size="9">期待値</text>
+    </svg>
+    <span class="fig__name">期待値と比べる</span>
+    <span class="fig__note">出てきた信号を期待値と比べて、合否を判定する</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="選別：良品と不良品に分け、良品は性能に応じて等級に分けることもある">
+      <rect class="fig-wafer" x="84" y="20" width="32" height="16" />
+      <path class="fig-arrow" d="M100 40v14l-44 30m44-44v14l44 30m-49-23 5 7 5-7" />
+      <rect class="fig-film" x="32" y="90" width="48" height="24" />
+      <rect class="fig-part" x="120" y="90" width="48" height="24" />
+      <text class="fig-text" x="56" y="130" font-size="9" text-anchor="middle">良品</text>
+      <text class="fig-text" x="144" y="130" font-size="9" text-anchor="middle">不良品</text>
+    </svg>
+    <span class="fig__name">分ける</span>
+    <span class="fig__note">良品と不良品に分ける。結果は歩留まりの把握にも使う</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-wafer" x="3" y="8" width="18" height="8" /></svg>製品</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-line" d="M3 12h18" /></svg>出てきた信号</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-dash" d="M3 12h18" /></svg>期待値</li>
+  </ul>
+</FigureFrame>
