@@ -456,7 +456,7 @@ class PagesBuildTest(unittest.TestCase):
     def test_process_pages_have_figures(self):
         # 工程の図（仕様書 7章）：src/figures/process/{slug}.astro がある工程は、その図を解説の最初に出す。図の説明（figcaption）を必ず付ける
         dist = self.build("production")
-        for slug in ("etching", "deposition", "cmp", "dicing", "wafer", "cleaning"):
+        for slug in ("etching", "deposition", "cmp", "dicing", "wafer", "cleaning", "circuit-design", "packaging", "final-test"):
             html = self.read(dist, f"processes/{slug}/index.html")
             figure = re.findall(r'<figure class="fig"[^>]*>(.*?)</figure>', html, re.S)
             self.assertTrue(figure, slug)
