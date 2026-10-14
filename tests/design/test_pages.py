@@ -463,6 +463,16 @@ class PagesBuildTest(unittest.TestCase):
             self.assertIn('role="img"', figure[0], slug)
             self.assertIn("模式図、本サイトで作成", figure[0], slug)
 
+    def test_term_pages_have_figures(self):
+        # 用語の図（仕様書 7章、9.5）：src/figures/term/{slug}.astro がある用語は、短い定義の後、解説の前に図を出す
+        dist = self.build("production")
+        for slug in ("euv", "chiplet", "wire-bonding"):
+            html = self.read(dist, f"glossary/{slug}/index.html")
+            figure = re.findall(r'<figure class="fig"[^>]*>(.*?)</figure>', html, re.S)
+            self.assertTrue(figure, slug)
+            self.assertIn("模式図、本サイトで作成", figure[0], slug)
+            self.assertLess(html.index('<figure class="fig"'), html.index('id="related"'), slug)
+
     def test_learn_index_without_pages_keeps_glossary_entry(self):
         # 学習のページが1つもない間は、トップの入口を用語集へ（要件定義書 3.3）。リポジトリの学習のページは公開済みのため、
         # 作業用のコピーから content/learn/{分野}/*.md を除いて確かめる

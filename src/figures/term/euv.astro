@@ -1,0 +1,41 @@
+---
+// 図：EUV露光の光の進み方（模式図）。用語 euv の本文に合わせる
+import FigureFrame from '../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-term-euv" columns={2} title="EUV露光の仕組み（模式図）" caption="図：極端紫外線は物質に吸収されやすいため、装置の中を真空に保ち、レンズではなく反射鏡で光を導く。フォトマスクも反射型で、反射した光がウェーハ上のフォトレジストに回路パターンを写す。寸法は簡単にした模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="光の道すじ：光源から出た極端紫外線を、反射鏡で反射型のフォトマスクに当て、反射した光をさらに反射鏡でウェーハに導く">
+      <rect class="fig-dash" x="6" y="6" width="188" height="128" />
+      <circle class="fig-plasma" cx="26" cy="104" r="8" />
+      <path class="fig-part" d="M60 24l24 -8 4 10-24 8z" />
+      <rect class="fig-film" x="120" y="12" width="56" height="10" />
+      <path class="fig-part" d="M120 70l28 8-3 10-28-8z" />
+      <rect class="fig-wafer" x="60" y="118" width="64" height="8" />
+      <path class="fig-arrow" d="M32 98 72 28M76 26l70-4M148 22l-14 52M130 84l-38 32" />
+      <text class="fig-text" x="148" y="34" font-size="9" text-anchor="middle">マスク（反射型）</text>
+      <text class="fig-text" x="26" y="88" font-size="9" text-anchor="middle">光源</text>
+      <text class="fig-text" x="56" y="125" font-size="9" text-anchor="end">ウェーハ</text>
+    </svg>
+    <span class="fig__name">反射鏡で光を導く</span>
+    <span class="fig__note">装置の中は真空。透過するレンズの代わりに反射鏡を使う</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="写す：反射した光がフォトレジストに当たり、回路パターンの形に性質が変わる">
+      <rect class="fig-wafer" x="20" y="96" width="160" height="28" />
+      <rect class="fig-resist" x="20" y="84" width="160" height="12" />
+      <path class="fig-arrow" d="M50 30v48m-5-6 5 6 5-6M100 30v48m-5-6 5 6 5-6M150 30v48m-5-6 5 6 5-6" />
+      <rect class="fig-strong" x="40" y="84" width="20" height="12" />
+      <rect class="fig-strong" x="90" y="84" width="20" height="12" />
+      <rect class="fig-strong" x="140" y="84" width="20" height="12" />
+    </svg>
+    <span class="fig__name">フォトレジストに写す</span>
+    <span class="fig__note">波長が短い光ほど、細かいパターンを描きやすい</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-part" x="3" y="8" width="18" height="8" /></svg>反射鏡</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-resist" x="3" y="8" width="18" height="8" /></svg>フォトレジスト</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-strong" x="3" y="8" width="18" height="8" /></svg>光が当たった部分</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-dash" x="3" y="5" width="18" height="14" /></svg>真空に保つ部屋</li>
+  </ul>
+</FigureFrame>

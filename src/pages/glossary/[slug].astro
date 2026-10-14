@@ -12,11 +12,15 @@ import Page from '../../layouts/Page.astro';
 import { loadCompanies, loadSupply } from '../../lib/companies';
 import { loadTerms } from '../../lib/content';
 
+// 用語の図：src/figures/term/{slug}.astro があれば、短い定義の後、解説の前に出す（仕様書 7章、9.5）
+const figureModules = import.meta.glob<{ default: unknown }>('../../figures/term/*.astro', { eager: true });
+
 export function getStaticPaths() {
   return loadTerms(BUILD_ENV === 'preview').map((t) => ({ params: { slug: t.slug }, props: { term: t } }));
 }
 const { term } = Astro.props as { term: ReturnType<typeof loadTerms>[number] };
 const f = term.front;
+const TermFigure = (figureModules[`../../figures/term/${term.slug}.astro`]?.default ?? null) as any;
 const supply = loadSupply();
 const companies = loadCompanies();
 const processName = (slug: string) => supply.processes.find((p) => p.slug === slug)?.name ?? slug;
@@ -46,6 +50,7 @@ const toc = [
     <p class="term-reading">読み：{f.reading}{f.name_en && <>　英語：{f.name_en}</>}{(f.aliases ?? []).length > 0 && <>　別の表記：{(f.aliases ?? []).join('、')}</>}</p>
     <p class="lead measure"><Phrase text={f.short_definition} /></p>
   </Fragment>
+  {TermFigure && <TermFigure />}
   {term.sections.map((section, i) => (
     <section>
       {section.heading && <h2 id={`s${term.sections.filter((s) => s.heading).indexOf(section)}`}>{section.heading}</h2>}
