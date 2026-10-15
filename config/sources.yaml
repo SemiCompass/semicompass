@@ -1,0 +1,14 @@
+# 取得してよい発行元を、用途ごとに限る（データ定義書 7.4、LG-06）。
+# ir：IR重要ポイントの原資料の許可の一覧。企業のドメインは、企業マスタの ir_url と website_url から自動で加えるため、ここには書かない。
+schema_version: 1
+ir:
+  - domain: disclosure2.edinet-fsa.go.jp
+    kind: edinet
+  - domain: disclosure2dl.edinet-fsa.go.jp
+    kind: edinet
+  - domain: www.release.tdnet.info
+    kind: exchange
+  - domain: www.jpx.co.jp
+    kind: exchange
+news: []
+blocked: []

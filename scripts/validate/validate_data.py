@@ -60,6 +60,7 @@ import json
 import os
 from datetime import date, timedelta
 import re
+import urllib.parse
 import sys
 import unicodedata
 from dataclasses import dataclass
@@ -87,6 +88,7 @@ SCHEMAS = {
     "learn": "schemas/content/learn.schema.json",
     "events": "schemas/data/events.schema.json",
     "learn-path": "schemas/content/learn-path.schema.json",
+    "ir-point": "schemas/content/ir-point.schema.json",
 }
 OVERVIEW_HEADINGS = ["事業概要", "工程上の位置づけ"]  # データ定義書 6.4
 OVERVIEW_LENGTH = (300, 500)  # 「事業概要」の文字数の目安（V-12）
@@ -217,6 +219,8 @@ def kind_of(path: Path, root: Path) -> str | None:
         return "news"
     if rel.startswith("content/learn/") and rel.endswith(".md") and rel.count("/") == 3:
         return "learn"
+    if rel.startswith("content/ir-points/") and rel.endswith(".md") and rel.count("/") == 3:
+        return "ir-point"
     if rel == "content/learn/path.yaml":
         return "learn-path"
     if rel == "data/events.yaml":
@@ -242,6 +246,7 @@ def collect_files(root: Path) -> list[tuple[str, Path]]:
     files += [("process", p) for p in sorted((root / "content" / "processes").glob("*.md"))]
     files += [("news", p) for p in sorted((root / "content" / "news").glob("*.md"))]
     files += [("learn", p) for p in sorted((root / "content" / "learn").glob("*/*.md"))]
+    files += [("ir-point", p) for p in sorted((root / "content" / "ir-points").glob("*/*.md"))]
     for kind, rel in (("learn-path", "content/learn/path.yaml"), ("events", "data/events.yaml"), ("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml"),
                       ("explainer-sources", "config/explainer-sources.yaml"), ("news-config", "config/news.yaml")):
         if (root / rel).is_file():
@@ -260,7 +265,7 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
         try:
             if kind == "auto":
                 data, pitfalls = load_json(path), []
-            elif kind in ("overview", "term", "process", "news", "learn"):
+            elif kind in ("overview", "term", "process", "news", "learn", "ir-point"):
                 data, pitfalls, bodies[rel] = load_markdown(path)
             else:
                 data, pitfalls = load_yaml(path)
@@ -293,6 +298,10 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     problems += check_process_pages(processes, supply, explainer, terms, names)
     problems += check_news({rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "news" and isinstance(d, dict)},
                            companies, supply)
+    ir_points = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "ir-point" and isinstance(d, dict)}
+    if ir_points:
+        segments = {rel: d for rel, (k, _, d) in loaded.items() if k == "segment-map" and isinstance(d, dict)}
+        problems += check_ir_points(ir_points, companies, segments, autos, (load_yaml(root / "config" / "sources.yaml")[0] if (root / "config" / "sources.yaml").is_file() else None))
     learn_pages = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "learn" and isinstance(d, dict)}
     learn_path = next((d for k, _, d in loaded.values() if k == "learn-path"), None)
     problems += check_learn(learn_pages, learn_path, supply, terms, companies, explainer, names, root)
@@ -998,6 +1007,93 @@ def check_learn(pages: dict[str, tuple[dict, str]], path, supply, terms: dict[st
         _length_warning(rel, "(本文)", "本文", count_characters(split_body(quiz_split(body)[0])[1]), *LEARN_LENGTH, out)
         if isinstance(data.get("description"), str):
             _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
+    return out
+
+
+# ---- IR重要ポイント（データ定義書 6.3、要求定義書 FR-307、LG-06） ----
+
+IR_HEADINGS = [("業績の要点", 100), ("今期見通し", 80), ("注目材料", 70)]  # 見出しと字数の上限（CLAUDE.md 6.2）
+IR_FILE = re.compile(r"([0-9]{4}-[0-9]{2})-q([1-4])")
+
+
+def _domain(url: str) -> str:
+    return urllib.parse.urlsplit(url).hostname or ""
+
+
+def _allowed(domain: str, allowed: set[str]) -> bool:
+    return any(domain == d or domain.endswith("." + d) for d in allowed)
+
+
+def check_ir_points(points: dict[str, tuple[dict, str]], companies: dict[str, dict], segments: dict[str, dict],
+                    autos: dict[str, dict], sources_config) -> list[Problem]:
+    """IR重要ポイントの検査（スキーマで確かめられない整合）。draft: true も検査する。"""
+    out: list[Problem] = []
+    by_slug = {(d.get("slug") if isinstance(d.get("slug"), str) else Path(rel).stem): d for rel, d in companies.items() if isinstance(d, dict)}
+    seg_by = {d.get("company"): d for d in segments.values()}
+    auto_by = {Path(rel).stem: d for rel, d in autos.items() if isinstance(d, dict)}
+    ir_list = (sources_config or {}).get("ir") if isinstance(sources_config, dict) else None
+    fixed = {e.get("domain") for e in ir_list or [] if isinstance(e, dict) and e.get("domain")}
+    if sources_config is None:
+        out.append(Problem("config/sources.yaml", "", "V-04", "IR重要ポイントがあるのに、config/sources.yaml（IR用の許可の一覧）がない"))
+    for rel, (data, body) in points.items():
+        folder, stem = Path(rel).parent.name, Path(rel).stem
+        match = IR_FILE.fullmatch(stem)
+        if not match:
+            out.append(Problem(rel, "", "V-02", "ファイル名は {fiscal_period_end}-q{quarter}.md の形にする（例：2026-03-q2.md）"))
+        else:
+            if data.get("fiscal_period_end") != match.group(1):
+                out.append(Problem(rel, "/fiscal_period_end", "V-02", f"ファイル名の決算期（{match.group(1)}）と fiscal_period_end が一致しない"))
+            if data.get("quarter") != int(match.group(2)):
+                out.append(Problem(rel, "/quarter", "V-02", f"ファイル名の四半期（q{match.group(2)}）と quarter が一致しない"))
+        if data.get("company") != folder:
+            out.append(Problem(rel, "/company", "V-02", f"置き場所のフォルダ（{folder}）と company（{data.get('company')}）が一致しない"))
+        company = by_slug.get(data.get("company"))
+        if company is None:
+            out.append(Problem(rel, "/company", "V-04", f"企業 {data.get('company')} が企業マスタにない"))
+        else:
+            if company.get("listing") != "detailed":
+                out.append(Problem(rel, "/company", "V-04", "IR重要ポイントは、詳細掲載の企業だけに作る"))
+            if company.get("type") == "foreign_subsidiary":
+                out.append(Problem(rel, "/company", "V-04", "外資系日本法人には、IR重要ポイントを作らない"))
+        announcements = (auto_by.get(folder) or {}).get("announcements") or []
+        same = [a for a in announcements if isinstance(a, dict) and a.get("fiscal_period_end") == data.get("fiscal_period_end")
+                and a.get("quarter") == data.get("quarter")]
+        if same and data.get("announced_on") not in {a.get("announced_on") for a in same}:
+            out.append(Problem(rel, "/announced_on", "V-09", "announced_on が、自動取得のデータの announcements（同じ決算期・四半期）の決算発表日と一致しない"))
+
+        sections, _ = split_body(body)
+        headings = [(level, text) for level, text, _ in sections[1:]]
+        expected = [h for h, _ in IR_HEADINGS]
+        if [t for _, t in headings] != expected or any(level != 2 for level, _ in headings):
+            found = " / ".join("#" * level + " " + text for level, text in headings) or "なし"
+            out.append(Problem(rel, "(本文)", "V-10", "本文の見出しは「## 業績の要点」「## 今期見通し」「## 注目材料」の3つだけで、この順にする"
+                               f"（実際：{found[:200]}）"))
+        if any(line.strip() for line in sections[0][2]):
+            out.append(Problem(rel, "(本文)", "V-10", "最初の見出しより前に文章がある。本文は3つの見出しの下だけに書く"))
+        limits = dict(IR_HEADINGS)
+        for level, text, lines in sections[1:]:
+            if text in limits:
+                n = count_characters(lines)
+                if n == 0:
+                    out.append(Problem(rel, "(本文)", "V-12", f"「{text}」の下に文章がない"))
+                elif n > limits[text]:
+                    out.append(Problem(rel, "(本文)", "V-12", f"「{text}」が {n}字で、上限（{limits[text]}字）を超えている（FR-307）"))
+
+        allowed = set(fixed)
+        if company:
+            allowed |= {_domain(company[k]) for k in ("ir_url", "website_url") if isinstance(company.get(k), str)}
+        for k, src in enumerate(data.get("sources") or []):
+            url = (src or {}).get("url") if isinstance(src, dict) else None
+            if isinstance(url, str) and not _allowed(_domain(url), allowed):
+                out.append(Problem(rel, pointer(["sources", k, "url"]), "V-04",
+                                   f"出典の発行元（{_domain(url)}）が、IR用の許可の一覧（config/sources.yaml の ir と、企業の ir_url・website_url）にない（LG-06）"))
+
+        if company and company.get("type") == "conglomerate":
+            names = [sg.get("name") for sg in (seg_by.get(folder) or {}).get("segments") or []
+                     if isinstance(sg, dict) and sg.get("classification") in ("semiconductor", "partial") and sg.get("name")]
+            if names and not any(n in body for n in names):
+                out.append(Problem(rel, "(本文)", "V-12", f"総合メーカーのIR重要ポイントで、半導体関連のセグメント（{'、'.join(names[:3])}）に触れていない（FR-307）",
+                                   "warning"))
     return out
 
 
