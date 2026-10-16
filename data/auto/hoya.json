@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "company": "hoya",
+  "edinet_code": "E01124",
+  "updated_at": "2026-10-16T17:34:11+09:00",
+  "filings": [
+    {
+      "doc_id": "S100VW2P",
+      "doc_type": "annual_report",
+      "edinet_doc_type_code": "120",
+      "fiscal_period_end": "2025-03",
+      "period_type": "annual",
+      "period_start": "2024-04-01",
+      "period_end": "2025-03-31",
+      "submitted_at": "2025-06-05T16:24:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100VW2P.pdf",
+      "status": "failed",
+      "error": "anomaly:operating_income_not_found"
+    },
+    {
+      "doc_id": "S100WYW1",
+      "doc_type": "semiannual_report",
+      "edinet_doc_type_code": "160",
+      "fiscal_period_end": "2026-03",
+      "period_type": "half",
+      "period_start": "2025-04-01",
+      "period_end": "2025-09-30",
+      "submitted_at": "2025-11-06T09:49:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100WYW1.pdf",
+      "status": "failed",
+      "error": "anomaly:operating_income_not_found"
+    },
+    {
+      "doc_id": "S100Y90T",
+      "doc_type": "annual_report",
+      "edinet_doc_type_code": "120",
+      "fiscal_period_end": "2026-03",
+      "period_type": "annual",
+      "period_start": "2025-04-01",
+      "period_end": "2026-03-31",
+      "submitted_at": "2026-06-05T15:04:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100Y90T.pdf",
+      "status": "failed",
+      "error": "anomaly:operating_income_not_found"
+    },
+    {
+      "doc_id": "S100YD7J",
+      "doc_type": "amended_annual_report",
+      "edinet_doc_type_code": "130",
+      "fiscal_period_end": "2026-03",
+      "period_type": "annual",
+      "period_start": "2025-04-01",
+      "period_end": "2026-03-31",
+      "submitted_at": "2026-06-17T13:51:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YD7J.pdf",
+      "status": "failed",
+      "supersedes": "S100Y90T",
+      "error": "anomaly:operating_income_not_found"
+    }
+  ],
+  "financials": [],
+  "employees": [],
+  "announcements": [],
+  "revisions": []
+}
