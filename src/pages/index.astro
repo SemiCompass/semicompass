@@ -34,20 +34,47 @@ const companyTags = (slugs: string[]) =>
 const entries = [
   // 学習のページ（content/learn/）が1つもない間は、用語集へ（要件定義書 3.3）
   loadLearnPages(preview).length > 0
-    ? { href: '/learn/', icon: 'book', title: '半導体を学ぶ', text: '基礎から順に学ぶ' }
+    ? { href: '/learn/', icon: 'book', title: '半導体を学ぶ', text: '基礎から図でわかる' }
     : { href: '/glossary/', icon: 'book', title: '半導体を学ぶ', text: '用語から基本を知る' },
-  { href: '/processes/', icon: 'flow', title: '工程を学ぶ', text: '設計から検査まで' },
-  { href: '/news/', icon: 'newspaper', title: 'ニュースを読む', text: '背景と関わる企業' },
-  { href: '/companies/', icon: 'building', title: '企業分析', text: '工程と業績で比べる' },
+  { href: '/processes/', icon: 'flow', title: '工程をたどる', text: 'チップができるまで' },
+  { href: '/news/', icon: 'newspaper', title: 'ニュースを読む', text: 'どこに効くかまで' },
+  { href: '/companies/', icon: 'building', title: '会社を知る', text: '工程と数字で比べる' },
 ] as const;
+
+// 最初の画面の工程の流れの図（仕様書 9.1 の改訂案）。工程の一覧への入口を兼ねる
+const flowSteps = [
+  { label: '設計', x: 20, y: 10 },
+  { label: 'ウェーハ', x: 180, y: 10 },
+  { label: '前工程', x: 180, y: 82 },
+  { label: '後工程', x: 20, y: 82 },
+  { label: '検査', x: 20, y: 154 },
+];
 ---
 
 <Base title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="半導体ができるまでの工程と、そこに関わる日本の企業を、図と業績の数字でたどれる情報サイト。ニュースは、どの工程・どの企業に関わるかまで解説します。">
   <div class="container home">
-    <h1 class="home__title"><Phrase text="日本の半導体業界を、企業・工程・ニュースでつなげて理解する" /></h1>
-    <p class="lead measure home__lead">
-      半導体の工程と、そこに関わる日本の企業を、図と業績の数字でたどれます。
-    </p>
+    <div class="home__hero">
+      <div class="home__intro">
+        <h1 class="home__title"><Phrase text="日本の半導体業界を、企業・工程・ニュースでつなげて理解する" /></h1>
+        <p class="lead measure home__lead">
+          半導体ができる工程と、そこに関わる日本の企業を、図と業績の数字でひとつながりにたどれます。
+        </p>
+      </div>
+      <a class="home__flow" href="/processes/" aria-label="工程の一覧へ：設計、ウェーハ、前工程、後工程、検査の流れ">
+        <svg viewBox="0 0 320 200" role="img" aria-hidden="true" focusable="false">
+          {flowSteps.map((step, i) => (
+            <g transform={`translate(${step.x} ${step.y})`}>
+              <rect class="home__flow-box" width="120" height="44" rx="6" />
+              <circle class="home__flow-num" cx="22" cy="22" r="11" />
+              <text class="home__flow-num-text" x="22" y="26.5" font-size="13" text-anchor="middle">{i + 1}</text>
+              <text class="home__flow-label" x="42" y="27" font-size="15">{step.label}</text>
+            </g>
+          ))}
+          <path class="home__flow-arrow" d="M140 32h36m-6-5 6 5-6 5M236 54v28m-5-6 5 6 5-6M176 104h-36m6-5-6 5 6 5M80 126v28m-5-6 5 6 5-6" />
+        </svg>
+        <span class="home__flow-caption">工程ごとに、関わる企業がわかる</span>
+      </a>
+    </div>
 
     <nav class="entries" aria-label="目的から探す">
       <ul class="entries__list">
@@ -63,6 +90,7 @@ const entries = [
       </ul>
     </nav>
 
+    <div class="home__columns">
     <section aria-labelledby="latest-news" class="home__news">
       <h2 id="latest-news">新着のニュース解説</h2>
       {news.length === 0 ? (
@@ -100,6 +128,7 @@ const entries = [
         <p class="home-events__source">出典：各主催者の公式ページ。{dateLabel(eventsCheckedOn)}確認</p>
       </section>
     )}
+    </div>
 
     <p class="measure home__note">運営者は、noteでも発信しています。<ExternalLink href={note.url}>{note.label}</ExternalLink></p>
   </div>
@@ -115,6 +144,70 @@ const entries = [
   }
   .home__title {
     margin-block-end: var(--space-2);
+    font-size: var(--text-display);
+    line-height: var(--text-display-leading);
+  }
+  /* 最初の画面：説明と、工程の流れの図。PCでは2列、それより狭い幅では図を入口の後ろに回さず、説明の下に小さく置く */
+  .home__hero {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .home__flow {
+    display: none;
+  }
+  @media (--pc) {
+    .home__hero {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      align-items: center;
+      gap: var(--space-7);
+      margin-block-end: var(--space-7);
+    }
+    .home__flow {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      padding: var(--space-4);
+      border-radius: var(--radius-card);
+      background: var(--color-surface-sunken);
+      color: var(--color-text);
+      text-decoration: none;
+    }
+    .home__flow:hover {
+      background: var(--color-primary-tint);
+    }
+  }
+  .home__flow svg {
+    width: 100%;
+    height: auto;
+  }
+  .home__flow-box {
+    fill: var(--color-surface);
+    stroke: var(--color-border-strong);
+    stroke-width: var(--border-width);
+  }
+  .home__flow-num {
+    fill: var(--color-highlight-tint);
+    stroke: var(--color-highlight);
+    stroke-width: var(--icon-stroke);
+  }
+  .home__flow-num-text {
+    fill: var(--color-highlight-text);
+    font-weight: var(--font-weight-bold);
+  }
+  .home__flow-label {
+    fill: var(--color-text);
+    font-weight: var(--font-weight-bold);
+  }
+  .home__flow-arrow {
+    fill: none;
+    stroke: var(--color-primary);
+    stroke-width: 2;
+  }
+  .home__flow-caption {
+    color: var(--color-primary);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    align-self: center;
   }
   .home__lead {
     margin-block-end: var(--space-4);
@@ -141,6 +234,15 @@ const entries = [
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
+  @media (--tablet) {
+    .entry {
+      padding: var(--space-4);
+    }
+    .entry :global(.entry__icon) {
+      margin-block-end: var(--space-2);
+      padding: var(--space-2);
+    }
+  }
   .entries__list li {
     display: flex;
   }
@@ -151,19 +253,26 @@ const entries = [
     width: 100%;
     min-height: var(--target-min);
     padding: var(--space-3);
-    border: var(--border-width) solid var(--color-border-strong);
-    border-radius: var(--radius-control);
-    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
     color: var(--color-text);
     text-decoration: none;
   }
   .entry:hover {
+    border-color: var(--color-primary);
     background: var(--color-primary-tint);
   }
+  /* 記号は琥珀の下地の丸に置く（暖色のアクセントを点で使う） */
   .entry :global(.entry__icon) {
+    box-sizing: content-box;
     width: var(--icon-entry);
     height: var(--icon-entry);
-    color: var(--color-primary);
+    margin-block-end: var(--space-1);
+    padding: var(--space-1);
+    border-radius: 50%;
+    background: var(--color-highlight-tint);
+    color: var(--color-highlight-text);
   }
   .entry__title {
     color: var(--color-primary);
@@ -180,6 +289,20 @@ const entries = [
   }
   .home__news {
     margin-block-start: var(--space-7);
+  }
+  /* PCでは、新着のニュース解説を左、イベントを右の2列にする */
+  @media (--pc) {
+    .home__columns {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: var(--space-7);
+      align-items: start;
+    }
+    .home__columns .home__events {
+      padding: var(--space-5);
+      border-radius: var(--radius-card);
+      background: var(--color-surface-sunken);
+    }
   }
   .home__note {
     margin-block-start: var(--space-6);
@@ -221,6 +344,10 @@ const entries = [
     line-height: var(--text-small-leading);
   }
   .home-events__date {
+    color: var(--color-highlight-text);
+    font-weight: var(--font-weight-bold);
+  }
+  .home-events__date {
     font-variant-numeric: tabular-nums;
   }
   .home-events__name {
@@ -244,6 +371,7 @@ const entries = [
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
     letter-spacing: var(--text-small-tracking);
+    font-variant-numeric: tabular-nums;
   }
   .home-news__title {
     margin: var(--space-1) 0 0;
@@ -253,6 +381,12 @@ const entries = [
   .home-news__title a {
     display: inline-block;
     min-height: var(--target-min);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .home-news__title a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
   }
   .home-news__tags {
     display: flex;

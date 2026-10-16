@@ -265,7 +265,7 @@ class PagesBuildTest(unittest.TestCase):
         # 「半導体を学ぶ」は、学習のページがあれば /learn/、なければ用語集（プレビューでは下書きのページも数える）
         self.assertIn(links[0][0], ("/learn/", "/glossary/"))
         self.assertEqual([h for h, _ in links[1:]], ["/processes/", "/news/", "/companies/"])
-        for title, (_, body) in zip(["半導体を学ぶ", "工程を学ぶ", "ニュースを読む", "企業分析"], links):
+        for title, (_, body) in zip(["半導体を学ぶ", "工程をたどる", "ニュースを読む", "会社を知る"], links):
             self.assertIn(title, body)
             self.assertIn('aria-hidden="true"', body)  # 記号は見出しと組にし、読み上げない
         self.assertIn("role=\"search\"", html)  # 企業名・証券コードの検索は、ヘッダーの検索欄

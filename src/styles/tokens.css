@@ -34,6 +34,10 @@
   --color-error: #b42318;
   --color-error-bg: #fdecea;
   --color-success: #1e6b3a;
+  /* 4.4 暖色のアクセント（琥珀。仕様書の改訂案）：点で使う。面の広い背景、注意の表示には使わない */
+  --color-highlight: #b97f00; /* 図形・印（3.4） */
+  --color-highlight-text: #8c5e00; /* 文字（5.7） */
+  --color-highlight-tint: #fff4d6; /* 記号の下地、新着の印の背景 */
 
   /* ---- 4.3 グラフの色（基本の色とは別） ---- */
   --chart-single: #0b6e4f;
@@ -74,6 +78,8 @@
   --text-small: 0.875rem;
   --text-small-leading: 1.6;
   --text-small-tracking: 0.02em;
+  --text-display: 1.75rem; /* トップページの大見出し。タブレット以上は 2.5rem */
+  --text-display-leading: 1.35;
   --leading-reset: 1; /* 記号など、行間を持たない要素（仕様書に値がない） */
 
   /* ---- 6.1 余白の段階（4pxを基にした8段階） ---- */
@@ -103,6 +109,7 @@
   --focus-offset: 2px;
   --radius-control: 2px;
   --radius-none: 0;
+  --radius-card: 8px; /* 入口のカード、図の枠（仕様書 7章の改訂案） */
   --icon-stroke: 1.5px; /* 図と記号の線の太さ */
 
   /* ---- 構造の寸法（仕様書に値がある：8.1、8.5、8.6、8.11、DS-07） ---- */
@@ -136,6 +143,7 @@
 @media (--tablet) {
   :root {
     --text-h1: 2rem;
+    --text-display: 2.5rem;
     --page-gutter: var(--space-6);
   }
 }
