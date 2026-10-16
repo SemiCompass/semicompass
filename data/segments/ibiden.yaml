@@ -1,0 +1,29 @@
+schema_version: 1
+company: ibiden
+reviewed_on: '2026-10-16'
+based_on: S100YFCS
+segments:
+- name: 電子
+  xbrl_members:
+  - ElectronicsReportableSegmentsMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: パッケージ基板の製造販売が事業の内容である。
+- name: セラミック
+  xbrl_members:
+  - CeramicsReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 半導体関連の部材開発を含むが、環境関連製品など半導体以外の製品も扱うため。
+sources:
+- id: S1
+  title: 有価証券報告書（2026-03期）
+  publisher: イビデン（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YFCS.pdf
+  accessed_on: '2026-10-16'
+  doc_id: S100YFCS
+  published_on: '2026-06-22'

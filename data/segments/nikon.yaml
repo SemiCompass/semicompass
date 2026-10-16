@@ -1,0 +1,53 @@
+schema_version: 1
+company: nikon
+reviewed_on: '2026-10-16'
+based_on: S100YKBP
+segments:
+- name: 映像事業
+  xbrl_members:
+  - ImagingProductsBusinessReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: デジタルカメラ、シネマカメラ、交換レンズが中心で、半導体には関わらない。
+- name: 精機事業
+  xbrl_members:
+  - PrecisionEquipmentBusinessReportableSegmentMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 半導体露光装置とFPD露光装置を扱う。FPD露光装置は半導体の製造に使わないため、一部含むとした。
+- name: ヘルスケア事業
+  xbrl_members:
+  - HealthcareBusinessReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 生物顕微鏡、検眼鏡、細胞受託生産が中心で、半導体には関わらない。
+- name: コンポーネント事業
+  xbrl_members:
+  - ComponentsBusinessReportableSegmentMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: EUV関連コンポーネントやX線／CT検査システムを含むが、光学部品や宇宙関連なども混在する。
+- name: デジタルマニュファクチャリング事業
+  xbrl_members:
+  - DigitalManufacturingReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 金属3Dプリンターが中心で、半導体の製造工程とは直接結びつかない。
+sources:
+- id: S1
+  title: 有価証券報告書（2026-03期）
+  publisher: ニコン（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YKBP.pdf
+  accessed_on: '2026-10-16'
+  doc_id: S100YKBP
+  published_on: '2026-06-25'

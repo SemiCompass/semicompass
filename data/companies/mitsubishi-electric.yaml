@@ -10,8 +10,41 @@ securities_code: "6503"
 edinet_code: E01739
 categories:
   - devices
-listing: coming_soon
+processes: []
+listing: detailed
+detailed_since: "2026-10-16"
+tagline: "パワー半導体や光デバイスを作るセミコンダクター・デバイス事業を持つ総合電機メーカー"
+website_url: "https://www.mitsubishielectric.co.jp/ja/"
+ir_url: "https://www.mitsubishielectric.co.jp/investors/"
+recruit_url: "https://www.mitsubishielectric.co.jp/saiyo/index.html"
+accounting_standard: ifrs
+fiscal_year_end_month: 3
+is_holding_company: false
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S1
+sources:
+  - id: S1
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "三菱電機株式会社（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YD3V.pdf"
+    published_on: "2026-06-19"
+    accessed_on: "2026-10-16"
+    doc_id: S100YD3V
+  - id: S2
+    title: "三菱電機 Mitsubishi Electric"
+    publisher: "三菱電機株式会社"
+    url: "https://www.mitsubishielectric.co.jp/ja/"
+    accessed_on: "2026-10-16"
+  - id: S3
+    title: "投資家情報"
+    publisher: "三菱電機株式会社"
+    url: "https://www.mitsubishielectric.co.jp/investors/"
+    accessed_on: "2026-10-16"
+  - id: S4
+    title: "採用情報"
+    publisher: "三菱電機株式会社"
+    url: "https://www.mitsubishielectric.co.jp/saiyo/index.html"
+    accessed_on: "2026-10-16"
