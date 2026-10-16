@@ -25,7 +25,7 @@ function label(date: string): string {
       {publishedAt && <span>公開日：<time datetime={publishedAt}>{label(publishedAt)}</time></span>}
       {updatedAt && <span>更新日：<time datetime={updatedAt}>{label(updatedAt)}</time></span>}
       {category && <span>分類：{category}</span>}
-      {author && <span>作成者：{author}</span>}
+      {author && <span>作成者：<a href="/about/">{author}</a></span>}
     </p>
   )}
 </header>

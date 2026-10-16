@@ -8,6 +8,7 @@ import Phrase from '../components/Phrase.astro';
 import StateMessage from '../components/StateMessage.astro';
 import HomeSupplyMap from '../components/HomeSupplyMap.astro';
 import Base from '../layouts/Base.astro';
+import { organizationLd, websiteLd } from '../lib/seo';
 import { dateLabel, loadCompanies } from '../lib/companies';
 import { buildDate } from '../lib/buildDate';
 import { loadLearnPages } from '../lib/content';
@@ -60,7 +61,7 @@ const entries = [
 
 ---
 
-<Base title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="半導体ができるまでの工程と、そこに関わる日本の企業を、図と業績の数字でたどれる情報サイト。ニュースは、どの工程・どの企業に関わるかまで解説します。">
+<Base jsonLd={[organizationLd(Astro.site as URL), websiteLd(Astro.site as URL)]} title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="半導体ができるまでの工程と、そこに関わる日本の企業を、図と業績の数字でたどれる情報サイト。ニュースは、どの工程・どの企業に関わるかまで解説します。">
   <div class="home-page">
   <div class="container home">
     <div class="home__hero">

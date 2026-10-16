@@ -62,6 +62,7 @@ const toc = [
   toc={toc}
   publishedAt={content?.front.published_at}
   updatedAt={content?.front.updated_at}
+  schemaType={content ? 'Article' : undefined}
   noindex={content?.front.draft === true}
 >
   <section aria-labelledby="point">
