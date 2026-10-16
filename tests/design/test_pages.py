@@ -448,7 +448,7 @@ class PagesBuildTest(unittest.TestCase):
                                                    "accessed_on": "2098-12-01"}], "events": events}
         dist = self.build_with("events", "production", extra={"data/events.yaml": yaml.safe_dump(data, allow_unicode=True, sort_keys=False)})
         main = self.read(dist, "index.html").split("<main")[1]
-        self.assertIn("近く開かれる技術系のイベント", main)
+        self.assertIn("近く開かれるイベント", main)
         self.assertEqual(main.count('class="home-events__item"'), 5)
         self.assertNotIn("終わった展示会", main)
         self.assertLess(main.index("試験の展示会1"), main.index("試験の展示会2"))

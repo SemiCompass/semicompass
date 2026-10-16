@@ -52,7 +52,7 @@ const steps = [
     <li><span class="smap__dot smap__dot--front" aria-hidden="true"></span>前工程</li>
     <li><span class="smap__dot smap__dot--back" aria-hidden="true"></span>後工程</li>
     <li><span class="smap__dot smap__dot--devices" aria-hidden="true"></span>デバイス</li>
-    <li class="smap__legend-note">ニュースの段階のタグと同じ色</li>
+    <li class="smap__legend-note">ニュースのタグと同じ色です</li>
   </ul>
 </section>
 
@@ -146,7 +146,27 @@ const steps = [
     width: 100%;
   }
   .smap__step--neutral {
-    background: var(--color-surface-sunken);
+    background: var(--color-stage-neutral-tint);
+  }
+  /* タブレット以上：段階の間に、流れを示す小さな矢印（飾りではなく順番を示す） */
+  @media (--tablet) {
+    .smap__steps {
+      column-gap: var(--space-4);
+    }
+    .smap__steps li {
+      position: relative;
+    }
+    .smap__steps li:not(:last-child)::after {
+      position: absolute;
+      top: 50%;
+      right: calc(var(--space-3) * -1);
+      width: var(--space-2);
+      height: var(--space-2);
+      border-top: var(--icon-stroke) solid var(--color-border-strong);
+      border-right: var(--icon-stroke) solid var(--color-border-strong);
+      content: "";
+      transform: translateY(-50%) rotate(45deg);
+    }
   }
   .smap__step--front {
     background: var(--color-stage-front-tint);

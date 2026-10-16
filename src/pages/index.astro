@@ -61,6 +61,7 @@ const entries = [
 ---
 
 <Base title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="半導体ができるまでの工程と、そこに関わる日本の企業を、図と業績の数字でたどれる情報サイト。ニュースは、どの工程・どの企業に関わるかまで解説します。">
+  <div class="home-page">
   <div class="container home">
     <div class="home__hero">
       <div class="home__intro">
@@ -121,7 +122,7 @@ const entries = [
       <div class="home__side">
         {events.length > 0 && (
           <section aria-labelledby="home-events-title" class="home__events">
-            <h2 id="home-events-title">近く開かれる技術系のイベント</h2>
+            <h2 id="home-events-title">近く開かれるイベント</h2>
             <ol class="home-events">
               {events.map((e) => (
                 <li class="home-events__item">
@@ -145,11 +146,19 @@ const entries = [
       </div>
     </div>
   </div>
+  </div>
 </Base>
 
 <style>
   @import "../styles/breakpoints.css";
   /* まとまりは余白で示す（仕様書 6.1）。スマートフォンは、最初の画面（360×640）に説明と4つの入口が収まる範囲に抑える */
+  .home-page {
+    background: var(--color-page);
+  }
+  /* トップでは、薄い灰色の地とフッターの間に白い隙間を作らない */
+  :global(body:has(.home-page) .site-footer) {
+    margin-block-start: 0;
+  }
   .home {
     padding-block: var(--space-3) var(--space-6);
   }
@@ -199,7 +208,7 @@ const entries = [
     padding: var(--space-2) var(--space-3);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-card);
-    background: var(--color-surface-sunken);
+    background: var(--color-surface);
     color: var(--color-text);
     text-decoration: none;
   }
@@ -278,17 +287,16 @@ const entries = [
     list-style: none;
   }
   .home-news {
+    padding-block: var(--space-2);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-card);
+    background: var(--color-surface);
   }
   .home-news__item {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: var(--space-3);
-    padding: var(--space-4);
-  }
-  .home-news__item + .home-news__item {
-    border-top: var(--border-width) solid var(--color-border);
+    padding: var(--space-3) var(--space-4);
   }
   .home-news__date {
     padding-block-start: var(--space-1);
@@ -300,8 +308,8 @@ const entries = [
   }
   .home-news__title {
     margin: 0;
-    font-size: var(--text-lead);
-    line-height: var(--text-lead-leading);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
   }
   .home-news__title a {
     color: var(--color-text);
@@ -335,8 +343,8 @@ const entries = [
     align-items: center;
     gap: var(--space-1);
     min-height: var(--tag-height);
-    padding-inline: var(--space-2);
-    border-radius: var(--radius-control);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-pill);
     background: var(--color-surface-sunken);
     color: var(--color-text-muted);
     font-size: var(--text-small);
@@ -384,6 +392,7 @@ const entries = [
     padding: var(--space-3);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-card);
+    background: var(--color-surface);
   }
   .home-events__cal {
     display: flex;
@@ -393,8 +402,8 @@ const entries = [
     min-width: var(--target-min);
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-card);
-    background: var(--color-highlight-tint);
-    color: var(--color-highlight-text);
+    background: var(--color-stage-neutral-tint);
+    color: var(--color-text);
     font-variant-numeric: tabular-nums;
   }
   .home-events__month {

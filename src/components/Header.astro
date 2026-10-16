@@ -120,6 +120,17 @@ const pathname = Astro.url.pathname;
     display: none;
     grid-area: nav;
   }
+  /* 帯の上の検索欄：丸い形で、帯になじむ濃い面にする（運営者の見本） */
+  .site-header__search :global(.search__input) {
+    border-color: var(--color-brand-hover);
+    border-radius: var(--radius-pill);
+    background: var(--color-brand-hover);
+    color: var(--color-on-brand);
+  }
+  .site-header__search :global(.search__input::placeholder),
+  .site-header__search :global(.search__icon) {
+    color: var(--color-on-brand-muted);
+  }
   .site-header__search {
     grid-area: search;
   }
