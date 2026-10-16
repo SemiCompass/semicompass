@@ -1,0 +1,29 @@
+schema_version: 1
+company: tokyo-seimitsu
+reviewed_on: '2026-10-16'
+based_on: S100YEOP
+segments:
+- name: 半導体製造装置
+  xbrl_members:
+  - SemiconductorManufacturingDeviceReportableSegmentsMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主要製品はウェーハプロービングマシン、ウェーハダイシングマシン、CMP装置など。半導体製造工程の加工・検査装置が中心。
+- name: 計測機器
+  xbrl_members:
+  - MeasurementEquipmentReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 三次元座標測定機などの精密測定機器が中心。測定対象に半導体を含むが、他分野も対象で半導体専用ではない。
+sources:
+- id: S1
+  title: 有価証券報告書（2026-03期）
+  publisher: 東京精密（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YEOP.pdf
+  accessed_on: '2026-10-16'
+  doc_id: S100YEOP
+  published_on: '2026-06-19'
