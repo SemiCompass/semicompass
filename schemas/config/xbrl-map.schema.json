@@ -50,6 +50,34 @@
         }
       }
     },
+    "company_exceptions": {
+      "description": "企業ごとの例外（任意）。キーはEDINETコード。書類に項目がないことを確かめた企業だけを書く（例：営業利益を開示しないIFRSの企業）",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^E[0-9]{5}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_absent"
+        ],
+        "properties": {
+          "expected_absent": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "operating_income",
+                "ordinary_income",
+                "net_income"
+              ]
+            }
+          }
+        }
+      }
+    },
     "employees": {
       "$ref": "#/$defs/candidates"
     },
