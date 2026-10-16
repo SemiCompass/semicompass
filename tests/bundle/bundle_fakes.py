@@ -91,9 +91,13 @@ def write_auto(directory: Path, slug="testco", filings=None, edinet_code=EDINET_
         json.dumps({"company": slug, "edinet_code": edinet_code, "filings": filings}), encoding="utf-8")
 
 
-def filing(doc_id, doc_type="annual_report", status="ingested", period="2026-03", submitted="2026-06-20T13:00:00+09:00"):
-    return {"doc_id": doc_id, "doc_type": doc_type, "status": status, "fiscal_period_end": period,
-            "submitted_at": submitted, "period_type": "annual"}
+def filing(doc_id, doc_type="annual_report", status="ingested", period="2026-03", submitted="2026-06-20T13:00:00+09:00",
+           supersedes=None):
+    row = {"doc_id": doc_id, "doc_type": doc_type, "status": status, "fiscal_period_end": period,
+           "submitted_at": submitted, "period_type": "annual"}
+    if supersedes:
+        row["supersedes"] = supersedes
+    return row
 
 
 R2_ACCOUNT = "0123456789abcdef0123456789abcdef"

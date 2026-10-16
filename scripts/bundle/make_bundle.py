@@ -5,7 +5,8 @@
         python3 scripts/bundle/make_bundle.py --company advantest [--sections 要素ID ...] [--dry-run]
     python3 scripts/bundle/make_bundle.py --doc-id S100XXXX ...
 
-* --company は、data/auto/{slug}.json の filings から、最新の通期（annual_report）の ingested の書類を選ぶ。
+* --company は、data/auto/{slug}.json の filings から、最新の通期（annual_report、または元の書類と置き換えた
+  amended_annual_report）の ingested の書類を選ぶ。
   --doc-id を足すと、その書類を使う（その企業の filings にあるものだけ）。--doc-id だけのときは、
   data/auto/ の filings にある書類から、企業を決める
 * --sections は、取り出す要素ID（候補が1つだけの節として扱う。key は要素IDのまま）。省略すると config/bundle-sections.yaml の既定を使う。
@@ -92,14 +93,20 @@ def load_auto(slug: str, auto_dir: Path = AUTO_DIR) -> dict:
 
 
 def latest_annual_report(filings: list[dict]) -> dict:
-    """filings から、最新の通期（doc_type が annual_report）で、status が ingested の書類を選ぶ。
+    """filings から、最新の通期の有価証券報告書で、status が ingested の書類を選ぶ。
 
+    対象は doc_type が annual_report の書類と、J01 が元の書類と置き換えた（元の書類が superseded で、
+    訂正報告書の supersedes がその書類を指す）amended_annual_report の書類。
     決算期（fiscal_period_end）の新しい順、同じなら提出日時（submitted_at）の新しい順。
-    それより新しい決算期の通期の書類（訂正報告書を含む）があるのに、その期の annual_report が
-    ingested でない（訂正で置き換えられた、取り込めなかった）ときは、古い期を黙って選ばず、止める。
+    それより新しい決算期の通期の書類（訂正報告書を含む）があるのに、その期の書類が
+    ingested でない（取り込めなかった）ときは、古い期を黙って選ばず、止める。
     """
+    replaced = {f.get("doc_id") for f in filings
+                if f.get("doc_type") == "annual_report" and f.get("status") == "superseded"}
     ordered = sorted(
-        (f for f in filings if f.get("doc_type") == "annual_report" and f.get("status") == "ingested"),
+        (f for f in filings if f.get("status") == "ingested" and (
+            f.get("doc_type") == "annual_report"
+            or (f.get("doc_type") == "amended_annual_report" and f.get("supersedes") in replaced))),
         key=lambda f: (f.get("fiscal_period_end", ""), f.get("submitted_at", "")),
         reverse=True,
     )
