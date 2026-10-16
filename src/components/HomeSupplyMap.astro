@@ -10,8 +10,15 @@ const namesOf = (category: string, max = 2) => {
   const list = companies
     .filter((c) => c.categories.includes(category))
     .sort((a, b) => String(a.securities_code ?? '9999').localeCompare(String(b.securities_code ?? '9999')));
-  const names = list.slice(0, max).map(shortest);
-  return list.length > max ? `${names.join('、')} ほか` : names.join('、');
+  // 名前の途中で切れないよう、合わせた文字数が目安（budget）を超えるときは、そこまでの社数にする（最低1社）
+  const budget = max > 2 ? 40 : 14;
+  const names: string[] = [];
+  for (const c of list.slice(0, max)) {
+    const name = shortest(c);
+    if (names.length > 0 && names.join('、').length + name.length + 1 > budget) break;
+    names.push(name);
+  }
+  return list.length > names.length ? `${names.join('、')} ほか` : names.join('、');
 };
 const steps = [
   { slug: 'design', name: '設計', note: '回路・レイアウト', stage: 'neutral' },
@@ -106,13 +113,24 @@ const steps = [
     font-weight: var(--font-weight-bold);
     line-height: var(--text-dense-leading);
   }
+  /* 段階の名前はそのまま、中身と企業の名前は小さく（改行を減らして読みやすくする） */
   .smap__note,
   .smap__cos {
-    font-size: var(--text-small);
-    line-height: var(--text-small-leading);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
   }
   .smap__note {
     color: var(--color-text-muted);
+  }
+  /* 企業の名前は、さらに小さくし、3行までにする（続きは段階の企業の一覧へ） */
+  .smap__cos {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: var(--text-micro);
+    line-height: var(--text-micro-leading);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--line-clamp-names);
+    line-clamp: var(--line-clamp-names);
   }
   .smap__band--materials {
     background: var(--color-stage-materials-tint);
