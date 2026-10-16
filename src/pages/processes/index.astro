@@ -2,13 +2,12 @@
 // 工程の一覧とサプライチェーンマップ（/processes/。FR-102 MVP）：data/supply-chain.yaml の工程を段階ごとに並べた静的な図（SVG）と、
 // 段階ごとの工程の一覧（名前、一文の説明、企業の表）。図の各工程は、同じページの見出し（#p-{工程}）へ移動できる。旧 /supply-chain/ は、ここへ転送する。
 import { BUILD_ENV } from 'astro:env/server';
-import DataTable from '../../components/DataTable.astro';
 import FacilitiesBand from '../../components/FacilitiesBand.astro';
 import SourceLine from '../../components/SourceLine.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import SupplyMapSvg from '../../components/SupplyMapSvg.astro';
 import Page from '../../layouts/Page.astro';
-import { companyRows, loadCompanies, loadSupply, typeLabel } from '../../lib/companies';
+import { companyRows, loadCompanies, loadSupply } from '../../lib/companies';
 import { buildSupplyMap, orderedStages, type MapProcess, type MapStage } from '../../lib/supplyMap';
 
 const supply = loadSupply() as unknown as { categories: MapStage[]; processes: (MapProcess & { short_description?: string })[] };
@@ -22,21 +21,13 @@ const decided = loadCompanies()
   .map((c) => (c as unknown as { selection?: { decided_on?: string } }).selection?.decided_on ?? '')
   .sort()
   .pop() ?? '';
-const columns = [
-  { key: 'name', label: '企業名' },
-  { key: 'code', label: '証券コード' },
-  { key: 'type', label: '企業区分' },
-  { key: 'status', label: '掲載の状態' },
-];
+// 工程ごとの企業は、企業名だけを横に折り返して並べる（縦の長さを抑える。証券コード・企業区分・掲載の状態は、比べる一覧のページで見る）
 const tableFor = (slug: string) =>
   rows
     .filter((r) => r.company.processes.includes(slug))
     .map((r) => ({
-      __href: `/companies/${r.company.slug}/`,
+      href: `/companies/${r.company.slug}/`,
       name: r.company.short_names[0] ?? r.company.name,
-      code: r.company.securities_code ?? '—',
-      type: typeLabel[r.company.type] ?? r.company.type,
-      status: r.detailed ? '詳細' : '準備中',
     }));
 ---
 
@@ -62,7 +53,7 @@ const tableFor = (slug: string) =>
   </figure>
 
   <h2 id="process-tables">工程ごとの企業</h2>
-  <p class="measure">企業は、企業マスタで工程に結び付けている企業です。「準備中」の企業は、詳しい内容をまだ公開していません。</p>
+  <p class="measure">企業は、企業マスタで工程に結び付けている企業です。企業名を選ぶと、その企業のページを開けます。証券コードなどは、各工程の「売上高などを比べる一覧」で見られます。</p>
   {stages.map((s) => (
     <section aria-labelledby={`stage-${s.stage.slug}`}>
       <h3 id={`stage-${s.stage.slug}`}>{s.stage.name}</h3>
@@ -73,7 +64,9 @@ const tableFor = (slug: string) =>
             <h4 id={`p-${p.slug}`} tabindex="-1"><a href={`/processes/${p.slug}/`}>{p.name}</a></h4>
             {p.short_description && <p class="measure">{p.short_description}</p>}
             {data.length > 0 ? (
-              <DataTable caption={`${p.name}の企業`} columns={columns} rows={data} wideFirst />
+              <ul class="supply-process__companies" aria-label={`${p.name}の企業`}>
+                {data.map((c) => <li><a href={c.href}>{c.name}</a></li>)}
+              </ul>
             ) : (
               <StateMessage kind="empty" message="この工程に結び付けた企業は、まだ掲載していません。" />
             )}
@@ -123,6 +116,21 @@ const tableFor = (slug: string) =>
     font-size: var(--text-lead);
     line-height: var(--text-lead-leading);
     letter-spacing: var(--text-lead-tracking);
+  }
+  .supply-process__companies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .supply-process__companies a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
   }
   .supply-process__links {
     display: flex;
