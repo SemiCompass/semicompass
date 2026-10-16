@@ -14,11 +14,20 @@ categories:
 processes:
   - bonding
   - packaging
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-16"
+tagline: "半導体のパッケージや製造装置向けのセラミック部品などを作る、部品と機器の企業"
+website_url: "https://www.kyocera.co.jp/"
+ir_url: "https://www.kyocera.co.jp/ir/"
+recruit_url: "https://www.kyocera.co.jp/recruit/new/index.html"
+accounting_standard: ifrs
+fiscal_year_end_month: 3
+is_holding_company: false
 selection:
   basis: global_share
   note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S3
 sources:
   - id: S1
     title: "半導体（IC）パッケージ"
@@ -30,3 +39,25 @@ sources:
     publisher: "京セラ株式会社"
     url: "https://www.kyocera.co.jp/prdct/semicon/index.html"
     accessed_on: "2026-10-11"
+  - id: S3
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "京セラ株式会社（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YF47.pdf"
+    published_on: "2026-06-19"
+    accessed_on: "2026-10-16"
+    doc_id: S100YF47
+  - id: S4
+    title: "京セラ株式会社"
+    publisher: "京セラ株式会社"
+    url: "https://www.kyocera.co.jp/"
+    accessed_on: "2026-10-16"
+  - id: S5
+    title: "株主・投資家の皆様へ"
+    publisher: "京セラ株式会社"
+    url: "https://www.kyocera.co.jp/ir/"
+    accessed_on: "2026-10-16"
+  - id: S6
+    title: "新卒採用情報｜京セラ株式会社"
+    publisher: "京セラ株式会社"
+    url: "https://www.kyocera.co.jp/recruit/new/index.html"
+    accessed_on: "2026-10-16"
