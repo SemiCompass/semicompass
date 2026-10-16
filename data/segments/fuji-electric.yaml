@@ -1,0 +1,45 @@
+schema_version: 1
+company: fuji-electric
+reviewed_on: '2026-10-16'
+based_on: S100YEEB
+segments:
+- name: エネルギー
+  xbrl_members:
+  - EnergyReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主な製品は発電設備、受変電設備、蓄電システム、電気工事などで、半導体の製造や材料、装置は含まれない。
+- name: インダストリー
+  xbrl_members:
+  - IndustryReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主な製品はインバータ、モータ、計測機器、FAシステムなどである。半導体は部品として使う側にとどまる。
+- name: 半導体
+  xbrl_members:
+  - SemiconductorsReportableSegmentsMember
+  classification: semiconductor
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主な製品は産業用・自動車用のパワー半導体である。
+- name: 食品流通
+  xbrl_members:
+  - FoodAndBeverageDistributionReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 主な製品は飲料自販機、店舗設備機器、金銭機器で、半導体事業は含まれない。
+sources:
+- id: S1
+  title: 有価証券報告書（2026-03期）
+  publisher: 富士電機（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YEEB.pdf
+  accessed_on: '2026-10-16'
+  doc_id: S100YEEB
+  published_on: '2026-06-19'
