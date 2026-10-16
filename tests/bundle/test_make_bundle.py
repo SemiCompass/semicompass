@@ -156,6 +156,15 @@ class MakeBundleTest(Base):
         self.assertIn("test_cor:NoneTextBlock", err)  # --sections の key は要素IDのまま
         self.assertEqual(r2.puts, [])
 
+    def test_missing_section_lists_elements_without_text(self):
+        # 候補を足せるように、書類にある要素IDを出す。本文の語は出さない
+        code, out, err = self.run_main(["--company", "testco", "--sections", "test_cor:NoneTextBlock"], r2=FakeR2())
+        self.assertEqual(code, 1)
+        self.assertIn(bf.ELEM_A, out)
+        self.assertIn(bf.ELEM_B, out)
+        for word in (bf.WORD_A, bf.WORD_B):
+            self.assertNotIn(word, out + err)
+
     def test_invalid_element_id(self):
         code, _, _ = self.run_main(["--company", "testco", "--sections", "jppfs_cor:NetSales"], r2=FakeR2())
         self.assertEqual(code, 2)

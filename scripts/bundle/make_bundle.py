@@ -232,6 +232,15 @@ def select_rows(rows: list[TextRow], specs: list[SectionSpec]) -> tuple[list[tup
     return selected, missing
 
 
+def describe_elements(rows: list[TextRow]) -> list[str]:
+    """書類にある文章の要素を、要素IDごとに1行（要素ID、項目名、合計の文字数）にする。本文は含めない。"""
+    totals: dict[str, list] = {}
+    for row in rows:
+        entry = totals.setdefault(row.element_id, [row.label, 0])
+        entry[1] += len(row.text)
+    return [f"  {element}  {label}  {count:,}文字" for element, (label, count) in totals.items()]
+
+
 def bundle_id_of(slug: str, doc_id: str) -> str:
     return f"{slug}-{doc_id}"
 
@@ -411,6 +420,9 @@ def main(
         print(f"節の行 {len(picked)}件")
         print("\n".join(describe_sections(picked)))
         if missing:
+            # 候補を足せるように、書類にある文章の要素ID・項目名・文字数だけを出す（本文は出さない）
+            print("書類にある文章の要素（要素ID、項目名、文字数。本文は出さない）:")
+            print("\n".join(describe_elements(all_rows)))
             raise BundleError("どの候補の要素IDも書類にない節（何も保存しない）: " + ", ".join(missing))
 
         moment = (now or datetime.now(ZoneInfo("Asia/Tokyo"))).astimezone(ZoneInfo("Asia/Tokyo"))
