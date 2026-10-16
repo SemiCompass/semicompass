@@ -18,7 +18,8 @@ stopped（DEIが読めず、取り出しを止めたか）。
   一致する行から、会計基準の候補の要素を先頭から順に探して、最初の行を使う。連結か単体かは、DEIの連結の有無で決め、
   行の選び方は変えない（連結の値も、連結財務諸表がない会社の値も、Member を含まないコンテキストの行）
 * 見つからない項目は value を null にし、element と context は "(not_found)" にする（スキーマが、
-  reported_value の element と context を必須にしているため）。expected_absent の項目は異常にしない
+  reported_value の element と context を必須にしているため）。expected_absent の項目と、企業ごとの例外
+  （company_exceptions）の項目は異常にしない
 * 同じ要素・コンテキストの数値の行が、違う値で複数あるときは、先頭の行を使い、異常にする
 * 単位：金額は、CSVの「単位」の列（円など）から original_unit を決め、百万円に換算する（Decimalで、丸めない）。
   平均年間給与は円のまま。人と年は、単位の列が空の行なので、要素の種類で決める。未知の単位は、異常にして null にする
@@ -322,6 +323,14 @@ def company_code_of(rows: list[dict]) -> str | None:
     return values.pop() if len(values) == 1 else None
 
 
+def company_expected_absent(xbrl_map: dict, company_code: str | None) -> set[str]:
+    """企業ごとの例外（company_exceptions）で、書類にないことを確かめた項目。EDINETコードが決まらなければ空。"""
+    if not company_code:
+        return set()
+    entry = (xbrl_map.get("company_exceptions") or {}).get(company_code) or {}
+    return set(entry.get("expected_absent") or [])
+
+
 def extract(rows: list[dict], doc_id: str, ingested_at: str, xbrl_map: dict, doc_type_code: str | None = None) -> dict:
     """書類のCSVの行から、financial、employee、異常の一覧などを取り出す。
 
@@ -339,6 +348,7 @@ def extract(rows: list[dict], doc_id: str, ingested_at: str, xbrl_map: dict, doc
     spec = xbrl_map["standards"][standard]
     items = spec["items"]
 
+    expected_absent = set(spec["expected_absent"]) | company_expected_absent(xbrl_map, work.company_code)
     values: dict[str, dict] = {}
     labels = ""
     for item in ("net_sales", "operating_income", "ordinary_income", "net_income"):
@@ -348,7 +358,7 @@ def extract(rows: list[dict], doc_id: str, ingested_at: str, xbrl_map: dict, doc
         values[item] = work.reported(item, row, "money")
         if item == "net_sales" and row is not None:
             labels = net_sales_label(row["label"])
-        if row is None and item not in spec["expected_absent"]:
+        if row is None and item not in expected_absent:
             work.anomaly("item_not_found", f"{item}：当期（{duration}）の行が見つからない", item)
     segments, adjustment = ([], None) if standard == "usgaap" else _segments(prepared, items, duration, work)
     financial = {

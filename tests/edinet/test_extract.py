@@ -106,6 +106,20 @@ class JgaapTest(unittest.TestCase):
         self.assertIsNone(res["financial"]["operating_income"]["value"])
         self.assertEqual([a["item"] for a in res["anomalies"]], ["operating_income"])
 
+    def test_company_exception_is_not_anomaly(self):
+        # 企業ごとの例外（company_exceptions）に書いた項目は、見つからなくても異常にせず、null にする
+        rows = [x for x in JG if "OperatingIncome" not in x[0]]
+        xmap = dict(XMAP, company_exceptions={"E99999": {"expected_absent": ["operating_income"]}})
+        res = extract.extract([dict(zip(HEADER, x)) for x in dei(code="E99999") + rows + EMP], DOC, AT, xmap)
+        self.assertIsNone(res["financial"]["operating_income"]["value"])
+        self.assertEqual(res["anomalies"], [])
+        # 別の企業の書類では、これまでどおり異常にする
+        other = extract.extract([dict(zip(HEADER, x)) for x in dei(code="E99998") + rows + EMP], DOC, AT, xmap)
+        self.assertEqual([a["item"] for a in other["anomalies"]], ["operating_income"])
+
+    def test_shipped_company_exceptions(self):
+        self.assertEqual(XMAP["company_exceptions"], {"E01124": {"expected_absent": ["operating_income"]}})
+
     def test_candidate_order_and_second_candidate(self):
         rows = [r("jpcrp_cor:NetSalesSummaryOfBusinessResults", CUR, "7000000", "売上高、経営指標等")]
         res = run(dei() + rows + JG[1:])
