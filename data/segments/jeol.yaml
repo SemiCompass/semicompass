@@ -1,0 +1,37 @@
+schema_version: 1
+company: jeol
+reviewed_on: '2026-10-16'
+based_on: S100YIDD
+segments:
+- name: 理科学・計測機器事業
+  xbrl_members:
+  - ScientificAndMeasurementInstrumentsReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 電子顕微鏡、核磁気共鳴装置、質量分析計が中心。半導体は重点分野の一つで、ライフサイエンス向けなども含む。
+- name: 産業機器事業
+  xbrl_members:
+  - IndustrialEquipmentReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 電子ビーム描画装置を含むが、金属3Dプリンターや高周波電源など半導体以外の製品も含む。
+- name: 医用機器事業
+  xbrl_members:
+  - MedicalEquipmentReportableSegmentsMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 自動分析装置などの製造販売で、半導体に関わらない。2026年4月1日付で譲渡した。
+sources:
+- id: S1
+  title: 有価証券報告書（2026-03期）
+  publisher: 日本電子（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YIDD.pdf
+  accessed_on: '2026-10-16'
+  doc_id: S100YIDD
+  published_on: '2026-06-23'
