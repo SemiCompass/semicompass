@@ -31,14 +31,18 @@ export function seoFiles({ site, production }) {
         }
         const urls = [];
         for (const file of htmlFiles(root)) {
-          const head = readFileSync(file, 'utf-8').slice(0, 2000);
+          const head = readFileSync(file, 'utf-8').slice(0, 6000);
           if (/name="robots" content="[^"]*noindex/.test(head)) continue;
           if (head.includes('http-equiv="refresh"')) continue;
           const path = '/' + relative(root, file).split(sep).slice(0, -1).join('/');
-          urls.push(new URL(path === '/' ? '/' : path + '/', site).href);
+          const lastmod = head.match(/<meta name="last-modified" content="(\d{4}-\d{2}-\d{2})"/)?.[1];
+          urls.push({ loc: new URL(path === '/' ? '/' : path + '/', site).href, lastmod });
         }
-        urls.sort();
-        const body = urls.map((u) => `  <url><loc>${escapeXml(u)}</loc></url>`).join('\n');
+        urls.sort((a, b) => a.loc.localeCompare(b.loc));
+        // 更新日（SE-07）：ページの <meta name="last-modified">（解説の更新日、なければ公開日）があれば lastmod に出す
+        const body = urls
+          .map((u) => `  <url><loc>${escapeXml(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ''}</url>`)
+          .join('\n');
         writeFileSync(
           join(root, 'sitemap.xml'),
           `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`,

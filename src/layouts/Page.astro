@@ -8,6 +8,7 @@ import Breadcrumb from '../components/Breadcrumb.astro';
 import PageHead from '../components/PageHead.astro';
 import Toc from '../components/Toc.astro';
 import Base from './Base.astro';
+import { AUTHOR, breadcrumbLd, contentLd, type SchemaType } from '../lib/seo';
 
 interface Props {
   title: string; // <title> に使う（例：「企業一覧｜SemiCompass」）
@@ -21,13 +22,24 @@ interface Props {
   category?: string; // ニュースの種別（日付の行に出す）
   noindex?: boolean;
   wide?: boolean; // 右の列を持たないページ（トップ、一覧、検索）：外枠の幅いっぱいを使う
+  schemaType?: SchemaType; // 解説のページの構造化データの種類（SE-03、NF-07）。付けると、作成者も表示する
 }
-const { title, heading, description, breadcrumbs = [], toc = [], publishedAt, updatedAt, author, category, noindex, wide = false } =
+const { title, heading, description, breadcrumbs = [], toc = [], publishedAt, updatedAt, category, noindex, wide = false, schemaType } =
   Astro.props;
+// 作成者（SE-03）：解説のページでは運営者（/about/ へのリンク）
+const author = Astro.props.author ?? (schemaType ? AUTHOR.name : undefined);
+const site = Astro.site as URL;
+const canonical = new URL(Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`, site).href;
+const jsonLd = [
+  ...(breadcrumbs.length > 0 ? [breadcrumbLd(breadcrumbs, canonical, site)] : []),
+  ...(schemaType
+    ? [contentLd(schemaType, { headline: heading ?? title, description, url: canonical, published: publishedAt, modified: updatedAt }, site)]
+    : []),
+];
 const hasAside = !wide;
 ---
 
-<Base title={title} description={description} noindex={noindex}>
+<Base title={title} description={description} noindex={noindex} jsonLd={jsonLd} ogType={schemaType && schemaType !== 'DefinedTerm' ? 'article' : 'website'} lastmod={updatedAt ?? publishedAt}>
   <div class="container page">
     {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
     <PageHead title={heading ?? title} publishedAt={publishedAt} updatedAt={updatedAt} author={author} category={category} />

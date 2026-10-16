@@ -11,9 +11,12 @@ interface Props {
   title: string;
   description: string;
   noindex?: boolean; // 検索に登録させない指定（プレビューのビルドでは、常に付く）
+  jsonLd?: object[]; // 構造化データ（NF-07）。パンくずリスト、記事、用語、トップの組織とサイト
+  ogType?: 'website' | 'article';
+  lastmod?: string; // 更新日（YYYY-MM-DD）。サイトマップの lastmod に使う（SE-07）
 }
 
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, jsonLd = [], ogType = 'website', lastmod } = Astro.props;
 
 // 正規のURL：site とそのページのパスから作る。末尾はスラッシュに統一する（要件定義書3.1）
 if (!Astro.site) {
@@ -23,6 +26,10 @@ const canonicalPath = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `$
 const canonicalUrl = new URL(canonicalPath, Astro.site).href;
 // アクセス解析（要件定義書 LG-03）：本番のビルドで、測定IDがあるときだけ。Cookieの利用の確認を出し、同意した閲覧者だけを計測する
 const gaId = BUILD_ENV === 'production' ? loadSite().ga4_measurement_id : '';
+// SNSで共有されたときの表示（OGP、Xのカード）。画像は全ページ共通の1枚
+const ogImage = new URL('/og-default.png', Astro.site).href;
+// 構造化データの中の「<」は、文字の参照にして、HTMLの終わりの印と取り違えないようにする
+const ldJson = (data: object) => JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
 <!doctype html>
@@ -30,11 +37,23 @@ const gaId = BUILD_ENV === 'production' ? loadSite().ga4_measurement_id : '';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {(BUILD_ENV === 'preview' || noindex) && <meta name="robots" content="noindex, nofollow" />}
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
+    {lastmod && <meta name="last-modified" content={lastmod} />}
+    <meta property="og:site_name" content="SemiCompass" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {jsonLd.map((data) => <script type="application/ld+json" set:html={ldJson(data)} />)}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    {(BUILD_ENV === 'preview' || noindex) && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body data-ga-id={gaId || undefined}>
     <a class="skip-link" href="#main">本文へ移動</a>

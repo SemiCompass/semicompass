@@ -178,7 +178,7 @@ class PagesBuildTest(unittest.TestCase):
             for label in ("企業名", "証券コード", "企業区分", "工程", "売上高（億円）", "半導体関連の比率", "掲載の状態"):
                 self.assertIn(label, html)
             self.assertIn('aria-sort="none"', html)
-            self.assertNotIn("card", html.lower().replace("discard", ""))
+            self.assertNotIn("card", html.split("<main")[1].lower().replace("discard", ""))  # 一覧はカードの格子にしない（head の twitter:card は対象外）
             self.assertIn('role="status"', html)
             self.assertEqual(html.count('href="/companies/process/'), 0 if env else 0)  # 工程ごとの長いリンクの並びは、置かない
             self.assertIn('href="/processes/"', html.split("<main")[1])
@@ -317,6 +317,33 @@ class PagesBuildTest(unittest.TestCase):
         headers = (ROOT / "public" / "_headers").read_text(encoding="utf-8")
         self.assertIn("script-src 'self' https://www.googletagmanager.com", headers)
         self.assertNotIn("unsafe-inline", headers)
+
+    def test_structured_data_author_ogp_and_sitemap_lastmod(self):
+        # 要件定義書 SE-03、SE-07、NF-07：構造化データ（トップに Organization と WebSite、ページにパンくずリスト、ニュースに NewsArticle、
+        # 用語に DefinedTerm）、作成者（/about/ へのリンク）、OGP、サイトマップの lastmod
+        import json
+        dist = self.build("production")
+        def ld(html):
+            return [json.loads(x) for x in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)]
+        home = self.read(dist, "index.html")
+        self.assertEqual({d["@type"] for d in ld(home)}, {"Organization", "WebSite"})
+        self.assertIn('property="og:image"', home)
+        self.assertIn('name="twitter:card"', home)
+        news = sorted((dist / "news").glob("*/*/*/index.html"))
+        self.assertTrue(news)
+        html = news[0].read_text(encoding="utf-8")
+        types = {d["@type"]: d for d in ld(html)}
+        self.assertIn("BreadcrumbList", types)
+        article = types["NewsArticle"]
+        self.assertTrue(article["datePublished"])
+        self.assertTrue(article["author"]["url"].endswith("/about/"))
+        self.assertIn('作成者：<a href="/about/"', html)
+        self.assertIn('property="og:type" content="article"', html)
+        term = sorted((dist / "glossary").glob("*/index.html"))[0].read_text(encoding="utf-8")
+        self.assertIn("DefinedTerm", {d["@type"] for d in ld(term)})
+        sitemap = self.read(dist, "sitemap.xml")
+        self.assertRegex(sitemap, r"/news/[^<]+</loc><lastmod>\d{4}-\d{2}-\d{2}</lastmod>")
+        self.assertTrue((dist / "og-default.png").is_file())
 
     def test_home_lists_latest_news_up_to_five(self):
         # 公開しているニュース解説を、トップに新しい順で最大5件出す（仕様書 9.1 の4）。0件のときだけ「まだありません」
@@ -555,7 +582,7 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("分類：技術", html)
         self.assertIn(f'href="/companies/{company["slug"]}/"', html.split("<main")[1])
         self.assertIn('href="/news/2026/10/newer-sample/"', html)
-        self.assertNotIn("card", html.lower().replace("discard", ""))
+        self.assertNotIn("card", html.split("<main")[1].lower().replace("discard", ""))  # 一覧はカードの格子にしない（head の twitter:card は対象外）
 
     def test_news_draft_only_in_preview(self):
         preview, production = self.news_site("preview"), self.news_site("production")
