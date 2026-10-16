@@ -1,0 +1,213 @@
+---
+// トップの全体図「半導体ができるまで」（仕様書 9.1 の改訂案）：材料 → 設計・前工程・後工程・検査 → できあがる半導体。
+// 各段階は、その分類の企業の一覧（/companies/process/{分類}/）へのリンク。企業名は、証券コードの順に、工程は2社、材料とできあがる半導体は4社まで示す（AD-402）。
+// 段階の色は、ニュースの段階のタグと同じ（tokens.css 4.5）。色だけで区別せず、段階の名前を必ず書く
+import { loadCompanies } from '../lib/companies';
+
+const companies = loadCompanies();
+const shortest = (c: (typeof companies)[number]) => [c.name, ...c.short_names].reduce((a, b) => (b.length < a.length ? b : a));
+const namesOf = (category: string, max = 2) => {
+  const list = companies
+    .filter((c) => c.categories.includes(category))
+    .sort((a, b) => String(a.securities_code ?? '9999').localeCompare(String(b.securities_code ?? '9999')));
+  const names = list.slice(0, max).map(shortest);
+  return list.length > max ? `${names.join('、')} ほか` : names.join('、');
+};
+const steps = [
+  { slug: 'design', name: '設計', note: '回路・レイアウト', stage: 'neutral' },
+  { slug: 'front-end', name: '前工程', note: '成膜・露光・エッチング', stage: 'front' },
+  { slug: 'back-end', name: '後工程', note: 'ダイシング・実装', stage: 'back' },
+  { slug: 'test', name: '検査', note: 'テスト', stage: 'neutral' },
+];
+---
+
+<section class="smap" aria-labelledby="smap-title">
+  <div class="smap__head">
+    <h2 id="smap-title" class="smap__title">半導体ができるまで</h2>
+    <span class="smap__hint">段階を選ぶと、関わる企業の一覧へ</span>
+  </div>
+  <a class="smap__band smap__band--materials" href="/companies/process/materials/">
+    <span class="smap__name">材料</span>
+    <span class="smap__note">シリコンウェーハ、感光材、ガスなど</span>
+    <span class="smap__cos">{namesOf('materials', 4)}</span>
+  </a>
+  <ol class="smap__steps">
+    {steps.map((s) => (
+      <li>
+        <a class:list={['smap__step', `smap__step--${s.stage}`]} href={`/companies/process/${s.slug}/`}>
+          <span class="smap__name">{s.name}</span>
+          <span class="smap__note">{s.note}</span>
+          <span class="smap__cos">{namesOf(s.slug)}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+  <a class="smap__band smap__band--devices" href="/companies/process/devices/">
+    <span class="smap__name">できあがる半導体</span>
+    <span class="smap__note">ロジック、メモリ、パワー半導体、イメージセンサーなど</span>
+    <span class="smap__cos">{namesOf('devices', 4)}</span>
+  </a>
+  <ul class="smap__legend" aria-label="色の見方">
+    <li><span class="smap__dot smap__dot--materials" aria-hidden="true"></span>材料</li>
+    <li><span class="smap__dot smap__dot--front" aria-hidden="true"></span>前工程</li>
+    <li><span class="smap__dot smap__dot--back" aria-hidden="true"></span>後工程</li>
+    <li><span class="smap__dot smap__dot--devices" aria-hidden="true"></span>デバイス</li>
+    <li class="smap__legend-note">ニュースのタグと同じ色です</li>
+  </ul>
+</section>
+
+<style>
+  @import "../styles/breakpoints.css";
+  .smap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+  .smap__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  .smap__title {
+    margin: 0;
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .smap__hint,
+  .smap__legend {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .smap__band,
+  .smap__step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-height: var(--target-min);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-card);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .smap__band:hover,
+  .smap__step:hover {
+    border-color: var(--color-border-strong);
+  }
+  .smap__name {
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  .smap__note,
+  .smap__cos {
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .smap__note {
+    color: var(--color-text-muted);
+  }
+  .smap__band--materials {
+    background: var(--color-stage-materials-tint);
+  }
+  .smap__band--materials .smap__name {
+    color: var(--color-stage-materials);
+  }
+  .smap__band--devices {
+    background: var(--color-stage-devices-tint);
+  }
+  .smap__band--devices .smap__name {
+    color: var(--color-stage-devices);
+  }
+  .smap__steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (--tablet) {
+    .smap__steps {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .smap__steps li {
+    display: flex;
+  }
+  .smap__step {
+    width: 100%;
+  }
+  .smap__step--neutral {
+    background: var(--color-stage-neutral-tint);
+  }
+  /* タブレット以上：段階の間に、流れを示す小さな矢印（飾りではなく順番を示す） */
+  @media (--tablet) {
+    .smap__steps {
+      column-gap: var(--space-4);
+    }
+    .smap__steps li {
+      position: relative;
+    }
+    .smap__steps li:not(:last-child)::after {
+      position: absolute;
+      top: 50%;
+      right: calc(var(--space-3) * -1);
+      width: var(--space-2);
+      height: var(--space-2);
+      border-top: var(--icon-stroke) solid var(--color-border-strong);
+      border-right: var(--icon-stroke) solid var(--color-border-strong);
+      content: "";
+      transform: translateY(-50%) rotate(45deg);
+    }
+  }
+  .smap__step--front {
+    background: var(--color-stage-front-tint);
+  }
+  .smap__step--front .smap__name {
+    color: var(--color-stage-front);
+  }
+  .smap__step--back {
+    background: var(--color-stage-back-tint);
+  }
+  .smap__step--back .smap__name {
+    color: var(--color-stage-back);
+  }
+  .smap__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .smap__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .smap__dot {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: 50%;
+  }
+  .smap__dot--materials {
+    background: var(--color-stage-materials);
+  }
+  .smap__dot--front {
+    background: var(--color-stage-front);
+  }
+  .smap__dot--back {
+    background: var(--color-stage-back);
+  }
+  .smap__dot--devices {
+    background: var(--color-stage-devices);
+  }
+</style>

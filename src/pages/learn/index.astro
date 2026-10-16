@@ -64,13 +64,14 @@ const index = learnIndex(BUILD_ENV === 'preview');
     width: 100%;
     min-height: var(--target-min);
     padding: var(--space-3);
-    border: var(--border-width) solid var(--color-border-strong);
-    border-radius: var(--radius-control);
-    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
     color: var(--color-text);
     text-decoration: none;
   }
   .learn-field-entry:hover {
+    border-color: var(--color-primary);
     background: var(--color-primary-tint);
   }
   .learn-field-entry__title {

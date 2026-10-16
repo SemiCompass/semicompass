@@ -6,7 +6,7 @@ import Icon from '../components/Icon.astro';
 import ExternalLink from '../components/ExternalLink.astro';
 import Phrase from '../components/Phrase.astro';
 import StateMessage from '../components/StateMessage.astro';
-import Tag from '../components/Tag.astro';
+import HomeSupplyMap from '../components/HomeSupplyMap.astro';
 import Base from '../layouts/Base.astro';
 import { dateLabel, loadCompanies } from '../lib/companies';
 import { buildDate } from '../lib/buildDate';
@@ -14,6 +14,7 @@ import { loadLearnPages } from '../lib/content';
 import { eventDates, upcomingEvents } from '../lib/events';
 import { loadMenu } from '../lib/menu';
 import { loadNews } from '../lib/news';
+import { loadSupply } from '../lib/companies';
 
 const { note } = loadMenu();
 const preview = BUILD_ENV === 'preview';
@@ -30,104 +31,163 @@ const companyTags = (slugs: string[]) =>
     return c ? [{ slug, name: c.short_names[0] ?? c.name }] : [];
   });
 
+// 新着の印：ビルドの日から3日以内に公開したもの（日付で変わる計算は BUILD_DATE を使う。CLAUDE.md 9章）
+const today = buildDate(BUILD_DATE);
+const isNew = (d: string) => (Date.parse(today) - Date.parse(String(d))) / 86400000 <= 3;
+const shortDate = (d: string) => `${Number(String(d).slice(5, 7))}月${Number(String(d).slice(8, 10))}日`;
+// イベントの暦：開催の年がビルドの年と違うときは、年も示す
+const calMonth = (d: string) => (String(d).slice(0, 4) === today.slice(0, 4) ? '' : `${String(d).slice(0, 4)}年`) + `${Number(String(d).slice(5, 7))}月`;
+// ニュースの段階のタグ：工程のタグの段階、なければ関係する企業の分類から（最大2つ）。色はトップの全体図と同じ
+const supply = loadSupply() as { processes: { slug: string; stage: string }[]; categories: { slug: string; name: string }[] };
+const stageColor: Record<string, string> = { materials: 'materials', 'front-end': 'front', 'back-end': 'back', devices: 'devices' };
+const stagesOf = (n: (typeof news)[number]) => {
+  const fromProcesses = n.front.tags.processes.map((p) => supply.processes.find((x) => x.slug === p)?.stage).filter(Boolean) as string[];
+  const fromCompanies = n.front.tags.companies.flatMap((slug) => companies.find((c) => c.slug === slug)?.categories ?? []);
+  const slugs = [...new Set([...fromProcesses, ...(fromProcesses.length ? [] : fromCompanies)])].filter((s) => s in stageColor || s === 'design' || s === 'test');
+  return slugs.slice(0, 2).map((slug) => ({ slug, name: supply.categories.find((c) => c.slug === slug)?.name ?? slug, color: stageColor[slug] ?? 'neutral' }));
+};
+
 // 4つの入口（要件定義書 3.3 の3）：行き先、見出し、一文の説明、記号。企業名・証券コードの検索は、ヘッダーの検索欄を使う
 const entries = [
   // 学習のページ（content/learn/）が1つもない間は、用語集へ（要件定義書 3.3）
   loadLearnPages(preview).length > 0
-    ? { href: '/learn/', icon: 'book', title: '半導体を学ぶ', text: '基礎から順に学ぶ' }
+    ? { href: '/learn/', icon: 'book', title: '半導体を学ぶ', text: '基礎から順に' }
     : { href: '/glossary/', icon: 'book', title: '半導体を学ぶ', text: '用語から基本を知る' },
   { href: '/processes/', icon: 'flow', title: '工程を学ぶ', text: '設計から検査まで' },
   { href: '/news/', icon: 'newspaper', title: 'ニュースを読む', text: '背景と関わる企業' },
-  { href: '/companies/', icon: 'building', title: '企業分析', text: '工程と業績で比べる' },
+  { href: '/companies/', icon: 'building', title: '企業を比べる', text: '工程と業績で' },
 ] as const;
+
 ---
 
 <Base title="SemiCompass（セミコンパス）｜日本の半導体業界を、企業・工程・ニュースでつなげて理解する" description="半導体ができるまでの工程と、そこに関わる日本の企業を、図と業績の数字でたどれる情報サイト。ニュースは、どの工程・どの企業に関わるかまで解説します。">
+  <div class="home-page">
   <div class="container home">
-    <h1 class="home__title"><Phrase text="日本の半導体業界を、企業・工程・ニュースでつなげて理解する" /></h1>
-    <p class="lead measure home__lead">
-      半導体の工程と、そこに関わる日本の企業を、図と業績の数字でたどれます。
-    </p>
+    <div class="home__hero">
+      <div class="home__intro">
+        <h1 class="home__title"><Phrase text="日本の半導体業界を、企業・工程・ニュースでつなげて理解する" /></h1>
+        <p class="lead measure home__lead">
+          半導体ができるまでの工程と、そこに関わる日本の企業を、図と業績の数字でたどれます。ニュースも「どの工程・どの企業の話か」まで解説します。
+        </p>
+        <nav class="entries" aria-label="目的から探す">
+          <ul class="entries__list">
+            {entries.map((e) => (
+              <li>
+                <a class="entry" href={e.href}>
+                  <Icon name={e.icon} class="entry__icon" />
+                  <span class="entry__body">
+                    <span class="entry__title">{e.title}</span>
+                    <span class="entry__text">{e.text}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      <HomeSupplyMap />
+    </div>
 
-    <nav class="entries" aria-label="目的から探す">
-      <ul class="entries__list">
-        {entries.map((e) => (
-          <li>
-            <a class="entry" href={e.href}>
-              <Icon name={e.icon} class="entry__icon" />
-              <span class="entry__title">{e.title}</span>
-              <span class="entry__text">{e.text}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
-
-    <section aria-labelledby="latest-news" class="home__news">
-      <h2 id="latest-news">新着のニュース解説</h2>
-      {news.length === 0 ? (
-        <StateMessage kind="empty" message="ニュース解説は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
-      ) : (
-        <>
+    <div class="home__columns">
+      <section aria-labelledby="latest-news" class="home__news">
+        <div class="home__section-head">
+          <h2 id="latest-news">新着のニュース解説</h2>
+          {news.length > 0 && <a class="home__more" href="/news/">一覧を見る</a>}
+        </div>
+        {news.length === 0 ? (
+          <StateMessage kind="empty" message="ニュース解説は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
+        ) : (
           <ol class="home-news">
             {news.map((n) => (
               <li class="home-news__item">
-                <time class="home-news__date" datetime={n.front.published_at}>{dateLabel(n.front.published_at)}</time>
-                <h3 class="home-news__title"><a href={n.url}><Phrase text={n.front.title} /></a></h3>
-                {companyTags(n.front.tags.companies).length > 0 && (
-                  <p class="home-news__tags">{companyTags(n.front.tags.companies).map((c) => <Tag href={`/companies/${c.slug}/`} kind="企業">{c.name}</Tag>)}</p>
-                )}
+                <time class="home-news__date" datetime={n.front.published_at}>{shortDate(n.front.published_at)}</time>
+                <div class="home-news__body">
+                  <h3 class="home-news__title">
+                    <a href={n.url}><Phrase text={n.front.title} /></a>
+                    {isNew(n.front.published_at) && <span class="home-news__new">新着</span>}
+                  </h3>
+                  {(stagesOf(n).length > 0 || companyTags(n.front.tags.companies).length > 0) && (
+                    <p class="home-news__tags">
+                      {stagesOf(n).map((st) => <a class:list={['chip', `chip--${st.color}`]} href={`/companies/process/${st.slug}/`}><span class="chip__dot" aria-hidden="true"></span>{st.name}</a>)}
+                      {companyTags(n.front.tags.companies).map((c) => <a class="chip" href={`/companies/${c.slug}/`}><span class="visually-hidden">企業：</span>{c.name}</a>)}
+                    </p>
+                  )}
+                </div>
               </li>
             ))}
           </ol>
-          <p class="home-news__more"><a href="/news/">ニュース解説の一覧</a></p>
-        </>
-      )}
-    </section>
-
-    {events.length > 0 && (
-      <section aria-labelledby="home-events-title" class="home__events">
-        <h2 id="home-events-title">近く開かれる技術系のイベント</h2>
-        <ol class="home-events">
-          {events.map((e) => (
-            <li class="home-events__item">
-              <span class="home-events__date">{eventDates(e)}</span>
-              <span class="home-events__name"><ExternalLink href={e.url}>{e.name}</ExternalLink></span>
-              <span class="home-events__place">{e.venue}（{e.city}）・主催：{e.organizer}</span>
-            </li>
-          ))}
-        </ol>
-        <p class="home-events__source">出典：各主催者の公式ページ。{dateLabel(eventsCheckedOn)}確認</p>
+        )}
       </section>
-    )}
 
-    <p class="measure home__note">運営者は、noteでも発信しています。<ExternalLink href={note.url}>{note.label}</ExternalLink></p>
+      <div class="home__side">
+        {events.length > 0 && (
+          <section aria-labelledby="home-events-title" class="home__events">
+            <h2 id="home-events-title">近く開かれるイベント</h2>
+            <ol class="home-events">
+              {events.map((e) => (
+                <li class="home-events__item">
+                  <span class="home-events__cal" aria-hidden="true">
+                    <span class="home-events__month">{calMonth(e.start_date)}</span>
+                    <span class="home-events__day">{Number(String(e.start_date).slice(8, 10))}</span>
+                    {e.end_date && e.end_date !== e.start_date && <span class="home-events__month">〜{Number(String(e.end_date).slice(8, 10))}日</span>}
+                  </span>
+                  <span class="home-events__text">
+                    <span class="visually-hidden">{eventDates(e)}</span>
+                    <span class="home-events__name"><ExternalLink href={e.url}>{e.name}</ExternalLink></span>
+                    <span class="home-events__place">{e.venue}・主催：{e.organizer}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <p class="home-events__source">出典：各主催者の公式ページ。{dateLabel(eventsCheckedOn)}確認</p>
+          </section>
+        )}
+        <p class="home__note"><span class="home__note-mark" aria-hidden="true">n</span><span>運営者は、noteでも発信しています。<ExternalLink href={note.url}>{note.label}</ExternalLink></span></p>
+      </div>
+    </div>
+  </div>
   </div>
 </Base>
 
 <style>
   @import "../styles/breakpoints.css";
-
-  /* まとまりは余白で示す（仕様書 6.1）。スマートフォンは、最初の画面（360×640）に説明と4つの入口が収まる範囲に抑え、
-     タブレット以上で、--space-7〜--space-8 を取る */
+  /* まとまりは余白で示す（仕様書 6.1）。スマートフォンは、最初の画面（360×640）に説明と4つの入口が収まる範囲に抑える */
+  .home-page {
+    background: var(--color-page);
+  }
+  /* トップでは、薄い灰色の地とフッターの間に白い隙間を作らない */
+  :global(body:has(.home-page) .site-footer) {
+    margin-block-start: 0;
+  }
   .home {
     padding-block: var(--space-3) var(--space-6);
   }
   .home__title {
     margin-block-end: var(--space-2);
+    font-size: var(--text-display);
+    line-height: var(--text-display-leading);
   }
   .home__lead {
-    margin-block-end: var(--space-4);
+    margin-block-end: var(--space-3);
+  }
+  /* 最初の画面：左に説明と4つの入口、右に全体図（PC）。狭い幅では、入口の下に全体図 */
+  .home__hero {
+    display: grid;
+    gap: var(--space-6);
   }
   @media (--tablet) {
     .home {
       padding-block: var(--space-7) var(--space-8);
     }
-    .home__lead {
-      margin-block-end: var(--space-7);
+  }
+  @media (--pc) {
+    .home__hero {
+      grid-template-columns: minmax(0, 9fr) minmax(0, 11fr);
+      align-items: start;
+      gap: var(--space-6);
     }
   }
-  /* 4つの入口：記号・見出し・一文の説明を縦に組んだボタン。スマートフォンは2列×2行、タブレット以上は4列（仕様書 9.1 の3） */
+  /* 4つの入口：カード。スマートフォンは記号の下に見出し、タブレット以上は記号の右に見出し */
   .entries__list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -135,11 +195,6 @@ const entries = [
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-  @media (--tablet) {
-    .entries__list {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
   }
   .entries__list li {
     display: flex;
@@ -150,109 +205,131 @@ const entries = [
     gap: var(--space-1);
     width: 100%;
     min-height: var(--target-min);
-    padding: var(--space-3);
-    border: var(--border-width) solid var(--color-border-strong);
-    border-radius: var(--radius-control);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
     background: var(--color-surface);
     color: var(--color-text);
     text-decoration: none;
   }
+  @media (--tablet) {
+    .entry {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-3);
+    }
+  }
   .entry:hover {
+    border-color: var(--color-primary);
     background: var(--color-primary-tint);
   }
   .entry :global(.entry__icon) {
+    flex: none;
+    box-sizing: content-box;
     width: var(--icon-entry);
     height: var(--icon-entry);
+    padding: var(--space-1);
+    border-radius: var(--radius-card);
+    background: var(--color-primary-tint);
     color: var(--color-primary);
   }
+  .entry__body {
+    display: flex;
+    flex-direction: column;
+  }
   .entry__title {
-    color: var(--color-primary);
-    font-size: var(--text-lead);
+    color: var(--color-text);
+    font-size: var(--text-dense);
     font-weight: var(--font-weight-bold);
-    line-height: var(--text-lead-leading);
-    letter-spacing: var(--text-lead-tracking);
+    line-height: var(--text-dense-leading);
   }
   .entry__text {
     color: var(--color-text-muted);
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
-    letter-spacing: var(--text-small-tracking);
   }
-  .home__news {
+  /* 新着のニュース解説（左）とイベント（右）。PCで2列 */
+  .home__columns {
+    display: grid;
+    gap: var(--space-7);
     margin-block-start: var(--space-7);
   }
-  .home__note {
-    margin-block-start: var(--space-6);
-    color: var(--color-text-muted);
-    font-size: var(--text-small);
-    line-height: var(--text-small-leading);
-    letter-spacing: var(--text-small-tracking);
+  @media (--pc) {
+    .home__columns {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      align-items: start;
+      margin-block-start: var(--space-8);
+    }
   }
-  .home__news h2 {
-    margin-block-start: 0;
-  }
-  /* 新着のニュース解説：1件ずつ罫線で区切る（ニュースの一覧と同じ並べ方。仕様書 9.6） */
-  .home__events {
-    margin-block-start: var(--space-7);
-  }
-  .home__events h2 {
-    margin-block-start: 0;
-  }
-  /* イベント：1件ずつ罫線で区切る（ニュースの一覧と同じ並べ方。仕様書 9.1 の5） */
-  .home-events {
-    max-width: var(--content-max-width);
-    margin: var(--space-4) 0 0;
-    padding: 0;
-    border-top: var(--border-width) solid var(--color-border);
-    list-style: none;
-  }
-  .home-events__item {
+  .home__section-head {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    padding-block: var(--space-3);
-    border-bottom: var(--border-width) solid var(--color-border);
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
   }
-  .home-events__date,
-  .home-events__place,
-  .home-events__source {
-    color: var(--color-text-muted);
-    font-size: var(--text-small);
-    line-height: var(--text-small-leading);
-  }
-  .home-events__date {
-    font-variant-numeric: tabular-nums;
-  }
-  .home-events__name {
-    font-size: var(--text-lead);
-    font-weight: var(--font-weight-bold);
-    line-height: var(--text-lead-leading);
-  }
-  .home-news {
-    max-width: var(--content-max-width);
-    margin: var(--space-4) 0 0;
-    padding: 0;
-    border-top: var(--border-width) solid var(--color-border);
-    list-style: none;
-  }
-  .home-news__item {
-    padding-block: var(--space-4);
-    border-bottom: var(--border-width) solid var(--color-border);
-  }
-  .home-news__date {
-    color: var(--color-text-muted);
-    font-size: var(--text-small);
-    line-height: var(--text-small-leading);
-    letter-spacing: var(--text-small-tracking);
-  }
-  .home-news__title {
-    margin: var(--space-1) 0 0;
+  .home__columns h2 {
+    margin: 0;
     font-size: var(--text-h3);
     line-height: var(--text-h3-leading);
   }
-  .home-news__title a {
-    display: inline-block;
+  .home__more {
+    display: inline-flex;
+    align-items: center;
     min-height: var(--target-min);
+    font-size: var(--text-small);
+  }
+  .home-news,
+  .home-events {
+    display: flex;
+    flex-direction: column;
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .home-news {
+    padding-block: var(--space-2);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+  .home-news__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+  .home-news__date {
+    padding-block-start: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .home-news__title {
+    margin: 0;
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .home-news__title a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .home-news__title a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+  .home-news__new {
+    display: inline-block;
+    margin-inline-start: var(--space-2);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-control);
+    background: var(--color-highlight-tint);
+    color: var(--color-highlight-text);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-small-leading);
+    vertical-align: middle;
   }
   .home-news__tags {
     display: flex;
@@ -260,13 +337,133 @@ const entries = [
     gap: var(--space-2);
     margin: var(--space-2) 0 0;
   }
-  .home-news__more {
-    margin-block-start: var(--space-4);
+  /* 段階のタグと企業のタグ（ホームの中だけの小さなタグ。段階は色の点と名前、企業は名前） */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--tag-height);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-sunken);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    text-decoration: none;
   }
-  @media (--tablet) {
-    .home__news,
-    .home__events {
-      margin-block-start: var(--space-8);
-    }
+  .chip:hover {
+    text-decoration: underline;
+  }
+  .chip__dot {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: 50%;
+    background: currentcolor;
+  }
+  .chip--materials {
+    background: var(--color-stage-materials-tint);
+    color: var(--color-stage-materials);
+  }
+  .chip--front {
+    background: var(--color-stage-front-tint);
+    color: var(--color-stage-front);
+  }
+  .chip--back {
+    background: var(--color-stage-back-tint);
+    color: var(--color-stage-back);
+  }
+  .chip--devices {
+    background: var(--color-stage-devices-tint);
+    color: var(--color-stage-devices);
+  }
+  /* イベント：日付を暦の形で左に置いたカード */
+  .home__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .home-events {
+    gap: var(--space-3);
+  }
+  .home-events__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+  .home-events__cal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--target-min);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-card);
+    background: var(--color-stage-neutral-tint);
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+  }
+  .home-events__month {
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    white-space: nowrap;
+  }
+  .home-events__day {
+    font-size: var(--text-h2);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--leading-reset);
+  }
+  .home-events__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .home-events__name :global(a) {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .home-events__name :global(a:hover) {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+  .home-events__name {
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  .home-events__place,
+  .home-events__source {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .home-events__source {
+    margin-block: var(--space-3) 0;
+  }
+  .home__note {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--color-primary-tint);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .home__note-mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--icon-entry);
+    height: var(--icon-entry);
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-on-brand);
+    font-weight: var(--font-weight-bold);
   }
 </style>
