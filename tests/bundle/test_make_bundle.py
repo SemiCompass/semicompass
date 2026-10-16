@@ -64,13 +64,29 @@ class SelectFilingTest(unittest.TestCase):
                    bf.filing("S100AAA2", submitted="2026-06-21T00:00:00+09:00")]
         self.assertEqual(mb.latest_annual_report(filings)["doc_id"], "S100AAA2")
 
+    def test_uses_amended_report_that_replaced_the_annual_report(self):
+        # 元の有価証券報告書が訂正報告書に置き換えられた（superseded）とき、取り込み済みの訂正報告書を使う
+        filings = [bf.filing("S100AAA1", period="2025-03"),
+                   bf.filing("S100AAA2", period="2026-03", status="superseded"),
+                   bf.filing("S100AAA3", doc_type="amended_annual_report", period="2026-03", supersedes="S100AAA2")]
+        self.assertEqual(mb.latest_annual_report(filings)["doc_id"], "S100AAA3")
+
     def test_stops_when_newer_period_exists_only_as_non_annual_report(self):
+        # 訂正報告書が、置き換えた書類を示していない（supersedes がない）ときは、古い期を選ばずに止める
         filings = [bf.filing("S100AAA1", period="2025-03"),
                    bf.filing("S100AAA2", period="2026-03", status="superseded"),
                    bf.filing("S100AAA3", doc_type="amended_annual_report", period="2026-03")]
         with self.assertRaises(mb.BundleError) as raised:
             mb.latest_annual_report(filings)
         self.assertIn("S100AAA3", str(raised.exception))
+
+    def test_stops_when_amended_report_was_not_ingested(self):
+        filings = [bf.filing("S100AAA1", period="2025-03"),
+                   bf.filing("S100AAA2", period="2026-03", status="superseded"),
+                   bf.filing("S100AAA3", doc_type="amended_annual_report", period="2026-03", status="failed",
+                             supersedes="S100AAA2")]
+        with self.assertRaises(mb.BundleError):
+            mb.latest_annual_report(filings)
 
     def test_no_candidate(self):
         with self.assertRaises(mb.BundleError):
