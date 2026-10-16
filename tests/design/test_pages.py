@@ -265,18 +265,20 @@ class PagesBuildTest(unittest.TestCase):
         # 「半導体を学ぶ」は、学習のページがあれば /learn/、なければ用語集（プレビューでは下書きのページも数える）
         self.assertIn(links[0][0], ("/learn/", "/glossary/"))
         self.assertEqual([h for h, _ in links[1:]], ["/processes/", "/news/", "/companies/"])
-        for title, (_, body) in zip(["半導体を学ぶ", "工程をたどる", "ニュースを読む", "会社を知る"], links):
+        for title, (_, body) in zip(["半導体を学ぶ", "工程を学ぶ", "ニュースを読む", "企業を比べる"], links):
             self.assertIn(title, body)
             self.assertIn('aria-hidden="true"', body)  # 記号は見出しと組にし、読み上げない
         self.assertIn("role=\"search\"", html)  # 企業名・証券コードの検索は、ヘッダーの検索欄
         self.assertIn("新着のニュース解説", html)
 
-    def test_home_has_no_process_map_or_sales_chart(self):
-        # トップは、説明・4つの入口・新着のニュース解説だけ（運営者の判断。工程の全体図と売上高の上位10社は、工程の一覧と企業一覧で見る）
+    def test_home_has_supply_map_but_no_sales_chart(self):
+        # トップの最初の画面に、全体図「半導体ができるまで」を置く（運営者の判断、2026年10月16日）。各段階は分類の企業の一覧へ。
+        # 売上高の上位10社と工場設備の帯は、企業一覧と工程の一覧で見る
         html = self.read(self.build("production"), "index.html")
         main = html.split("<main")[1]
-        self.assertNotIn("半導体ができるまで", main)
-        self.assertNotIn('class="map-svg', main)
+        self.assertIn("半導体ができるまで", main)
+        for category in ("materials", "design", "front-end", "back-end", "test", "devices"):
+            self.assertIn(f'href="/companies/process/{category}/"', main)
         self.assertNotIn("上位10社", main)
         self.assertNotIn('class="facilities-band"', main)
         self.assertIn("ニュースを読む", main)
