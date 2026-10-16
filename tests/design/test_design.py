@@ -55,6 +55,8 @@ class TokensTest(unittest.TestCase):
 
     def test_no_purple_or_violet_colors(self):
         for name, value in V.items():
+            if name.startswith("--color-stage-materials"):
+                continue  # 紫は、段階の色（材料）にだけ使う（CLAUDE.md 9章）
             if re.fullmatch(r"#[0-9a-f]{6}", value):
                 r, g, b = (int(value[i:i + 2], 16) / 255 for i in (1, 3, 5))
                 hue, _, saturation = colorsys.rgb_to_hls(r, g, b)
@@ -144,6 +146,7 @@ class StylelintTest(unittest.TestCase):
                      "font-style: italic", "text-align: center", "color: violet"):
             with self.subTest(decl):
                 self.assertTrue(self.rejected(f".a {{ {decl}; }}\n"))
+        self.assertFalse(self.rejected(".a { box-shadow: var(--shadow-card); }\n"))  # 弱い影の1種類だけは使える
 
     def test_media_queries_must_use_the_named_breakpoints(self):
         self.assertTrue(self.rejected("@media (min-width: 768px) { .a { display: none; } }\n"))

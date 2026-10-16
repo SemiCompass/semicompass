@@ -38,9 +38,9 @@
   --color-highlight: #b97f00; /* 図形・印（3.4） */
   --color-highlight-text: #8c5e00; /* 文字（5.7） */
   --color-highlight-tint: #fff4d6; /* 記号の下地、新着の印の背景 */
-  /* 4.5 段階の色（トップの全体図と、ニュースの段階のタグで同じ色を使う。紫・青紫は使わない） */
-  --color-stage-materials: #9b3047; /* 材料：えんじ（文字 6.9） */
-  --color-stage-materials-tint: #f8eaee;
+  /* 4.5 段階の色（トップの全体図と、ニュースの段階のタグで同じ色を使う。紫は材料だけ） */
+  --color-stage-materials: #6b4c9a; /* 材料：紫（CLAUDE.md 9章で、段階の色（材料）にだけ使う） */
+  --color-stage-materials-tint: #eee8f6;
   --color-stage-front: #2d5c91; /* 前工程：青 */
   --color-stage-front-tint: #dfe9f5;
   --color-stage-back: #8f5400; /* 後工程：琥珀 */
@@ -129,7 +129,8 @@
   --radius-control: 2px;
   --radius-none: 0;
   --radius-card: 10px;
-  --radius-pill: 999px; /* タグ、検索欄（丸い形） */ /* 入口のカード、図の枠（仕様書 7章の改訂案） */
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 6%), 0 4px 12px rgb(15 23 42 / 5%); /* カードを浮かせる弱い影。影はこの1種類だけ（CLAUDE.md 9章） */ /* タグ、検索欄（丸い形） */ /* 入口のカード、図の枠（仕様書 7章の改訂案） */
   --icon-stroke: 1.5px; /* 図と記号の線の太さ */
 
   /* ---- 構造の寸法（仕様書に値がある：8.1、8.5、8.6、8.11、DS-07） ---- */
