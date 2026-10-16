@@ -132,6 +132,13 @@ standards:
       - operating_income  # キヤノンの書類にない（確認済み）
       - ordinary_income   # 米国基準には経常利益がない（確認済み。キヤノン）
 
+# 企業ごとの例外。キーはEDINETコード。会計基準の expected_absent に加えて、その企業の書類にないことを
+# 確かめた項目を書く。ここに書いた項目は、見つからなくても異常にせず、値を null にする（画面では「—」）。
+company_exceptions:
+  E01124:             # HOYA（IFRS）。営業利益の候補の要素が書類にない（2026年10月16日の J01 で、有価証券報告書・半期報告書の4書類とも operating_income_not_found）
+    expected_absent:
+      - operating_income
+
 # 働く環境（有価証券報告書の「従業員の状況」。データ定義書 5.5）。有価証券報告書だけにある。
 # 半期報告書には、従業員の項目がない。確認済み（東京エレクトロン、ソニー、キヤノン）
 employees:
