@@ -1,0 +1,29 @@
+schema_version: 1
+company: ulvac
+reviewed_on: '2026-10-16'
+based_on: S100Z3KY
+segments:
+- name: 真空機器事業
+  xbrl_members:
+  - VacuumEquipmentBusinessReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: 半導体製造装置が柱だが、液晶・有機EL製造装置や真空ポンプ、一般産業用の炉なども含むため一部含むとした。
+- name: 真空応用事業
+  xbrl_members:
+  - VacuumApplicationBusinessReportableSegmentsMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: セグメント情報
+  note: スパッタリングターゲット材料や分析機器、マスクブランクスを扱い、半導体向けとFPD向けなど用途が混在するため。
+sources:
+- id: S1
+  title: 有価証券報告書（2026-06期）
+  publisher: アルバック（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100Z3KY.pdf
+  accessed_on: '2026-10-16'
+  doc_id: S100Z3KY
+  published_on: '2026-09-25'
