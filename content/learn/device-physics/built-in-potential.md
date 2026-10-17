@@ -16,7 +16,7 @@ applies_to:
   folder: devices
   note: 炭化ケイ素のpn接合で電位差が大きくなる理由が、分母の値の小ささで読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-17'
 ai_generated: true
 sources:

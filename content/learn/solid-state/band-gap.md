@@ -20,7 +20,7 @@ applies_to:
   folder: devices
   note: 光を出す・感じる部品で、扱える波長の限界がこの値で決まる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-17'
 ai_generated: true
 sources:
