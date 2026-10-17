@@ -263,10 +263,17 @@ export function regionSpec(rows: FinancialRow[], colors: ChartColors): { spec: C
 export function employeeValue(e: EmployeeRow): number | null {
   return (e.consolidated?.employees.value ?? e.non_consolidated.employees.value) ?? null;
 }
-export function employeeSpec(auto: Auto, colors: ChartColors): { spec: ChartSpec; rows: EmployeeRow[] } | null {
+// グラフの数値の範囲（FR-803）：すべての期が連結なら「連結」、連結の数値がない期を含むなら、その期は提出会社単体であることを書く
+export function employeeScope(rows: EmployeeRow[]): string {
+  const consolidated = rows.filter((r) => r.consolidated?.employees.value != null).length;
+  if (consolidated === rows.length) return '連結';
+  if (consolidated === 0) return '提出会社単体';
+  return '連結。連結の数値がない期は提出会社単体';
+}
+export function employeeSpec(auto: Auto, colors: ChartColors): { spec: ChartSpec; rows: EmployeeRow[]; scope: string } | null {
   const rows = [...auto.employees].filter((e) => employeeValue(e) !== null).sort((a, b) => a.fiscal_period_end.localeCompare(b.fiscal_period_end));
   if (rows.length === 0) return null;
-  return { rows, spec: { kind: 'line', unit: '人', decimals: 0, labelLatest: true, withChange: true,
+  return { rows, scope: employeeScope(rows), spec: { kind: 'line', unit: '人', decimals: 0, labelLatest: true, withChange: true,
     categories: rows.map((r) => category(r.fiscal_period_end)),
     series: [{ name: '従業員数', color: colors.metrics.employees.color, values: rows.map((r) => employeeValue(r)) }] } };
 }

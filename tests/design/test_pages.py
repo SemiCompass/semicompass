@@ -249,6 +249,13 @@ class PagesBuildTest(unittest.TestCase):
         cls.companies = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted((ROOT / "data" / "companies").glob("*.yaml"))]
         cls.processes = yaml.safe_load((ROOT / "data" / "supply-chain.yaml").read_text(encoding="utf-8"))["processes"]
 
+    def test_employee_chart_states_its_scope(self):
+        # FR-803、AT-05：従業員数のグラフは、連結か提出会社単体かを見出しに書く（単体の表は「提出会社単体」と書く）
+        html = self.read(self.build("production"), "companies/disco/index.html")
+        work = html.split('id="work"')[1].split('id="news"')[0]
+        self.assertRegex(work, r"従業員数の推移（(連結|提出会社単体|連結。連結の数値がない期は提出会社単体)）")
+        self.assertIn("提出会社単体", work[work.index("従業員数の推移"):])
+
     def test_company_list(self):
         for env in ("preview", "production"):
             dist = self.build(env)
