@@ -1,0 +1,44 @@
+---
+// 図：ドリフト（電界に押されて動く）と拡散（濃いところから薄いところへ広がる）（模式図。仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const dense = [
+  [40, 50], [52, 70], [36, 88], [60, 96], [48, 112], [66, 60], [30, 70], [58, 82], [42, 128], [70, 116],
+];
+const sparse = [[110, 64], [132, 100], [154, 76], [124, 124]];
+---
+
+<FigureFrame id="fig-carrier-motion" columns={2} title="ドリフトと拡散（模式図）" caption="図：左はドリフト。両端に電圧をかけると中に電界ができ、電子（黒い丸）は電界と逆の向きに、正孔（縁取りの丸）は電界と同じ向きに動く。どちらも同じ向きの電流になる。右は拡散。電子が濃いところ（左）から、薄いところ（右）へ、電界がなくても広がる。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="ドリフト：電界の向きに正孔が、反対の向きに電子が動く">
+      <rect class="fig-wafer" x="30" y="40" width="140" height="80" />
+      <rect class="fig-metal" x="18" y="40" width="12" height="80" />
+      <rect class="fig-metal" x="170" y="40" width="12" height="80" />
+      <text class="fig-text" x="24" y="34" font-size="8" text-anchor="middle">＋</text>
+      <text class="fig-text" x="176" y="34" font-size="8" text-anchor="middle">−</text>
+      <path class="fig-arrow" d="M70 20h60M124 16l6 4-6 4" />
+      <text class="fig-strong" x="100" y="14" font-size="8" text-anchor="middle">電界の向き</text>
+      <circle class="fig-dot" cx="120" cy="64" r="4" />
+      <path class="fig-line" d="M112 64H84M90 60l-6 4 6 4" />
+      <text class="fig-text" x="100" y="56" font-size="7" text-anchor="middle">電子</text>
+      <circle class="fig-dot-alt" cx="80" cy="98" r="4.5" />
+      <path class="fig-line" d="M88 98h28M110 94l6 4-6 4" />
+      <text class="fig-text" x="100" y="114" font-size="7" text-anchor="middle">正孔</text>
+      <text class="fig-text" x="100" y="140" font-size="8" text-anchor="middle">電流は、どちらも左から右</text>
+    </svg>
+    <span class="fig__name">ドリフト</span>
+    <span class="fig__note">電界に押されて動く</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="拡散：電子が濃い左側から、薄い右側へ広がる">
+      <rect class="fig-wafer" x="20" y="40" width="160" height="96" />
+      {dense.map(([x, y]) => <circle class="fig-dot" cx={x} cy={y} r="3" />)}
+      {sparse.map(([x, y]) => <circle class="fig-dot" cx={x} cy={y} r="3" />)}
+      <path class="fig-arrow" d="M80 88h48M122 84l6 4-6 4" />
+      <text class="fig-text" x="50" y="32" font-size="8" text-anchor="middle">濃い</text>
+      <text class="fig-text" x="150" y="32" font-size="8" text-anchor="middle">薄い</text>
+      <text class="fig-text" x="100" y="152" font-size="8" text-anchor="middle">電界がなくても広がる</text>
+    </svg>
+    <span class="fig__name">拡散</span>
+    <span class="fig__note">濃いところから薄いところへ</span>
+  </li>
+</FigureFrame>

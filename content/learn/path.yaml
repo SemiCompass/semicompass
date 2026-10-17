@@ -10,7 +10,8 @@ fields:
     slug: basics
     title: 半導体工学の基礎
     summary: 半導体が電気を通したり止めたりできる仕組みと、トランジスタの働きを学びます。
-    units: []
+    units:
+      - { type: learn, ref: electricity-basics }
     sections:
       - slug: properties
         title: 半導体の性質
@@ -18,6 +19,7 @@ fields:
           - { type: learn, ref: what-is-semiconductor }
           - { type: learn, ref: electrons-and-holes }
           - { type: learn, ref: pn-junction }
+          - { type: learn, ref: carrier-motion }
           - { type: learn, ref: energy-band }
       - slug: transistor
         title: トランジスタ

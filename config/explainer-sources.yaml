@@ -268,6 +268,12 @@ processes:
       - {status: approved, role: supplementary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: 半導体用語集(出所:ICガイドブック2009年版), url: "https://semicon.jeita.or.jp/word/word.html"}
 # 半導体を学ぶ（学習のページ。データ定義書 6.8）：運営者が確かめる方式（CLAUDE.md 6.4、運用ルール書 4.2）で書くページだけを指定する。キーはページの slug
 learn:
+  electricity-basics:
+    title: 電気の基礎：電圧、電流、抵抗
+    basis: reviewed
+  carrier-motion:
+    title: 電子と正孔の動き：ドリフトと拡散
+    basis: reviewed
   what-is-semiconductor:
     title: 半導体とは何か
     basis: reviewed
