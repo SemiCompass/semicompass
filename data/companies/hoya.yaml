@@ -12,11 +12,20 @@ categories:
   - materials
 processes:
   - photomask
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-17"
+tagline: "半導体用マスクブランクスなどを作る、ライフケアと情報・通信の企業"
+website_url: "https://www.hoya.com/"
+ir_url: "https://www.hoya.com/investor/"
+recruit_url: "https://www.hoya.com/recruit/"
+accounting_standard: ifrs
+fiscal_year_end_month: 3
+is_holding_company: false
 selection:
   basis: revenue_ratio
-  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体関連の売上比率は、公開資料での確認が未実施で、暫定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。情報・通信事業は連結売上収益の37.4%（2026年3月期、S3）。半導体用マスクブランクスのほかFPD用フォトマスクなどを含み、半導体だけの比率は資料にない。30%以上かの判断は保留（2026年10月17日）"
   decided_on: "2026-10-04"
+  source: S3
 sources:
   - id: S1
     title: "事業紹介"
@@ -28,3 +37,25 @@ sources:
     publisher: "HOYA株式会社"
     url: "https://www.hoya.com/ir/2023/en/review/it.html"
     accessed_on: "2026-10-11"
+  - id: S3
+    title: "有価証券報告書（2026年3月期）"
+    publisher: "HOYA株式会社（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100Y90T.pdf"
+    published_on: "2026-06-05"
+    accessed_on: "2026-10-17"
+    doc_id: S100Y90T
+  - id: S4
+    title: "HOYA株式会社"
+    publisher: "HOYA株式会社"
+    url: "https://www.hoya.com/"
+    accessed_on: "2026-10-17"
+  - id: S5
+    title: "IR情報"
+    publisher: "HOYA株式会社"
+    url: "https://www.hoya.com/investor/"
+    accessed_on: "2026-10-17"
+  - id: S6
+    title: "採用情報"
+    publisher: "HOYA株式会社"
+    url: "https://www.hoya.com/recruit/"
+    accessed_on: "2026-10-17"

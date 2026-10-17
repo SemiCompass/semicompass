@@ -1,0 +1,39 @@
+schema_version: 1
+company: hoya
+reviewed_on: '2026-10-17'
+based_on: S100Y90T
+segments:
+- name: ライフケア事業
+  xbrl_members:
+  - LifeCareMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: メガネレンズ、コンタクトレンズ、医療用内視鏡、眼内レンズが中心で、半導体には関わらない。
+- name: 情報・通信事業
+  xbrl_members:
+  - InformationTechnologyMember
+  - InformationTechnologyReportableSegmentMember
+  classification: partial
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: 半導体用マスクブランクスを含む。FPD用フォトマスク、HDD用ガラスサブストレート、映像関連製品も同じセグメントにある。
+- name: その他
+  xbrl_members:
+  - OtherReportableSegmentsMember
+  - OtherReportableSegmentMember
+  classification: excluded
+  rationale:
+    source: S1
+    pages: 事業の内容
+  note: 音声合成ソフトウェア事業で、2025年10月に譲渡が完了した。半導体には関わらない。
+sources:
+- id: S1
+  title: 有価証券報告書（2026年3月期）
+  publisher: HOYA株式会社（EDINET）
+  url: https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100Y90T.pdf
+  published_on: '2026-06-05'
+  accessed_on: '2026-10-17'
+  doc_id: S100Y90T
