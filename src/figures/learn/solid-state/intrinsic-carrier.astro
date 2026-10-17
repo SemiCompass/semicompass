@@ -1,0 +1,54 @@
+---
+// 図：シリコンの真性キャリア濃度の温度変化と、指数の中の値の材料による違い（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// PVEducation「Intrinsic Carrier Concentration」のシリコンの近似式 ni = 5.29e19 (T/300)^2.54 exp(-6726/T) で、本サイトで計算
+const ni = (t: number) => 5.29e19 * (t / 300) ** 2.54 * Math.exp(-6726 / t);
+const tx = (t: number) => 40 + ((t - 300) / 200) * 148;
+const ly = (n: number) => 126 - (Math.log10(n) - 9) * 18;
+const curve = Array.from({ length: 21 }, (_, i) => 300 + i * 10)
+  .map((t, i) => `${i === 0 ? 'M' : 'L'}${tx(t).toFixed(1)} ${ly(ni(t)).toFixed(1)}`)
+  .join('');
+// 300 K での Eg/2kT（バンドギャップは東芝デバイス＆ストレージの表、k は NIST の CODATA 2018）
+const kT = 8.617333262e-5 * 300;
+const bars = [
+  { name: 'Si', eg: 1.12 },
+  { name: '4H-SiC', eg: 3.26 },
+].map((b) => ({ ...b, v: b.eg / (2 * kT) }));
+---
+
+<FigureFrame id="fig-intrinsic-carrier" columns={2} title="真性キャリア濃度は、温度と Eg で桁が変わる" caption="図：左は、シリコンの真性キャリア濃度の温度変化（縦は対数の目盛り。1目盛りで10倍）。PVEducation「Intrinsic Carrier Concentration」の近似式から本サイトで計算。右は、300 K での指数の中の値 Eg/2kT（バンドギャップは東芝デバイス＆ストレージ、ボルツマン定数はNISTのCODATA 2018。本サイトで計算）。この値が大きいほど、真性キャリア濃度は小さい">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="シリコンの真性キャリア濃度は、300 Kの約1×10^10 cm^-3から、400 Kで約5.5×10^12、500 Kで約3×10^14 cm^-3に増える">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[10, 11, 12, 13, 14, 15].map((e) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(10 ** e)}h150`} />
+          <text class="fig-text" x="36" y={ly(10 ** e) + 3} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+        </>
+      ))}
+      {[300, 400, 500].map((t) => (
+        <text class="fig-text" x={tx(t)} y="138" font-size="7" text-anchor="middle">{t}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">温度（K）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">cm⁻³</text>
+      <path class="fig-arrow" d={curve} />
+    </svg>
+    <span class="fig__name">シリコンの温度変化</span>
+    <span class="fig__note">100 K上げると、2桁以上増える</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`300 KでのEg/2kTは、Siで約${bars[0].v.toFixed(0)}、4H-SiCで約${bars[1].v.toFixed(0)}`}>
+      <path class="fig-line" d="M56 20V120h134" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="52" y={52 + i * 40} font-size="8" text-anchor="end">{b.name}</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="56" y={40 + i * 40} width={(b.v / 70) * 130} height="18" />
+          <text class="fig-text" x={56 + (b.v / 70) * 130 + 3} y={52 + i * 40} font-size="8">{b.v.toFixed(0)}</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="138" font-size="7" text-anchor="end">Eg/2kT（300 K）</text>
+    </svg>
+    <span class="fig__name">指数の中の値</span>
+    <span class="fig__note">大きいほど、熱で越える電子が少ない</span>
+  </li>
+</FigureFrame>
