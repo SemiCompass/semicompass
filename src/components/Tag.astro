@@ -1,5 +1,6 @@
 ---
-// タグ（8.11）：工程、分類、企業。リンクにし、色で種類を分けない（種類は前の文字「工程：」などで示す）
+// タグ（8.11）：工程、分類、企業。リンクにし、色で種類を分けない（種類は前の文字「工程：」などで示す）。
+// 丸い形、薄い灰色の面、枠なし、補足の大きさ（12px）、高さ26px
 interface Props {
   href: string;
   kind: string; // 種類の名前（例：工程、分類、企業）
@@ -13,22 +14,26 @@ const { href, kind } = Astro.props;
   .tag {
     display: inline-flex;
     align-items: center;
-    min-height: var(--tag-height);
-    padding-inline: var(--space-2);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-control);
-    background: var(--color-surface);
-    font-size: var(--text-dense);
-    line-height: var(--text-dense-leading);
-    letter-spacing: var(--text-dense-tracking);
+    min-height: var(--tag-height-sm);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+    letter-spacing: var(--text-small-tracking);
     text-decoration: none;
   }
   .tag__kind {
     color: var(--color-text-muted);
   }
+  .tag:visited {
+    color: var(--color-text);
+  }
   .tag:hover,
   .tag:active {
-    background: var(--color-surface-sunken);
+    background: var(--color-primary-tint);
+    color: var(--color-primary-hover);
   }
   /* タッチの画面では、押せる範囲を44px以上に広げる（8.11） */
   @media (pointer: coarse) {

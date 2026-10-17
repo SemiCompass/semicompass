@@ -1,6 +1,7 @@
 ---
 // ヘッダー（8.1）。濃紺の帯。左にロゴとサイト名、右に主要メニュー（config/menu.yaml の順）と検索欄。
 // スマートフォン：主要メニューは「メニュー」で開閉し、検索欄は2段目に常に出す。ヘッダーは画面に張り付けない
+// タブレット：検索欄の代わりに、検索のページへのリンク（虫めがねの記号と「検索」）を置く。PC：検索欄
 import { loadMenu, isCurrent } from '../lib/menu';
 import Icon from './Icon.astro';
 import Logo from './Logo.astro';
@@ -44,6 +45,7 @@ const pathname = Astro.url.pathname;
     <div class="site-header__search">
       <SearchBox />
     </div>
+    <a class="site-header__search-link" href="/search/"><Icon name="search" /><span>検索</span></a>
   </div>
 </header>
 
@@ -134,6 +136,9 @@ const pathname = Astro.url.pathname;
   .site-header__search {
     grid-area: search;
   }
+  .site-header__search-link {
+    display: none;
+  }
   .site-menu {
     display: flex;
     flex-direction: column;
@@ -189,7 +194,7 @@ const pathname = Astro.url.pathname;
 
   @media (--tablet) {
     .site-header__bar {
-      grid-template-columns: auto 1fr minmax(var(--search-width-min), var(--search-width-max));
+      grid-template-columns: auto 1fr auto;
       grid-template-areas: "brand nav search";
       padding-block: 0;
     }
@@ -213,6 +218,38 @@ const pathname = Astro.url.pathname;
     .site-menu a {
       min-height: var(--header-height);
       padding-inline: var(--space-4);
+    }
+    /* タブレット：検索欄を出さず、検索のページへのリンクにする（8.1） */
+    .site-header__search {
+      display: none;
+    }
+    .site-header__search-link,
+    .site-header__search-link:visited {
+      display: inline-flex;
+      grid-area: search;
+      justify-self: end;
+      align-items: center;
+      gap: var(--space-2);
+      min-height: var(--target-min);
+      padding-inline: var(--space-4);
+      border-radius: var(--radius-pill);
+      background: var(--color-brand-hover);
+      color: var(--color-on-brand);
+      font-size: var(--text-dense);
+      font-weight: var(--font-weight-bold);
+      text-decoration: none;
+    }
+  }
+  @media (--pc) {
+    .site-header__bar {
+      grid-template-columns: auto 1fr minmax(var(--search-width-min), var(--search-width-max));
+    }
+    .site-header__search {
+      display: block;
+    }
+    .site-header__search-link,
+    .site-header__search-link:visited {
+      display: none;
     }
   }
 </style>

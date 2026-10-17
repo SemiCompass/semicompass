@@ -1,31 +1,42 @@
 ---
-// フッター（8.13、運営者の見本に合わせた改訂案）：上段にサイト名とデータの出典の説明、中段にサイトについて・質問のリンクと運営者のnote、
-// 下段に著作権の表示と、ご利用にあたって（免責事項など）とCookieの設定。リンクは1行に並べ、狭い幅では折り返す
+// フッター（8.13）：上段は、左にロゴとサイト名とデータの出典の説明、右にリンクの3つのまとまり（探す、このサイトについて、お問い合わせ）。
+// 運営者のnoteは「お問い合わせ」の最後。下段に著作権の表示と、ご利用にあたって（免責事項など）とCookieの設定。
+// まとまりの項目と順番は config/menu.yaml
 import ExternalLink from './ExternalLink.astro';
+import Logo from './Logo.astro';
 import { loadMenu } from '../lib/menu';
 
 const { footer, note } = loadMenu();
+const groups = footer.filter((g) => g.title !== 'ご利用にあたって');
+const legal = footer.filter((g) => g.title === 'ご利用にあたって');
 const { analytics = false } = Astro.props as { analytics?: boolean };
 ---
 
 <footer class="site-footer">
   <div class="container">
     <div class="site-footer__top">
-      <p class="site-footer__name">SemiCompass</p>
-      <p class="site-footer__note">業績などの数値の出典は、EDINET（金融庁）などの公開資料で、各ページに示しています。</p>
-    </div>
-    <nav class="site-footer__nav" aria-label="フッター">
-      <ul class="site-footer__links">
-        {footer.filter((g) => g.title !== 'ご利用にあたって').flatMap((g) => g.links).map((link) => (
-          <li><a href={link.path}>{link.label}</a></li>
+      <div class="site-footer__about">
+        <p class="site-footer__name"><Logo /><span>SemiCompass</span></p>
+        <p class="site-footer__note">業績などの数値の出典は、EDINET（金融庁）などの公開資料で、各ページに示しています。</p>
+      </div>
+      <nav class="site-footer__nav" aria-label="フッター">
+        {groups.map((g, i) => (
+          <div class="site-footer__group">
+            <p class="site-footer__group-title" id={`footer-group-${i}`}>{g.title}</p>
+            <ul class="site-footer__links site-footer__links--group" aria-labelledby={`footer-group-${i}`}>
+              {g.links.map((link) => (
+                <li><a href={link.path}>{link.label}</a></li>
+              ))}
+              {i === groups.length - 1 && <li><ExternalLink href={note.url}>{note.label}</ExternalLink></li>}
+            </ul>
+          </div>
         ))}
-        <li><ExternalLink href={note.url}>{note.label}</ExternalLink></li>
-      </ul>
-    </nav>
+      </nav>
+    </div>
     <div class="site-footer__bottom">
       <p class="site-footer__note"><small>© SemiCompass</small></p>
       <ul class="site-footer__links site-footer__links--legal" aria-label="ご利用にあたって">
-        {footer.filter((g) => g.title === 'ご利用にあたって').flatMap((g) => g.links).map((link) => (
+        {legal.flatMap((g) => g.links).map((link) => (
           <li><a href={link.path}>{link.label}</a></li>
         ))}
         {analytics && <li><button type="button" class="site-footer__consent" data-consent-open>Cookieの設定</button></li>}
@@ -41,19 +52,42 @@ const { analytics = false } = Astro.props as { analytics?: boolean };
     padding-block: var(--space-7) var(--space-6);
     border-top: var(--border-width) solid var(--color-border);
     background: var(--color-surface-sunken);
+    color: var(--color-text-muted);
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
   }
+  .site-footer__top {
+    display: grid;
+    gap: var(--space-6);
+  }
   .site-footer__name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     margin: 0;
+    color: var(--color-text);
+    font-size: var(--text-dense);
     font-weight: var(--font-weight-bold);
   }
+  /* ロゴは、白い帯の外では濃紺の線にする（針の上半分は明るい緑のまま） */
+  .site-footer__name :global(.logo) {
+    width: var(--logo-size-sp);
+    height: var(--logo-size-sp);
+    color: var(--color-brand);
+  }
   .site-footer__note {
-    margin: var(--space-1) 0 0;
+    margin: var(--space-2) 0 0;
     color: var(--color-text-muted);
   }
   .site-footer__nav {
-    margin-block-start: var(--space-5);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+  .site-footer__group-title {
+    margin: 0 0 var(--space-1);
+    color: var(--color-text);
+    font-weight: var(--font-weight-bold);
   }
   .site-footer__links {
     display: flex;
@@ -63,8 +97,11 @@ const { analytics = false } = Astro.props as { analytics?: boolean };
     padding: 0;
     list-style: none;
   }
+  .site-footer__links--group {
+    flex-direction: column;
+  }
   .site-footer__links li {
-    padding-block: var(--space-2);
+    padding-block: var(--space-1);
   }
   /* 押せる範囲は、行の間を広げず、透明な ::after で高さを取る（8.5） */
   .site-footer__links a {
@@ -96,8 +133,8 @@ const { analytics = false } = Astro.props as { analytics?: boolean };
     justify-content: space-between;
     align-items: center;
     gap: var(--space-2) var(--space-5);
-    margin-block-start: var(--space-4);
-    padding-block-start: var(--space-3);
+    margin-block-start: var(--space-6);
+    padding-block-start: var(--space-4);
     border-top: var(--border-width) solid var(--color-border);
   }
   .site-footer__bottom .site-footer__note {
@@ -112,5 +149,15 @@ const { analytics = false } = Astro.props as { analytics?: boolean };
     font: inherit;
     text-decoration: underline;
     cursor: pointer;
+  }
+  @media (--tablet) {
+    .site-footer__nav {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (--pc) {
+    .site-footer__top {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
   }
 </style>
