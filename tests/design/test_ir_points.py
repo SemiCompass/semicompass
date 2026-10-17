@@ -1,20 +1,14 @@
 """企業ページのIR重要ポイント（FR-307）と「最新の決算は未反映」（CT-03、AT-11、AT-22）の表示のテスト。
 作業用のコピーに、架空のIR重要ポイントと決算発表の行を置いて、ビルドの日（BUILD_DATE）を変えて組み立てる。"""
 import json
-import re
-import os
-import shutil
-import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
-import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from test_pages import HAS_NODE, make_site  # noqa: E402
+from test_pages import HAS_NODE, make_site, submit_build  # noqa: E402
 
 POINT = """---
 company: advantest
@@ -63,20 +57,19 @@ def auto_with_announcement(slug, url):
 class IrPointsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.work = make_site(extra_files={
+        extra = {
             "content/ir-points/advantest/2027-03-q2.md": POINT,
             "data/auto/advantest.json": auto_with_announcement("advantest", "https://www.release.tdnet.info/inbs/test-a.pdf"),
             "data/auto/disco.json": auto_with_announcement("disco", "https://www.release.tdnet.info/inbs/test-d.pdf"),
-        })
-        cls.addClassCleanup(shutil.rmtree, cls.work, True)
+        }
+        # ビルドの日を変えた2つの組み立てを、並べて動かす（tests/design の共通の仕組み）
+        futures = {day: submit_build("production", lambda: make_site(extra_files=extra), {"BUILD_DATE": day})
+                   for day in ("2026-11-04", "2026-11-05")}
         cls.sites = {}
-        for day in ("2026-11-04", "2026-11-05"):
-            out = Path(tempfile.mkdtemp())
-            cls.addClassCleanup(shutil.rmtree, out, True)
-            done = subprocess.run(["npx", "astro", "build", "--outDir", str(out / "dist")], text=True, capture_output=True,
-                                  cwd=cls.work, env={**os.environ, "BUILD_ENV": "production", "BUILD_DATE": day})
-            if done.returncode != 0:
-                raise AssertionError(done.stdout[-1500:] + done.stderr[-1500:])
+        for day, future in futures.items():
+            out, failure = future.result()
+            if failure is not None:
+                raise AssertionError(failure)
             cls.sites[day] = out / "dist"
 
     def page(self, day, slug):
