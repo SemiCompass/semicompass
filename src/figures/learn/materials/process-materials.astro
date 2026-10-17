@@ -1,0 +1,47 @@
+---
+// 図：工程ごとに使う主な材料（模式図。仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const front = [
+  { step: '成膜', item: '原料のガス、ターゲット' },
+  { step: 'リソグラフィ', item: '感光材、現像液' },
+  { step: 'エッチング', item: 'フッ素・塩素を含むガス' },
+  { step: 'イオン注入', item: 'ホウ素・リンを含むガス' },
+  { step: '洗浄', item: '酸・アルカリの薬液、超純水' },
+  { step: 'CMP', item: '研磨剤（スラリー）、パッド' },
+];
+const back = [
+  { step: 'ダイボンド', item: '接着の材料' },
+  { step: 'ワイヤボンド', item: 'ボンディングワイヤ' },
+  { step: '基板・枠', item: 'リードフレーム、基板' },
+  { step: '封止', item: '封止材（樹脂）' },
+];
+---
+
+<FigureFrame id="fig-process-materials" columns={2} title="工程ごとに使う主な材料（模式図）" caption="図：左は前工程（ウェーハの上に回路を作る工程）、右は後工程（チップを組み立てる工程）で使う主な材料。どの工程でも、専用の材料が使い分けられる。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`前工程の材料：${front.map((f) => `${f.step}は${f.item}`).join('、')}`}>
+      {front.map((f, i) => (
+        <>
+          <rect class="fig-film" x="6" y={8 + i * 25} width="62" height="20" />
+          <text class="fig-text" x="37" y={21 + i * 25} font-size="7" text-anchor="middle">{f.step}</text>
+          <text class="fig-text" x="74" y={21 + i * 25} font-size="7">{f.item}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">前工程</span>
+    <span class="fig__note">ガス、薬液、感光材が中心</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`後工程の材料：${back.map((f) => `${f.step}は${f.item}`).join('、')}`}>
+      {back.map((f, i) => (
+        <>
+          <rect class="fig-wafer" x="6" y={14 + i * 34} width="62" height="22" />
+          <text class="fig-text" x="37" y={28 + i * 34} font-size="7" text-anchor="middle">{f.step}</text>
+          <text class="fig-text" x="74" y={28 + i * 34} font-size="7">{f.item}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">後工程</span>
+    <span class="fig__note">チップを守り、外とつなぐ材料</span>
+  </li>
+</FigureFrame>

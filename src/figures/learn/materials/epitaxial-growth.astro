@@ -1,0 +1,36 @@
+---
+// 図：基板の上に膜を育てるエピタキシャル成長と、格子整合・不整合（模式図。仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const cols = [0, 1, 2, 3, 4, 5, 6, 7];
+---
+
+<FigureFrame id="fig-epitaxial-growth" columns={2} title="エピタキシャル成長と、原子の間隔（模式図）" caption="図：左は、熱した基板の上に原料のガスを流し、基板の原子の並びにならって膜の原子が積もる様子。右は、膜と基板で原子の並ぶ間隔が違う場合。ひずみがたまり、並びの合わない場所（転位）が生まれる。原子の大きさや間隔の比は実際と異なる。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="原料のガスが基板の上で分かれ、基板の並びにならって膜の原子が積もる">
+      <path class="fig-arrow" d="M30 24h120M144 20l6 4-6 4" />
+      <text class="fig-text" x="90" y="16" font-size="8" text-anchor="middle">原料のガス</text>
+      {[50, 90, 130].map((x) => <path class="fig-dash" d={`M${x} 32v24`} />)}
+      {cols.map((i) => <circle class="fig-dot-alt" cx={30 + i * 20} cy={70} r="6" />)}
+      {cols.map((i) => [0, 1, 2].map((j) => <circle class="fig-dot" cx={30 + i * 20} cy={92 + j * 18} r="6" />))}
+      <rect class="fig-wafer" x="18" y="140" width="164" height="10" />
+      <text class="fig-text" x="190" y="74" font-size="7" text-anchor="end">膜</text>
+      <text class="fig-text" x="100" y="158" font-size="7" text-anchor="middle">熱した基板</text>
+    </svg>
+    <span class="fig__name">基板の並びにならって育つ</span>
+    <span class="fig__note">層ごとに材料やドーパントを変えられる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="膜の原子の間隔が基板より広く、並びが合わない場所に転位ができる">
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => <circle class="fig-dot-alt" cx={30 + i * 23} cy={50} r="6" />)}
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => <circle class="fig-dot-alt" cx={30 + i * 23} cy={70} r="6" />)}
+      {cols.map((i) => [0, 1, 2].map((j) => <circle class="fig-dot" cx={30 + i * 20} cy={96 + j * 18} r="6" />))}
+      <path class="fig-arrow" d="M118 60v18M114 72l4 6 4-6" />
+      <text class="fig-strong" x="126" y="34" font-size="8">転位</text>
+      <path class="fig-dash" d="M24 84h152" />
+      <text class="fig-text" x="190" y="44" font-size="7" text-anchor="end">膜</text>
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">基板</text>
+    </svg>
+    <span class="fig__name">間隔が違うと、欠陥が生まれる</span>
+    <span class="fig__note">間にバッファ層をはさんで和らげる</span>
+  </li>
+</FigureFrame>

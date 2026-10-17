@@ -193,10 +193,48 @@ terms:
     sources:
       - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略 令和6年5月31日 資料3, url: "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/0011/handeji_reviesd.pdf"}
 
+  ion-implantation:
+    term: イオン注入
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  dry-etching:
+    term: ドライエッチング
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  wet-etching:
+    term: ウェットエッチング
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  thermal-oxidation:
+    term: 熱酸化
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  epitaxial-growth:
+    term: エピタキシャル成長
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  damascene:
+    term: ダマシン
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  low-k-film:
+    term: Low-k膜
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  sem:
+    term: 走査型電子顕微鏡
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  tsv:
+    term: TSV
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
 # slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
 # ----------------------------------------------------------------------------
+
 processes:
   circuit-design:
     process: 回路設計(設計ツールを含む)
@@ -268,6 +306,15 @@ processes:
       - {status: approved, role: supplementary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: 半導体用語集(出所:ICガイドブック2009年版), url: "https://semicon.jeita.or.jp/word/word.html"}
 # 半導体を学ぶ（学習のページ。データ定義書 6.8）：運営者が確かめる方式（CLAUDE.md 6.4、運用ルール書 4.2）で書くページだけを指定する。キーはページの slug
 learn:
+  epitaxial-growth:
+    title: 化合物半導体はどう作るか：エピタキシャル成長
+    basis: reviewed
+  process-materials:
+    title: 製造に使う材料：ガス、薬液、感光材
+    basis: reviewed
+  new-materials:
+    title: 新しい半導体材料：酸化ガリウム、ダイヤモンドなど
+    basis: reviewed
   device-types:
     title: パワー半導体の種類：ダイオード、MOSFET、IGBT
     basis: reviewed
