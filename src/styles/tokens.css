@@ -163,6 +163,10 @@
   --hero-overlap-sp: 3rem;
   --hero-max-width: 40rem; /* 9.1 帯の中の1列の最大幅 */
   --hero-lead-max-width: 34rem;
+  --co-pos-width: 22rem; /* 8.8 企業の頭の右の「サプライチェーン上の位置」の幅（PC） */
+  --peer-bar-width: 8rem; /* 9.2 同じ工程の企業と比べるの横棒の幅（スマートフォンは --peer-bar-width-sp） */
+  --peer-bar-width-sp: 4rem;
+  --peer-bar-height: 0.5rem;
   --date-col-width: 4.5rem; /* 9.1 トップのニュースとイベントの、左の日付の列の幅 */
   --quiz-num-size: 1.625rem; /* 8.17 選択肢の番号の丸（26px） */
   --quiz-border-current: 2px; /* 8.17 正解・あなたの答えの枠 */

@@ -55,8 +55,10 @@ export interface Source {
 export interface Company {
   slug: string;
   name: string;
+  name_en?: string;
   short_names: string[];
   type: string;
+  fiscal_year_end_month?: number;
   securities_code?: string;
   categories: string[];
   processes: string[];

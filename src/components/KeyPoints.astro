@@ -1,54 +1,81 @@
 ---
-// この会社のポイント（8.8）：一言での説明（text-lead）と、主要な数値のラベル・数値の組。数値の下に期と出典。企業ページに1つだけ置く
-import Phrase from './Phrase.astro';
-
+// 主要な数値の帯（仕様書 8.8「この会社のポイント」）：4つの数値を横に並べる（タブレット以下は2列×2行）。
+// 各数値は、ラベル・数値（大きな等幅の数字。単位は数値の直後）・比べる行の3段。売上高と営業利益は、直近の期の推移の線を付ける。
+// 前期比は、増えたときは完了の色、減ったときは誤りの色の文字にし、符号（＋、−）を必ず書く（色だけで伝えない）。
+// 数値と単位は、折り返さない（white-space: nowrap）。帯の下に、期・連結の別・出典を1行で書く
 interface Metric {
   label: string;
-  value: string; // 表示する数値（単位を含む。例：8,325.5億円）
+  value: string; // 数値（例：24,435）
+  unit: string; // 単位（例：億円）
+  note?: string; // 比べる行（例：前期比 +0.5%、前期 28.7%）
+  trend?: 'up' | 'down'; // 前期比の向き（色を付ける）
+  sub?: string; // 補足の行（売上高の「半導体関連 100.0%」）
+  spark?: number[]; // 推移の線（古い順）
 }
 interface Props {
-  lead: string;
   metrics: Metric[];
-  period: string; // 期（例：2026年3月期）
-  source: string; // 出典（例：有価証券報告書、EDINET）
+  caption: string; // 期・連結の別・出典（例：2026年3月期・連結。出典：有価証券報告書、EDINET）
 }
-const { lead, metrics, period, source } = Astro.props;
+const { metrics, caption } = Astro.props;
+// 推移の線：幅144・高さ28の座標で、0を下端にして描く（金額の縦軸は0から。CLAUDE.md 9章）
+const W = 144;
+const H = 28;
+const path = (v: number[]) => {
+  const max = Math.max(...v, 0);
+  const min = Math.min(...v, 0);
+  const x = (i: number) => 4 + (i * (W - 8)) / Math.max(1, v.length - 1);
+  const y = (a: number) => H - 3 - ((a - min) / (max - min || 1)) * (H - 8);
+  return { d: v.map((a, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(a).toFixed(1)}`).join(''), cx: x(v.length - 1), cy: y(v[v.length - 1]) };
+};
 ---
 
 <section class="key-points" aria-labelledby="key-points-heading">
   <h2 class="visually-hidden" id="key-points-heading">この会社のポイント</h2>
-  <p class="key-points__lead lead"><Phrase text={lead} /></p>
   <dl class="key-points__list">
     {metrics.map((m) => (
       <div class="key-points__metric">
         <dt>{m.label}</dt>
-        <dd class="numeric">{m.value}</dd>
+        <dd class="key-points__value"><span class="key-points__num">{m.value}</span><span class="key-points__unit">{m.unit}</span></dd>
+        {m.note && <dd class:list={['key-points__note', m.trend && `key-points__note--${m.trend}`]}>{m.note}</dd>}
+        {m.sub && <dd class="key-points__sub">{m.sub}</dd>}
+        {m.spark && m.spark.length > 1 && (() => {
+          const p = path(m.spark);
+          return (
+            <dd class="key-points__spark" aria-hidden="true">
+              <svg viewBox={`0 0 ${W} ${H}`} focusable="false"><path d={p.d} /><circle cx={p.cx} cy={p.cy} r="3" /></svg>
+            </dd>
+          );
+        })()}
       </div>
     ))}
   </dl>
-  <p class="key-points__source">{period}、出典：{source}</p>
+  <p class="key-points__source">{caption}</p>
 </section>
 
 <style>
   @import "../styles/breakpoints.css";
-
   .key-points {
-    margin-block: var(--space-6);
-    padding: var(--space-5);
-    border-left: var(--border-width-accent) solid var(--color-primary);
-    background: var(--color-primary-tint);
-  }
-  .key-points__lead {
-    margin-block: 0 var(--space-4);
+    margin-block: 0 var(--space-6);
   }
   .key-points__list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin: 0;
+    border-bottom: var(--border-width) solid var(--color-border);
   }
   .key-points__metric {
-    flex: 1 1 var(--key-point-min);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+    padding: var(--space-5) var(--space-3) var(--space-5) 0;
+  }
+  .key-points__metric:nth-child(even) {
+    padding-inline-start: var(--space-3);
+    border-left: var(--border-width) solid var(--color-border);
+  }
+  .key-points__metric:nth-child(n + 3) {
+    border-top: var(--border-width) solid var(--color-border);
   }
   .key-points__metric dt {
     color: var(--color-text-muted);
@@ -58,17 +85,74 @@ const { lead, metrics, period, source } = Astro.props;
   }
   .key-points__metric dd {
     margin: 0;
-    white-space: nowrap; /* 数値と単位は、折り返さない */
-    font-size: var(--text-h3);
+  }
+  /* 数値は折り返さない（white-space: nowrap）。最も大きい数値で幅が足りないときだけ、単位を次の行に送る */
+  .key-points__num,
+  .key-points__unit {
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .key-points__value {
+    font-size: var(--text-figure);
     font-weight: var(--font-weight-bold);
-    line-height: var(--text-h3-leading);
-    letter-spacing: var(--text-h3-tracking);
+    line-height: var(--text-figure-leading);
+    font-variant-numeric: tabular-nums;
+  }
+  .key-points__unit {
+    margin-inline-start: var(--space-1);
+    font-size: var(--text-dense);
+  }
+  .key-points__note {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    font-variant-numeric: tabular-nums;
+  }
+  .key-points__sub {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    font-variant-numeric: tabular-nums;
+  }
+  .key-points__note--up {
+    color: var(--color-success);
+  }
+  .key-points__note--down {
+    color: var(--color-error);
+  }
+  .key-points__spark svg {
+    display: block;
+    width: 100%;
+    max-width: var(--spark-width);
+    height: var(--spark-height);
+  }
+  .key-points__spark path {
+    fill: none;
+    stroke: var(--chart-single);
+    stroke-width: var(--icon-stroke);
+  }
+  .key-points__spark circle {
+    fill: var(--chart-single);
   }
   .key-points__source {
-    margin: var(--space-4) 0 0;
+    margin: var(--space-3) 0 0;
     color: var(--color-text-muted);
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
     letter-spacing: var(--text-small-tracking);
+  }
+  @media (--pc) {
+    .key-points__list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .key-points__metric:nth-child(n) {
+      padding: var(--space-5);
+      border-top: 0;
+      border-left: var(--border-width) solid var(--color-border);
+    }
+    .key-points__metric:first-child {
+      padding-inline-start: 0;
+      border-left: 0;
+    }
   }
 </style>
