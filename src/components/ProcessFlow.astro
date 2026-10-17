@@ -1,0 +1,277 @@
+---
+// 工程の流れの図（仕様書 9.1 の4、9.4）：設計・材料・前工程・後工程の4つの段階を左から並べ、段階の中に工程を1行ずつ置く。
+// 工程の行は、工程ページ（または、同じページの工程の説明）へのリンクで、右に関わる掲載企業の数を書く。
+// 下に、工場設備の帯（分類の企業の一覧へ）と、できあがる半導体の帯を2列で置く。段階の色は 4.5（色だけで区別せず、名前を書く）
+import { loadCompanies, loadSupply } from '../lib/companies';
+
+interface Props {
+  linkTo?: 'page' | 'anchor'; // page：/processes/{slug}/、anchor：同じページの #p-{slug}
+}
+const { linkTo = 'page' } = Astro.props;
+
+type P = { slug: string; name: string; stage: string; order: number };
+type C = { slug: string; name: string; description?: string };
+const supply = loadSupply() as unknown as { processes: P[]; categories: C[] };
+const companies = loadCompanies();
+
+// 図の中では、長い工程の名前を短くする（工程ページの見出しは、正式な名前のまま）
+const SHORT: Record<string, string> = {
+  'circuit-design': '回路設計',
+  deposition: '成膜（CVD・PVD・ALD）',
+  lithography: 'リソグラフィ',
+  bonding: 'ボンディング',
+};
+// 段階の補足（何をする段階か）。工程の数は、データから数える
+const STAGES = [
+  { slug: 'design', color: 'neutral', note: '回路と原版を作る' },
+  { slug: 'materials', color: 'materials', note: 'ウェーハを作る' },
+  { slug: 'front-end', color: 'front', note: 'ウェーハに回路を作る' },
+  { slug: 'back-end', color: 'back', note: 'チップにして仕上げる' },
+];
+const stageName = (slug: string) => supply.categories.find((c) => c.slug === slug)?.name ?? slug;
+const countOf = (slug: string) => companies.filter((c) => c.processes.includes(slug)).length;
+const hrefOf = (slug: string) => (linkTo === 'anchor' ? `#p-${slug}` : `/processes/${slug}/`);
+const stages = STAGES.map((s) => ({
+  ...s,
+  name: stageName(s.slug),
+  processes: supply.processes.filter((p) => p.stage === s.slug).sort((a, b) => a.order - b.order),
+})).filter((s) => s.processes.length > 0);
+
+// 帯：工場設備（分類 facilities）と、できあがる半導体（分類 devices）
+const facilities = supply.categories.find((c) => c.slug === 'facilities');
+const facilitiesCount = companies.filter((c) => c.categories.includes('facilities')).length;
+const shortest = (c: (typeof companies)[number]) => [c.name, ...c.short_names].reduce((a, b) => (b.length < a.length ? b : a));
+const devices = companies
+  .filter((c) => c.categories.includes('devices'))
+  .sort((a, b) => String(a.securities_code ?? '9999').localeCompare(String(b.securities_code ?? '9999')));
+const deviceNames = devices.slice(0, 3).map(shortest).join('、') + (devices.length > 3 ? 'ほか' : '');
+---
+
+<div class="pflow">
+  <ol class="pflow__stages" aria-label="半導体ができるまでの段階">
+    {stages.map((s, i) => (
+      <li class="pflow__col">
+        {i > 0 && <span class="pflow__link" aria-hidden="true"></span>}
+        <section class:list={['pflow__stage', `pflow__stage--${s.color}`]} aria-label={s.name}>
+          <h3 class="pflow__head">
+            <span class="pflow__name"><span class="pflow__mark" aria-hidden="true"></span>{s.name}</span>
+            <span class="pflow__note">{s.note}・{s.processes.length}工程</span>
+          </h3>
+          <ol class="pflow__list">
+            {s.processes.map((p) => (
+              <li>
+                <a class="pflow__item" href={hrefOf(p.slug)}>
+                  <span class="pflow__pname">{SHORT[p.slug] ?? p.name}</span>
+                  <span class="pflow__count">{countOf(p.slug)}社</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </li>
+    ))}
+  </ol>
+  <div class="pflow__bands">
+    {facilities && facilitiesCount > 0 && (
+      <a class="pflow__band" href={`/companies/process/${facilities.slug}/`}>
+        <span class="pflow__band-name">{facilities.name}</span>
+        <span class="pflow__band-text">{facilities.description}</span>
+        <span class="pflow__count">{facilitiesCount}社</span>
+      </a>
+    )}
+    {devices.length > 0 && (
+      <a class="pflow__band pflow__band--devices" href="/companies/process/devices/">
+        <span class="pflow__band-name">できあがる半導体</span>
+        <span class="pflow__band-text">ロジック、メモリ、パワー半導体、イメージセンサー。{deviceNames}</span>
+        <span class="pflow__count">{devices.length}社</span>
+      </a>
+    )}
+  </div>
+</div>
+
+<style>
+  @import "../styles/breakpoints.css";
+  .pflow__stages {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pflow__col {
+    display: flex;
+    min-width: 0;
+  }
+  .pflow__link {
+    display: none;
+  }
+  .pflow__stage {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+  .pflow__stage--neutral {
+    --stage-ink: var(--color-text);
+    --stage-tint: var(--color-stage-neutral-tint);
+  }
+  .pflow__stage--materials {
+    --stage-ink: var(--color-stage-materials);
+    --stage-tint: var(--color-stage-materials-tint);
+  }
+  .pflow__stage--front {
+    --stage-ink: var(--color-stage-front);
+    --stage-tint: var(--color-stage-front-tint);
+  }
+  .pflow__stage--back {
+    --stage-ink: var(--color-stage-back);
+    --stage-tint: var(--color-stage-back-tint);
+  }
+  .pflow__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0 var(--space-2);
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+    background: var(--stage-tint);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .pflow__name {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--stage-ink);
+    white-space: nowrap;
+    font-feature-settings: "palt";
+  }
+  .pflow__mark {
+    width: var(--space-3);
+    height: var(--space-3);
+    border-radius: var(--radius-control);
+    background: var(--stage-ink);
+  }
+  .pflow__note {
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--text-caption-leading);
+  }
+  .pflow__list {
+    margin: 0;
+    padding: var(--space-1) 0;
+    list-style: none;
+  }
+  .pflow__item,
+  .pflow__item:visited {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--target-min);
+    padding: var(--space-1) var(--space-4);
+    color: var(--color-text);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+    text-decoration: none;
+  }
+  .pflow__item:hover {
+    background: var(--color-primary-tint);
+    color: var(--color-primary-hover);
+  }
+  .pflow__item:hover .pflow__pname {
+    text-decoration: underline;
+  }
+  .pflow__count {
+    flex: none;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .pflow__bands {
+    display: grid;
+    gap: var(--space-3);
+    margin-block-start: var(--space-3);
+  }
+  .pflow__band,
+  .pflow__band:visited {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    min-height: var(--target-min);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .pflow__band:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text);
+  }
+  .pflow__band-name {
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+  }
+  .pflow__band-text {
+    flex: 1 1 var(--search-width-min);
+    min-width: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .pflow__band--devices {
+    background: var(--color-stage-devices-tint);
+  }
+  .pflow__band--devices .pflow__band-name {
+    color: var(--color-stage-devices);
+  }
+  @media (--tablet) {
+    .pflow__stages {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pflow__bands {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  /* PC：4つの段階を横に並べ、間に点と矢印の線を置く。列の幅の比は、設計1・材料1・前工程1.35・後工程1.1 */
+  @media (--pc) {
+    .pflow__stages {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1.1fr);
+      gap: 0;
+      align-items: start;
+    }
+    .pflow__link {
+      position: relative;
+      display: block;
+      flex: none;
+      width: var(--space-6);
+      height: var(--target-min);
+    }
+    .pflow__link::before {
+      position: absolute;
+      top: 50%;
+      right: var(--space-2);
+      left: var(--space-1);
+      border-top: var(--border-width) solid var(--color-border-strong);
+      content: "";
+    }
+    .pflow__link::after {
+      position: absolute;
+      top: calc(50% - var(--space-1));
+      right: var(--space-1);
+      border-top: var(--space-1) solid transparent;
+      border-bottom: var(--space-1) solid transparent;
+      border-left: var(--space-2) solid var(--color-border-strong);
+      content: "";
+    }
+  }
+</style>

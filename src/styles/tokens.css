@@ -48,7 +48,7 @@
   --color-stage-devices: #1f6b47; /* できあがる半導体：緑 */
   --color-stage-devices-tint: #ddefe3;
   --color-stage-neutral-tint: #e9edf2; /* 設計・検査の箱、イベントの暦の面 */
-  /* 4.6 トップの面（運営者の見本に合わせる）：ページの地を薄い灰色にし、カードを白で浮かせる */
+  /* 4.4 「半導体を学ぶ」の一覧の頭の地（薄い灰色） */
   --color-page: #f3f5f8;
   --color-on-brand-muted: #b8c4d6; /* 帯の上の補助の文字（検索欄の入力の例と記号。帯の上の面に対して 7.5） */
   --color-on-brand-lead: #d4dce8; /* トップの帯の上の説明の文字（帯に対して 11.6） */
@@ -97,10 +97,6 @@
   --text-small-tracking: 0.02em;
   --text-caption: 0.75rem; /* 12px。短い補足だけ（仕様書 5.2）：図の段階の補足、タグ、印、数値のラベルなど。文章には使わない */
   --text-caption-leading: 1.5;
-  --text-micro: 0.6875rem; /* 11px。トップの全体図の企業の名前だけ（仕様書 5.2 の改訂案） */
-  --text-micro-leading: 1.45;
-  --line-clamp-names: 3; /* 全体図の企業の名前は3行まで。続きは段階の企業の一覧で見る */
-  --event-cal-width: 5.5rem; /* イベントの暦の形の日付の幅。年と月（「2027年2月」）が1行に入る幅でそろえる */
   --text-display: 1.75rem; /* トップページの大見出し。タブレット以上は 2.5rem */
   --text-figure: 1.625rem; /* 企業ページの主要な数値（8.8）。タブレット以上は 2rem */
   --text-figure-leading: 1.25;
@@ -161,6 +157,13 @@
   --chip-height: 2.25rem; /* 8.19 絞り込みのチップ（36px。押せる範囲は --target-min） */
   --spark-height: 1.75rem; /* 8.8 主要な数値の推移の線 */
   --spark-width: 9rem;
+  --search-large-height: 3.5rem; /* 8.6 トップの帯の中の大きな検索欄（56px） */
+  --search-submit-width: 5rem; /* 8.6 大きな検索欄の右端の「検索」のボタンの幅（仕様書に値がない） */
+  --hero-overlap: 3.5rem; /* 9.1 入口が帯の下端からはみ出す量（56px。スマートフォンは --hero-overlap-sp） */
+  --hero-overlap-sp: 3rem;
+  --hero-max-width: 40rem; /* 9.1 帯の中の1列の最大幅 */
+  --hero-lead-max-width: 34rem;
+  --date-col-width: 4.5rem; /* 9.1 トップのニュースとイベントの、左の日付の列の幅 */
   --quiz-num-size: 1.625rem; /* 8.17 選択肢の番号の丸（26px） */
   --quiz-border-current: 2px; /* 8.17 正解・あなたの答えの枠 */
   --figure-thumb: 7.5rem; /* 学習の図の、スマートフォンで説明の横に並べる小さな図の幅（仕様書に値がない） */

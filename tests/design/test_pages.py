@@ -351,29 +351,33 @@ class PagesBuildTest(unittest.TestCase):
         # 4つの入口（要件定義書 3.3 の3）：記号・見出し・一文の説明を組にしたリンク
         html = self.read(self.build("preview"), "index.html")
         self.assertEqual(html.count("<h1"), 1)
-        entries = re.findall(r'<nav class="entries"[^>]*>(.*?)</nav>', html, re.S)[0]
+        entries = re.findall(r'<nav class="[^"]*\bentries\b[^"]*"[^>]*>(.*?)</nav>', html, re.S)[0]
         links = re.findall(r'<a class="entry"[^>]*href="([^"]+)"[^>]*>(.*?)</a>', entries, re.S)
         # 「半導体を学ぶ」は、学習のページがあれば /learn/、なければ用語集（プレビューでは下書きのページも数える）
         self.assertIn(links[0][0], ("/learn/", "/glossary/"))
         self.assertEqual([h for h, _ in links[1:]], ["/processes/", "/news/", "/companies/"])
         for title, (_, body) in zip(["半導体を学ぶ", "工程を学ぶ", "ニュースを読む", "企業を比べる"], links):
             self.assertIn(title, body)
-            self.assertIn('aria-hidden="true"', body)  # 記号は見出しと組にし、読み上げない
-        self.assertIn("role=\"search\"", html)  # 企業名・証券コードの検索は、ヘッダーの検索欄
+            self.assertIn('aria-hidden="true"', body)  # 絵は見出しと組にし、読み上げない
+        self.assertIn("role=\"search\"", html)  # 企業名・証券コードの検索は、帯の中の大きな検索欄
         self.assertIn("新着のニュース解説", html)
 
-    def test_home_has_supply_map_but_no_sales_chart(self):
-        # トップの最初の画面に、全体図「半導体ができるまで」を置く（運営者の判断、2026年10月16日）。各段階は分類の企業の一覧へ。
-        # 売上高の上位10社と工場設備の帯は、企業一覧と工程の一覧で見る
+    def test_home_has_process_flow_but_no_sales_chart(self):
+        # トップの「半導体ができるまで」（仕様書 9.1 の3・4、2026年10月17日の作り直し）：工程の流れの図。各工程は工程ページへ。
+        # 下に工場設備の帯（分類の企業の一覧へ）と、できあがる半導体の帯。売上高の上位10社は置かない
         html = self.read(self.build("production"), "index.html")
         main = html.split("<main")[1]
         self.assertIn("半導体ができるまで", main)
-        for category in ("materials", "design", "front-end", "back-end", "test", "devices"):
+        for p in self.processes:
+            self.assertIn(f'href="/processes/{p["slug"]}/"', main, p["slug"])
+        for category in ("facilities", "devices"):
             self.assertIn(f'href="/companies/process/{category}/"', main)
         self.assertNotIn("上位10社", main)
-        self.assertNotIn('class="facilities-band"', main)
         self.assertIn("ニュースを読む", main)
         self.assertNotIn("ニュース・テーマを読む", main)
+        # 帯の中の大きな検索欄があるため、トップではヘッダーの検索欄を出さない（8.1）
+        self.assertIn("site-header--home", html)
+        self.assertIn('id="home-search"', main)
 
     def test_facilities_band_on_processes(self):
         # 工場設備（分類 facilities）：特定の工程ではなく工場全体を支える会社。工程の一覧の全体図の下の帯から、分類の企業の一覧へ
