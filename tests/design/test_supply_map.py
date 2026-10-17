@@ -105,7 +105,8 @@ class SupplyMapPageTest(unittest.TestCase):
         used = {p for c in companies for p in (c.get("processes") or [])}
         empty = [p for p in SUPPLY["processes"] if p["slug"] not in used]
         self.assertEqual(self.html.count("まだ掲載していません"), len(empty))
-        self.assertEqual(self.html.count('<table class="data-table'), len(SUPPLY["processes"]) - len(empty))
+        # 工程ごとの企業は、企業名のリンクだけの一覧（表ではない）。企業のある工程の数だけ出る
+        self.assertEqual(self.html.count('<ul class="supply-process__companies'), len(SUPPLY["processes"]) - len(empty))
 
 
 if __name__ == "__main__":
