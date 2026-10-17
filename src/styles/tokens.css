@@ -50,7 +50,11 @@
   --color-stage-neutral-tint: #e9edf2; /* 設計・検査の箱、イベントの暦の面 */
   /* 4.6 トップの面（運営者の見本に合わせる）：ページの地を薄い灰色にし、カードを白で浮かせる */
   --color-page: #f3f5f8;
-  --color-on-brand-muted: #b8c4d6; /* 帯の上の検索欄の入力の例と記号（帯の上の面に対して 7 以上） */
+  --color-on-brand-muted: #b8c4d6; /* 帯の上の補助の文字（検索欄の入力の例と記号。帯の上の面に対して 7.5） */
+  --color-on-brand-lead: #d4dce8; /* トップの帯の上の説明の文字（帯に対して 11.6） */
+  --color-brand-line: #1a3a60; /* 帯の上の罫線、入力の例の枠 */
+  --color-brand-grid: #163357; /* トップの帯の地の、回路の格子の線（仕様書 7章） */
+  --color-brand-ring: #22476f; /* トップの帯の地の、ウェーハの同心円の線（仕様書 7章） */
 
   /* ---- 4.3 グラフの色（基本の色とは別） ---- */
   --chart-single: #0b6e4f;
@@ -91,13 +95,17 @@
   --text-small: 0.875rem;
   --text-small-leading: 1.6;
   --text-small-tracking: 0.02em;
-  --text-caption: 0.75rem; /* 12px。トップの全体図の、段階の中身と企業の名前だけ（仕様書 5.2 の改訂案） */
+  --text-caption: 0.75rem; /* 12px。短い補足だけ（仕様書 5.2）：図の段階の補足、タグ、印、数値のラベルなど。文章には使わない */
   --text-caption-leading: 1.5;
   --text-micro: 0.6875rem; /* 11px。トップの全体図の企業の名前だけ（仕様書 5.2 の改訂案） */
   --text-micro-leading: 1.45;
   --line-clamp-names: 3; /* 全体図の企業の名前は3行まで。続きは段階の企業の一覧で見る */
   --event-cal-width: 5.5rem; /* イベントの暦の形の日付の幅。年と月（「2027年2月」）が1行に入る幅でそろえる */
-  --text-display: 1.75rem; /* トップページの大見出し。タブレット以上は 2.25rem */
+  --text-display: 1.75rem; /* トップページの大見出し。タブレット以上は 2.5rem */
+  --text-figure: 1.625rem; /* 企業ページの主要な数値（8.8）。タブレット以上は 2rem */
+  --text-figure-leading: 1.25;
+  --text-term: 2rem; /* 用語ページの大見出し（9.5）。タブレット以上は 2.5rem */
+  --text-term-leading: 1.25;
   --text-display-leading: 1.35;
   --leading-reset: 1; /* 記号など、行間を持たない要素（仕様書に値がない） */
 
@@ -129,8 +137,9 @@
   --radius-control: 2px;
   --radius-none: 0;
   --radius-card: 10px;
-  --radius-pill: 999px;
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 6%), 0 4px 12px rgb(15 23 42 / 5%); /* カードを浮かせる弱い影。影はこの1種類だけ（CLAUDE.md 9章） */ /* タグ、検索欄（丸い形） */ /* 入口のカード、図の枠（仕様書 7章の改訂案） */
+  --radius-pill: 999px; /* タグ、絞り込みのチップ、検索欄（丸い形） */
+  --radius-cal: 6px; /* イベントの暦の形の日付 */
+  --shadow-card: 0 1px 2px rgb(13 36 64 / 6%), 0 4px 12px rgb(13 36 64 / 5%); /* カードを浮かせる弱い影（濃紺の6%・5%）。影はこの1種類だけ（CLAUDE.md 9章） */
   --icon-stroke: 1.5px; /* 図と記号の線の太さ */
 
   /* ---- 構造の寸法（仕様書に値がある：8.1、8.5、8.6、8.11、DS-07） ---- */
@@ -142,7 +151,18 @@
   --control-height: 2.75rem; /* ボタン、検索の入力欄 */
   --tag-height: 2rem;
   --icon-size: 1.25rem; /* 図と記号の大きさ（仕様書に値がない） */
-  --icon-entry: 2rem; /* トップページの入口の記号（仕様書 7章） */
+  --icon-entry: 2.75rem; /* トップページの入口の絵（仕様書 7章） */
+  --icon-entry-tile: 4rem; /* 入口の絵の下地 */
+  --icon-field: 2.25rem; /* 「半導体を学ぶ」の分野の絵（仕様書 7章） */
+  --icon-field-tile: 3.5rem;
+  --icon-field-head: 3.25rem; /* 分野のページの頭の絵 */
+  --icon-field-head-tile: 5rem;
+  --tag-height-sm: 1.625rem; /* 8.11 工程・分類・企業・段階のタグ（26px） */
+  --chip-height: 2.25rem; /* 8.19 絞り込みのチップ（36px。押せる範囲は --target-min） */
+  --spark-height: 1.75rem; /* 8.8 主要な数値の推移の線 */
+  --spark-width: 9rem;
+  --quiz-num-size: 1.625rem; /* 8.17 選択肢の番号の丸（26px） */
+  --quiz-border-current: 2px; /* 8.17 正解・あなたの答えの枠 */
   --figure-thumb: 7.5rem; /* 学習の図の、スマートフォンで説明の横に並べる小さな図の幅（仕様書に値がない） */
   --link-underline-offset: 0.2em; /* 8.5 */
   --motion-duration: 0.15s; /* 11 開閉の動き */
@@ -164,7 +184,9 @@
 @media (--tablet) {
   :root {
     --text-h1: 2rem;
-    --text-display: 2.25rem;
+    --text-display: 2.5rem;
+    --text-figure: 2rem;
+    --text-term: 2.5rem;
     --page-gutter: var(--space-6);
   }
 }

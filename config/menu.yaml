@@ -14,8 +14,16 @@ main:
 note:
   label: SemiCompass｜note
   url: https://note.com/hysd_research
+# フッターは、「ご利用にあたって」を下段に、それ以外のまとまりを上段に、この順で縦に並べる（仕様書 8.13）。
+# 運営者のnoteへのリンクは、「お問い合わせ」のまとまりの最後に置く。
 footer:
-  - title: サイトについて
+  - title: 探す
+    links:
+      - { label: 企業一覧, path: /companies/ }
+      - { label: 工程の一覧, path: /processes/ }
+      - { label: 用語集, path: /glossary/ }
+      - { label: ニュース解説, path: /news/ }
+  - title: このサイトについて
     links:
       - { label: このサイトについて, path: /about/ }
       - { label: 編集方針, path: /editorial-policy/ }
@@ -26,7 +34,7 @@ footer:
       - { label: 免責事項, path: /disclaimer/ }
       - { label: プライバシーポリシー, path: /privacy/ }
       - { label: 外部送信について, path: /external-transmission/ }
-  - title: 質問・訂正
+  - title: お問い合わせ
     links:
       - { label: よくある質問, path: /faq/ }
       - { label: 訂正一覧, path: /corrections/ }

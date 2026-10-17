@@ -25,8 +25,9 @@ const { questions, pageType } = Astro.props;
           {q.choices.map((c, j) => (
             <li>
               <button type="button" class="quiz__choice" data-choice={j + 1}>
+                <span class="quiz__num" aria-hidden="true">{j + 1}</span>
+                <span class="quiz__label"><span class="visually-hidden">{j + 1}. </span><RichText text={c} /></span>
                 <span class="quiz__mark" data-mark aria-hidden="true"></span>
-                <span class="quiz__label">{j + 1}. <RichText text={c} /></span>
                 <span class="quiz__result" data-result></span>
               </button>
             </li>
@@ -65,8 +66,25 @@ const { questions, pageType } = Astro.props;
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
   }
+  /* 問いの全体を枠で囲む（8.17） */
   .quiz__item {
     margin-block-start: var(--space-5);
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+  .quiz__num {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: var(--quiz-num-size);
+    height: var(--quiz-num-size);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-small);
+    line-height: var(--leading-reset);
+    font-variant-numeric: tabular-nums;
   }
   .quiz__no {
     margin: 0;
@@ -89,7 +107,7 @@ const { questions, pageType } = Astro.props;
   .quiz__choice {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
     width: 100%;
     min-height: var(--target-min);
     padding: var(--space-2) var(--space-3);
@@ -118,14 +136,30 @@ const { questions, pageType } = Astro.props;
   }
   .quiz__choice[data-state="correct"] {
     border-color: var(--color-success);
-    border-width: var(--border-width-current);
+    outline: calc(var(--quiz-border-current) - var(--border-width)) solid var(--color-success);
+    outline-offset: calc(var(--border-width) * -1);
     color: var(--color-success);
   }
   .quiz__choice[data-state="wrong"] {
     border-color: var(--color-error);
-    border-width: var(--border-width-current);
+    outline: calc(var(--quiz-border-current) - var(--border-width)) solid var(--color-error);
+    outline-offset: calc(var(--border-width) * -1);
     background: var(--color-error-bg);
     color: var(--color-error);
+  }
+  /* 選んだあと、番号の丸を塗る（色だけでなく、記号と言葉を添える） */
+  .quiz__choice[data-state="correct"] .quiz__num {
+    border-color: var(--color-success);
+    background: var(--color-success);
+    color: var(--color-primary-contrast);
+  }
+  .quiz__choice[data-state="wrong"] .quiz__num {
+    border-color: var(--color-error);
+    background: var(--color-error);
+    color: var(--color-primary-contrast);
+  }
+  .quiz__choice[data-state] .quiz__label {
+    color: var(--color-text);
   }
   .quiz__mark:empty {
     display: none;
