@@ -12,12 +12,13 @@ interface Item {
 interface Props {
   items: Item[];
   variant: 'fold' | 'side';
+  always?: boolean; // 右の列を持たないページ（wide）では、PCでも開閉式の目次を出す
 }
-const { items, variant } = Astro.props;
+const { items, variant, always = false } = Astro.props;
 ---
 
 {variant === 'fold' && (
-  <details class="toc toc--fold">
+  <details class:list={['toc', 'toc--fold', { 'toc--always': always }]}>
     <summary class="toc__summary"><Icon name="chevron" /><span>このページの目次</span></summary>
     <ol class="toc__list">
       {items.map((item) => <li><a href={`#${item.id}`}>{item.label}</a></li>)}
@@ -96,7 +97,7 @@ const { items, variant } = Astro.props;
   }
 
   @media (--pc) {
-    .toc--fold {
+    .toc--fold:not(.toc--always) {
       display: none;
     }
     .toc--side {

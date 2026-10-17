@@ -3,6 +3,7 @@
 // 段階ごとの工程の一覧（名前、一文の説明、企業の表）。図の各工程は、同じページの見出し（#p-{工程}）へ移動できる。旧 /supply-chain/ は、ここへ転送する。
 import { BUILD_ENV } from 'astro:env/server';
 import FacilitiesBand from '../../components/FacilitiesBand.astro';
+import Icon from '../../components/Icon.astro';
 import SourceLine from '../../components/SourceLine.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import SupplyMapSvg from '../../components/SupplyMapSvg.astro';
@@ -21,6 +22,10 @@ const decided = loadCompanies()
   .map((c) => (c as unknown as { selection?: { decided_on?: string } }).selection?.decided_on ?? '')
   .sort()
   .pop() ?? '';
+const toc = [
+  { id: 'supply-map-title', label: '工程の全体図' },
+  ...stages.map((s) => ({ id: `stage-${s.stage.slug}`, label: s.stage.name })),
+];
 // 工程ごとの企業は、企業名だけを横に折り返して並べる（縦の長さを抑える。証券コード・企業区分・掲載の状態は、比べる一覧のページで見る）
 const tableFor = (slug: string) =>
   rows
@@ -32,15 +37,20 @@ const tableFor = (slug: string) =>
 ---
 
 <Page
-  title="工程の一覧とサプライチェーンマップ｜SemiCompass"
+  title="半導体製造工程の一覧と関連企業のマップ｜SemiCompass"
   heading="工程の一覧とサプライチェーンマップ"
-  description="半導体ができるまでの工程の一覧と、全体を1枚で見渡せる図。工程ごとに、説明と、関わる企業を確かめられます。"
+  description="半導体ができるまでの工程の一覧と、全体を1枚で見渡せる図。前工程・後工程などの工程ごとに、説明と、関わる企業を確かめられます。"
   breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '工程' }]}
+  toc={toc}
+  updatedAt={decided || undefined}
   wide
 >
-  <p class="measure">
-    半導体は、材料、設計、前工程、後工程の段階を経て作られます。図の箱は工程で、右の数は掲載している企業の数です。箱を選ぶと、同じページの下にある、その工程の説明と企業の表へ移動します。工程の名前を選ぶと、その工程の解説のページを開けます。
-  </p>
+  <p class="measure">半導体ができるまでの主な工程と、各工程に関わる企業を一覧できます。</p>
+  <ul class="measure supply-guide">
+    <li>図の箱を選ぶと、同じページの下にある、その工程の説明と企業へ移動します。右の数は、掲載している企業の数です。</li>
+    <li>各工程の「工程の解説」で解説のページを、「売上高などを比べる一覧」で企業の比較を開けます。</li>
+    <li>前工程は、ウェーハの上に回路を作る工程です。後工程は、ウェーハを切り分け、チップとして使える形にする工程です。</li>
+  </ul>
   <figure class="supply-map" aria-labelledby="supply-map-title">
     <h2 id="supply-map-title">工程の全体図</h2>
     <p class="supply-map__meta">矢印は、おおまかな流れを示します。実際の製造では、同じ工程を何度も繰り返す場合があります。</p>
@@ -53,31 +63,40 @@ const tableFor = (slug: string) =>
   </figure>
 
   <h2 id="process-tables">工程ごとの企業</h2>
-  <p class="measure">企業は、企業マスタで工程に結び付けている企業です。企業名を選ぶと、その企業のページを開けます。証券コードなどは、各工程の「売上高などを比べる一覧」で見られます。</p>
+  <p class="measure">
+    企業の数は、企業マスタでその工程に結び付けている企業の数です。1社が複数の工程に入る場合があります。企業名は証券コード順です。工程の分類と掲載の基準は、<a href="/editorial-policy/">編集方針</a>で説明しています。
+  </p>
+  <p class="supply-tools" data-expand-tools hidden>
+    <button type="button" class="supply-tools__button" data-expand="open">企業をすべて開く</button>
+    <button type="button" class="supply-tools__button" data-expand="close">企業をすべて閉じる</button>
+  </p>
   {stages.map((s) => (
-    <section aria-labelledby={`stage-${s.stage.slug}`}>
+    <section aria-labelledby={`stage-${s.stage.slug}`} class="supply-stage">
       <h3 id={`stage-${s.stage.slug}`}>{s.stage.name}</h3>
       {s.items.map((p) => {
         const data = tableFor(p.slug);
         return (
           <section class="supply-process" aria-labelledby={`p-${p.slug}`}>
-            <h4 id={`p-${p.slug}`} tabindex="-1"><a href={`/processes/${p.slug}/`}>{p.name}</a></h4>
+            <h4 id={`p-${p.slug}`} tabindex="-1">{p.name}</h4>
             {p.short_description && <p class="measure">{p.short_description}</p>}
             {data.length > 0 ? (
-              <ul class="supply-process__companies" aria-label={`${p.name}の企業`}>
-                {data.map((c) => <li><a href={c.href}>{c.name}</a></li>)}
-              </ul>
+              <details class="supply-process__companies">
+                <summary><Icon name="chevron" /><Icon name="building" /><span>企業を見る（{data.length}社）</span></summary>
+                <ul class="supply-chips" aria-label={`${p.name}の企業`}>
+                  {data.map((c) => <li><a href={c.href}>{c.name}</a></li>)}
+                </ul>
+              </details>
             ) : (
               <StateMessage kind="empty" message="この工程に結び付けた企業は、まだ掲載していません。" />
             )}
             <p class="supply-process__links">
-              <a href={`/processes/${p.slug}/`}>工程の解説</a>
-              <a href={`/companies/process/${p.slug}/`}>売上高などを比べる一覧</a>
-              <a href="#supply-map-title">図に戻る</a>
+              <a href={`/processes/${p.slug}/`}><Icon name="book" /><span>工程の解説</span></a>
+              <a href={`/companies/process/${p.slug}/`}><Icon name="chart" /><span>売上高などを比べる一覧</span></a>
             </p>
           </section>
         );
       })}
+      <p class="supply-stage__back"><a href="#supply-map-title"><Icon name="up" /><span>図に戻る</span></a></p>
     </section>
   ))}
 </Page>
@@ -117,20 +136,91 @@ const tableFor = (slug: string) =>
     line-height: var(--text-lead-leading);
     letter-spacing: var(--text-lead-tracking);
   }
-  .supply-process__companies {
+  .supply-guide {
+    margin-block: var(--space-3);
+    padding-inline-start: var(--space-5);
+  }
+  .supply-guide li + li {
+    margin-block-start: var(--space-1);
+  }
+  .supply-tools {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-5);
-    margin: 0;
+    gap: var(--space-2) var(--space-4);
+    margin-block: var(--space-3);
+  }
+  .supply-tools[hidden] {
+    display: none;
+  }
+  .supply-tools__button {
+    min-height: var(--target-min);
+    padding-inline: var(--space-3);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-primary);
+    font: inherit;
+    font-size: var(--text-dense);
+    cursor: pointer;
+  }
+  .supply-process__companies summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--target-min);
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    list-style: none;
+    cursor: pointer;
+  }
+  .supply-process__companies summary::-webkit-details-marker {
+    display: none;
+  }
+  .supply-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
     padding: 0;
     list-style: none;
-    font-size: var(--text-dense);
-    line-height: var(--text-dense-leading);
   }
-  .supply-process__companies a {
+  .supply-chips a {
     display: inline-flex;
     align-items: center;
+    min-height: var(--tag-height);
+    padding-inline: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+    text-decoration: none;
+  }
+  .supply-chips a:hover,
+  .supply-chips a:active {
+    background: var(--color-surface-sunken);
+  }
+  .supply-stage {
+    margin-block-end: var(--space-7);
+    padding-block-end: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .supply-stage__back {
+    margin-block: var(--space-2) 0;
+    font-size: var(--text-dense);
+  }
+  .supply-stage__back a,
+  .supply-process__links a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     min-height: var(--target-min);
+  }
+  @media (pointer: coarse) {
+    .supply-chips a {
+      min-height: var(--target-min);
+    }
   }
   .supply-process__links {
     display: flex;
@@ -138,11 +228,6 @@ const tableFor = (slug: string) =>
     gap: var(--space-2) var(--space-5);
     margin-block: var(--space-3) 0;
     font-size: var(--text-dense);
-  }
-  .supply-process__links a {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--target-min);
   }
   @media (--tablet) {
     .supply-map__plot :global(.map-svg--compact) {
@@ -153,3 +238,7 @@ const tableFor = (slug: string) =>
     }
   }
 </style>
+
+<script>
+  import '../../scripts/process-index';
+</script>

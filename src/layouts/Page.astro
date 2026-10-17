@@ -44,7 +44,7 @@ const hasAside = !wide;
     {breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
     <PageHead title={heading ?? title} publishedAt={publishedAt} updatedAt={updatedAt} author={author} category={category} />
     <slot name="lead" />
-    {toc.length > 0 && <Toc items={toc} variant="fold" />}
+    {toc.length > 0 && <Toc items={toc} variant="fold" always={wide} />}
     <div class:list={['page__grid', { 'page__grid--two': hasAside }]}>
       <div class="page__body"><slot /></div>
       {hasAside && (
