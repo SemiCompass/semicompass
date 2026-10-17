@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import yaml
@@ -53,27 +54,81 @@ class NormalizeTest(unittest.TestCase):
         self.assertEqual(heading[4], "その他")
 
 
-def build_site(env: str, cwd: Path = ROOT) -> tuple[Path, str | None]:
+def build_site(env: str, cwd: Path = ROOT, extra_env: dict[str, str] | None = None) -> tuple[Path, str | None]:
     """astro build を動かし、(出力のディレクトリ、失敗したときの出力の末尾)を返す。出力の置き場は、呼び出し側が消す。"""
     out = Path(tempfile.mkdtemp())
-    done = subprocess.run(["npx", "astro", "build", "--outDir", str(out / "dist")], text=True, capture_output=True,
-                          cwd=cwd, env={**os.environ, "BUILD_ENV": env})
+    command = ["npx", "astro", "build", "--outDir", str(out / "dist")]
+    if Path(cwd).resolve() != ROOT:
+        # 作業用のコピーは node_modules をリポジトリと共有するため、Astro と Vite の作業用の場所（cacheDir）を、
+        # コピーの中に分ける（並べて組み立てたときに、互いの作業用のファイルを壊さないように）
+        (Path(cwd) / "astro.test.config.mjs").write_text(
+            "import base from './astro.config.mjs';\n"
+            "export default { ...base, cacheDir: './.astro-test-cache', vite: { ...(base.vite ?? {}), cacheDir: './.vite-test-cache' } };\n",
+            encoding="utf-8")
+        command += ["--config", "astro.test.config.mjs"]
+    done = subprocess.run(command, text=True, capture_output=True,
+                          cwd=cwd, env={**os.environ, "BUILD_ENV": env, **(extra_env or {})})
     return out, (None if done.returncode == 0 else done.stdout[-1500:] + done.stderr[-1500:])
 
 
+# 組み立て（astro build）は、design のテストの時間のほとんどを占める。組み立ては1つずつは1コアしか使わないため、
+# 同時に DESIGN_BUILD_JOBS 個（既定はコアの数、最低2）まで並べて動かす。必要な組み立ては、読み込みの時点で先に始める（_prefetch）
+BUILD_JOBS = int(os.environ.get("DESIGN_BUILD_JOBS") or max(2, os.cpu_count() or 2))
+_POOL = ThreadPoolExecutor(max_workers=BUILD_JOBS)
+
+
+def _build_job(env: str, work_factory=None, extra_env: dict[str, str] | None = None) -> tuple[Path, str | None]:
+    """作業用のコピー（work_factory があれば作る）を組み立てる。出力とコピーは、プロセスの終わりに消す。"""
+    work = work_factory() if work_factory is not None else None
+    out, failure = build_site(env, work or ROOT, extra_env)
+    atexit.register(shutil.rmtree, out, True)
+    if work is not None:
+        atexit.register(shutil.rmtree, work, True)
+    return out, failure
+
+
+_REAL_FUTURES: dict = {}
 _REAL_SITES: dict[str, Path] = {}
+
+
+def _real_future(env: str):
+    if env not in _REAL_FUTURES:
+        # リポジトリそのものではなく、そのままの写しで組み立てる（ほかの組み立てと並べても、作業用の場所がぶつからない）
+        _REAL_FUTURES[env] = _POOL.submit(_build_job, env, lambda: make_draft_site(()))
+    return _REAL_FUTURES[env]
+
+
+def submit_build(env: str, work_factory=None, extra_env: dict[str, str] | None = None):
+    """組み立てを、並べて動かす列に入れる。返り値の .result() は (出力のディレクトリ, 失敗の出力の末尾)。"""
+    return _POOL.submit(_build_job, env, work_factory, extra_env)
+
+
+_DRAFT_FUTURES: dict = {}
+
+
+def _draft_future(env: str, slugs: tuple[str, ...]):
+    key = (env, tuple(slugs))
+    if key not in _DRAFT_FUTURES:
+        _DRAFT_FUTURES[key] = submit_build(env, lambda: make_draft_site(tuple(slugs)))
+    return _DRAFT_FUTURES[key]
+
+
+def draft_site(env: str, slugs: tuple[str, ...]) -> Path:
+    """指定した企業を draft: true にした作業用のコピーで組み立てる（同じ条件は1回だけ）。"""
+    out, failure = _draft_future(env, slugs).result()
+    if failure is not None:
+        raise AssertionError(failure)
+    return out / "dist"
 
 
 def real_site(env: str) -> Path:
     """リポジトリそのままのサイトを、環境ごとに、プロセスの中で1回だけ組み立てる（design の全テストで使い回す）。
-    組み立て（astro build）が、design のテストの時間のほとんどを占めるため。**使う側は、出力を書き換えない・消さない**。"""
+    **使う側は、出力を書き換えない・消さない**。"""
     if env not in _REAL_SITES:
-        out, failure = build_site(env, ROOT)
+        out, failure = _real_future(env).result()
         if failure is not None:
-            shutil.rmtree(out, True)
             raise AssertionError(failure)
         _REAL_SITES[env] = out / "dist"
-        atexit.register(shutil.rmtree, out, True)
     return _REAL_SITES[env]
 
 
@@ -135,19 +190,44 @@ def make_draft_site(slugs: tuple[str, ...]) -> Path:
 
 @unittest.skipUnless(HAS_NODE, "node_modules がない")
 class PagesBuildTest(unittest.TestCase):
-    _cache: dict[str, Path] = {}  # 同じ条件のビルドを、クラスの中で1回だけ行う（キーは "real-preview" など）
+    _cache: dict[str, Path] = {}  # 同じ条件のビルドを、1回だけ行う（キーは "fixture-preview" など）
+    _futures: dict = {}
+    _prefetch = False  # true の間は、組み立てを始めるだけで待たない（_prefetch から使う）
 
     @classmethod
-    def _built(cls, key: str, env: str, work: Path | None = None) -> Path:
+    def _built(cls, key: str, env: str, work=None) -> Path:
+        """work は、作業用のコピーを作る関数（またはコピーそのもの）。None はリポジトリそのまま。"""
+        if key not in cls._futures:
+            factory = work if callable(work) else ((lambda: make_draft_site(())) if work is None else (lambda w=work: w))
+            cls._futures[key] = _POOL.submit(_build_job, env, factory)
+        if cls._prefetch:
+            return ROOT
         if key not in cls._cache:
-            out, failure = build_site(env, work or ROOT)
-            cls.addClassCleanup(shutil.rmtree, out, True)
-            if work is not None:
-                cls.addClassCleanup(shutil.rmtree, work, True)
+            out, failure = cls._futures[key].result()
             if failure is not None:
                 raise AssertionError(failure)
             cls._cache[key] = out / "dist"
         return cls._cache[key]
+
+    @classmethod
+    def prefetch(cls) -> None:
+        """このクラスが使う作業用のコピーの組み立てを、先に始める（待たない）。"""
+        cls.setUpClass()
+        probe = cls("test_company_list")
+        cls._prefetch = True
+        try:
+            probe.build_empty()
+            for env in ("preview", "production"):
+                probe.fixture_site(env)
+                probe.news_site(env)
+                probe.drafts_site(env)
+            probe.learn_site()
+            probe.learn_site(physics=True)
+            probe.learnpath_site()
+            probe.events_site()
+            probe.nolearn_site()
+        finally:
+            cls._prefetch = False
 
     def build(self, env: str) -> Path:
         """リポジトリそのままの content/ で、サイトを組み立てる（用語・工程の件数は、問わない）。"""
@@ -155,11 +235,11 @@ class PagesBuildTest(unittest.TestCase):
 
     def build_empty(self, env: str = "preview") -> Path:
         """content/glossary/ と content/processes/ を空にした、作業用のコピーで、サイトを組み立てる。"""
-        return self._built(f"empty-{env}", env, make_site())
+        return self._built(f"empty-{env}", env, make_site)
 
     def build_with(self, key: str, env: str, glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None,
                    news: dict[str, str] | None = None, extra: dict[str, str] | None = None) -> Path:
-        return self._built(f"{key}-{env}", env, make_site(glossary, processes, news, extra))
+        return self._built(f"{key}-{env}", env, lambda: make_site(glossary, processes, news, extra))
 
     def read(self, dist: Path, path: str) -> str:
         return (dist / path).read_text(encoding="utf-8")
@@ -217,10 +297,14 @@ class PagesBuildTest(unittest.TestCase):
 
     def test_production_shows_draft_companies_as_coming_soon(self):
         # 企業はすべて公開済み。下書き（draft: true）の企業を2社置いたコピーで、本番にだけ出ない（Coming Soon になる）ことを確かめる
-        drafts = ("tokyo-electron", "sony")
-        preview = self.read(self._built("drafts-preview", "preview", make_draft_site(drafts)), "companies/index.html")
-        production = self.read(self._built("drafts-production", "production", make_draft_site(drafts)), "companies/index.html")
-        self.assertEqual(preview.count(">詳細<") - production.count(">詳細<"), len(drafts))
+        preview = self.read(self.drafts_site("preview"), "companies/index.html")
+        production = self.read(self.drafts_site("production"), "companies/index.html")
+        self.assertEqual(preview.count(">詳細<") - production.count(">詳細<"), len(self.DRAFTS))
+
+    DRAFTS = ("tokyo-electron", "sony")
+
+    def drafts_site(self, env: str) -> Path:
+        return self._built(f"drafts-{env}", env, lambda: make_draft_site(self.DRAFTS))
 
     def test_process_pages_and_neighbours(self):
         dist = self.build_empty()  # 「解説は準備中」は、content/processes/ に本文がない（空の）ときの表示
@@ -473,9 +557,7 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn('href="/learn/device-physics/"', card.split('class="learn-field-nav"')[1])
         self.assertNotIn('href="/learn/industry/"', card.split('class="learn-field-nav"')[1])
 
-    def test_learn_path_can_be_followed_to_the_end(self):
-        # 要件定義書 AT-09：最初のページから、次の案内だけで最後までたどれ、最後に業績とニュース解説の入口に着く。
-        # 分野の境目では次の分野の最初のページへ、学習の順に入った工程ページにも学習の前後を出す
+    def learnpath_site(self) -> Path:
         slug = self.processes[0]["slug"]
         tree = yaml.safe_load((ROOT / "content" / "learn" / "path.yaml").read_text(encoding="utf-8"))
         for field in tree["fields"]:
@@ -495,7 +577,13 @@ class PagesBuildTest(unittest.TestCase):
             extra[name] = "---\ntitle: 下書き\nfield: x\ndescription: 下書き\ndraft: true\npublished_at: '2026-01-01'\nai_generated: true\n---\n## 節\n\n下書き。\n"
         extra.update({"content/learn/basics/path-a.md": page("basics", "試験の一つ目"), "content/learn/devices/path-b.md": page("devices", "試験の二つ目"),
                       "src/figures/learn/basics/path-a.astro": figure, "src/figures/learn/devices/path-b.astro": figure})
-        dist = self.build_with("learnpath", "production", extra=extra)
+        return self.build_with("learnpath", "production", extra=extra)
+
+    def test_learn_path_can_be_followed_to_the_end(self):
+        # 要件定義書 AT-09：最初のページから、次の案内だけで最後までたどれ、最後に業績とニュース解説の入口に着く。
+        # 分野の境目では次の分野の最初のページへ、学習の順に入った工程ページにも学習の前後を出す
+        slug = self.processes[0]["slug"]
+        dist = self.learnpath_site()
         first = self.read(dist, "learn/basics/path-a/index.html")
         self.assertIn("次の分野（2. 半導体材料とウェーハ）の最初のページ：", first)
         self.assertIn('href="/learn/devices/path-b/"', first)
@@ -515,15 +603,18 @@ class PagesBuildTest(unittest.TestCase):
         other = next(p["slug"] for p in self.processes[1:])
         self.assertNotIn('id="learn-order"', self.read(dist, f"processes/{other}/index.html"))  # 学習の順にない工程には出さない
 
-    def test_home_lists_upcoming_events_only(self):
-        # 近く開かれる技術系のイベント（要件定義書 3.3 の5）：終わったものは出さず、開催日の近い順に最大5件
+    def events_site(self) -> Path:
         events = [{"id": f"e{i}", "name": f"試験の展示会{i}", "kind": "exhibition", "start_date": f"2099-0{i}-10", "end_date": f"2099-0{i}-12",
                    "venue": "試験の会場", "city": "東京都", "organizer": "試験の主催者", "url": f"https://example.org/{i}", "source": "S1",
                    "checked_on": "2098-12-01"} for i in range(1, 8)]
         events.append({**events[0], "id": "past", "name": "終わった展示会", "start_date": "2000-01-01", "end_date": "2000-01-02"})
         data = {"schema_version": 1, "sources": [{"id": "S1", "title": "公式", "publisher": "主催者", "url": "https://example.org/",
                                                    "accessed_on": "2098-12-01"}], "events": events}
-        dist = self.build_with("events", "production", extra={"data/events.yaml": yaml.safe_dump(data, allow_unicode=True, sort_keys=False)})
+        return self.build_with("events", "production", extra={"data/events.yaml": yaml.safe_dump(data, allow_unicode=True, sort_keys=False)})
+
+    def test_home_lists_upcoming_events_only(self):
+        # 近く開かれる技術系のイベント（要件定義書 3.3 の5）：終わったものは出さず、開催日の近い順に最大5件
+        dist = self.events_site()
         main = self.read(dist, "index.html").split("<main")[1]
         self.assertIn("近く開かれるイベント", main)
         self.assertEqual(main.count('class="home-events__item"'), 5)
@@ -552,13 +643,18 @@ class PagesBuildTest(unittest.TestCase):
             self.assertIn("模式図、本サイトで作成", figure[0], slug)
             self.assertLess(html.index('<figure class="fig"'), html.index('id="related"'), slug)
 
+    def nolearn_site(self) -> Path:
+        def work():
+            site = make_site()
+            for page in (site / "content" / "learn").glob("*/*.md"):
+                page.unlink()
+            return site
+        return self._built("nolearn-production", "production", work)
+
     def test_learn_index_without_pages_keeps_glossary_entry(self):
         # 学習のページが1つもない間は、トップの入口を用語集へ（要件定義書 3.3）。リポジトリの学習のページは公開済みのため、
         # 作業用のコピーから content/learn/{分野}/*.md を除いて確かめる
-        work = make_site()
-        for page in (work / "content" / "learn").glob("*/*.md"):
-            page.unlink()
-        html = self.read(self._built("nolearn-production", "production", work), "index.html").split("<main")[1]
+        html = self.read(self.nolearn_site(), "index.html").split("<main")[1]
         self.assertIn('href="/glossary/"', html)
         self.assertNotIn('href="/learn/"', html)
 
@@ -699,6 +795,21 @@ class PagesBuildTest(unittest.TestCase):
             html = self.read(preview, f"processes/{process['slug']}/index.html").replace("<wbr>", "")
             if process["slug"] not in process_files:
                 self.assertIn("この工程の解説は、準備中です", html, process["slug"])  # 本文がない工程だけ、準備中
+
+
+def _prefetch() -> None:
+    """読み込みの時点で、必要な組み立てを先に始める（DESIGN_PREFETCH=0 で止める）。"""
+    if HAS_NODE and os.environ.get("DESIGN_PREFETCH") != "0":
+        for env in ("preview", "production"):
+            _real_future(env)
+        PagesBuildTest.prefetch()
+        # test_design.py の下書きのコピー（企業の組み合わせは、そのテストと同じにする）
+        for env, slugs in (("preview", ("tokyo-electron", "jasm")), ("production", ("tokyo-electron", "jasm")),
+                           ("preview", ("tokyo-electron", "sony", "screen"))):
+            _draft_future(env, slugs)
+
+
+_prefetch()
 
 
 if __name__ == "__main__":
