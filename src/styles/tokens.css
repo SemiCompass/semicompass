@@ -190,6 +190,14 @@
   --table-first-column-wide: 20rem; /* 企業の表など、最初の列を広げる表（仕様書に値がない） */
   --table-wrap-column-min: 10rem; /* 折り返す列（工程の名前の並びなど）の最小の幅（仕様書に値がない） */
   --news-date-width: 7rem; /* 9.6 ニュースの一覧の、左の日付の列の幅（タブレット以上） */
+  --meter-cell-width: 6px; /* 8.18 分野のカードのページの数の目盛り（幅6px・高さ10px） */
+  --meter-cell-height: 10px;
+  --meter-gap: 2px;
+  --progress-cell-width: 14px; /* 8.18 学習のページの、分野の中の位置の目盛り（幅14px・高さ6px） */
+  --progress-cell-height: 6px;
+  --pending-opacity: 0.55; /* 8.18 準備中の分野の絵の濃さ */
+  --unit-num-size: 2.5rem; /* 8.18 単元の一覧の番号の丸 */
+  --learn-start-width: 22rem; /* 8.18 一覧の「初めての方へ」の枠の幅（PC） */
   --aside-max-height: calc(100vh - var(--toc-sticky-top) * 2); /* 右の列の張り付く部分が、画面に収まる高さ */
 }
 

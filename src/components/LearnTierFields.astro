@@ -1,6 +1,8 @@
 ---
-// 半導体を学ぶの一覧（/learn/）の1つの段（基礎編、半導体の物理）：段の中見出しと説明、対象・前提知識・読む順、分野の入口の並び（仕様書 8.18）。
-// 単元のない分野・カードは、リンクにせず、控えめな形で「準備中」と示す（押す前に読めるかが分かるようにする）
+// 半導体を学ぶの一覧（/learn/）の1つの段（基礎編、半導体の物理）（仕様書 8.18）：
+// 段の頭（左に段の名前と一文の説明、右に対象・前提知識・読む順。下に濃い罫線）と、分野・カードの入口の並び。
+// 入口は、左に分野の絵、右に番号と名前・何が分かるか・ページの数の目盛り。単元のない分野は、リンクにせず、破線の枠で「準備中」と示す
+import FieldPicture from './FieldPicture.astro';
 import { TIER_GUIDE } from '../lib/content';
 import { fieldName, type TierIndex } from '../lib/learn';
 
@@ -10,28 +12,39 @@ interface Props {
 const { tier, fields } = Astro.props.entry;
 const id = `tier-${tier.slug}`;
 const guide = TIER_GUIDE[tier.slug];
+const physics = tier.slug === 'physics';
+const METER_MAX = 13; // 目盛りは13まで（それより多いときも13本）
 ---
 
 <section aria-labelledby={id} class="learn-tier">
-  <h2 id={id}>{tier.title}</h2>
-  <p class="measure">{tier.summary}</p>
-  <dl class="learn-tier__guide">
-    <div><dt>対象</dt><dd>{guide.audience}</dd></div>
-    <div><dt>前提知識</dt><dd>{guide.prerequisite}</dd></div>
-    <div><dt>読む順</dt><dd>{guide.order}</dd></div>
-  </dl>
+  <div class="learn-tier__head">
+    <div>
+      <h2 id={id}>{tier.title}</h2>
+      <p class="learn-tier__summary">{tier.summary}</p>
+    </div>
+    <dl class="learn-tier__guide">
+      <div><dt>対象</dt><dd>{guide.audience}</dd></div>
+      <div><dt>前提知識</dt><dd>{guide.prerequisite}</dd></div>
+      <div><dt>読む順</dt><dd>{guide.order}</dd></div>
+    </dl>
+  </div>
   <ul class="learn-fields__list">
     {fields.map(({ field, units }) => (
       <li>
         {units.length > 0 ? (
-          <a class="learn-field-entry" href={`/learn/${field.slug}/`}>
-            <span class="learn-field-entry__title">{fieldName(field)}</span>
+          <a class:list={['learn-field-entry', { 'learn-field-entry--physics': physics }]} href={`/learn/${field.slug}/`}>
+            <span class="learn-field-entry__pic"><FieldPicture slug={field.slug} physics={physics} /></span>
+            <span class="learn-field-entry__title"><span class="visually-hidden">{fieldName(field)}</span><span class="learn-field-entry__mark" aria-hidden="true">{field.mark}.</span><span aria-hidden="true">{field.title}</span></span>
             <span class="learn-field-entry__text">{field.summary}</span>
-            <span class="learn-field-entry__count">{units.length}ページ</span>
+            <span class="learn-field-entry__count">
+              <span class="learn-meter" aria-hidden="true">{Array.from({ length: Math.min(units.length, METER_MAX) }, () => <i></i>)}</span>
+              {units.length}ページ
+            </span>
           </a>
         ) : (
-          <div class="learn-field-entry learn-field-entry--pending">
-            <span class="learn-field-entry__title">{fieldName(field)}<span class="learn-field-entry__pending">（準備中）</span></span>
+          <div class:list={['learn-field-entry', 'learn-field-entry--pending', { 'learn-field-entry--physics': physics }]}>
+            <span class="learn-field-entry__pic"><FieldPicture slug={field.slug} physics={physics} /></span>
+            <span class="learn-field-entry__title"><span class="visually-hidden">{fieldName(field)}</span><span class="learn-field-entry__mark" aria-hidden="true">{field.mark}.</span><span aria-hidden="true">{field.title}</span><span class="learn-field-entry__pending">（準備中）</span></span>
             <span class="learn-field-entry__text">{field.summary}</span>
           </div>
         )}
@@ -43,18 +56,32 @@ const guide = TIER_GUIDE[tier.slug];
 <style>
   @import "../styles/breakpoints.css";
   .learn-tier {
-    margin-block-start: var(--space-6);
+    margin-block-start: var(--space-8);
+  }
+  .learn-tier__head {
+    display: grid;
+    gap: var(--space-3) var(--space-5);
+    padding-block-end: var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-text);
+  }
+  .learn-tier__head h2 {
+    margin: 0;
+  }
+  .learn-tier__summary {
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
   }
   .learn-tier__guide {
-    max-width: var(--content-max-width);
-    margin: var(--space-2) 0 0;
+    margin: 0;
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
     letter-spacing: var(--text-small-tracking);
   }
   .learn-tier__guide div {
     display: flex;
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
   .learn-tier__guide dt {
     flex: none;
@@ -68,33 +95,25 @@ const guide = TIER_GUIDE[tier.slug];
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
-    margin: var(--space-4) 0 0;
+    margin: var(--space-5) 0 0;
     padding: 0;
     list-style: none;
-  }
-  @media (--tablet) {
-    .learn-fields__list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  @media (--pc) {
-    .learn-fields__list {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
   }
   .learn-fields__list li {
     display: flex;
   }
-  .learn-field-entry {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+  /* 入口のカード：左に絵、右に番号と名前・説明・ページの数（下端にそろえる） */
+  .learn-field-entry,
+  .learn-field-entry:visited {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: var(--space-4);
     width: 100%;
-    min-height: var(--target-min);
-    padding: var(--space-3);
+    padding: var(--space-5);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-card);
-    background: var(--color-surface-sunken);
+    background: var(--color-surface);
     color: var(--color-text);
     text-decoration: none;
   }
@@ -102,28 +121,71 @@ const guide = TIER_GUIDE[tier.slug];
     border-color: var(--color-primary);
     background: var(--color-primary-tint);
   }
+  .learn-field-entry__pic {
+    display: grid;
+    grid-row: 1 / 4;
+    place-items: center;
+    width: var(--icon-field-tile);
+    height: var(--icon-field-tile);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
+  }
+  a.learn-field-entry:hover .learn-field-entry__pic {
+    background: var(--color-surface);
+  }
   .learn-field-entry__title {
-    color: var(--color-primary);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
     font-size: var(--text-lead);
     font-weight: var(--font-weight-bold);
-    line-height: var(--text-lead-leading);
+    line-height: var(--text-h3-leading);
     letter-spacing: var(--text-lead-tracking);
+    font-feature-settings: "palt";
   }
-  .learn-field-entry__text,
-  .learn-field-entry__count {
+  .learn-field-entry__mark {
+    flex: none;
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-variant-numeric: tabular-nums;
+  }
+  .learn-field-entry--physics .learn-field-entry__mark {
+    color: var(--color-brand);
+  }
+  .learn-field-entry__text {
+    margin-block-start: var(--space-1);
     color: var(--color-text-muted);
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
     letter-spacing: var(--text-small-tracking);
   }
-  /* ページの数は、カードの下端にそろえる */
+  /* ページの数は、カードの下端にそろえる。目盛りはページの数だけ（読み上げない） */
   .learn-field-entry__count {
-    margin-block-start: auto;
-    padding-block-start: var(--space-1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-block-start: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    font-variant-numeric: tabular-nums;
   }
-  /* 準備中：リンクにせず、白い面と補助の色で控えめに示す */
+  .learn-meter {
+    display: inline-flex;
+    gap: var(--meter-gap);
+  }
+  .learn-meter i {
+    width: var(--meter-cell-width);
+    height: var(--meter-cell-height);
+    border-radius: var(--meter-gap);
+    background: var(--color-accent);
+  }
+  /* 準備中：リンクにせず、破線の枠、薄い絵、補助の色の名前 */
   .learn-field-entry--pending {
-    background: var(--color-surface);
+    border-style: dashed;
+  }
+  .learn-field-entry--pending .learn-field-entry__pic {
+    opacity: var(--pending-opacity);
   }
   .learn-field-entry--pending .learn-field-entry__title {
     color: var(--color-text-muted);
@@ -131,5 +193,19 @@ const guide = TIER_GUIDE[tier.slug];
   .learn-field-entry__pending {
     font-size: var(--text-small);
     font-weight: var(--font-weight-normal);
+  }
+  @media (--tablet) {
+    .learn-fields__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (--pc) {
+    .learn-tier__head {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+    }
+    .learn-fields__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 </style>

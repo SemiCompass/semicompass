@@ -1,18 +1,25 @@
 ---
-// 半導体を学ぶの一覧（/learn/）で、分野や小分けの単元を並べる一覧（仕様書 8.18）
+// 分野のページ（/learn/{分野}/）の単元の一覧（仕様書 8.18）。
+//   基礎編（numbered）：読む順を、番号の丸と、丸どうしを縦につなぐ線で示す。番号は分野の中で通し（start から数える）。
+//   半導体の物理：順序を決めないため、番号を付けず、1行ずつ罫線で区切る
 import type { UnitLink } from '../lib/learn';
 
 interface Props {
   units: UnitLink[];
+  numbered?: boolean;
+  start?: number; // 最初の単元の番号から1を引いた値（小分けをまたいで通しで数える）
 }
-const { units } = Astro.props;
+const { units, numbered = false, start = 0 } = Astro.props;
 ---
 
-<ol class="learn-units">
-  {units.map((u) => (
+<ol class:list={['learn-units', { 'learn-units--numbered': numbered }]}>
+  {units.map((u, i) => (
     <li class="learn-units__item">
-      <a class="learn-units__title" href={u.href}>{u.title}</a>
-      {u.summary && <span class="learn-units__summary">{u.summary}</span>}
+      {numbered && <span class="learn-units__no" aria-hidden="true">{start + i + 1}</span>}
+      <div class="learn-units__body">
+        <a class="learn-units__title" href={u.href}>{u.title}</a>
+        {u.summary && <span class="learn-units__summary">{u.summary}</span>}
+      </div>
     </li>
   ))}
 </ol>
@@ -24,26 +31,70 @@ const { units } = Astro.props;
     padding: 0;
     border-top: var(--border-width) solid var(--color-border);
     list-style: none;
-    counter-reset: unit;
   }
   .learn-units__item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
     padding-block: var(--space-3);
     border-bottom: var(--border-width) solid var(--color-border);
   }
-  .learn-units__title {
+  .learn-units__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  .learn-units__title,
+  .learn-units__title:visited {
     display: inline-flex;
     align-items: center;
     min-height: var(--target-min);
+    color: var(--color-text);
     font-size: var(--text-lead);
     font-weight: var(--font-weight-bold);
     line-height: var(--text-lead-leading);
+    text-decoration: none;
+  }
+  .learn-units__title:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
   }
   .learn-units__summary {
     color: var(--color-text-muted);
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
+  }
+  /* 基礎編：番号の丸と、丸どうしをつなぐ線（罫線は引かない） */
+  .learn-units--numbered {
+    border-top: 0;
+  }
+  .learn-units--numbered .learn-units__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--unit-num-size) minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-block: 0 var(--space-5);
+    border-bottom: 0;
+  }
+  .learn-units--numbered .learn-units__item:not(:last-child)::after {
+    position: absolute;
+    top: var(--unit-num-size);
+    bottom: 0;
+    left: calc(var(--unit-num-size) / 2 - var(--border-width));
+    border-left: var(--quiz-border-current) solid var(--color-border);
+    content: "";
+  }
+  .learn-units__no {
+    display: grid;
+    place-items: center;
+    width: var(--unit-num-size);
+    height: var(--unit-num-size);
+    border: var(--quiz-border-current) solid var(--color-primary);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+    font-variant-numeric: tabular-nums;
+  }
+  .learn-units--numbered .learn-units__title {
+    min-height: var(--unit-num-size);
   }
 </style>

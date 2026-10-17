@@ -16,15 +16,69 @@ const fieldName = (s: PathStep) => name(s.field);
 
 <nav aria-labelledby={id} class="learn-next">
   <h2 id={id}>{heading}</h2>
-  <ul>
+  <ul class="learn-next__cards">
     {previous && (
-      <li>{previous.crossesField ? `前の分野（${fieldName(previous)}）の最後のページ：` : '前のページ：'}<a href={previous.link.href}>{previous.link.title}</a></li>
+      <li><a href={previous.link.href}><span class="learn-next__dir">← {previous.crossesField ? `前の分野（${fieldName(previous)}）の最後のページ：` : '前のページ：'}</span><span class="learn-next__name">{previous.link.title}</span></a></li>
     )}
     {next && (
-      <li>{next.crossesField ? `次の分野（${fieldName(next)}）の最初のページ：` : '次のページ：'}<a href={next.link.href}>{next.link.title}</a></li>
-    )}
-    {isLast && (
-      <li>学んだことを、企業とニュースで確かめる：<a href="/companies/">企業分析（業績）</a>、<a href="/news/">ニュース解説</a></li>
+      <li class="learn-next__next"><a href={next.link.href}><span class="learn-next__dir">{next.crossesField ? `次の分野（${fieldName(next)}）の最初のページ：` : '次のページ：'} →</span><span class="learn-next__name">{next.link.title}</span></a></li>
     )}
   </ul>
+  {isLast && (
+    <p class="learn-next__last">学んだことを、企業とニュースで確かめる：<a href="/companies/">企業分析（業績）</a>、<a href="/news/">ニュース解説</a></p>
+  )}
 </nav>
+
+<style>
+  @import "../styles/breakpoints.css";
+  /* 前後のページの案内（8.21）：2つのカード。次へのカードは右揃え */
+  .learn-next__cards {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .learn-next__cards a,
+  .learn-next__cards a:visited {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    height: 100%;
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .learn-next__cards a:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+  }
+  .learn-next__next a {
+    align-items: flex-end;
+    text-align: end;
+  }
+  .learn-next__dir {
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .learn-next__name {
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  .learn-next__last {
+    margin-block: var(--space-4) 0;
+    font-size: var(--text-dense);
+  }
+  @media (--tablet) {
+    .learn-next__cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .learn-next__next:only-child {
+      grid-column: 2;
+    }
+  }
+</style>
