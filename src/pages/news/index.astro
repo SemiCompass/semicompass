@@ -1,26 +1,43 @@
 ---
-// ニュース解説の一覧（/news/。仕様書 9.6）：新しい順に、日付、見出し、分類、関係する企業のタグを、1件ずつ罫線で区切って並べる。
+// ニュース解説の一覧（/news/。仕様書 9.6）：分類の絞り込み（8.19のチップ。件数つき）と、新しい順の一覧。
+// 1件ずつ罫線で区切り、左に日付（月日を大きく、下に年と曜日）、右に分類・見出し・段階と企業のタグ。カードにしない。
 // content/news/ の draft: true は、プレビューのビルドだけ。0件のときは、データがない状態の表示
 import { BUILD_ENV } from 'astro:env/server';
 import Phrase from '../../components/Phrase.astro';
 import StateMessage from '../../components/StateMessage.astro';
-import Tag from '../../components/Tag.astro';
 import Page from '../../layouts/Page.astro';
-import { dateLabel, loadCompanies } from '../../lib/companies';
+import { loadCompanies, loadSupply } from '../../lib/companies';
 import { CATEGORY_LABEL, loadNews } from '../../lib/news';
 
 const items = loadNews(BUILD_ENV === 'preview');
 const companies = loadCompanies();
+const supply = loadSupply() as unknown as { processes: { slug: string; stage: string }[]; categories: { slug: string; name: string }[] };
 const companyTags = (slugs: string[]) =>
   slugs.flatMap((slug) => {
     const c = companies.find((x) => x.slug === slug);
     return c ? [{ slug, name: c.short_names[0] ?? c.name }] : [];
   });
+// 段階のタグ（トップの新着と同じ決まり）：工程のタグの段階、なければ関係する企業の分類から、最大2つ
+const stageColor: Record<string, string> = { design: 'neutral', materials: 'materials', 'front-end': 'front', 'back-end': 'back', devices: 'devices' };
+const stagesOf = (n: (typeof items)[number]) => {
+  const fromProcesses = n.front.tags.processes.map((p) => supply.processes.find((x) => x.slug === p)?.stage).filter(Boolean) as string[];
+  const fromCompanies = n.front.tags.companies.flatMap((slug) => companies.find((c) => c.slug === slug)?.categories ?? []);
+  return [...new Set([...fromProcesses, ...(fromProcesses.length ? [] : fromCompanies)])]
+    .filter((s) => s in stageColor)
+    .slice(0, 2)
+    .map((slug) => ({ slug, name: supply.categories.find((c) => c.slug === slug)?.name ?? slug, color: stageColor[slug] }));
+};
+const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
+const parts = (d: string) => {
+  const [y, m, day] = String(d).slice(0, 10).split('-').map(Number);
+  return { md: `${m}.${day}`, y, w: WEEK[new Date(Date.UTC(y, m - 1, day)).getUTCDay()], full: `${y}年${m}月${day}日` };
+};
+const categories = [...new Set(items.map((n) => n.front.category))];
 ---
 
 <Page
   title="ニュース解説の一覧｜SemiCompass"
-  heading="ニュース"
+  heading="ニュース解説"
   description="半導体業界のニュースを、何が起きたか、なぜ重要か、サプライチェーン上のどこに関わるかの順に解説します。新しい順に並べています。"
   breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: 'ニュース' }]}
   wide
@@ -29,60 +46,216 @@ const companyTags = (slugs: string[]) =>
     <StateMessage kind="empty" message="ニュース解説は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
   ) : (
     <>
-      <p class="measure">ニュース解説を、新しい順に並べています。（{items.length}件）</p>
+      <p class="lead measure">半導体のニュースを、どの工程・どの企業の話かまで解説します。新しい順に並べています。</p>
+      <div class="news-filter" data-news-filter hidden>
+        <div class="chips" role="group" aria-label="分類で絞り込む">
+          <button type="button" class="chip" aria-pressed="true" data-category="">すべて<span class="chip__n">{items.length}</span></button>
+          {categories.map((c) => (
+            <button type="button" class="chip" aria-pressed="false" data-category={c}>{CATEGORY_LABEL[c]}<span class="chip__n">{items.filter((n) => n.front.category === c).length}</span></button>
+          ))}
+        </div>
+      </div>
+      <p class="news-count" role="status" data-news-count>{items.length}件</p>
       <ol class="news-list">
-        {items.map((n) => (
-          <li class="news-list__item">
-            <p class="news-list__meta">
-              <time datetime={n.front.published_at}>{dateLabel(n.front.published_at)}</time>
-              <span>分類：{CATEGORY_LABEL[n.front.category]}</span>
-            </p>
-            <h2 class="news-list__title"><a href={n.url}><Phrase text={n.front.title} /></a></h2>
-            {companyTags(n.front.tags.companies).length > 0 && (
-              <p class="news-list__tags">{companyTags(n.front.tags.companies).map((c) => <Tag href={`/companies/${c.slug}/`} kind="企業">{c.name}</Tag>)}</p>
-            )}
-          </li>
-        ))}
+        {items.map((n) => {
+          const d = parts(n.front.published_at);
+          return (
+            <li class="news-list__item" data-category={n.front.category}>
+              <p class="news-list__date"><time datetime={n.front.published_at}><span class="news-list__md">{d.md}</span><span class="news-list__yw">{d.y}年（{d.w}）</span><span class="visually-hidden">{d.full}</span></time></p>
+              <div class="news-list__body">
+                <p class="news-list__cat"><span class="visually-hidden">分類：{CATEGORY_LABEL[n.front.category]}</span><span aria-hidden="true">{CATEGORY_LABEL[n.front.category]}</span></p>
+                <h2 class="news-list__title"><a href={n.url}><Phrase text={n.front.title} /></a></h2>
+                {(stagesOf(n).length > 0 || companyTags(n.front.tags.companies).length > 0) && (
+                  <p class="news-list__tags">
+                    {stagesOf(n).map((st) => <a class:list={['ntag', `ntag--${st.color}`]} href={`/companies/process/${st.slug}/`}><span class="ntag__dot" aria-hidden="true"></span>{st.name}</a>)}
+                    {companyTags(n.front.tags.companies).map((c) => <a class="ntag" href={`/companies/${c.slug}/`}><span class="visually-hidden">企業：</span>{c.name}</a>)}
+                  </p>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ol>
     </>
   )}
 </Page>
 
+<script>
+  import '../../scripts/news-filter';
+</script>
+
 <style>
+  @import "../../styles/breakpoints.css";
+  .news-filter {
+    margin-block: var(--space-5) 0;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--chip-height);
+    padding-inline: var(--space-4);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--text-dense);
+    cursor: pointer;
+  }
+  .chip::after {
+    position: absolute;
+    inset: calc((var(--chip-height) - var(--target-min)) / 2) 0;
+    content: "";
+  }
+  .chip:hover {
+    background: var(--color-primary-tint);
+  }
+  .chip[aria-pressed="true"] {
+    border-color: var(--color-brand);
+    background: var(--color-brand);
+    color: var(--color-on-brand);
+  }
+  .chip__n {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .chip[aria-pressed="true"] .chip__n {
+    color: var(--color-on-brand-muted);
+  }
+  .news-count {
+    margin-block: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+  }
   .news-list {
     max-width: var(--content-max-width);
-    margin: var(--space-5) 0 0;
+    margin: 0;
     padding: 0;
-    border-top: var(--border-width) solid var(--color-border);
+    border-top: var(--border-width) solid var(--color-text);
     list-style: none;
   }
   .news-list__item {
-    padding-block: var(--space-4);
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-5);
     border-bottom: var(--border-width) solid var(--color-border);
   }
-  .news-list__meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-4);
+  .news-list__date {
     margin: 0;
     color: var(--color-text-muted);
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
-    letter-spacing: var(--text-small-tracking);
+    font-variant-numeric: tabular-nums;
+  }
+  .news-list__md {
+    margin-inline-end: var(--space-2);
+    color: var(--color-text);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+  }
+  .news-list__cat {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-caption-leading);
   }
   .news-list__title {
     margin: var(--space-1) 0 0;
-    font-size: var(--text-h3);
+    font-size: var(--text-lead);
     line-height: var(--text-h3-leading);
+    font-feature-settings: "palt";
   }
-  .news-list__title a {
-    display: inline-block;
-    min-height: var(--target-min);
+  .news-list__title a,
+  .news-list__title a:visited {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .news-list__title a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
   }
   .news-list__tags {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
     margin: var(--space-2) 0 0;
+  }
+  /* 段階のタグと企業のタグ（8.11） */
+  .ntag,
+  .ntag:visited {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--tag-height-sm);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    font-size: var(--text-caption);
+    text-decoration: none;
+  }
+  .ntag:hover {
+    text-decoration: underline;
+  }
+  .ntag__dot {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: var(--radius-pill);
+    background: currentcolor;
+  }
+  .ntag--neutral,
+  .ntag--materials,
+  .ntag--front,
+  .ntag--back,
+  .ntag--devices {
+    font-weight: var(--font-weight-bold);
+  }
+  .ntag--neutral,
+  .ntag--neutral:visited {
+    background: var(--color-stage-neutral-tint);
+  }
+  .ntag--materials,
+  .ntag--materials:visited {
+    background: var(--color-stage-materials-tint);
+    color: var(--color-stage-materials);
+  }
+  .ntag--front,
+  .ntag--front:visited {
+    background: var(--color-stage-front-tint);
+    color: var(--color-stage-front);
+  }
+  .ntag--back,
+  .ntag--back:visited {
+    background: var(--color-stage-back-tint);
+    color: var(--color-stage-back);
+  }
+  .ntag--devices,
+  .ntag--devices:visited {
+    background: var(--color-stage-devices-tint);
+    color: var(--color-stage-devices);
+  }
+  @media (--tablet) {
+    .news-list__item {
+      grid-template-columns: var(--news-date-width) minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+    .news-list__md {
+      display: block;
+      margin: 0;
+      font-size: var(--text-h3);
+      line-height: var(--text-h3-leading);
+    }
+    .news-list__title {
+      font-size: var(--text-h3);
+    }
   }
 </style>

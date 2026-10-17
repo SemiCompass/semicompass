@@ -189,6 +189,7 @@
   --table-first-column-max: 12rem;
   --table-first-column-wide: 20rem; /* 企業の表など、最初の列を広げる表（仕様書に値がない） */
   --table-wrap-column-min: 10rem; /* 折り返す列（工程の名前の並びなど）の最小の幅（仕様書に値がない） */
+  --news-date-width: 7rem; /* 9.6 ニュースの一覧の、左の日付の列の幅（タブレット以上） */
   --aside-max-height: calc(100vh - var(--toc-sticky-top) * 2); /* 右の列の張り付く部分が、画面に収まる高さ */
 }
 
