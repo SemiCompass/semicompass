@@ -512,7 +512,7 @@ class PagesBuildTest(unittest.TestCase):
         # 半導体を学ぶ（FR-901、FR-904）：一覧に分野と単元、学習のページに図・本文・理解度チェック、トップの入口は /learn/ へ
         dist = self.learn_site()
         index = self.read(dist, "learn/index.html")
-        self.assertIn("1. 半導体工学の基礎", index)
+        self.assertIn("1. 半導体の基礎", index)
         self.assertIn('href="/learn/basics/"', index)  # 一覧には基礎編の9分野の入口を並べ、分野のページへ進む（仕様書 8.18）
         basic = index.split('id="tier-basic"')[1].split('id="tier-physics"')[0]
         self.assertEqual(len(re.findall(r'class="learn-field-entry[ "]', basic)), 9)
@@ -606,7 +606,7 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("次の分野（2. 半導体材料とウェーハ）の最初のページ：", first)
         self.assertIn('href="/learn/devices/path-b/"', first)
         second = self.read(dist, "learn/devices/path-b/index.html")
-        self.assertIn("前の分野（1. 半導体工学の基礎）の最後のページ：", second)
+        self.assertIn("前の分野（1. 半導体の基礎）の最後のページ：", second)
         self.assertIn("半導体材料とウェーハ", second.split('aria-label="パンくずリスト"')[1].split("</nav>")[0])  # パンくずは並べた分野（フォルダの devices ではない）
         index = self.read(dist, "learn/process/index.html")
         self.assertIn("試験の小分け", index)

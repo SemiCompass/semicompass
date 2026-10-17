@@ -10,9 +10,10 @@ import SourceList from '../../../components/SourceList.astro';
 import LearnDeeper from '../../../components/LearnDeeper.astro';
 import LearnPathNav from '../../../components/LearnPathNav.astro';
 import Page from '../../../layouts/Page.astro';
+import Phrase from '../../../components/Phrase.astro';
 import { companyRows, loadSupply } from '../../../lib/companies';
 import { loadLearnPages, loadLearnPath, loadTerms, type LearnPage } from '../../../lib/content';
-import { appliesToLinks, deeperLinks, fieldOf, learnFigure, learnHref, neighbors } from '../../../lib/learn';
+import { appliesToLinks, deeperLinks, fieldName, fieldOf, learnFigure, learnHref, learnIndex, neighbors } from '../../../lib/learn';
 import { displayMath } from '../../../lib/math';
 
 export function getStaticPaths() {
@@ -38,6 +39,15 @@ const sources = (f.sources ?? []).map((s) => ({
   number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on, accessedOn: s.accessed_on, pages: s.pages,
 }));
 const headed = page.sections.filter((s) => s.heading);
+// 分野の中の位置（8.18。基礎編だけ）：「4 / 8ページ」と、ページの数だけの目盛り
+const fieldEntry = !physics && field ? learnIndex(preview).find((e) => e.field.slug === field.slug) : undefined;
+const position = fieldEntry ? fieldEntry.units.findIndex((u) => u.href === learnHref(page)) + 1 : 0;
+const total = fieldEntry?.units.length ?? 0;
+const SUMMARY_HEADING = 'このページのまとめ';
+const label = (date: string) => {
+  const [y, m, d] = date.split('-').map(Number);
+  return `${y}年${m}月${d}日`;
+};
 const toc = [
   ...headed.map((s, i) => ({ id: `s${i}`, label: s.heading })),
   ...(applies.length > 0 ? [{ id: 'applies', label: '基礎編のどこに効くか' }] : []),
@@ -67,17 +77,37 @@ const toc = [
   schemaType="Article"
   noindex={f.draft === true}
 >
+  <header class="lesson-head" slot="head">
+    {position > 0 && field && (
+      <p class="lesson-progress">
+        <a href={`/learn/${field.slug}/`}>{fieldName(field)}</a>
+        <span class="lesson-progress__bar" aria-hidden="true">
+          {Array.from({ length: total }, (_, i) => <i class:list={{ 'is-done': i + 1 < position, 'is-current': i + 1 === position }}></i>)}
+        </span>
+        <span class="lesson-progress__n">{position} / {total}ページ</span>
+      </p>
+    )}
+    <h1 class="lesson-head__title"><Phrase text={f.title} /></h1>
+    <p class="lesson-head__dates">
+      {f.published_at && <span>公開日：<time datetime={f.published_at}>{label(f.published_at)}</time></span>}
+      {f.updated_at && <span>更新日：<time datetime={f.updated_at}>{label(f.updated_at)}</time></span>}
+      <span>作成者：<a href="/about/">hysd（SemiCompass運営者）</a></span>
+    </p>
+  </header>
   <p class="lead measure">{f.description}</p>
   {Figure && <Figure />}
-  {page.sections.map((section) => (
-    <>
-      {section.heading && <h2 id={`s${headed.indexOf(section)}`}>{section.heading}</h2>}
-      {section.paragraphs.map((paragraph) => {
-        const block = physics ? displayMath(paragraph) : null;
-        return block ? <div class="math-display" set:html={block} /> : <p><RichText text={paragraph} math={physics} /></p>;
-      })}
-    </>
-  ))}
+  {page.sections.map((section) => {
+    const body = section.paragraphs.map((paragraph) => {
+      const block = physics ? displayMath(paragraph) : null;
+      return block ? <div class="math-display" set:html={block} /> : <p><RichText text={paragraph} math={physics} /></p>;
+    });
+    return (
+      <>
+        {section.heading && <h2 id={`s${headed.indexOf(section)}`}>{section.heading}</h2>}
+        {section.heading === SUMMARY_HEADING ? <div class="lesson-summary">{body}</div> : body}
+      </>
+    );
+  })}
 
   {applies.length > 0 && (
     <section aria-labelledby="applies">
@@ -119,5 +149,62 @@ const toc = [
     margin-block: var(--space-4);
     padding-inline-start: var(--space-4);
     overflow-x: auto;
+  }
+  /* 学習のページの頭（8.18）：分野の中の位置、大見出し、日付と作成者 */
+  .lesson-head {
+    margin-block-end: var(--space-5);
+  }
+  .lesson-progress {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .lesson-progress a {
+    font-weight: var(--font-weight-bold);
+  }
+  .lesson-progress__bar {
+    display: inline-flex;
+    gap: var(--meter-gap);
+  }
+  .lesson-progress__bar i {
+    width: var(--progress-cell-width);
+    height: var(--progress-cell-height);
+    border-radius: var(--meter-gap);
+    background: var(--color-border);
+  }
+  .lesson-progress__bar i.is-done {
+    background: var(--color-accent);
+  }
+  .lesson-progress__bar i.is-current {
+    background: var(--color-primary);
+  }
+  .lesson-progress__n {
+    font-variant-numeric: tabular-nums;
+  }
+  .lesson-head__title {
+    margin: 0;
+  }
+  .lesson-head__dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-3) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  /* このページのまとめ（8.18） */
+  .lesson-summary {
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
+  }
+  .lesson-summary :global(p:last-child) {
+    margin-block-end: 0;
   }
 </style>

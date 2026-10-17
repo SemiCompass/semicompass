@@ -1,0 +1,129 @@
+---
+// 「半導体を学ぶ」の分野の絵（仕様書 7章）：分野の中身を表す線の図。線は --color-primary（半導体の物理は --color-brand）、
+// 絵の中の小さな印だけ琥珀（4.4）。分野の名前と必ず組にし、読み上げない（aria-hidden）。分野を足すときは、ここに絵を足す
+interface Props {
+  slug: string;
+  physics?: boolean;
+  size?: 'card' | 'head';
+}
+const { slug, physics = false, size = 'card' } = Astro.props;
+---
+
+<svg class:list={['field-pic', `field-pic--${size}`, { 'field-pic--physics': physics }]} viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+  {slug === 'basics' && (
+    <>
+      <circle cx="8" cy="8" r="2.4" /><circle cx="20" cy="8" r="2.4" /><circle cx="32" cy="8" r="2.4" /><circle cx="8" cy="20" r="2.4" />
+      <circle cx="32" cy="20" r="2.4" /><circle cx="8" cy="32" r="2.4" /><circle cx="20" cy="32" r="2.4" /><circle cx="32" cy="32" r="2.4" />
+      <path d="M10.4 8h7.2M22.4 8h7.2M8 10.4v7.2M32 10.4v7.2M8 22.4v7.2M32 22.4v7.2M10.4 32h7.2M22.4 32h7.2" />
+      <circle class="field-pic__dot" cx="20" cy="20" r="3" />
+    </>
+  )}
+  {slug === 'materials' && (
+    <>
+      <path d="M20 4a16 16 0 1 0 2.5.2M17.5 4.2 20 6.5l2.5-2.3" />
+      <path class="field-pic__thin" d="M9 14h22M7 20h26M9 26h22M14 9v22M20 7v26M26 9v22" />
+    </>
+  )}
+  {slug === 'design' && (
+    <>
+      <path d="M12 10h8a10 10 0 0 1 0 20h-8zM4 15h8M4 25h8M30 20h6" />
+      <circle class="field-pic__dot" cx="36" cy="20" r="1.6" />
+    </>
+  )}
+  {slug === 'process' && (
+    <>
+      <path d="M4 30h32M4 24h32M4 18h10M26 18h10M14 18v-6h12v6" />
+      <path d="M6 36h28" stroke-dasharray="2 3" />
+      <rect class="field-pic__box" x="14" y="12" width="12" height="6" />
+    </>
+  )}
+  {slug === 'test' && (
+    <>
+      <rect x="6" y="22" width="28" height="12" rx="1" />
+      <path d="M12 22v-2M18 22v-2M24 22v-2M30 22v-2M26 4l-6 14" />
+      <circle class="field-pic__dot" cx="20" cy="19" r="1.6" />
+    </>
+  )}
+  {slug === 'power' && (
+    <>
+      <path d="M4 20c3-8 6-8 9 0s6 8 9 0M22 20h2v-8h6v16h6v-8" />
+      <path d="M4 32h32" stroke-dasharray="2 3" />
+    </>
+  )}
+  {slug === 'sensors' && (
+    <>
+      <rect x="8" y="18" width="24" height="16" rx="1" />
+      <path class="field-pic__thin" d="M16 18v16M24 18v16M8 26h24" />
+      <path d="M14 4l3 9M26 4l-3 9M20 3v10" />
+      <circle class="field-pic__dot" cx="20" cy="26" r="2" />
+    </>
+  )}
+  {slug === 'communication' && (
+    <>
+      <path d="M20 16v20M14 36h12M14 10a8 8 0 0 0 0 12M26 10a8 8 0 0 1 0 12M9 6a14 14 0 0 0 0 20M31 6a14 14 0 0 1 0 20" />
+      <circle class="field-pic__dot" cx="20" cy="16" r="2" />
+    </>
+  )}
+  {slug === 'industry' && (
+    <>
+      <path d="M4 34V18l8 5v-5l8 5v-5l8 5V8h6v26zM4 34h32" />
+      <rect class="field-pic__box" x="10" y="27" width="5" height="4" />
+    </>
+  )}
+  {slug === 'solid-state' && (
+    <>
+      <path d="M4 8h32M4 13h32M4 27h32M4 32h32" />
+      <path d="M20 15v10" stroke-dasharray="2 2" />
+      <path d="M17 22l3 3 3-3" />
+      <circle class="field-pic__dot" cx="20" cy="30" r="1.6" />
+    </>
+  )}
+  {slug === 'device-physics' && (
+    <>
+      <path d="M4 10h12c4 0 4 10 8 10h12M4 28h12c4 0 4 8 8 8h12" />
+      <path d="M20 4v34" stroke-dasharray="2 3" />
+      <circle class="field-pic__dot" cx="20" cy="20" r="1.6" />
+    </>
+  )}
+  {slug === 'optics' && (
+    <>
+      <path d="M4 8h32M4 32h32M8 20c2-4 4 4 6 0s4 4 6 0 4 4 6 0M26 20l4-2v4z" />
+      <circle class="field-pic__dot" cx="32" cy="8" r="2" />
+    </>
+  )}
+  {slug === 'materials-physics' && (
+    <>
+      <path d="M8 14h18v18H8zM14 8h18v18M8 14l6-6M26 14l6-6M26 32l6-6" />
+      <circle class="field-pic__dot" cx="17" cy="23" r="2" />
+    </>
+  )}
+</svg>
+
+<style>
+  .field-pic {
+    color: var(--color-primary);
+    stroke-width: var(--icon-stroke);
+  }
+  .field-pic--card {
+    width: var(--icon-field);
+    height: var(--icon-field);
+  }
+  .field-pic--head {
+    width: var(--icon-field-head);
+    height: var(--icon-field-head);
+  }
+  .field-pic--physics {
+    color: var(--color-brand);
+  }
+  .field-pic__thin {
+    stroke-width: var(--border-width);
+  }
+  .field-pic__dot {
+    fill: var(--color-highlight);
+    stroke: none;
+  }
+  .field-pic__box {
+    fill: var(--color-highlight-tint);
+    stroke: var(--color-highlight);
+  }
+</style>

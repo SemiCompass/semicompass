@@ -2,6 +2,7 @@
 // 分野のページ（/learn/{分野}/。要件定義書 FR-901、仕様書 8.18）：その分野の単元を、小分けごとに体系の順に並べる。
 // 最後に前後の分野へのリンクを置く（同じ段の中だけ。基礎編と半導体の物理はまたがない）。単元がまだない分野は「準備中」と示す（MV-08）
 import { BUILD_ENV } from 'astro:env/server';
+import FieldPicture from '../../../components/FieldPicture.astro';
 import UnitList from '../../../components/LearnUnitList.astro';
 import Page from '../../../layouts/Page.astro';
 import { fieldName, learnTiers, type FieldIndex } from '../../../lib/learn';
@@ -24,6 +25,9 @@ const { field, lead, sections, units } = entry;
 const shown = sections.filter((s) => s.units.length > 0);
 const toc = shown.length > 0 ? shown.map(({ section }) => ({ id: `section-${section.slug}`, label: section.title })) : [];
 const name = fieldName;
+// 基礎編は、読む順の番号を、分野の中で通しで数える（小分けをまたぐ）
+const numbered = field.tier !== 'physics';
+const starts = shown.map((_, i) => lead.length + shown.slice(0, i).reduce((n, s) => n + s.units.length, 0));
 ---
 
 <Page
@@ -38,35 +42,116 @@ const name = fieldName;
   ]}
   toc={toc}
 >
-  <p class="lead measure">{field.summary}</p>
+  <header class="field-head" slot="head">
+    <span class="field-head__pic"><FieldPicture slug={field.slug} physics={!numbered} size="head" /></span>
+    <div>
+      <h1 class="field-head__title">{name(field)}</h1>
+      <p class="lead field-head__lead">{field.summary}</p>
+    </div>
+  </header>
   {units.length > 0 ? (
     <>
-      {lead.length > 0 && <UnitList units={lead} />}
-      {shown.map(({ section, units: su }) => (
+      <p class="field-info">{numbered ? `基礎編・${units.length}ページ。上から順に読むのがおすすめです。` : `半導体の物理・${units.length}ページ。必要なページから読めます。`}</p>
+      {lead.length > 0 && <UnitList units={lead} numbered={numbered} />}
+      {shown.map(({ section, units: su }, i) => (
         <section aria-labelledby={`section-${section.slug}`} class="learn-section">
           <h2 id={`section-${section.slug}`}>{section.title}</h2>
           {section.summary && <p class="measure">{section.summary}</p>}
-          <UnitList units={su} />
+          <UnitList units={su} numbered={numbered} start={starts[i]} />
         </section>
       ))}
     </>
   ) : (
     <p class="learn-field__pending">この分野のページは、準備中です。</p>
   )}
-  <nav aria-label="前後の分野" class="learn-field-nav">
-    <ul>
-      {previous && <li>前の分野：<a href={`/learn/${previous.slug}/`}>{name(previous)}</a></li>}
-      {next && <li>次の分野：<a href={`/learn/${next.slug}/`}>{name(next)}</a></li>}
-    </ul>
-  </nav>
+  {(previous || next) && (
+    <nav aria-label="前後の分野" class="learn-field-nav">
+      {previous && <a href={`/learn/${previous.slug}/`}><span class="learn-field-nav__dir">← 前の分野：</span><span class="learn-field-nav__name">{name(previous)}</span></a>}
+      {next && <a class="learn-field-nav__next" href={`/learn/${next.slug}/`}><span class="learn-field-nav__dir">次の分野：</span><span class="learn-field-nav__name">{name(next)} →</span></a>}
+    </nav>
+  )}
 </Page>
 
 <style>
-  .learn-section,
-  .learn-field-nav {
+  @import "../../../styles/breakpoints.css";
+  /* 分野の頭（8.18）：左に分野の絵、右に番号つきの大見出しと一文の説明 */
+  .field-head {
+    display: grid;
+    gap: var(--space-4) var(--space-5);
+    align-items: center;
+    margin-block-end: var(--space-5);
+  }
+  .field-head__pic {
+    display: grid;
+    place-items: center;
+    width: var(--icon-field-head-tile);
+    height: var(--icon-field-head-tile);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
+  }
+  .field-head__title {
+    margin: 0;
+  }
+  .field-head__lead {
+    max-width: var(--content-max-width);
+    margin: var(--space-1) 0 0;
+  }
+  .field-info {
+    margin: 0 0 var(--space-4);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .learn-section {
     margin-block-start: var(--space-7);
   }
   .learn-field__pending {
     color: var(--color-text-muted);
+  }
+  /* 前後の分野（8.21） */
+  .learn-field-nav {
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--content-max-width);
+    margin-block-start: var(--space-7);
+  }
+  .learn-field-nav a,
+  .learn-field-nav a:visited {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .learn-field-nav a:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+  }
+  .learn-field-nav a.learn-field-nav__next {
+    align-items: flex-end;
+    text-align: end;
+  }
+  .learn-field-nav__dir {
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .learn-field-nav__name {
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+  }
+  @media (--tablet) {
+    .field-head {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+    .learn-field-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .learn-field-nav__next:only-child {
+      grid-column: 2;
+    }
   }
 </style>

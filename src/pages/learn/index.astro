@@ -3,7 +3,6 @@
 // 二段の入口を並べる。基礎編（対象で分けた9分野）と、深掘り編「半導体の物理」（学問で分けたカード）。
 // 入口から分野のページ（/learn/{分野}/）へ進む。単元がまだない分野は、リンクにせず「準備中」とする（MV-08）
 import { BUILD_ENV } from 'astro:env/server';
-import Button from '../../components/Button.astro';
 import LearnTierFields from '../../components/LearnTierFields.astro';
 import Page from '../../layouts/Page.astro';
 import { learnTiers } from '../../lib/learn';
@@ -21,27 +20,116 @@ const first = firstField?.units[0];
   breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '半導体を学ぶ' }]}
   wide
 >
-  <p class="lead measure">半導体の仕組みから、製造、用途、業界までを、分野ごとに学べます。各ページの最後に、内容を確かめる問いがあります。</p>
-  {firstField && first && (
-    <div class="learn-start">
-      <p class="learn-start__text">初めての方は、基礎編の「{firstField.field.mark}. {firstField.field.title}」から始めてください。</p>
-      <Button variant="primary" href={first.href}>最初のページ「{first.title}」を読む</Button>
-    </div>
-  )}
+  <div class="learn-head">
+    <p class="lead learn-head__lead">半導体の仕組みから、製造、用途、業界までを、分野ごとに学べます。各ページの最後に、内容を確かめる問いがあります。</p>
+    {firstField && first && (
+      <div class="learn-start">
+        <p class="learn-start__label">初めての方へ</p>
+        <p class="learn-start__text">初めての方は、基礎編の「{firstField.field.mark}. {firstField.field.title}」から始めてください。中学校の理科の知識で読めます。</p>
+        <a class="learn-start__button" href={first.href}><span>最初のページ「{first.title}」を読む</span><span aria-hidden="true">→</span></a>
+      </div>
+    )}
+  </div>
   <nav aria-label="分野を選ぶ">
     {tiers.map((entry) => <LearnTierFields entry={entry} />)}
+  </nav>
+  <nav class="learn-after" aria-label="学んだあとに">
+    <a href="/processes/"><span class="learn-after__name">工程の一覧へ →</span>学んだ工程に、どの企業が関わっているかを見る</a>
+    <a href="/companies/"><span class="learn-after__name">企業を比べる →</span>売上高・利益率・給与を並べて見る</a>
+    <a href="/glossary/"><span class="learn-after__name">用語集へ →</span>分からない言葉の短い定義を引く</a>
   </nav>
 </Page>
 
 <style>
+  @import "../../styles/breakpoints.css";
+  /* 一覧の頭（8.18）：薄い灰色の面に、短い説明と「初めての方へ」の枠 */
+  .learn-head {
+    display: grid;
+    gap: var(--space-5);
+    align-items: end;
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--color-page);
+  }
+  .learn-head__lead {
+    max-width: var(--hero-lead-max-width);
+    margin: 0;
+  }
   .learn-start {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-    margin-block-start: var(--space-4);
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+  .learn-start__label {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
   }
   .learn-start__text {
-    margin: 0;
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-dense);
+    line-height: var(--text-lead-leading);
+  }
+  .learn-start__button,
+  .learn-start__button:visited {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--target-min);
+    margin-block-start: var(--space-4);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-control);
+    background: var(--color-primary);
+    color: var(--color-primary-contrast);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+    text-decoration: none;
+  }
+  .learn-start__button:hover {
+    background: var(--color-primary-hover);
+    color: var(--color-primary-contrast);
+  }
+  /* 学んだあとの行き先 */
+  .learn-after {
+    display: grid;
+    gap: var(--space-3);
+    margin-block-start: var(--space-8);
+  }
+  .learn-after a,
+  .learn-after a:visited {
+    display: block;
+    padding: var(--space-4) var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: var(--color-text);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    text-decoration: none;
+  }
+  .learn-after a:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+  }
+  .learn-after__name {
+    display: block;
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+  }
+  @media (--tablet) {
+    .learn-after {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (--pc) {
+    .learn-head {
+      grid-template-columns: minmax(0, 1fr) var(--learn-start-width);
+      gap: var(--space-7);
+      padding: var(--space-6);
+    }
   }
 </style>
