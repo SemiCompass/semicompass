@@ -8,7 +8,7 @@ schema_version: 1
 fields:
   - "no": 1
     slug: basics
-    title: 半導体工学の基礎
+    title: 半導体の基礎
     summary: 半導体が電気を通したり止めたりできる仕組みと、トランジスタの働きを学びます。
     units:
       - { type: learn, ref: electricity-basics }
