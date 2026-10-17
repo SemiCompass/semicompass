@@ -221,8 +221,8 @@ terms:
     term: Low-k膜
     basis: reviewed
     sources: []   # 運営者が確かめるときの手元の資料は未選定
-  cd-sem:
-    term: CD-SEM
+  sem:
+    term: 走査型電子顕微鏡
     basis: reviewed
     sources: []   # 運営者が確かめるときの手元の資料は未選定
   tsv:
