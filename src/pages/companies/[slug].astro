@@ -234,7 +234,7 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
       <h2 id="work"><Phrase text="働く環境" /></h2>
       {employees && latestEmployee ? (
         <>
-          <Chart id="employees" title="従業員数の推移" unit="人" period={periodRange(employees.rows)} spec={employees.spec} source={source} />
+          <Chart id="employees" title={`従業員数の推移（${employees.scope}）`} unit="人" period={periodRange(employees.rows)} spec={employees.spec} source={source} />
           {nonConsolidated && (
             <DataTable
               caption="提出会社単体の従業員の状況"
