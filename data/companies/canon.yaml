@@ -15,11 +15,20 @@ processes:
   - deposition
   - lithography
   - bonding
-listing: coming_soon
+listing: detailed
+detailed_since: "2026-10-17"
+tagline: "プリンターやカメラに加え、半導体露光装置を作る精密機器の企業"
+website_url: "https://global.canon/ja/"
+ir_url: "https://global.canon/ja/ir/"
+recruit_url: "https://global.canon/ja/employ/new/"
+accounting_standard: usgaap
+fiscal_year_end_month: 12
+is_holding_company: false
 selection:
   basis: global_share
-  note: "運営者が掲載企業リスト（第1.0版）で承認。世界シェア上位の製品を持つことは、公開資料での確認が未実施で、暫定"
+  note: "運営者が掲載企業リスト（第1.0版）で承認。半導体露光装置を主要製品とすることは有価証券報告書で確認した（2026年10月17日）。世界シェア上位であることは、公開資料での確認が未実施で、暫定"
   decided_on: "2026-10-04"
+  source: S3
 sources:
   - id: S1
     title: "半導体露光装置"
@@ -31,3 +40,25 @@ sources:
     publisher: "キヤノン株式会社"
     url: "https://global.canon/ja/product/indtech/semicon/group/"
     accessed_on: "2026-10-11"
+  - id: S3
+    title: "有価証券報告書（2025年12月期）"
+    publisher: "キヤノン株式会社（EDINET）"
+    url: "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100XTLJ.pdf"
+    published_on: "2026-03-25"
+    accessed_on: "2026-10-17"
+    doc_id: S100XTLJ
+  - id: S4
+    title: "Canon Global"
+    publisher: "キヤノン株式会社"
+    url: "https://global.canon/ja/"
+    accessed_on: "2026-10-17"
+  - id: S5
+    title: "投資家情報"
+    publisher: "キヤノン株式会社"
+    url: "https://global.canon/ja/ir/"
+    accessed_on: "2026-10-17"
+  - id: S6
+    title: "新卒採用"
+    publisher: "キヤノン株式会社"
+    url: "https://global.canon/ja/employ/new/"
+    accessed_on: "2026-10-17"
