@@ -1022,6 +1022,27 @@
       }
     }
   ],
-  "announcements": [],
+  "announcements": [
+    {
+      "fiscal_period_end": "2027-03",
+      "quarter": 1,
+      "announced_on": "2026-07-30",
+      "detected_at": "2026-10-17T13:54:12+09:00",
+      "documents": [
+        {
+          "type": "tanshin",
+          "title": "決算短信",
+          "url": "https://www.tel.co.jp/ir/library/report/negqvb0000000eqw-att/fy27q1tanshin-j.pdf",
+          "published_at": "2026-07-30T00:00:00+09:00"
+        },
+        {
+          "type": "presentation",
+          "title": "決算説明資料",
+          "url": "https://www.tel.co.jp/ir/library/report/negqvb0000000eqw-att/fy27q1presentations-j.pdf",
+          "published_at": "2026-07-30T00:00:00+09:00"
+        }
+      ]
+    }
+  ],
   "revisions": []
 }
