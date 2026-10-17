@@ -177,7 +177,7 @@ class PreviewFixesTest(unittest.TestCase):
         self.assertIn("word-break: auto-phrase", block)
         self.assertIn("text-wrap: balance", block)
         self.assertIn("lead", self.read("src/pages/index.astro"))
-        self.assertIn("lead", self.read("src/components/KeyPoints.astro"))
+        self.assertIn("lead", self.read("src/components/CompanyHead.astro"))  # 企業の一言の説明は、企業の頭（8.8）
 
     def test_table_first_column_has_a_width_range_and_wraps(self):
         self.assertIn("--table-first-column-min", V)

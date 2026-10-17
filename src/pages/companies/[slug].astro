@@ -6,6 +6,7 @@
 import { BUILD_DATE, BUILD_ENV } from 'astro:env/server';
 import Chart from '../../components/Chart.astro';
 import ExternalLink from '../../components/ExternalLink.astro';
+import CompanyHead from '../../components/CompanyHead.astro';
 import KeyPoints from '../../components/KeyPoints.astro';
 import FigureNotes from '../../components/FigureNotes.astro';
 import Notice from '../../components/Notice.astro';
@@ -19,9 +20,10 @@ import Tag from '../../components/Tag.astro';
 import DataTable from '../../components/DataTable.astro';
 import Page from '../../layouts/Page.astro';
 import { buildDate } from '../../lib/buildDate';
+import { millionToOku } from '../../lib/format';
 import { chartBehind, irPeriodLabel, irStatus, loadIrPoints, loadOperationsDays, shiftCitations } from '../../lib/irPoints';
 import {
-  annualRows, barSpec, dateLabel, employeeSpec, formatNumber, formatOku, isDetailed, loadAuto, loadChartColors, loadCompanies,
+  annualRows, barSpec, companyRows, dateLabel, employeeSpec, formatNumber, formatOku, isDetailed, loadAuto, loadChartColors, loadCompanies,
   loadOverview, loadSegmentMap, loadSupply, periodLabel, periodRange, regionSpec, segmentSpec,
   type Company,
 } from '../../lib/companies';
@@ -68,16 +70,49 @@ const standardName: Record<string, string> = { jgaap: '日本基準', ifrs: 'IFR
 const latestEmployee = employees ? employees.rows[employees.rows.length - 1] : undefined;
 const nonConsolidated = latestEmployee?.non_consolidated;
 
+// 主要な数値の帯（8.8）：売上高、営業利益、営業利益率、平均年間給与。売上高と営業利益は前期比と直近6期の推移の線
+const prev = rows[rows.length - 2];
+const okuOf = (v: number | null | undefined) => (v == null ? null : millionToOku(v));
+const signed = (v: number) => `${v >= 0 ? '+' : '−'}${formatNumber(Math.abs(v), 1)}%`;
+const change = (cur: number | null, before: number | null) =>
+  cur != null && before != null && before > 0 ? (cur / before - 1) * 100 : null;
+const marginOf = (r?: (typeof rows)[number]) =>
+  r && r.net_sales.value != null && r.operating_income.value != null && r.net_sales.value > 0 ? (r.operating_income.value / r.net_sales.value) * 100 : null;
+const mineRow = companyRows(preview).find((r) => r.company.slug === company.slug);
+const metricOf = (label: string, key: 'net_sales' | 'operating_income', sub?: string) => {
+  const cur = okuOf(latest?.[key].value);
+  if (cur == null) return [];
+  const ch = change(cur, okuOf(prev?.[key].value));
+  return [{
+    label, value: formatNumber(cur, 0), unit: '億円',
+    note: ch == null ? undefined : `前期比 ${signed(ch)}`, trend: ch == null ? undefined : ch >= 0 ? ('up' as const) : ('down' as const), sub,
+    spark: rows.slice(-6).map((r) => okuOf(r[key].value)).filter((v): v is number => v != null),
+  }];
+};
+const margin = marginOf(latest);
+const prevMargin = marginOf(prev);
 const metrics = [
-  ...(latest?.net_sales.value != null ? [{ label: '売上高', value: formatOku(latest.net_sales.value) }] : []),
-  ...(latest?.operating_income.value != null ? [{ label: '営業利益', value: formatOku(latest.operating_income.value) }] : []),
-  ...(segment?.ratio ? [{ label: '半導体関連の比率', value: `${formatNumber(segment.ratio.value, 1)}%` }] : []),
+  // 売上高には、半導体関連の比率を補足の行で添える（セグメントの区分が確かめられた会社だけ）
+  ...metricOf('売上高', 'net_sales', segment?.ratio ? `半導体関連 ${formatNumber(segment.ratio.value, 1)}%` : undefined),
+  ...metricOf('営業利益', 'operating_income'),
+  ...(margin != null ? [{ label: '営業利益率', value: formatNumber(margin, 1), unit: '%', note: prevMargin != null ? `前期 ${formatNumber(prevMargin, 1)}%` : undefined }] : []),
+  ...(mineRow?.salary != null
+    ? [{ label: '平均年間給与', value: formatNumber(mineRow.salary, 0), unit: '万円',
+        note: nonConsolidated?.average_age?.value != null ? `提出会社・平均${formatNumber(nonConsolidated.average_age.value, 1)}歳` : '提出会社' }]
+    : []),
 ];
+
+// 同じ工程の企業と比べる（9.2）：主な工程（processes の最初）の掲載企業のうち、詳しいページがあり売上高のある企業を、売上高の大きい順に
+const mainProcess = company.processes[0];
+const peersAll = mainProcess ? companyRows(preview).filter((r) => r.company.processes.includes(mainProcess)) : [];
+const peers = peersAll.filter((r) => r.detailed && r.sales != null).sort((a, b) => (b.sales ?? 0) - (a.sales ?? 0));
+const peerMax = Math.max(0, ...peers.map((r) => r.sales ?? 0));
 
 const toc = [
   { id: 'overview', label: '事業概要' },
   { id: 'process-position', label: '工程上の位置づけ' },
   { id: 'performance', label: '業績' },
+  ...(peers.length > 1 ? [{ id: 'peers', label: '同じ工程の企業と比べる' }] : []),
   { id: 'ir-points', label: 'IR重要ポイント' },
   { id: 'work', label: '働く環境' },
   { id: 'news', label: 'ニュース' },
@@ -126,17 +161,10 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
     schemaType="Article"
     noindex={overview.front.draft === true}
   >
+    <CompanyHead slot="head" company={company} typeLabel={typeLabel[company.type] ?? company.type} publishedAt={overview.front.published_at} updatedAt={overview.front.updated_at} author="hysd（SemiCompass運営者）" />
     <Fragment slot="lead">
-      <p class="company-meta">
-        {company.securities_code && <span>証券コード：<span class="nowrap">{company.securities_code}</span></span>}
-        <span>企業区分：{typeLabel[company.type] ?? company.type}</span>
-      </p>
-      <p class="company-tags">
-        {company.categories.map((c) => <Tag href={`/companies/process/${c}/`} kind="分類">{categoryName(c)}</Tag>)}
-        {company.processes.map((p) => <Tag href={`/processes/${p}/`} kind="工程">{processName(p)}</Tag>)}
-      </p>
       {latest && metrics.length > 0 && (
-        <KeyPoints lead={company.tagline} metrics={metrics} period={periodLabel(latest.fiscal_period_end)} source="有価証券報告書、EDINET" />
+        <KeyPoints metrics={metrics} caption={`${periodLabel(latest.fiscal_period_end)}・連結。出典：${source.title}、EDINET。${dateLabel(source.accessedOn)}確認`} />
       )}
       {overview.front.draft && (
         <Notice kind="warning" title="下書きです（プレビューだけに表示しています）">
@@ -201,6 +229,23 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
         </>
       )}
     </section>
+
+    {peers.length > 1 && (
+      <section aria-labelledby="peers">
+        <h2 id="peers"><Phrase text="同じ工程の企業と比べる" /></h2>
+        <p class="peers-cap">売上高（億円、最新の通期・連結）。工程：{processName(mainProcess)}。</p>
+        <ol class="peers">
+          {peers.map((r) => (
+            <li class:list={['peers__row', { 'peers__row--me': r.company.slug === company.slug }]}>
+              <span class="peers__name">{r.company.slug === company.slug ? (r.company.short_names[0] ?? r.company.name) : <a href={`/companies/${r.company.slug}/`}>{r.company.short_names[0] ?? r.company.name}</a>}</span>
+              <svg class="peers__bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect class="peers__track" width="100" height="8" /><rect class="peers__fill" width={Math.max(2, ((r.sales ?? 0) / peerMax) * 100).toFixed(1)} height="8" /></svg>
+              <span class="peers__value">{formatNumber(r.sales ?? 0, 1)}</span>
+            </li>
+          ))}
+        </ol>
+        <p class="peers-cap">{processName(mainProcess)}の掲載企業{peersAll.length}社のうち、詳しいページのある{peers.length}社。<a href={`/companies/process/${mainProcess}/`}>一覧のページで比べる</a></p>
+      </section>
+    )}
 
     <section aria-labelledby="ir-points">
       <h2 id="ir-points"><Phrase text="IR重要ポイント" /></h2>
@@ -313,6 +358,54 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
 )}
 
 <style>
+  @import "../../styles/breakpoints.css";
+  /* 同じ工程の企業と比べる（9.2）：企業名、売上高の横棒、売上高 */
+  .peers-cap {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .peers {
+    margin: 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    list-style: none;
+  }
+  .peers__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--peer-bar-width-sp) auto;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--target-min);
+    padding-block: var(--space-2);
+    border-bottom: var(--border-width) solid var(--color-border);
+    font-size: var(--text-dense);
+    line-height: var(--text-dense-leading);
+  }
+  .peers__row--me {
+    font-weight: var(--font-weight-bold);
+  }
+  /* 横棒は、CSPで属性の style を使えないため、SVGの幅で示す */
+  .peers__bar {
+    display: block;
+    width: 100%;
+    height: var(--peer-bar-height);
+  }
+  .peers__track {
+    fill: var(--color-surface-sunken);
+  }
+  .peers__fill {
+    fill: var(--color-primary);
+  }
+  .peers__value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (--tablet) {
+    .peers__row {
+      grid-template-columns: minmax(0, 1fr) var(--peer-bar-width) auto;
+    }
+  }
   /* IR重要ポイントの対象の期・作成日・元にした資料（補助の文字） */
   .ir-meta {
     color: var(--color-text-muted);

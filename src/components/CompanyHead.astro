@@ -1,0 +1,204 @@
+---
+// 企業の頭（仕様書 8.8）：左に分類の行、企業名（大見出し）、英語の名前、一言の説明、属性の行。
+// 右（PC）に「サプライチェーン上の位置」：段階ごとに工程の数だけ小さな四角を並べ、その会社が関わる工程を段階の色で塗る。
+// 色だけで伝えないため、関わる工程の名前を文字でも書く
+import ExternalLink from './ExternalLink.astro';
+import Phrase from './Phrase.astro';
+import { loadSupply, type Company } from '../lib/companies';
+
+interface Props {
+  company: Company;
+  typeLabel: string;
+  publishedAt?: string;
+  updatedAt?: string;
+  author?: string;
+}
+const { company, typeLabel, publishedAt, updatedAt, author } = Astro.props;
+type P = { slug: string; name: string; stage: string; order: number };
+const supply = loadSupply() as unknown as { processes: P[]; categories: { slug: string; name: string }[] };
+const categoryName = (slug: string) => supply.categories.find((c) => c.slug === slug)?.name ?? slug;
+// 分類の行：装置・材料などの分類と、段階（前工程など）を「 ・ 」でつなぐ
+const kind = company.categories.map(categoryName).join(' ・ ');
+const STAGES = [
+  { slug: 'design', color: 'neutral' },
+  { slug: 'materials', color: 'materials' },
+  { slug: 'front-end', color: 'front' },
+  { slug: 'back-end', color: 'back' },
+];
+const rows = STAGES.map((s) => ({
+  ...s,
+  name: categoryName(s.slug),
+  processes: supply.processes.filter((p) => p.stage === s.slug).sort((a, b) => a.order - b.order),
+})).filter((r) => r.processes.length > 0);
+const total = rows.reduce((n, r) => n + r.processes.length, 0);
+const mine = supply.processes.filter((p) => company.processes.includes(p.slug)).sort((a, b) => a.order - b.order);
+const label = (date: string) => {
+  const [y, m, d] = date.split('-').map(Number);
+  return `${y}年${m}月${d}日`;
+};
+---
+
+<header class="co-head">
+  <div class="co-head__main">
+    {kind && <p class="co-head__kind">{kind}</p>}
+    <h1 class="co-head__name"><Phrase text={company.name} /></h1>
+    {company.name_en && <p class="co-head__en" lang="en">{company.name_en}</p>}
+    <p class="co-head__tagline lead"><Phrase text={company.tagline} /></p>
+    <ul class="co-head__meta">
+      {company.securities_code && <li><b>証券コード</b><span class="nowrap">{company.securities_code}</span></li>}
+      <li><b>区分</b>{typeLabel}</li>
+      {company.fiscal_year_end_month && <li><b>決算</b>{company.fiscal_year_end_month}月</li>}
+      {company.website_url && <li><ExternalLink href={company.website_url}>公式サイト</ExternalLink></li>}
+      {company.ir_url && <li><ExternalLink href={company.ir_url}>IR</ExternalLink></li>}
+    </ul>
+    {(publishedAt || updatedAt || author) && (
+      <p class="co-head__dates">
+        {publishedAt && <span>公開日：<time datetime={publishedAt}>{label(publishedAt)}</time></span>}
+        {updatedAt && <span>更新日：<time datetime={updatedAt}>{label(updatedAt)}</time></span>}
+        {author && <span>作成者：<a href="/about/">{author}</a></span>}
+      </p>
+    )}
+  </div>
+  {company.processes.length > 0 && (
+    <section class="co-pos" aria-labelledby="co-pos-title">
+      <h2 class="co-pos__title" id="co-pos-title">サプライチェーン上の位置<span>{total}工程のうち{mine.length}</span></h2>
+      <dl class="co-pos__grid" role="img" aria-label={`関わる工程：${mine.map((p) => p.name).join('、')}`}>
+        {rows.map((r) => (
+          <>
+            <dt class:list={['co-pos__stage', `co-pos--${r.color}`]}>{r.name}</dt>
+            <dd class:list={['co-pos__cells', `co-pos--${r.color}`]}>
+              {r.processes.map((p) => <i class:list={['co-pos__cell', { 'co-pos__cell--on': company.processes.includes(p.slug) }]} title={p.name}></i>)}
+            </dd>
+          </>
+        ))}
+      </dl>
+      <p class="co-pos__legend">塗りの枠が関わる工程：{mine.map((p, i) => <>{i > 0 && '、'}<a href={`/processes/${p.slug}/`}>{p.name}</a></>)}</p>
+    </section>
+  )}
+</header>
+
+<style>
+  @import "../styles/breakpoints.css";
+  .co-head {
+    display: grid;
+    gap: var(--space-5);
+    padding-block-end: var(--space-6);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .co-head__main {
+    min-width: 0;
+  }
+  .co-head__kind,
+  .co-head__en,
+  .co-head__dates {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+  .co-head__name {
+    margin: var(--space-1) 0 0;
+  }
+  .co-head__tagline {
+    margin: var(--space-4) 0 0;
+    max-width: var(--content-max-width);
+  }
+  .co-head__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .co-head__meta li {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .co-head__meta b {
+    font-weight: var(--font-weight-bold);
+  }
+  .co-head__dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin-block-start: var(--space-3);
+  }
+  .co-pos {
+    align-self: end;
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+  .co-pos__title {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .co-pos__title span {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-normal);
+  }
+  .co-pos__grid {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin: 0;
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+  }
+  .co-pos--neutral {
+    --stage-ink: var(--color-text);
+  }
+  .co-pos--materials {
+    --stage-ink: var(--color-stage-materials);
+  }
+  .co-pos--front {
+    --stage-ink: var(--color-stage-front);
+  }
+  .co-pos--back {
+    --stage-ink: var(--color-stage-back);
+  }
+  .co-pos__stage {
+    color: var(--stage-ink);
+    font-weight: var(--font-weight-bold);
+    white-space: nowrap;
+  }
+  .co-pos__cells {
+    display: flex;
+    gap: var(--space-1);
+    margin: 0;
+  }
+  .co-pos__cell {
+    flex: 1 1 0;
+    height: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-sunken);
+  }
+  .co-pos__cell--on {
+    border-color: var(--stage-ink);
+    background: var(--stage-ink);
+  }
+  .co-pos__legend {
+    margin: var(--space-3) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-small-leading);
+  }
+  @media (--pc) {
+    .co-head {
+      grid-template-columns: minmax(0, 1fr) var(--co-pos-width);
+      gap: var(--space-7);
+      align-items: end;
+    }
+  }
+</style>
