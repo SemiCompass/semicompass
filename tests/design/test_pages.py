@@ -386,7 +386,7 @@ class PagesBuildTest(unittest.TestCase):
         self.assertGreater(n, 0)
         for page in ("processes/index.html",):
             main = self.read(dist, page).split("<main")[1]
-            self.assertIn('class="facilities-band" href="/companies/process/facilities/"', main, page)
+            self.assertRegex(main, r'class="pflow__band[^"]*"[^>]*href="/companies/process/facilities/"', page)
             self.assertIn(f"{n}社", main, page)
         self.assertTrue((dist / "companies" / "process" / "facilities" / "index.html").exists())
 
