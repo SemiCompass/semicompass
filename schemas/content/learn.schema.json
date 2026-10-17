@@ -31,7 +31,11 @@
         "design",
         "power",
         "sensors",
-        "communication"
+        "communication",
+        "solid-state",
+        "device-physics",
+        "optics",
+        "materials-physics"
       ]
     },
     "processes": {
@@ -52,6 +56,57 @@
         "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
         "minLength": 2,
         "maxLength": 60
+      }
+    },
+    "applies_to": {
+      "description": "深掘り編（半導体の物理）のページだけが持つ。そのページの物理が現れる基礎編のページ（学習・工程・用語）と、現場での現れ方の一文。ページの「基礎編のどこに効くか」と、相手のページの「さらに深く」の枠に使う（データ定義書 6.8）",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "ref",
+          "note"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "learn",
+              "process",
+              "term"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "folder": {
+            "description": "type が learn のときの、相手のページのフォルダ（content/learn/{folder}/）",
+            "enum": [
+              "basics",
+              "devices",
+              "logic",
+              "silicon",
+              "process",
+              "test",
+              "facilities",
+              "industry",
+              "materials",
+              "design",
+              "power",
+              "sensors",
+              "communication"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "現場での現れ方を一文で"
+          }
+        }
       }
     },
     "related_terms": {
