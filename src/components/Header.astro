@@ -9,9 +9,11 @@ import SearchBox from './SearchBox.astro';
 
 const { main } = loadMenu();
 const pathname = Astro.url.pathname;
+// トップでは、帯の中に大きな検索欄があるため、ヘッダーの検索欄を出さない（8.1。PCでは場所を空けたままにする）
+const isHome = pathname === '/';
 ---
 
-<header class="site-header">
+<header class:list={['site-header', { 'site-header--home': isHome }]}>
   <div class="container site-header__bar">
     <a class="site-header__brand" href="/">
       <Logo />
@@ -240,7 +242,19 @@ const pathname = Astro.url.pathname;
       text-decoration: none;
     }
   }
+  .site-header--home .site-header__bar {
+    padding-block-end: 0;
+  }
+  .site-header--home .site-header__search,
+  .site-header--home .site-header__search-link,
+  .site-header--home .site-header__search-link:visited {
+    display: none;
+  }
   @media (--pc) {
+    .site-header--home .site-header__search {
+      display: block;
+      visibility: hidden;
+    }
     .site-header__bar {
       grid-template-columns: auto 1fr minmax(var(--search-width-min), var(--search-width-max));
     }
