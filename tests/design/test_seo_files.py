@@ -4,20 +4,15 @@ import re
 import shutil
 import unittest
 
-from test_pages import HAS_NODE, ROOT, build_site
+from test_pages import HAS_NODE, ROOT, real_site
 
 
 @unittest.skipUnless(HAS_NODE, "node_modules がない")
 class SeoFilesTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.dist = {}
-        for env in ("production", "preview"):
-            out, failure = build_site(env)
-            cls.addClassCleanup(shutil.rmtree, out, True)
-            if failure:
-                raise AssertionError(failure)
-            cls.dist[env] = out / "dist"
+        # リポジトリそのままのサイト（design の全テストで使い回す。書き換えない）
+        cls.dist = {env: real_site(env) for env in ("production", "preview")}
 
     def test_preview_is_closed_to_search(self):
         dist = self.dist["preview"]

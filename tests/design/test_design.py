@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from test_pages import make_draft_site, real_site
+from test_pages import draft_site, real_site
 
 ROOT = Path(__file__).resolve().parents[2]
 TOKENS = (ROOT / "src" / "styles" / "tokens.css").read_text(encoding="utf-8")
@@ -282,14 +282,7 @@ class BuildTest(unittest.TestCase):
 
     def build_drafts(self, env: str, slugs: tuple[str, ...]) -> Path:
         """指定した企業の事業概要を draft: true にした作業用のコピーで組み立てる（企業は、リポジトリでは公開済み）。"""
-        work = make_draft_site(slugs)
-        self.addCleanup(shutil.rmtree, work, True)
-        out = Path(tempfile.mkdtemp())
-        self.addCleanup(shutil.rmtree, out, True)
-        done = subprocess.run(["npx", "astro", "build", "--outDir", str(out / "dist")], text=True, capture_output=True,
-                              cwd=work, env={**os.environ, "BUILD_ENV": env})
-        self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
-        return out / "dist"
+        return draft_site(env, slugs)
 
     def test_component_page_only_in_preview(self):
         preview = self.build("preview")
