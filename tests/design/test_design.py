@@ -435,7 +435,7 @@ class CompanyPageBuildTest(BuildTest):
         # 4 報告セグメントが1つの会社：比率100.0%と、根拠
         html = self.page(preview, "tokyo-electron")
         self.assertIn("報告セグメントは「半導体製造装置」の1つです（全社の売上が半導体関連）", html)
-        self.assertIn("100.0%", html)
+        # 半導体関連の比率は、企業ページの主要な数値に出さない（2026年10月17日、運営者の判断。企業一覧で見る）
         self.assertIn("セグメント情報", html)
         self.assertNotIn("区分が未確認", html)
         # 5 半導体関連以外が2つ以上：グラフでは1つにまとめ、内訳は表に出す
