@@ -8,7 +8,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 PAGES = ROOT / "content" / "pages"
-AUTO_ROUTES = {"/corrections/", "/", "/news/", "/companies/", "/processes/", "/glossary/", "/search/"}  # 自動で作るページ・一覧
+AUTO_ROUTES = {"/corrections/", "/", "/news/", "/companies/", "/processes/", "/glossary/", "/learn/", "/search/"}  # 自動で作るページ・一覧
 
 
 def load():
