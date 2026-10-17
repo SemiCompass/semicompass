@@ -16,7 +16,7 @@ applies_to:
   folder: test
   note: 高い温度でリークの電流が増える理由が、この濃度の温度変化で読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-17'
 ai_generated: true
 sources:
