@@ -43,6 +43,7 @@ fields:
         units:
           - { type: learn, ref: compound, folder: basics }
           - { type: learn, ref: epitaxial-growth }
+          - { type: learn, ref: new-materials }
           - { type: learn, ref: process-materials }
   - "no": 3
     slug: design

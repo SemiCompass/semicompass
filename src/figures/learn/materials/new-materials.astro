@@ -1,0 +1,41 @@
+---
+// 図：半導体材料のバンドギャップの大小の並びと、新しい材料の強みと課題（模式図。仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// 並びの順だけを示す（間隔は実際の値の比ではない）
+const order = ['シリコン', '炭化ケイ素', '窒化ガリウム', '酸化ガリウム', 'ダイヤモンド', '窒化アルミニウム'];
+const rows = [
+  { name: '酸化ガリウム', good: '大きな基板を作りやすい', issue: '熱を伝えにくい、p型が難しい' },
+  { name: 'ダイヤモンド', good: '強い電界に耐え、熱をよく伝える', issue: '大きな基板、n型が難しい' },
+  { name: '窒化アルミニウム', good: '深紫外線の光を出せる', issue: '欠陥の少ない結晶づくり' },
+];
+---
+
+<FigureFrame id="fig-new-materials" columns={2} title="新しい半導体材料の位置と、強み・課題（模式図）" caption="図：左は、バンドギャップの小さい順に材料を並べたもの（並びの順だけを示し、間隔は実際の値の比ではない）。右は、新しい材料の主な強みと課題。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`バンドギャップの小さい順：${order.join('、')}`}>
+      <path class="fig-arrow" d="M30 148V14M26 20l4-6 4 6" />
+      <text class="fig-text" x="36" y="12" font-size="7">バンドギャップが大きい</text>
+      {order.map((m, i) => (
+        <>
+          <rect class={i < 3 ? 'fig-wafer' : 'fig-film'} x="44" y={130 - i * 21} width={20 + i * 10} height="14" />
+          <text class="fig-text" x={68 + i * 10} y={141 - i * 21} font-size="7">{m}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">バンドギャップの並び</span>
+    <span class="fig__note">上の三つが、新しい材料</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={rows.map((r) => `${r.name}：強み ${r.good}、課題 ${r.issue}`).join('。')}>
+      {rows.map((r, i) => (
+        <>
+          <text class="fig-strong" x="8" y={22 + i * 48} font-size="8">{r.name}</text>
+          <text class="fig-text" x="14" y={36 + i * 48} font-size="7">強み：{r.good}</text>
+          <text class="fig-text" x="14" y={48 + i * 48} font-size="7">課題：{r.issue}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">強みと課題</span>
+    <span class="fig__note">作れるかどうかが、製品への壁になる</span>
+  </li>
+</FigureFrame>
