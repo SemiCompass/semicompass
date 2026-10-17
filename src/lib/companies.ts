@@ -40,6 +40,7 @@ export interface Auto {
   filings: { doc_id: string; doc_type: string; status: string; fiscal_period_end: string; url: string; submitted_at: string }[];
   financials: FinancialRow[];
   employees: EmployeeRow[];
+  announcements?: import('./irPoints').Announcement[];
 }
 export interface Source {
   id: string;
