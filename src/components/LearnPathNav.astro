@@ -1,7 +1,7 @@
 ---
 // 半導体を学ぶの順で、前と次に読むページ（要求定義書 FR-901、要件定義書 AT-09）。学習のページと、学習の順に入っている工程ページで使う。
 // 分野の境目では、次の分野の名前を添える。最後の単元では、業績（企業分析）とニュース解説の入口を示す
-import type { PathStep } from '../lib/learn';
+import { fieldName as name, type PathStep } from '../lib/learn';
 
 interface Props {
   id: string;
@@ -11,7 +11,7 @@ interface Props {
   isLast: boolean;
 }
 const { id, heading, previous, next, isLast } = Astro.props;
-const fieldName = (s: PathStep) => `${s.field.no}. ${s.field.title}`;
+const fieldName = (s: PathStep) => name(s.field);
 ---
 
 <nav aria-labelledby={id} class="learn-next">

@@ -942,31 +942,46 @@ def check_quiz(rel: str, body: str) -> list[Problem]:
     return out
 
 
+PHYSICS_HEADINGS = ["式", "式のどこを見るか", "数値例"]  # 深掘り編のページの本文の見出し（運用ルール書 4.2。4つ目の「基礎編のどこに効くか」は applies_to から作る）
+
+
 def check_learn(pages: dict[str, tuple[dict, str]], path, supply, terms: dict[str, tuple[dict, str]],
                 companies: dict[str, dict], config, names: set[str], root: Path) -> list[Problem]:
-    """学習のページ（content/learn/{分野}/{slug}.md）と、並び（content/learn/path.yaml）の検査（データ定義書 6.8）。"""
+    """学習のページ（content/learn/{分野}/{slug}.md）と、並び（content/learn/path.yaml）の検査（データ定義書 6.8）。
+
+    path.yaml は二段で持つ：基礎編の分野（fields）と、深掘り編「半導体の物理」のカード（physics.cards）。
+    """
     out: list[Problem] = []
     fields = [f for f in (path or {}).get("fields") or [] if isinstance(f, dict)] if isinstance(path, dict) else []
+    physics = (path or {}).get("physics") if isinstance(path, dict) else None
+    cards = [c for c in (physics or {}).get("cards") or [] if isinstance(c, dict)] if isinstance(physics, dict) else []
+    physics_slugs = {c.get("slug") for c in cards}
     process_slugs = _slugs(supply, "processes")
     term_slugs = {Path(rel).stem for rel in terms}
     company_slugs = {Path(rel).stem for rel in companies}
     page_keys = {(Path(rel).parent.name, Path(rel).stem) for rel in pages}
     if pages and path is None:
         out.append(Problem("content/learn/path.yaml", "", "V-04", "学習のページがあるのに、content/learn/path.yaml がない"))
+    labels = [c.get("label") for c in cards]
+    if labels != [chr(ord("A") + i) for i in range(len(cards))]:
+        out.append(Problem("content/learn/path.yaml", "/physics/cards", "V-02", "physics のカードの label は、並びの順に A、B、C… と付ける"))
     listed: set[tuple[str, str]] = set()  # path.yaml に並べた学習のページ（フォルダ、slug）
+    listed_in_physics: set[tuple[str, str]] = set()
     seen: set[tuple[str, str, str]] = set()
-    for i, field in enumerate(fields):
+    groups_of_path = [(["fields", i], field) for i, field in enumerate(fields)] + [(["physics", "cards", i], card) for i, card in enumerate(cards)]
+    for base_at, field in groups_of_path:
+        in_physics = base_at[0] == "physics"
         # 分野の units と、小分け（sections）の units を、この順で見る（データ定義書 6.8）
-        groups = [(["fields", i, "units"], field.get("units") or [])]
+        groups = [([*base_at, "units"], field.get("units") or [])]
         section_slugs: set[str] = set()
         for k, section in enumerate(field.get("sections") or []):
             if not isinstance(section, dict):
                 continue
             if section.get("slug") in section_slugs:
-                out.append(Problem("content/learn/path.yaml", pointer(["fields", i, "sections", k, "slug"]), "V-03",
+                out.append(Problem("content/learn/path.yaml", pointer([*base_at, "sections", k, "slug"]), "V-03",
                                    f"同じ小分けの slug（{section.get('slug')}）が重複している"))
             section_slugs.add(section.get("slug"))
-            groups.append((["fields", i, "sections", k, "units"], section.get("units") or []))
+            groups.append(([*base_at, "sections", k, "units"], section.get("units") or []))
         for base, units in groups:
             for j, unit in enumerate(units):
                 if not isinstance(unit, dict):
@@ -978,8 +993,13 @@ def check_learn(pages: dict[str, tuple[dict, str]], path, supply, terms: dict[st
                 if key in seen:
                     out.append(Problem("content/learn/path.yaml", at, "V-03", f"同じ単元（{kind} {ref}）が重複している（1つの単元は1か所にだけ並べる）"))
                 seen.add(key)
+                if in_physics and (kind != "learn" or folder not in physics_slugs):
+                    out.append(Problem("content/learn/path.yaml", at, "V-02",
+                                       "physics のカードには、深掘り編のフォルダ（physics のカードの slug）にある学習のページだけを並べる"))
                 if kind == "learn":
                     listed.add((folder, ref))
+                    if in_physics:
+                        listed_in_physics.add((folder, ref))
                     if (folder, ref) not in page_keys:
                         out.append(Problem("content/learn/path.yaml", at, "V-04", f"学習のページ content/learn/{folder}/{ref}.md がない"))
                 elif kind == "process" and process_slugs is not None and ref not in process_slugs:
@@ -988,6 +1008,35 @@ def check_learn(pages: dict[str, tuple[dict, str]], path, supply, terms: dict[st
                     out.append(Problem("content/learn/path.yaml", at, "V-04", f"用語 {ref} の原稿（content/glossary/）がない"))
     for rel, (data, body) in pages.items():
         folder, slug = Path(rel).parent.name, Path(rel).stem
+        is_physics = folder in physics_slugs or (folder, slug) in listed_in_physics
+        applies = [a for a in data.get("applies_to") or [] if isinstance(a, dict)]
+        if is_physics:
+            # 深掘り編のページ：本文は「式／式のどこを見るか／数値例」の3つの見出し、基礎編への接続（applies_to）を必ず持つ（運用ルール書 4.2）
+            if folder not in physics_slugs:
+                out.append(Problem(rel, "", "V-02", "深掘り編のページは、physics のカードの slug と同じフォルダに置く"))
+            headings = [h for level, h, _ in split_body(quiz_split(body)[0])[0][1:] if level == 2]
+            if headings != PHYSICS_HEADINGS:
+                out.append(Problem(rel, "(本文)", "V-10", "深掘り編のページの本文の見出しは、「" + "」「".join(PHYSICS_HEADINGS) + "」の順の3つにする"))
+            if not applies:
+                out.append(Problem(rel, "/applies_to", "V-04", "深掘り編のページには、基礎編のどこに効くか（applies_to）を1件以上書く"))
+            if data.get("basis") == "reviewed":
+                out.append(Problem(rel, "/basis", "V-01", "深掘り編のページは、数値例に出典が要るため、basis: reviewed にしない"))
+        elif applies:
+            out.append(Problem(rel, "/applies_to", "V-01", "applies_to は、深掘り編のページだけが持つ"))
+        for k, a in enumerate(applies):
+            kind, ref, at = a.get("type"), a.get("ref"), pointer(["applies_to", k])
+            if kind == "learn":
+                target = a.get("folder")
+                if not target:
+                    out.append(Problem(rel, at, "V-04", "applies_to の learn には、相手のページのフォルダ（folder）を書く"))
+                elif (target, ref) not in page_keys:
+                    out.append(Problem(rel, at, "V-04", f"学習のページ content/learn/{target}/{ref}.md がない"))
+                elif target in physics_slugs:
+                    out.append(Problem(rel, at, "V-02", "applies_to には、基礎編のページを書く（深掘り編のページどうしは指さない）"))
+            elif kind == "process" and process_slugs is not None and ref not in process_slugs:
+                out.append(Problem(rel, at, "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
+            elif kind == "term" and ref not in term_slugs:
+                out.append(Problem(rel, at, "V-04", f"用語 {ref} の原稿（content/glossary/）がない"))
         if data.get("field") != folder:
             out.append(Problem(rel, "/field", "V-02", f"置き場所のフォルダ（{folder}）と field（{data.get('field')}）が一致しない"))
         if (folder, slug) not in listed:
