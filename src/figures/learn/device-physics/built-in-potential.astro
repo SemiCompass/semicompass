@@ -1,0 +1,49 @@
+---
+// 図：pn接合の内蔵電位。接合の前後のバンド図（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-built-in-potential" columns={2} title="pn接合のバンド図と内蔵電位（模式図）" caption="図：左は、つなぐ前のp型とn型。フェルミ準位 EF（破線）の高さが違う。右は、つないだ後。電子が流れ込んでEFがそろい、境目の帯が曲がる。その段差 qVbi が内蔵電位にあたる。電子は坂を下る向きに、正孔は坂を上る向きに動きやすい。段差の大きさは実際の比と異なる。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="つなぐ前：p型はEFが価電子帯の近く、n型はEFが伝導帯の近くにあり、EFの高さが違う">
+      <path class="fig-line" d="M14 150V12M10 18l4-6 4 6" />
+      <text class="fig-text" x="58" y="152" font-size="8" text-anchor="middle">p型</text>
+      <text class="fig-text" x="148" y="152" font-size="8" text-anchor="middle">n型</text>
+      <path class="fig-line" d="M24 40h68M24 80h68" />
+      <path class="fig-dash" d="M24 74h68" />
+      <text class="fig-text" x="58" y="36" font-size="7" text-anchor="middle">Ec</text>
+      <text class="fig-text" x="58" y="92" font-size="7" text-anchor="middle">Ev</text>
+      <text class="fig-text" x="26" y="70" font-size="7">EF</text>
+      <path class="fig-line" d="M114 40h68M114 80h68" />
+      <path class="fig-dash" d="M114 46h68" />
+      <text class="fig-text" x="148" y="36" font-size="7" text-anchor="middle">Ec</text>
+      <text class="fig-text" x="148" y="92" font-size="7" text-anchor="middle">Ev</text>
+      <text class="fig-text" x="166" y="58" font-size="7">EF</text>
+      <circle class="fig-dot-alt" cx="44" cy="84" r="3" />
+      <circle class="fig-dot-alt" cx="70" cy="84" r="3" />
+      <circle class="fig-dot" cx="134" cy="36" r="3" />
+      <circle class="fig-dot" cx="160" cy="36" r="3" />
+    </svg>
+    <span class="fig__name">つなぐ前</span>
+    <span class="fig__note">p型とn型で、EFの高さが違う</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="つないだ後：EFがそろい、境目で帯が曲がって段差qVbiができる">
+      <path class="fig-line" d="M14 150V12M10 18l4-6 4 6" />
+      <text class="fig-text" x="50" y="152" font-size="8" text-anchor="middle">p型</text>
+      <text class="fig-text" x="156" y="152" font-size="8" text-anchor="middle">n型</text>
+      <path class="fig-line" d="M24 62h56C96 62 110 104 126 104h56M24 102h56C96 102 110 144 126 144h56" />
+      <path class="fig-dash" d="M24 96h158" />
+      <text class="fig-text" x="30" y="58" font-size="7">Ec</text>
+      <text class="fig-text" x="30" y="114" font-size="7">Ev</text>
+      <text class="fig-text" x="30" y="92" font-size="7">EF</text>
+      <path class="fig-dash" d="M126 62h64" />
+      <path class="fig-arrow" d="M186 68v30M182 74l4-6 4 6M182 92l4 6 4-6" />
+      <text class="fig-strong" x="150" y="56" font-size="8">qVbi</text>
+      <circle class="fig-dot-alt" cx="44" cy="106" r="3" />
+      <circle class="fig-dot" cx="150" cy="100" r="3" />
+    </svg>
+    <span class="fig__name">つないだ後</span>
+    <span class="fig__note">EFがそろい、段差 qVbi ができる</span>
+  </li>
+</FigureFrame>

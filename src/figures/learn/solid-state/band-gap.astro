@@ -1,0 +1,53 @@
+---
+// 図：バンドギャップの定義と、材料ごとに吸収できる最も長い波長（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// 吸収できる最も長い波長（nm）。バンドギャップ（東芝デバイス＆ストレージの物性値の表）を、hc ≒ 1,240 eV·nm で割った値
+const materials = [
+  { name: 'Si', eg: '1.12', nm: 1107 },
+  { name: 'GaAs', eg: '1.43', nm: 867 },
+  { name: '4H-SiC', eg: '3.26', nm: 380 },
+  { name: 'GaN', eg: '3.39', nm: 366 },
+];
+const x = (nm: number) => 56 + (nm / 1200) * 130;
+---
+
+<FigureFrame id="fig-band-gap" columns={2} title="バンドギャップと、吸収できる最も長い波長" caption="図：左は、伝導帯の底 Ec と価電子帯の頂上 Ev の差がバンドギャップ Eg であることを示す（模式図）。右は、各材料のバンドギャップから計算した、吸収できる最も長い波長。棒が短いほど、短い波長の光しか吸収しない。バンドギャップの値は東芝デバイス＆ストレージ「ワイドバンドギャップ半導体とは」、波長は本サイトで計算">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="伝導帯の底Ecと価電子帯の頂上Evの差がバンドギャップEg">
+      <path class="fig-line" d="M24 150V12M20 18l4-6 4 6" />
+      <text class="fig-text" x="30" y="156" font-size="8">（上ほどエネルギーが高い）</text>
+      <rect class="fig-film" x="44" y="20" width="96" height="34" />
+      <text class="fig-text" x="92" y="41" font-size="8" text-anchor="middle">伝導帯</text>
+      <rect class="fig-wafer" x="44" y="104" width="96" height="34" />
+      <text class="fig-text" x="92" y="125" font-size="8" text-anchor="middle">価電子帯</text>
+      <path class="fig-dash" d="M44 54h120M44 104h120" />
+      <text class="fig-text" x="166" y="57" font-size="8">Ec</text>
+      <text class="fig-text" x="166" y="107" font-size="8">Ev</text>
+      <path class="fig-arrow" d="M152 60v38M148 66l4-6 4 6M148 92l4 6 4-6" />
+      <text class="fig-strong" x="158" y="83" font-size="9">Eg</text>
+    </svg>
+    <span class="fig__name">バンドギャップの定義</span>
+    <span class="fig__note">Eg = Ec − Ev</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="吸収できる最も長い波長：Si 約1107 nm、GaAs 約867 nm、4H-SiC 約380 nm、GaN 約366 nm">
+      <path class="fig-line" d="M56 14V126h134" />
+      {[0, 400, 800, 1200].map((nm) => (
+        <>
+          <path class="fig-dash" d={`M${x(nm)} 14V126`} />
+          <text class="fig-text" x={x(nm)} y="138" font-size="7" text-anchor="middle">{nm}</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">波長（nm）</text>
+      {materials.map((m, i) => (
+        <>
+          <text class="fig-text" x="52" y={32 + i * 26} font-size="7" text-anchor="end">{m.name}</text>
+          <rect class={i < 2 ? 'fig-wafer' : 'fig-film'} x="56" y={24 + i * 26} width={x(m.nm) - 56} height="12" />
+          <text class="fig-text" x={x(m.nm) + 3} y={33 + i * 26} font-size="7">{m.nm}</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">吸収できる最も長い波長</span>
+    <span class="fig__note">約1,240 ÷ Eg（eV）で、単位は nm</span>
+  </li>
+</FigureFrame>

@@ -150,12 +150,15 @@ physics:
       slug: solid-state
       title: 固体物理学
       summary: 結晶の中で電子がどう振る舞うかを、バンド、格子振動、統計の3つの柱で学びます。半導体がなぜ「半」導体なのか、なぜ熱と雑音が限界を決めるのかが式で読めるようになります。
-      units: []
+      units:
+        - { type: learn, ref: band-gap }
+        - { type: learn, ref: intrinsic-carrier }
     - label: B
       slug: device-physics
       title: 半導体デバイス物理
       summary: pn接合、MOS構造、トランジスタ、電極の動作を、ポテンシャルと電流の式で読みます。設計の原則が「なぜそうなっているか」に戻ってつながります。
-      units: []
+      units:
+        - { type: learn, ref: built-in-potential }
     - label: C
       slug: optics
       title: 光物性
