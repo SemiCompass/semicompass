@@ -1,5 +1,7 @@
 ---
-// 用語集（/glossary/。仕様書 9.5）：五十音とアルファベットの見出しで区切った一覧（用語、読み、短い定義）。用語がまだないときは、準備中の表示
+// 用語集（/glossary/。仕様書 9.5）：読みの行への移動の並び（画面の上に張り付ける）と、行ごとのまとまり。
+// まとまりは、左に行の名前、右に用語を2列（タブレット以下は1列）。各用語は、名前・読み（名前と同じときは省く）・短い定義。
+// 用語がまだないときは、準備中の表示
 import { BUILD_ENV } from 'astro:env/server';
 import StateMessage from '../../components/StateMessage.astro';
 import Page from '../../layouts/Page.astro';
@@ -10,6 +12,12 @@ const groups = GLOSSARY_HEADING_ORDER.map((heading) => ({
   heading,
   items: terms.filter((t) => glossaryHeading(t.front.reading) === heading).sort((a, b) => a.front.reading.localeCompare(b.front.reading, 'ja')),
 })).filter((g) => g.items.length > 0);
+// 読みの行（あ行〜わ行）は、用語がなくても並べ、用語のない行はリンクにしない。アルファベットなどは、用語のあるものだけ
+const KANA = ['あ行', 'か行', 'さ行', 'た行', 'な行', 'は行', 'ま行', 'や行', 'ら行', 'わ行'];
+const has = new Set(groups.map((g) => g.heading));
+const index = [...KANA.map((h) => ({ heading: h, on: has.has(h) })), ...groups.filter((g) => !KANA.includes(g.heading)).map((g) => ({ heading: g.heading, on: true }))];
+const kana = (s: string) => s.replace(/[\u30a1-\u30f6]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60));
+const sameReading = (term: string, reading: string) => kana(term) === kana(reading);
 ---
 
 <Page
@@ -23,17 +31,26 @@ const groups = GLOSSARY_HEADING_ORDER.map((heading) => ({
     <StateMessage kind="empty" message="用語集は、準備中です。用語は、順に公開します。" actionLabel="工程の一覧を見る" actionHref="/processes/" />
   ) : (
     <>
-      <p class="measure">用語を、読みの順に並べています。</p>
-      <nav aria-label="用語集の見出し"><ul class="glossary-index">{groups.map((g) => <li><a href={`#g-${g.heading}`}>{g.heading}</a></li>)}</ul></nav>
+      <p class="lead measure">半導体の用語を、読みの順に並べています。用語を選ぶと、解説と関係する工程・企業が見られます。</p>
+      <nav class="glossary-index" aria-label="用語集の見出し">
+        <ol>
+          {index.map((g) => (
+            <li>{g.on ? <a href={`#g-${g.heading}`}>{g.heading.replace('行', '')}</a> : <span aria-disabled="true">{g.heading.replace('行', '')}</span>}</li>
+          ))}
+        </ol>
+      </nav>
       {groups.map((g) => (
-        <section aria-labelledby={`g-${g.heading}`}>
-          <h2 id={`g-${g.heading}`}>{g.heading}</h2>
+        <section class="glossary-group" aria-labelledby={`g-${g.heading}`}>
+          <h2 id={`g-${g.heading}`} class="glossary-group__title">{g.heading.replace('行', '')}<span class="visually-hidden">{g.heading.endsWith('行') ? '行' : ''}</span></h2>
           <dl class="glossary-list">
             {g.items.map((t) => (
-              <>
-                <dt><a href={`/glossary/${t.slug}/`}>{t.front.term}</a><span class="glossary-list__reading">（{t.front.reading}）</span></dt>
+              <div class="glossary-list__item">
+                <dt>
+                  <a href={`/glossary/${t.slug}/`}>{t.front.term}</a>
+                  {!sameReading(t.front.term, t.front.reading) && <span class="glossary-list__reading">{t.front.reading}</span>}
+                </dt>
                 <dd>{t.front.short_definition}</dd>
-              </>
+              </div>
             ))}
           </dl>
         </section>
@@ -43,36 +60,103 @@ const groups = GLOSSARY_HEADING_ORDER.map((heading) => ({
 </Page>
 
 <style>
+  @import "../../styles/breakpoints.css";
+  /* 読みの行への移動の並び：画面の上に張り付ける。用語のない行は補助の色で、リンクにしない */
   .glossary-index {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin-block: var(--space-5) 0;
+    padding-block: var(--space-2);
+    border-bottom: var(--border-width) solid var(--color-border);
+    background: var(--color-bg);
+  }
+  .glossary-index ol {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
-    margin: 0 0 var(--space-5);
+    gap: var(--space-1);
+    margin: 0;
     padding: 0;
     list-style: none;
   }
-  .glossary-index a {
-    display: inline-flex;
-    align-items: center;
+  .glossary-index a,
+  .glossary-index span {
+    display: inline-grid;
+    place-items: center;
     min-width: var(--target-min);
     min-height: var(--target-min);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-control);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  .glossary-index a,
+  .glossary-index a:visited {
+    color: var(--color-text);
+  }
+  .glossary-index a:hover {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+  }
+  .glossary-index span {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-normal);
+  }
+  /* 行ごとのまとまり：左に行の名前、右に用語 */
+  .glossary-group {
+    display: grid;
+    gap: var(--space-3) var(--space-5);
+    padding-block: var(--space-6);
+    border-bottom: var(--border-width) solid var(--color-border);
+    scroll-margin-top: var(--glossary-index-height);
+  }
+  .glossary-group__title {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: var(--text-h2);
+    line-height: var(--leading-reset);
   }
   .glossary-list {
-    max-width: var(--content-max-width);
+    display: grid;
+    gap: var(--space-4) var(--space-6);
     margin: 0;
   }
+  .glossary-list__item {
+    min-width: 0;
+  }
   .glossary-list dt {
-    margin-block-start: var(--space-4);
     font-weight: var(--font-weight-bold);
   }
+  .glossary-list dt a,
+  .glossary-list dt a:visited {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .glossary-list dt a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
   .glossary-list__reading {
+    margin-inline-start: var(--space-2);
     color: var(--color-text-muted);
-    font-size: var(--text-small);
+    font-size: var(--text-caption);
     font-weight: var(--font-weight-normal);
   }
   .glossary-list dd {
-    margin: 0 0 var(--space-3);
-    font-size: var(--text-dense);
-    line-height: var(--text-dense-leading);
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  @media (--tablet) {
+    .glossary-group {
+      grid-template-columns: var(--glossary-head-width) minmax(0, 1fr);
+    }
+  }
+  @media (--pc) {
+    .glossary-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 </style>

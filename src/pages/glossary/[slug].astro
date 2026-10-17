@@ -1,5 +1,6 @@
 ---
-// 用語ページ（/glossary/{slug}/。仕様書 9.5）：見出し（用語、読み）→ 短い定義（text-lead）→ 解説 → 関係する工程と企業 → さらに深く（あれば）→ 出典。
+// 用語ページ（/glossary/{slug}/。仕様書 9.5）：頭（「用語」と段階のチップ、大見出し、読み・英語・別の表記、日付、「ひとことで言うと」の定義の枠）→
+//   図 → 解説 → 関係する工程と企業（チップ）→ 関係する用語（チップ）→ さらに深く（あれば）→ 理解度チェック → 出典。
 // content/glossary/{slug}.md（データ定義書 6.6）から作る。draft: true は、プレビューのビルドだけ
 import { BUILD_ENV } from 'astro:env/server';
 import Phrase from '../../components/Phrase.astro';
@@ -8,7 +9,6 @@ import SourceList from '../../components/SourceList.astro';
 import LearnDeeper from '../../components/LearnDeeper.astro';
 import PageFeedback from '../../components/PageFeedback.astro';
 import Quiz from '../../components/Quiz.astro';
-import Tag from '../../components/Tag.astro';
 import Page from '../../layouts/Page.astro';
 import { loadCompanies, loadSupply } from '../../lib/companies';
 import { loadTerms } from '../../lib/content';
@@ -32,9 +32,23 @@ const sources = f.sources.map((s) => ({
 }));
 // 深掘り編「半導体の物理」で、この用語に効くページ（仕様書 8.18。公開済みのものがあるときだけ出す）
 const deeper = deeperLinks(BUILD_ENV === 'preview', `/glossary/${term.slug}/`);
+// 段階のチップ：用語の最初の工程の段階（4.5。色だけで区別せず、段階の名前を書く）
+type P = { slug: string; stage: string };
+const stageOf = (supply.processes as unknown as P[]).find((p) => p.slug === f.processes[0])?.stage;
+const stageName = stageOf ? (supply.categories.find((c) => c.slug === stageOf)?.name ?? stageOf) : undefined;
+const stageColor: Record<string, string> = { design: 'neutral', materials: 'materials', 'front-end': 'front', 'back-end': 'back' };
+const termCompanies = (f.companies ?? []).flatMap((slug) => {
+  const c = companies.find((x) => x.slug === slug);
+  return c ? [{ slug, name: c.short_names[0] ?? c.name }] : [];
+});
+const label = (date: string) => {
+  const [y, m, d] = date.split('-').map(Number);
+  return `${y}年${m}月${d}日`;
+};
 const toc = [
   ...term.sections.filter((s) => s.heading).map((s, i) => ({ id: `s${i}`, label: s.heading })),
   { id: 'related', label: '関係する工程と企業' },
+  ...(related.length > 0 ? [{ id: 'related-terms', label: '関係する用語' }] : []),
   ...(deeper.length > 0 ? [{ id: 'deeper', label: 'さらに深く' }] : []),
   ...(term.quiz.length > 0 ? [{ id: 'quiz-title', label: '理解度チェック' }] : []),
   { id: 'sources-heading', label: '出典' },
@@ -52,10 +66,27 @@ const toc = [
   schemaType="DefinedTerm"
   noindex={f.draft === true}
 >
-  <Fragment slot="lead">
-    <p class="term-reading">読み：{f.reading}{f.name_en && <>　英語：{f.name_en}</>}{(f.aliases ?? []).length > 0 && <>　別の表記：{(f.aliases ?? []).join('、')}</>}</p>
-    <p class="lead measure"><Phrase text={f.short_definition} /></p>
-  </Fragment>
+  <header class="term-head" slot="head">
+    <p class="term-head__kicker">
+      <span>用語</span>
+      {stageName && stageOf && <a class:list={['stage-chip', `stage-chip--${stageColor[stageOf] ?? 'neutral'}`]} href="/processes/"><span class="visually-hidden">段階：</span>{stageName}</a>}
+    </p>
+    <h1 class="term-head__title"><Phrase text={f.term} /></h1>
+    <dl class="term-meta">
+      <div><dt>読み</dt><dd>{f.reading}</dd></div>
+      {f.name_en && <div><dt>英語</dt><dd lang="en">{f.name_en}</dd></div>}
+      {(f.aliases ?? []).length > 0 && <div><dt>別の表記</dt><dd>{(f.aliases ?? []).join('、')}</dd></div>}
+    </dl>
+    <p class="term-head__dates">
+      {f.published_at && <span>公開日：<time datetime={f.published_at}>{label(f.published_at)}</time></span>}
+      {f.updated_at && <span>更新日：<time datetime={f.updated_at}>{label(f.updated_at)}</time></span>}
+      <span>作成者：<a href="/about/">hysd（SemiCompass運営者）</a></span>
+    </p>
+    <div class="defbox">
+      <p class="defbox__title">ひとことで言うと</p>
+      <p class="defbox__text"><Phrase text={f.short_definition} /></p>
+    </div>
+  </header>
   {TermFigure && <TermFigure />}
   {term.sections.map((section, i) => (
     <section>
@@ -65,15 +96,25 @@ const toc = [
   ))}
   <section aria-labelledby="related">
     <h2 id="related">関係する工程と企業</h2>
-    {f.processes.length > 0 && <p class="term-tags">{f.processes.map((p) => <Tag href={`/processes/${p}/`} kind="工程">{processName(p)}</Tag>)}</p>}
-    {(f.companies ?? []).length > 0 && (
-      <ul>{(f.companies ?? []).map((slug) => {
-        const c = companies.find((x) => x.slug === slug);
-        return c ? <li><a href={`/companies/${c.slug}/`}>{c.short_names[0] ?? c.name}</a></li> : null;
-      })}</ul>
+    {f.processes.length > 0 && (
+      <ul class="term-chips" aria-label="関係する工程">
+        {f.processes.map((p) => <li><a class="is-strong" href={`/processes/${p}/`}><span class="visually-hidden">工程：</span>{processName(p)}</a></li>)}
+      </ul>
     )}
-    {related.length > 0 && <p>関係する用語：{related.map((t, i) => <>{i > 0 && '、'}<a href={`/glossary/${t.slug}/`}>{t.front.term}</a></>)}</p>}
+    {termCompanies.length > 0 && (
+      <ul class="term-chips" aria-label="関係する企業">
+        {termCompanies.map((c) => <li><a href={`/companies/${c.slug}/`}><span class="visually-hidden">企業：</span>{c.name}</a></li>)}
+      </ul>
+    )}
   </section>
+  {related.length > 0 && (
+    <section aria-labelledby="related-terms">
+      <h2 id="related-terms">関係する用語</h2>
+      <ul class="term-chips">
+        {related.map((t) => <li><a href={`/glossary/${t.slug}/`}>{t.front.term}</a></li>)}
+      </ul>
+    </section>
+  )}
   {deeper.length > 0 && <LearnDeeper links={deeper} />}
   <Quiz questions={term.quiz} pageType="term" />
   <SourceList sources={sources} heading="出典" />
@@ -81,15 +122,145 @@ const toc = [
 </Page>
 
 <style>
-  .term-reading {
-    margin-block: 0 var(--space-3);
-    color: var(--color-text-muted);
-    font-size: var(--text-dense);
-    line-height: var(--text-dense-leading);
+  @import "../../styles/breakpoints.css";
+  /* 用語の頭（9.5） */
+  .term-head {
+    margin-block-end: var(--space-6);
   }
-  .term-tags {
+  .term-head__kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .term-head__title {
+    margin: 0;
+    font-size: var(--text-term);
+    line-height: var(--text-term-leading);
+  }
+  .term-meta {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-4) 0 0;
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .term-meta div {
+    display: contents;
+  }
+  .term-meta dt {
+    color: var(--color-text-muted);
+  }
+  .term-meta dd {
+    margin: 0;
+  }
+  .term-head__dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-3) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  /* ひとことで言うと（8.20 の定義の枠） */
+  .defbox {
+    max-width: var(--content-max-width);
+    margin-block-start: var(--space-5);
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
+  }
+  .defbox__title {
+    margin: 0 0 var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-small-leading);
+  }
+  .defbox__text {
+    margin: 0;
+    font-size: var(--text-lead);
+    line-height: var(--text-lead-leading);
+    letter-spacing: var(--text-lead-tracking);
+  }
+  /* 段階のチップ（8.20） */
+  .stage-chip,
+  .stage-chip:visited {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--tag-height-sm);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--stage-tint);
+    color: var(--stage-ink);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  .stage-chip::before {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--stage-ink);
+    content: "";
+  }
+  .stage-chip--neutral {
+    --stage-ink: var(--color-text);
+    --stage-tint: var(--color-stage-neutral-tint);
+  }
+  .stage-chip--materials {
+    --stage-ink: var(--color-stage-materials);
+    --stage-tint: var(--color-stage-materials-tint);
+  }
+  .stage-chip--front {
+    --stage-ink: var(--color-stage-front);
+    --stage-tint: var(--color-stage-front-tint);
+  }
+  .stage-chip--back {
+    --stage-ink: var(--color-stage-back);
+    --stage-tint: var(--color-stage-back-tint);
+  }
+  /* 工程・企業・用語の名前のチップ（8.11 の企業名のチップ） */
+  .term-chips {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+  .term-chips a,
+  .term-chips a:visited {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tag-height);
+    padding-inline: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    text-decoration: none;
+  }
+  .term-chips a.is-strong {
+    font-weight: var(--font-weight-bold);
+  }
+  .term-chips a:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+    color: var(--color-primary-hover);
+  }
+  @media (pointer: coarse) {
+    .term-chips a {
+      min-height: var(--target-min);
+    }
   }
 </style>
