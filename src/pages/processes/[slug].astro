@@ -9,7 +9,6 @@ import SourceList from '../../components/SourceList.astro';
 import PageFeedback from '../../components/PageFeedback.astro';
 import Quiz from '../../components/Quiz.astro';
 import StateMessage from '../../components/StateMessage.astro';
-import Tag from '../../components/Tag.astro';
 import ProcessFigure from '../../components/ProcessFigure.astro';
 import LearnDeeper from '../../components/LearnDeeper.astro';
 import LearnPathNav from '../../components/LearnPathNav.astro';
@@ -34,7 +33,14 @@ const stageName = supply.categories.find((c) => c.slug === process.stage)?.name 
 const content = loadProcessContent(process.slug, preview);
 const figure = processFigures[process.slug];
 const FigureFile = (figureModules[`../../figures/process/${process.slug}.astro`]?.default ?? null) as any;
-const rows = companyRows(preview).filter((r) => r.company.processes.includes(process.slug));
+// この工程の企業（仕様書 9.4）：売上高の大きい順。準備中の企業（売上高のない企業）は最後
+const rows = companyRows(preview)
+  .filter((r) => r.company.processes.includes(process.slug))
+  .sort((a, b) => (a.sales === null ? 1 : 0) - (b.sales === null ? 1 : 0) || (b.sales ?? 0) - (a.sales ?? 0));
+// 段階の中の位置（「前工程 9工程のうち7番目」）と、段階の色（4.5）
+const sameStage = supply.processes.filter((p) => p.stage === process.stage).sort((a, b) => a.order - b.order);
+const position = sameStage.findIndex((p) => p.slug === process.slug) + 1;
+const stageColor: Record<string, string> = { design: 'neutral', materials: 'materials', 'front-end': 'front', 'back-end': 'back' };
 const terms = loadTerms(preview).filter((t) => t.front.processes.includes(process.slug));
 const previous = (supply.flow ?? []).filter((f) => f.to === process.slug).map((f) => f.from);
 const next = (supply.flow ?? []).filter((f) => f.from === process.slug).map((f) => f.to);
@@ -69,10 +75,13 @@ const toc = [
   schemaType={content ? 'Article' : undefined}
   noindex={content?.front.draft === true}
 >
-  <section aria-labelledby="point">
-    <h2 id="point">この工程の要点</h2>
-    <p class="lead"><Phrase text={process.short_description ?? ''} /></p>
-    <p><Tag href="/processes/" kind="段階">{stageName}</Tag></p>
+  <section class="keypt" aria-labelledby="point">
+    <p class="keypt__stage">
+      <a class:list={['stage-chip', `stage-chip--${stageColor[process.stage] ?? 'neutral'}`]} href="/processes/"><span class="visually-hidden">段階：</span>{stageName}</a>
+      <span>{stageName} {sameStage.length}工程のうち{position}番目</span>
+    </p>
+    <h2 id="point" class="keypt__title">この工程の要点</h2>
+    <p class="keypt__text"><Phrase text={process.short_description ?? ''} /></p>
   </section>
 
   <section aria-labelledby="explanation">
@@ -98,13 +107,13 @@ const toc = [
     ) : (
       <StateMessage kind="empty" message="この工程に当たる企業は、まだありません。" actionLabel="企業の一覧を見る" actionHref="/companies/" />
     )}
-    <p><a href={`/companies/process/${process.slug}/`}>証券コード・工程・掲載の状態も含めて、一覧のページで見る</a></p>
+    <p><a href={`/companies/process/${process.slug}/`}>ほかの数値も含めて、一覧のページで比べる</a></p>
   </section>
 
   <section aria-labelledby="terms">
     <h2 id="terms">関係する用語</h2>
     {terms.length > 0 ? (
-      <ul>{terms.map((t) => <li><a href={`/glossary/${t.slug}/`}>{t.front.term}</a>：{t.front.short_definition}</li>)}</ul>
+      <ul class="term-lines">{terms.map((t) => <li><a href={`/glossary/${t.slug}/`}>{t.front.term}</a><span>{t.front.short_definition}</span></li>)}</ul>
     ) : (
       <StateMessage kind="empty" message="この工程に関係する用語は、まだありません。" actionLabel="用語集を見る" actionHref="/glossary/" />
     )}
@@ -112,9 +121,9 @@ const toc = [
 
   <section aria-labelledby="neighbors">
     <h2 id="neighbors">前後の工程</h2>
-    <ul>
-      {previous.map((slug) => <li>前の工程：<a href={`/processes/${slug}/`}>{nameOf(slug)}</a></li>)}
-      {next.map((slug) => <li>次の工程：<a href={`/processes/${slug}/`}>{nameOf(slug)}</a></li>)}
+    <ul class="pn-nav">
+      {previous.map((slug) => <li><a href={`/processes/${slug}/`}><span class="pn-nav__dir">← 前の工程</span><span class="pn-nav__name">{nameOf(slug)}</span></a></li>)}
+      {next.map((slug) => <li class="pn-nav__next"><a href={`/processes/${slug}/`}><span class="pn-nav__dir">次の工程 →</span><span class="pn-nav__name">{nameOf(slug)}</span></a></li>)}
     </ul>
     {previous.length === 0 && next.length === 0 && <p>前後の工程は、まだ設定されていません。</p>}
   </section>
@@ -129,3 +138,147 @@ const toc = [
   {sources.length > 0 && <SourceList sources={sources} heading="出典" />}
   <PageFeedback pageType="process" />
 </Page>
+
+<style>
+  @import "../../styles/breakpoints.css";
+  /* この工程の要点（8.20）：明るい緑の左の線、薄い緑の面。上に段階のチップと段階の中の位置 */
+  .keypt {
+    max-width: var(--content-max-width);
+    margin-block-end: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    border-left: var(--border-width-accent) solid var(--color-accent);
+    background: var(--color-primary-tint);
+  }
+  .keypt__stage {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin: 0 0 var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .keypt .keypt__title {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--color-primary);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .keypt__text {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-lead);
+    line-height: var(--text-lead-leading);
+    letter-spacing: var(--text-lead-tracking);
+  }
+  /* 段階のチップ（8.20、8.11の段階のタグと同じ形） */
+  .stage-chip,
+  .stage-chip:visited {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--tag-height-sm);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--stage-tint);
+    color: var(--stage-ink);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  .stage-chip::before {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--stage-ink);
+    content: "";
+  }
+  .stage-chip--neutral {
+    --stage-ink: var(--color-text);
+    --stage-tint: var(--color-stage-neutral-tint);
+  }
+  .stage-chip--materials {
+    --stage-ink: var(--color-stage-materials);
+    --stage-tint: var(--color-stage-materials-tint);
+  }
+  .stage-chip--front {
+    --stage-ink: var(--color-stage-front);
+    --stage-tint: var(--color-stage-front-tint);
+  }
+  .stage-chip--back {
+    --stage-ink: var(--color-stage-back);
+    --stage-tint: var(--color-stage-back-tint);
+  }
+  /* 関係する用語：1行ずつ、用語の名前と短い定義。行の間を罫線で区切る */
+  .term-lines {
+    margin: 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    list-style: none;
+  }
+  .term-lines li {
+    padding-block: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+    font-size: var(--text-dense);
+    line-height: var(--text-lead-leading);
+  }
+  .term-lines a {
+    margin-inline-end: var(--space-3);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  .term-lines a:hover {
+    text-decoration: underline;
+  }
+  .term-lines span {
+    color: var(--color-text-muted);
+  }
+  /* 前後の工程（8.21）：2つのカード。次へのカードは右揃え */
+  .pn-nav {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pn-nav a,
+  .pn-nav a:visited {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    height: 100%;
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .pn-nav a:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+  }
+  .pn-nav__next a {
+    align-items: flex-end;
+    text-align: end;
+  }
+  .pn-nav__dir {
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .pn-nav__name {
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  @media (--tablet) {
+    .pn-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pn-nav__next:only-child {
+      grid-column: 2;
+    }
+  }
+</style>

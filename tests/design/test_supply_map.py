@@ -85,14 +85,15 @@ class SupplyMapPageTest(unittest.TestCase):
         cls.html = (cls.dist / "processes" / "index.html").read_text(encoding="utf-8")
 
     def test_every_link_in_the_figure_has_a_matching_heading(self):
-        ids = set(re.findall(r'<h4 id="(p-[a-z-]+)"', self.html))
-        links = set(re.findall(r'<a class="[^"]*map-box[^"]*" href="#(p-[a-z-]+)"', self.html))
+        # 工程の流れの図（仕様書 9.4、2026年10月17日の作り直し）の工程の行は、同じページの工程の見出しへ移動する
+        ids = set(re.findall(r'<h3 id="(p-[a-z-]+)"', self.html))
+        links = set(re.findall(r'<a class="[^"]*pflow__item[^"]*" href="#(p-[a-z-]+)"', self.html))
         self.assertEqual(links, {f"p-{p['slug']}" for p in SUPPLY["processes"]})
         self.assertLessEqual(links, ids)
 
-    def test_has_source_line_and_two_figures_and_no_noindex_problem(self):
+    def test_has_source_line_and_the_flow_and_no_noindex_problem(self):
         self.assertIn("出典：", self.html)
-        self.assertEqual(len(re.findall(r'<svg class="[^"]*map-svg ', self.html)), 2)
+        self.assertEqual(self.html.count('class="pflow__stages'), 1)
         self.assertNotIn("<script src=\"http", self.html)
 
     def test_old_url_redirects_to_processes(self):
@@ -105,8 +106,9 @@ class SupplyMapPageTest(unittest.TestCase):
         used = {p for c in companies for p in (c.get("processes") or [])}
         empty = [p for p in SUPPLY["processes"] if p["slug"] not in used]
         self.assertEqual(self.html.count("まだ掲載していません"), len(empty))
-        # 工程ごとの企業は、企業名のチップの一覧（表ではない）を、開閉できる枠に入れる。企業のある工程の数だけ出る
-        self.assertEqual(self.html.count('<details class="supply-process__companies'), len(SUPPLY["processes"]) - len(empty))
+        # 工程ごとの企業は、企業名のチップの一覧（表ではない）。開閉にせず、常に見せる。企業のある工程の数だけ出る
+        self.assertEqual(len(re.findall(r'<ul class="supply-chips', self.html)), len(SUPPLY["processes"]) - len(empty))
+        self.assertNotIn("<details class=\"supply-process", self.html)
 
 
 if __name__ == "__main__":
