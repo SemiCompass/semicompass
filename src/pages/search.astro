@@ -13,20 +13,121 @@ import Page from '../layouts/Page.astro';
   noindex
   wide
 >
-  <div class="measure"><SearchBox id="search-page" /></div>
+  <div class="search-page__box"><SearchBox id="search-page" size="large" /></div>
   <p class="measure search-hint">入力の例：企業名（東京エレクトロン）、証券コード（8035）、用語（CMP）。全角と半角、ひらがなとカタカナ、大文字と小文字は、区別しません。</p>
   <div data-search-results>
-    <p role="status" data-search-status>検索しています</p>
+    <p class="search-status" role="status" data-search-status>検索しています</p>
+    <div class="chips" role="group" aria-label="種類で絞り込む" data-search-chips hidden></div>
     <div data-search-groups></div>
     <noscript><p>検索には、JavaScriptが必要です。<a href="/companies/">企業の一覧</a>、<a href="/processes/">工程の一覧</a>、<a href="/glossary/">用語集</a>から探せます。</p></noscript>
   </div>
 </Page>
 
 <style>
+  .search-page__box {
+    max-width: var(--content-max-width);
+  }
   .search-hint {
     margin-block: var(--space-3) var(--space-5);
     color: var(--color-text-muted);
     font-size: var(--text-dense);
-    line-height: var(--text-dense-leading);
+    line-height: var(--text-lead-leading);
+  }
+  .search-status {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+  }
+  /* 種類の絞り込み（8.19。件数つき） */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block-end: var(--space-5);
+  }
+  .chips :global(.chip) {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--chip-height);
+    padding-inline: var(--space-4);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--text-dense);
+    cursor: pointer;
+  }
+  .chips :global(.chip::after) {
+    position: absolute;
+    inset: calc((var(--chip-height) - var(--target-min)) / 2) 0;
+    content: "";
+  }
+  .chips :global(.chip:hover) {
+    background: var(--color-primary-tint);
+  }
+  .chips :global(.chip[aria-pressed="true"]) {
+    border-color: var(--color-brand);
+    background: var(--color-brand);
+    color: var(--color-on-brand);
+  }
+  .chips :global(.chip__n) {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .chips :global(.chip[aria-pressed="true"] .chip__n) {
+    color: var(--color-on-brand-muted);
+  }
+  /* 種類ごとのまとまり（9.7） */
+  [data-search-groups] :global(.sres) {
+    margin-block-end: var(--space-6);
+  }
+  [data-search-groups] :global(.sres h2) {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: 0;
+    padding-block-end: var(--space-2);
+    border-bottom: var(--border-width) solid var(--color-text);
+    font-size: var(--text-h3);
+    line-height: var(--text-h3-leading);
+  }
+  [data-search-groups] :global(.sres h2 small) {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-normal);
+  }
+  [data-search-groups] :global(.sres ul) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  [data-search-groups] :global(.sres li) {
+    padding-block: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  [data-search-groups] :global(.sres a),
+  [data-search-groups] :global(.sres a:visited) {
+    color: var(--color-text);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  [data-search-groups] :global(.sres a:hover) {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+  [data-search-groups] :global(.sres mark) {
+    background: var(--color-highlight-tint);
+    color: inherit;
+  }
+  [data-search-groups] :global(.sres__detail) {
+    display: block;
+    margin-block-start: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
   }
 </style>

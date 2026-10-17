@@ -1,5 +1,6 @@
 ---
-// ニュース個別（/news/{yyyy}/{mm}/{slug}/。仕様書 9.6）：見出し → 日付と分類 → 元記事（見出し、発信元、リンク）→ 3つの中見出しの解説 → 関係する企業・工程 → 出典。
+// ニュース個別（/news/{yyyy}/{mm}/{slug}/。仕様書 9.6）：見出し → 日付と分類 → 元記事の枠 → 3つの中見出しの解説 → 関係する企業・工程 → 出典 → 前後の解説（8.21）。
+// 右の列（タブレット以下は本文の後）に、目次と「この解説の企業」（8.22。詳しいページのある企業を2社まで、主要な数値つき）
 // content/news/{yyyy}-{mm}-{slug}.md（データ定義書 6.2）から作る。draft: true は、プレビューのビルドだけ。
 // 重要度の点（score）と海外の出来事の印（overseas）は、仕様書に表示の指定がないため、画面には出さない（並べ替えや検査に使う値）
 import { BUILD_ENV } from 'astro:env/server';
@@ -11,7 +12,7 @@ import SourceList from '../../../../components/SourceList.astro';
 import PageFeedback from '../../../../components/PageFeedback.astro';
 import Tag from '../../../../components/Tag.astro';
 import Page from '../../../../layouts/Page.astro';
-import { dateLabel, loadCompanies, loadSupply } from '../../../../lib/companies';
+import { companyRows, dateLabel, formatNumber, loadCompanies, loadSupply } from '../../../../lib/companies';
 import { CATEGORY_LABEL, loadNews, type NewsItem } from '../../../../lib/news';
 
 export function getStaticPaths() {
@@ -30,6 +31,17 @@ const processTags = f.tags.processes.flatMap((slug) => {
   return p ? [{ slug, name: p.name }] : [];
 });
 const sections = news.sections.filter((s) => s.heading);
+// この解説の企業（8.22）：関係する企業のうち、詳しいページのある企業を2社まで
+const rowsAll = companyRows(BUILD_ENV === 'preview');
+const sideCompanies = f.tags.companies
+  .map((slug) => rowsAll.find((r) => r.company.slug === slug))
+  .filter((r): r is NonNullable<typeof r> => !!r && r.detailed)
+  .slice(0, 2);
+// 前後の解説（8.21）：新しい順の一覧で、1つ前（新しい）と1つ後（古い）
+const all = loadNews(BUILD_ENV === 'preview');
+const at = all.findIndex((n) => n.url === news.url);
+const newer = at > 0 ? all[at - 1] : undefined;
+const older = at >= 0 && at < all.length - 1 ? all[at + 1] : undefined;
 const source = f.source_article;
 const sources = [{ number: 1, title: source.title, publisher: source.publisher, url: source.url, publishedOn: source.published_on }];
 const toc = [
@@ -58,9 +70,13 @@ const toc = [
         <ul>{(f.corrections ?? []).map((c) => <li><time datetime={c.date}>{dateLabel(c.date)}</time>　{c.description}</li>)}</ul>
       </Notice>
     )}
-    <p class="news-source">
-      元記事：<ExternalLink href={source.url}>{source.title}</ExternalLink>（{source.publisher}、<time datetime={source.published_on}>{dateLabel(source.published_on)}</time>）
-    </p>
+    <div class="news-source">
+      <span class="news-source__label">元記事</span>
+      <p class="news-source__body">
+        <ExternalLink href={source.url}>{source.title}</ExternalLink>
+        <span class="news-source__meta">{source.publisher}、<time datetime={source.published_on}>{dateLabel(source.published_on)}</time></span>
+      </p>
+    </div>
   </Fragment>
   {sections.map((section, i) => (
     <section>
@@ -80,20 +96,163 @@ const toc = [
     )}
   </section>
   <SourceList sources={sources} heading="出典" />
+  {(older || newer) && (
+    <nav class="pn-nav" aria-label="前後の解説">
+      {older && <a href={older.url}><span class="pn-nav__dir">← 前の解説</span><span class="pn-nav__name">{older.front.title}</span></a>}
+      {newer && <a class="pn-nav__next" href={newer.url}><span class="pn-nav__dir">次の解説 →</span><span class="pn-nav__name">{newer.front.title}</span></a>}
+    </nav>
+  )}
   <PageFeedback pageType="news" />
+  {sideCompanies.length > 0 && (
+    <Fragment slot="aside">
+      <section class="side-co" aria-label="この解説の企業">
+        <p class="side-co__title">この解説の企業</p>
+        {sideCompanies.map((r) => (
+          <div class="side-co__item">
+            <a class="side-co__name" href={`/companies/${r.company.slug}/`}>{r.company.short_names[0] ?? r.company.name} →</a>
+            <dl class="side-co__grid">
+              {r.sales != null && <div><dt>売上高（億円）</dt><dd>{formatNumber(r.sales, 1)}</dd></div>}
+              {r.margin != null && <div><dt>営業利益率</dt><dd>{r.margin < 0 ? `−${formatNumber(-r.margin, 1)}` : formatNumber(r.margin, 1)}%</dd></div>}
+              {r.ratio != null && <div><dt>半導体関連の比率</dt><dd>{formatNumber(r.ratio, 1)}%</dd></div>}
+              {r.salary != null && <div><dt>平均年間給与</dt><dd>{formatNumber(r.salary, 0)}万円</dd></div>}
+            </dl>
+            <p class="side-co__note">{r.period}・連結（給与は提出会社）。出典：有価証券報告書、EDINET</p>
+          </div>
+        ))}
+      </section>
+    </Fragment>
+  )}
 </Page>
 
 <style>
+  @import "../../../../styles/breakpoints.css";
+  /* 元記事の枠（9.6） */
   .news-source {
-    max-width: var(--content-max-width); /* 元記事の見出しが長くても、本文の幅を超えない（1行の長さ。仕様書6.2） */
-    margin-block: 0 var(--space-5);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    max-width: var(--content-max-width);
+    margin-block: 0 var(--space-6);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .news-source__label {
     color: var(--color-text-muted);
-    font-size: var(--text-dense);
-    line-height: var(--text-dense-leading);
+    font-weight: var(--font-weight-bold);
+    white-space: nowrap;
+  }
+  .news-source__body {
+    margin: 0;
+  }
+  .news-source__body :global(a) {
+    font-weight: var(--font-weight-bold);
+  }
+  .news-source__meta {
+    display: block;
+    color: var(--color-text-muted);
   }
   .news-tags {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
+  /* 前後の解説（8.21） */
+  .pn-nav {
+    display: grid;
+    gap: var(--space-3);
+    margin-block-start: var(--space-7);
+  }
+  .pn-nav a,
+  .pn-nav a:visited {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .pn-nav a:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+  }
+  .pn-nav a.pn-nav__next {
+    align-items: flex-end;
+    text-align: end;
+  }
+  .pn-nav__dir {
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .pn-nav__name {
+    color: var(--color-primary);
+    font-size: var(--text-dense);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-dense-leading);
+  }
+  /* この解説の企業（8.22） */
+  .side-co {
+    margin-block-start: var(--space-6);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .side-co__title {
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-bold);
+  }
+  .side-co__item + .side-co__item {
+    margin-block-start: var(--space-4);
+    padding-block-start: var(--space-4);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+  .side-co__name,
+  .side-co__name:visited {
+    color: var(--color-text);
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  .side-co__name:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+  .side-co__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-3);
+    margin: var(--space-3) 0 0;
+  }
+  .side-co__grid dt {
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+  }
+  .side-co__grid dd {
+    margin: 0;
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-bold);
+    font-variant-numeric: tabular-nums;
+  }
+  .side-co__note {
+    margin: var(--space-2) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+  }
+  @media (--tablet) {
+    .pn-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pn-nav__next:only-child {
+      grid-column: 2;
+    }
   }
 </style>

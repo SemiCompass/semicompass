@@ -92,7 +92,8 @@ for (const form of document.querySelectorAll<HTMLFormElement>('form[data-search]
 const results = document.querySelector<HTMLElement>('[data-search-results]');
 if (results) {
   const query = new URLSearchParams(location.search).get('q')?.trim() ?? '';
-  const box = document.querySelector<HTMLInputElement>('form[data-search] input[type="search"]');
+  // 検索のページの大きな検索欄（なければ、最初の検索欄）に、入力した語を入れる
+  const box = document.querySelector<HTMLInputElement>('#search-page') ?? document.querySelector<HTMLInputElement>('form[data-search] input[type="search"]');
   if (box && query) box.value = query;
   const status = results.querySelector<HTMLElement>('[data-search-status]')!;
   const target = results.querySelector<HTMLElement>('[data-search-groups]')!;
@@ -109,21 +110,69 @@ if (results) {
       p.textContent = '該当するものは見つかりませんでした。企業名、証券コード、用語の一部を入力してみてください。例：東京エレクトロン、8035、CMP';
       target.append(p);
     }
+    // 種類ごとのまとまりと、種類の絞り込みのチップ（件数つき。結果のない種類は出さない）
+    const chips = results.querySelector<HTMLElement>('[data-search-chips]');
+    const sections: { type: string; el: HTMLElement }[] = [];
+    // 名前の中の、入力した語と同じ部分に印を付ける（大文字と小文字は区別しない。見つからなければ印なし）
+    const marked = (name: string) => {
+      const frag = document.createDocumentFragment();
+      const at = name.toLowerCase().indexOf(query.toLowerCase());
+      if (at < 0) {
+        frag.append(name);
+        return frag;
+      }
+      const mark = document.createElement('mark');
+      mark.textContent = name.slice(at, at + query.length);
+      frag.append(name.slice(0, at), mark, name.slice(at + query.length));
+      return frag;
+    };
     for (const type of ['company', 'process', 'term', 'news'] as const) {
       const group = found.filter((e) => e.type === type);
       if (group.length === 0) continue;
+      const section = document.createElement('section');
+      section.className = 'sres';
       const h2 = document.createElement('h2');
-      h2.textContent = `${TYPE_LABEL[type]}（${group.length}件）`;
+      const count = document.createElement('small');
+      count.textContent = `${group.length}件`;
+      h2.append(TYPE_LABEL[type], count);
       const ul = document.createElement('ul');
       for (const entry of group) {
         const li = document.createElement('li');
         const a = document.createElement('a');
         a.href = entry.url;
-        a.textContent = entry.name;
-        li.append(a, document.createTextNode(`　${[entry.code, entry.detail].filter(Boolean).join('　')}`));
+        a.append(marked(entry.name));
+        li.append(a);
+        const detail = [entry.code && `証券コード ${entry.code}`, entry.detail].filter(Boolean).join('・');
+        if (detail) {
+          const span = document.createElement('span');
+          span.className = 'sres__detail';
+          span.textContent = detail;
+          li.append(span);
+        }
         ul.append(li);
       }
-      target.append(h2, ul);
+      section.append(h2, ul);
+      target.append(section);
+      sections.push({ type, el: section });
+    }
+    if (chips && sections.length > 1) {
+      const make = (label: string, n: number, type: string) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.setAttribute('aria-pressed', String(type === ''));
+        const c = document.createElement('span');
+        c.className = 'chip__n';
+        c.textContent = String(n);
+        b.append(label, c);
+        b.addEventListener('click', () => {
+          chips.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          for (const s of sections) s.el.hidden = !!type && s.type !== type;
+        });
+        return b;
+      };
+      chips.append(make('すべて', found.length, ''), ...sections.map((s) => make(TYPE_LABEL[s.type as SearchEntry['type']], found.filter((e) => e.type === s.type).length, s.type)));
+      chips.hidden = false;
     }
   });
 }
