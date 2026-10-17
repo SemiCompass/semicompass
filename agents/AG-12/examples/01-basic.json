@@ -1,0 +1,31 @@
+{
+  "description": "指示文を変えたときの確認に使う見本。資料は架空の短い文章（実在の企業・書類ではない）。期待する出力は、本文ではなく、満たすべき条件で書く",
+  "input": {
+    "task": {
+      "company_name": "架空エレクトロニクス",
+      "fiscal_period": "2027年3月期第2四半期",
+      "quarter": 2,
+      "semiconductor_segments": ["装置事業"],
+      "sources": [
+        {"id": "S1", "title": "2027年3月期 第2四半期決算短信（架空）"},
+        {"id": "S2", "title": "2027年3月期 第2四半期決算説明資料（架空）"}
+      ]
+    },
+    "materials": {
+      "S1": "第2四半期累計の売上高は1,200億円（前年同期比10.0%増）、営業利益は150億円（同5.0%増）となった。通期の業績予想は据え置いた。装置事業の売上高は900億円であった。（架空）",
+      "S2": "新しい洗浄装置の出荷を開始した。国内工場の生産能力を増強する。（架空）"
+    }
+  },
+  "expect": {
+    "schema_valid": true,
+    "limits": {"performance_summary": 100, "outlook": 80, "highlights": 70},
+    "source_ids_subset_of_input": true,
+    "no_citations_or_markup_in_text": true,
+    "no_prohibited_words": true,
+    "mentions_semiconductor_segment": true,
+    "outlook_is_company_view": true,
+    "amounts_state_period_and_unit": true,
+    "uses_quarterly_figures": false,
+    "reprint_check_max_run_below": 30
+  }
+}
