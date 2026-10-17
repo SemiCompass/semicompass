@@ -3,7 +3,7 @@
 //   詳細掲載：見出し → この会社のポイント → 目次 → 事業概要・工程上の位置づけ → 業績 → IR重要ポイント → 働く環境 → ニュース → 資料 → 出典・関連
 //   Coming Soon：見出し、Coming Soon の表示、公開範囲と今後の予定へのリンク、同じ工程の詳細掲載の企業へのリンクだけ。検索に登録させない
 // content/companies/{slug}.md が draft: true の企業は、本番のビルドでは Coming Soon、プレビューのビルド（BUILD_ENV=preview）でだけ詳細掲載（確認のため）
-import { BUILD_ENV } from 'astro:env/server';
+import { BUILD_DATE, BUILD_ENV } from 'astro:env/server';
 import Chart from '../../components/Chart.astro';
 import ExternalLink from '../../components/ExternalLink.astro';
 import KeyPoints from '../../components/KeyPoints.astro';
@@ -18,6 +18,8 @@ import StateMessage from '../../components/StateMessage.astro';
 import Tag from '../../components/Tag.astro';
 import DataTable from '../../components/DataTable.astro';
 import Page from '../../layouts/Page.astro';
+import { buildDate } from '../../lib/buildDate';
+import { chartBehind, irPeriodLabel, irStatus, loadIrPoints, loadOperationsDays, shiftCitations } from '../../lib/irPoints';
 import {
   annualRows, barSpec, dateLabel, employeeSpec, formatNumber, formatOku, isDetailed, loadAuto, loadChartColors, loadCompanies,
   loadOverview, loadSegmentMap, loadSupply, periodLabel, periodRange, regionSpec, segmentSpec,
@@ -94,6 +96,21 @@ if (filing && !overview?.front.sources.some((s) => s.doc_id === filing.doc_id)) 
   sources.push({ number: Math.max(0, ...sources.map((s) => s.number)) + 1, title: source.title, publisher: 'EDINET', url: filing.url,
     publishedOn: filing.submitted_at.slice(0, 10), accessedOn: source.accessedOn, pages: undefined, edinet: true });
 }
+// IR重要ポイント（FR-307）と、最新の決算の反映（CT-03）。出典は、ページの出典の一覧の続きの番号にする
+const irPoints = company.type === 'foreign_subsidiary' ? [] : loadIrPoints(company.slug, preview);
+const ir = irStatus(auto?.announcements ?? [], irPoints, buildDate(BUILD_DATE), loadOperationsDays());
+const irOffset = Math.max(0, ...sources.map((s) => s.number));
+const irSections = ir.point
+  ? ir.point.sections.filter((s) => s.heading).map((s) => ({ heading: s.heading, paragraphs: s.paragraphs.map((p) => shiftCitations(p, irOffset)) }))
+  : [];
+if (ir.point) {
+  for (const s of ir.point.front.sources) {
+    sources.push({ number: Number(s.id.slice(1)) + irOffset, title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on,
+      accessedOn: s.accessed_on, pages: s.pages, edinet: (s.url ?? '').includes('edinet') });
+  }
+}
+const irTanshin = ir.latest?.documents.find((d) => d.type === 'tanshin');
+const irBehind = ir.point ? chartBehind(ir.point, auto?.financials ?? []) : false;
 const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上の位置づけ: 'process-position' };
 ---
 
@@ -187,7 +204,30 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
 
     <section aria-labelledby="ir-points">
       <h2 id="ir-points"><Phrase text="IR重要ポイント" /></h2>
-      <StateMessage kind="empty" message="IR重要ポイントは、まだありません。" actionLabel={company.ir_url ? '会社のIRページを見る' : undefined} actionHref={company.ir_url} />
+      {ir.stale && ir.latest && (
+        <Notice kind="warning">
+          <p>最新の決算は未反映です（決算発表：{dateLabel(ir.latest.announced_on)}）。{irTanshin && <ExternalLink href={irTanshin.url}>決算短信を見る</ExternalLink>}</p>
+        </Notice>
+      )}
+      {ir.point ? (
+        <>
+          <p class="ir-meta">対象：{irPeriodLabel(ir.point.front.fiscal_period_end, ir.point.front.quarter)}（決算発表 {dateLabel(ir.point.front.announced_on)}）・作成日：{dateLabel(ir.point.front.updated_at ?? ir.point.front.published_at)}</p>
+          {irSections.map((section) => (
+            <>
+              <h3>{section.heading}</h3>
+              {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+            </>
+          ))}
+          {irBehind && (
+            <Notice kind="note">
+              <p>{ir.point.front.uses_quarterly_figures ? '業績の要点の四半期の数値は、決算短信によります。' : ''}業績のグラフは、有価証券報告書・半期報告書の数値で、この決算の期はまだ含みません。{ir.point.front.sources[0]?.url && <ExternalLink href={ir.point.front.sources[0].url}>決算短信を見る</ExternalLink>}</p>
+            </Notice>
+          )}
+          <p class="ir-meta">元にした資料：{ir.point.front.sources.map((s) => s.title).join('、')}（出典の一覧を参照）</p>
+        </>
+      ) : (
+        <StateMessage kind="empty" message="IR重要ポイントは、まだありません。" actionLabel={company.ir_url ? '会社のIRページを見る' : undefined} actionHref={company.ir_url} />
+      )}
     </section>
 
     <section aria-labelledby="work">
@@ -273,6 +313,12 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
 )}
 
 <style>
+  /* IR重要ポイントの対象の期・作成日・元にした資料（補助の文字） */
+  .ir-meta {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
   .company-meta {
     display: flex;
     flex-wrap: wrap;
