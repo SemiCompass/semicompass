@@ -3,6 +3,9 @@ title: 電気の基礎：電圧、電流、抵抗
 field: basics
 description: 半導体を学ぶ前に知っておきたい、電圧・電流・抵抗の関係（オームの法則）と電力、電気をためるコンデンサと時定数、直流と交流の周波数を、水の流れのたとえで説明する。
 basis: reviewed
+reviewed_on: '2026-10-17'
+review_methods:
+- operator_knowledge
 draft: false
 published_at: '2026-10-17'
 ai_generated: true
