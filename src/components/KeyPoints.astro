@@ -35,7 +35,7 @@ const path = (v: number[]) => {
     {metrics.map((m) => (
       <div class="key-points__metric">
         <dt>{m.label}</dt>
-        <dd class="key-points__value"><span class="key-points__num">{m.value}</span><span class="key-points__unit">{m.unit}</span></dd>
+        <dd class="key-points__value"><span class="key-points__num">{m.value.split(',').map((part, i) => (i === 0 ? part : <>,<wbr />{part}</>))}</span><span class="key-points__unit">{m.unit}</span></dd>
         {m.note && <dd class:list={['key-points__note', m.trend && `key-points__note--${m.trend}`]}>{m.note}</dd>}
         {m.sub && <dd class="key-points__sub">{m.sub}</dd>}
         {m.spark && m.spark.length > 1 && (() => {
@@ -86,10 +86,12 @@ const path = (v: number[]) => {
   .key-points__metric dd {
     margin: 0;
   }
-  /* 数値は折り返さない（white-space: nowrap）。最も大きい数値で幅が足りないときだけ、単位を次の行に送る */
+  /* 数値は、ふつうは折り返さない。幅が足りないときは、まず単位を次の行に送り、それでも収まらない大きな数値（9,999,999など）は、3桁の区切りのカンマの後でだけ折り返す（<wbr>。フォントの幅の違いで、幅320pxの画面からはみ出していた） */
   .key-points__num,
   .key-points__unit {
     display: inline-block;
+  }
+  .key-points__unit {
     white-space: nowrap;
   }
   .key-points__value {
