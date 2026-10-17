@@ -40,6 +40,8 @@ fields:
         title: 半導体の材料
         units:
           - { type: learn, ref: compound, folder: basics }
+          - { type: learn, ref: epitaxial-growth }
+          - { type: learn, ref: process-materials }
   - "no": 3
     slug: design
     title: デバイス設計・回路
