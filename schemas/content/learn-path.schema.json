@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "schemas/content/learn-path.schema.json",
   "title": "半導体を学ぶの体系（D17）",
-  "description": "データ定義書（第1段階）6.8。content/learn/path.yaml。",
+  "description": "データ定義書（第1段階）6.8。content/learn/path.yaml。基礎編の分野（fields）と、深掘り編「半導体の物理」のカード（physics）。",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -95,7 +95,11 @@
                     "design",
                     "power",
                     "sensors",
-                    "communication"
+                    "communication",
+                    "solid-state",
+                    "device-physics",
+                    "optics",
+                    "materials-physics"
                   ]
                 }
               }
@@ -161,8 +165,191 @@
                           "design",
                           "power",
                           "sensors",
-                          "communication"
+                          "communication",
+                          "solid-state",
+                          "device-physics",
+                          "optics",
+                          "materials-physics"
                         ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "physics": {
+      "description": "深掘り編「半導体の物理」（任意）。基礎編の fields とは別の段として、一覧（/learn/）の基礎編の下に並べる。学習の順（前後のリンク）は、基礎編と深掘り編で別々に作る",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "summary",
+        "cards"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cards": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "label",
+              "slug",
+              "title",
+              "summary",
+              "units"
+            ],
+            "properties": {
+              "label": {
+                "type": "string",
+                "pattern": "^[A-Z]$",
+                "description": "カードの記号（A、B、C、D）。並びの順にA から付ける"
+              },
+              "slug": {
+                "enum": [
+                  "solid-state",
+                  "device-physics",
+                  "optics",
+                  "materials-physics"
+                ],
+                "description": "カードのslug。運用ルール書4.2の深掘り編の4つ（solid-state：固体物理学、device-physics：半導体デバイス物理、optics：光物性、materials-physics：結晶・材料の物理）"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "summary": {
+                "type": "string",
+                "minLength": 1
+              },
+              "units": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "type",
+                    "ref"
+                  ],
+                  "properties": {
+                    "type": {
+                      "enum": [
+                        "learn",
+                        "process",
+                        "term"
+                      ]
+                    },
+                    "ref": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                    },
+                    "folder": {
+                      "description": "type が learn で、ページが分野と別のフォルダ（content/learn/{folder}/）にあるときのフォルダ。URLを変えずに分野を組み替えるため",
+                      "enum": [
+                        "basics",
+                        "devices",
+                        "logic",
+                        "silicon",
+                        "process",
+                        "test",
+                        "facilities",
+                        "industry",
+                        "materials",
+                        "design",
+                        "power",
+                        "sensors",
+                        "communication",
+                        "solid-state",
+                        "device-physics",
+                        "optics",
+                        "materials-physics"
+                      ]
+                    }
+                  }
+                }
+              },
+              "sections": {
+                "description": "分野の中の小分け（任意）。units の後に、この順で並べる",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "slug",
+                    "title",
+                    "units"
+                  ],
+                  "properties": {
+                    "slug": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                    },
+                    "title": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "summary": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "units": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "ref"
+                        ],
+                        "properties": {
+                          "type": {
+                            "enum": [
+                              "learn",
+                              "process",
+                              "term"
+                            ]
+                          },
+                          "ref": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                          },
+                          "folder": {
+                            "description": "type が learn で、ページが分野と別のフォルダ（content/learn/{folder}/）にあるときのフォルダ。URLを変えずに分野を組み替えるため",
+                            "enum": [
+                              "basics",
+                              "devices",
+                              "logic",
+                              "silicon",
+                              "process",
+                              "test",
+                              "facilities",
+                              "industry",
+                              "materials",
+                              "design",
+                              "power",
+                              "sensors",
+                              "communication",
+                              "solid-state",
+                              "device-physics",
+                              "optics",
+                              "materials-physics"
+                            ]
+                          }
+                        }
                       }
                     }
                   }
