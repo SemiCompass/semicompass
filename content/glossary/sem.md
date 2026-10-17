@@ -17,7 +17,7 @@ related_terms:
 description: 走査型電子顕微鏡（SEM）は、電子ビームで試料の表面を走査し、出てくる電子から像を作る顕微鏡。光学顕微鏡では見えない微細なパターンの観察や寸法の測定に使われる。
 basis: reviewed
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---
