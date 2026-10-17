@@ -1,118 +1,314 @@
 ---
-// 企業の表（仕様書 9.3、8.7）：企業名、証券コード、企業区分、工程、売上高（億円、最新の通期）、半導体関連の比率、掲載の状態。
-// 工程と企業区分の絞り込み、件数の表示、並べ替え（見出しを押す）は、スクリプトがあるときに使える（なくても、全件が表で読める）。
-// 詳細掲載でない企業（Coming Soon、本番の draft）は、「準備中」とし、売上高・比率は出さない（企業ページと同じ決まり）
+// 企業の表（仕様書 9.3、8.7）。
+//   一覧（既定）：段階の絞り込み（8.19のチップ）と「詳しいページのある企業だけ」の切り替え、件数、並べ替え（見出しを押す）。
+//     列：企業名（下に証券コード、準備中の印）、工程（段階の印と主な工程）、売上高（横棒つき）、半導体関連の比率、営業利益率、平均年間給与。
+//     初めの並び順は、売上高の大きい順（値のない企業は末尾）。
+//   compact：列を、企業名・企業区分・売上高・比率・利益率・給与に絞る（工程ページ・学習のページの本文の列に収める）。
+// 絞り込みと並べ替えは、スクリプトがあるときに使える（なくても、全件が表で読める）。
+// 詳細掲載でない企業（Coming Soon、本番の draft）は「準備中」とし、売上高などは出さない（企業ページと同じ決まり）
 import DataTable from './DataTable.astro';
 import FigureNotes from './FigureNotes.astro';
-import { formatNumber, typeLabel, type CompanyRow } from '../lib/companies';
-import { normalizeForSearch } from '../lib/normalize';
+import { formatNumber, loadSupply, typeLabel, type CompanyRow } from '../lib/companies';
 
 interface Props {
   rows: CompanyRow[];
   caption: string;
-  processes: { slug: string; name: string }[]; // 工程の名前（表と絞り込みの選択肢）
+  processes: { slug: string; name: string }[]; // 工程の名前
   filters?: boolean;
-  compact?: boolean; // 列を、企業名・企業区分・売上高・比率に絞る（本文の列に収める）
+  compact?: boolean;
 }
-const { rows, caption, processes, filters = true, compact = false } = Astro.props;
+const { rows: input, caption, processes, filters = true, compact = false } = Astro.props;
 const processName = (slug: string) => processes.find((p) => p.slug === slug)?.name ?? slug;
-const types = [...new Set(rows.map((r) => r.company.type))];
+const fmt = (v: number | null, d = 1) => (v === null ? '—' : formatNumber(v, d));
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-const allColumns = [
-  { key: 'name', label: '企業名', sort: 'none' as const, sortKey: 'name' },
-  { key: 'code', label: '証券コード', sort: 'none' as const, sortKey: 'code' },
-  { key: 'type', label: '企業区分' },
-  { key: 'processes', label: '工程', wrap: true },
-  { key: 'sales', label: '売上高（億円）', numeric: true, sort: 'none' as const, sortKey: 'sales' },
-  { key: 'ratio', label: '半導体関連の比率（%）', numeric: true, sort: 'none' as const, sortKey: 'ratio' },
-  { key: 'margin', label: '営業利益率（％）', numeric: true, sort: 'none' as const, sortKey: 'margin' },
-  { key: 'salary', label: '平均年間給与（万円）', numeric: true, sort: 'none' as const, sortKey: 'salary' },
-  { key: 'status', label: '掲載の状態' },
+// 段階（8.19）：工程の段階と、分類「デバイス」
+const supply = loadSupply() as unknown as { processes: { slug: string; name: string; stage: string; order: number }[] };
+const STAGES = [
+  { slug: 'design', name: '設計', color: 'neutral' },
+  { slug: 'materials', name: '材料', color: 'materials' },
+  { slug: 'front-end', name: '前工程', color: 'front' },
+  { slug: 'back-end', name: '後工程', color: 'back' },
+  { slug: 'devices', name: 'デバイス', color: 'devices' },
 ];
-const compactKeys = ['name', 'type', 'sales', 'ratio', 'margin', 'salary'];
-const columns = compact ? allColumns.filter((c) => compactKeys.includes(c.key)) : allColumns;
-const tableRows = rows.map((r) => ({
-  __href: `/companies/${r.company.slug}/`,
-  name: r.company.short_names[0] ?? r.company.name,
-  code: r.company.securities_code ?? '—',
-  type: typeLabel[r.company.type] ?? r.company.type,
-  processes: r.company.processes.map(processName).join('、') || '—',
-  sales: r.sales === null ? '—' : formatNumber(r.sales, 1),
-  ratio: r.ratio === null ? '—' : formatNumber(r.ratio, 1),
-  margin: r.margin === null ? '—' : formatNumber(r.margin, 1),
-  salary: r.salary === null ? '—' : formatNumber(r.salary, 0),
-  status: r.detailed ? '詳細' : '準備中',
-}));
+const stagesOf = (r: CompanyRow) => {
+  const set = new Set(r.company.processes.map((p) => supply.processes.find((x) => x.slug === p)?.stage).filter(Boolean) as string[]);
+  if (r.company.categories.includes('devices')) set.add('devices');
+  return STAGES.filter((s) => set.has(s.slug));
+};
+// 主な工程：括弧の中を省いた名前を2つまで（3つ以上は「ほか」）
+const shortName = (slug: string) => processName(slug).replace(/（.*?）/g, '');
+const mainProcesses = (r: CompanyRow) => {
+  const names = [...r.company.processes].sort((a, b) => (supply.processes.find((x) => x.slug === a)?.order ?? 99) - (supply.processes.find((x) => x.slug === b)?.order ?? 99)).map(shortName);
+  return names.length === 0 ? '' : names.slice(0, 2).join('、') + (names.length > 2 ? '\u00a0ほか' : '');
+};
+
+// 一覧は売上高の大きい順（値のない企業は末尾。同じときは証券コード順）。compact は受け取った順
+const rows = compact ? input : [...input].sort((a, b) => (a.sales === null ? 1 : 0) - (b.sales === null ? 1 : 0) || (b.sales ?? 0) - (a.sales ?? 0));
+const maxSales = Math.max(0, ...rows.map((r) => r.sales ?? 0));
+const bar = (v: number | null) =>
+  v === null || maxSales <= 0
+    ? ''
+    : `<svg class="company-bar" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect class="company-bar__track" width="100" height="6"/><rect class="company-bar__fill" width="${Math.max(2, (v / maxSales) * 100).toFixed(1)}" height="6"/></svg>`;
+
+const columns = compact
+  ? [
+      { key: 'name', label: '企業名' },
+      { key: 'type', label: '企業区分' },
+      { key: 'sales', label: '売上高（億円）', numeric: true, sort: 'none' as const, sortKey: 'sales' },
+      { key: 'ratio', label: '半導体関連の比率（%）', numeric: true, sort: 'none' as const, sortKey: 'ratio' },
+      { key: 'margin', label: '営業利益率（％）', numeric: true, sort: 'none' as const, sortKey: 'margin' },
+      { key: 'salary', label: '平均年間給与（万円）', numeric: true, sort: 'none' as const, sortKey: 'salary' },
+    ]
+  : [
+      { key: 'name', label: '企業名', sort: 'none' as const, sortKey: 'name', html: true },
+      { key: 'processes', label: '工程', wrap: true, html: true },
+      { key: 'sales', label: '売上高（億円）', numeric: true, sort: 'descending' as const, sortKey: 'sales', html: true },
+      { key: 'ratio', label: '半導体関連の比率（%）', numeric: true, sort: 'none' as const, sortKey: 'ratio' },
+      { key: 'margin', label: '営業利益率（％）', numeric: true, sort: 'none' as const, sortKey: 'margin', html: true },
+      { key: 'salary', label: '平均年間給与（万円）', numeric: true, sort: 'none' as const, sortKey: 'salary' },
+    ];
+const tableRows = rows.map((r) => {
+  const name = r.company.short_names[0] ?? r.company.name;
+  const href = `/companies/${r.company.slug}/`;
+  const margin = r.margin === null ? '—' : r.margin < 0 ? `<span class="company-neg">−${formatNumber(-r.margin, 1)}</span>` : formatNumber(r.margin, 1);
+  return compact
+    ? { __href: href, name, type: typeLabel[r.company.type] ?? r.company.type, sales: fmt(r.sales), ratio: fmt(r.ratio), margin: fmt(r.margin), salary: fmt(r.salary, 0) }
+    : {
+        name:
+          `<a class="company-name${r.detailed ? '' : ' company-name--pending'}" href="${href}">${esc(name)}</a>` +
+          (r.detailed ? '' : '<span class="company-badge">準備中</span>') +
+          `<span class="company-code">${esc(r.company.securities_code ?? '—')}</span>`,
+        processes:
+          `<span class="company-stages">${stagesOf(r).map((s) => `<span class="company-stage company-stage--${s.color}"><i aria-hidden="true"></i>${s.name}</span>`).join('')}</span>` +
+          (mainProcesses(r) ? `<span class="company-procs">${esc(mainProcesses(r))}</span>` : stagesOf(r).length ? '' : '—'),
+        sales: `<span class="company-sales">${fmt(r.sales)}${bar(r.sales)}</span>`,
+        ratio: fmt(r.ratio),
+        margin,
+        salary: fmt(r.salary, 0),
+      };
+});
 const rowData = rows.map((r, i) => ({
+  'data-stage': stagesOf(r).map((s) => s.slug).join(' '),
   'data-process': r.company.processes.join(' '),
   'data-type': r.company.type,
+  'data-detailed': r.detailed ? 'true' : 'false',
   'data-index': String(i),
-  'data-sort-name': normalizeForSearch((r.company as { name_kana?: string }).name_kana ?? r.company.name),
-  'data-sort-code': r.company.securities_code ?? '',
+  'data-sort-name': r.company.securities_code ?? '',
   'data-sort-sales': r.sales === null ? '' : String(r.sales),
   'data-sort-ratio': r.ratio === null ? '' : String(r.ratio),
   'data-sort-margin': r.margin === null ? '' : String(r.margin),
   'data-sort-salary': r.salary === null ? '' : String(r.salary),
 }));
+const stageCount = (slug: string) => rows.filter((r) => stagesOf(r).some((s) => s.slug === slug)).length;
+const detailedCount = rows.filter((r) => r.detailed).length;
 ---
 
 <div class="company-table" data-company-table>
-  {filters && (
+  {filters && !compact && (
     <div class="company-table__filters" data-filters hidden>
-      <label>工程
-        <select data-filter="process">
-          <option value="">すべて</option>
-          {processes.map((p) => <option value={p.slug}>{p.name}</option>)}
-        </select>
-      </label>
-      <label>企業区分
-        <select data-filter="type">
-          <option value="">すべて</option>
-          {types.map((t) => <option value={t}>{typeLabel[t] ?? t}</option>)}
-        </select>
-      </label>
+      <div class="chips" role="group" aria-label="段階で絞り込む">
+        <button type="button" class="chip" aria-pressed="true" data-stage-filter="">すべて</button>
+        {STAGES.filter((s) => stageCount(s.slug) > 0).map((s) => (
+          <button type="button" class:list={['chip', `chip--${s.color}`]} aria-pressed="false" data-stage-filter={s.slug}><i aria-hidden="true"></i>{s.name}</button>
+        ))}
+      </div>
+      {detailedCount > 0 && detailedCount < rows.length && (
+        <label class="company-table__toggle"><input type="checkbox" data-detailed-only checked />詳しいページのある企業だけ</label>
+      )}
     </div>
   )}
   <slot />
-  <p class="company-table__count" role="status" data-count data-total={rows.length}>{rows.length}社を表示しています</p>
+  <p class="company-table__count" role="status" data-count data-total={rows.length}>{rows.length}社を表示しています{!compact && '。見出しを押すと並べ替えます。'}</p>
   <DataTable caption={caption} columns={columns} rows={tableRows} rowData={rowData} wideFirst emptyMessage="該当する企業はありません" />
   <p class="company-table__empty" data-empty hidden>条件に当てはまる企業は、ありません。絞り込みを変えてください。</p>
   <FigureNotes kind="table" />
 </div>
 
 <style>
+  @import "../styles/breakpoints.css";
   .company-table__filters {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
     gap: var(--space-3) var(--space-5);
-    margin-block: var(--space-4);
+    margin-block: var(--space-5) var(--space-2);
   }
-  .company-table__filters label {
+  /* 絞り込みのチップ（8.19） */
+  .chips {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    max-width: 100%;
-    font-size: var(--text-small);
-    font-weight: var(--font-weight-bold);
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
-  .company-table__filters select {
-    max-width: 100%;
-    min-height: var(--control-height);
-    padding-inline: var(--space-3);
+  .chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--chip-height);
+    padding-inline: var(--space-4);
     border: var(--border-width) solid var(--color-border-strong);
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-pill);
     background: var(--color-surface);
     color: var(--color-text);
     font: inherit;
     font-size: var(--text-dense);
-    font-weight: var(--font-weight-normal);
+    line-height: var(--text-dense-leading);
+    cursor: pointer;
+  }
+  /* 押せる範囲は44px以上（見た目は36px） */
+  .chip::after {
+    position: absolute;
+    inset: calc((var(--chip-height) - var(--target-min)) / 2) 0;
+    content: "";
+  }
+  .chip:hover {
+    background: var(--color-primary-tint);
+  }
+  .chip[aria-pressed="true"] {
+    border-color: var(--color-brand);
+    background: var(--color-brand);
+    color: var(--color-on-brand);
+  }
+  .chip i {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: var(--radius-control);
+    background: var(--stage-ink);
+  }
+  .chip[aria-pressed="true"] i {
+    outline: var(--border-width) solid var(--color-on-brand);
+  }
+  .chip--neutral,
+  .company-table :global(.company-stage--neutral) {
+    --stage-ink: var(--color-text);
+  }
+  .chip--materials,
+  .company-table :global(.company-stage--materials) {
+    --stage-ink: var(--color-stage-materials);
+  }
+  .chip--front,
+  .company-table :global(.company-stage--front) {
+    --stage-ink: var(--color-stage-front);
+  }
+  .chip--back,
+  .company-table :global(.company-stage--back) {
+    --stage-ink: var(--color-stage-back);
+  }
+  .chip--devices,
+  .company-table :global(.company-stage--devices) {
+    --stage-ink: var(--color-stage-devices);
+  }
+  .company-table__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--target-min);
+    font-size: var(--text-small);
+    cursor: pointer;
+  }
+  .company-table__toggle input {
+    width: var(--space-4);
+    height: var(--space-4);
+    accent-color: var(--color-primary);
   }
   .company-table__count,
   .company-table__empty {
     margin-block: var(--space-3);
     color: var(--color-text-muted);
-    font-size: var(--text-dense);
-    line-height: var(--text-dense-leading);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  /* 表のセルの中身（9.3） */
+  .company-table :global(.company-name),
+  .company-table :global(.company-name:visited) {
+    color: var(--color-text);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  .company-table :global(.company-name:hover) {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+  /* 企業名は、タブレット以上では折り返さない（スマートフォンは、左に固定する列の幅の中で折り返す） */
+  @media (--tablet) {
+    .company-table :global(.company-name) {
+      white-space: nowrap;
+    }
+  }
+  .company-table :global(.company-name--pending),
+  .company-table :global(.company-name--pending:visited) {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-normal);
+  }
+  .company-table :global(.company-badge) {
+    display: inline-block;
+    margin-inline-start: var(--space-2);
+    padding-inline: var(--space-1);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-control);
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+    white-space: nowrap;
+  }
+  .company-table :global(.company-code) {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+  }
+  .company-table :global(.company-stages) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-3);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .company-table :global(.company-stage) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    white-space: nowrap;
+  }
+  .company-table :global(.company-stage i) {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: var(--radius-control);
+    background: var(--stage-ink);
+  }
+  /* 列の見出しは、幅が足りないときに折り返す（PCで表が外枠の幅に収まるように） */
+  .company-table :global(.data-table thead th[scope="col"]) {
+    white-space: normal;
+  }
+  .company-table :global(.company-procs) {
+    display: block;
+    overflow-wrap: normal;
+    word-break: keep-all;
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+  }
+  .company-table :global(.company-sales) {
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .company-table :global(.company-bar) {
+    display: block;
+    width: var(--company-bar-width);
+    height: var(--space-2);
+  }
+  .company-table :global(.company-bar__track) {
+    fill: var(--color-surface-sunken);
+  }
+  .company-table :global(.company-bar__fill) {
+    fill: var(--color-primary);
+  }
+  .company-table :global(.company-neg) {
+    color: var(--color-error);
   }
 </style>
 

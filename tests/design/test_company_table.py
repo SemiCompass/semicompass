@@ -45,7 +45,8 @@ def real_metrics(slugs: list[str]) -> dict:
     return json.loads(done.stdout.strip().splitlines()[-1])
 
 
-COLUMNS = ["企業名", "証券コード", "企業区分", "工程", "売上高（億円）", "半導体関連の比率（%）", "営業利益率（％）", "平均年間給与（万円）", "掲載の状態"]
+# 企業一覧の列（仕様書 9.3、2026年10月17日の作り直し）：証券コードは企業名の下、準備中は企業名の後の印（掲載の状態は data-detailed）
+COLUMNS = ["企業名", "工程", "売上高（億円）", "半導体関連の比率（%）", "営業利益率（％）", "平均年間給与（万円）"]
 COMPACT = ["企業名", "企業区分", "売上高（億円）", "半導体関連の比率（%）", "営業利益率（％）", "平均年間給与（万円）"]
 NOTES = ["営業利益率は、全社の連結の数値です。半導体事業だけの数値ではありません。",
          "平均年間給与は、提出会社の従業員の数値です。持株会社では、事業会社の水準を表しません。",
@@ -69,6 +70,7 @@ class CompanyTableMetricsTest(unittest.TestCase):
         self.assertEqual(table_heads(html), COLUMNS)
         for key in ("margin", "salary"):  # 見出しを押して並べ替えられる（売上高・比率と同じ仕組み）
             self.assertRegex(html, rf'<th scope="col"[^>]*aria-sort="none"[^>]*data-sort-key="{key}"')
+        self.assertRegex(html, r'<th scope="col"[^>]*aria-sort="descending"[^>]*data-sort-key="sales"')  # 初めは売上高の大きい順
         self.assertTrue(all("data-sort-margin" in r["attrs"] and "data-sort-salary" in r["attrs"] for r in table_rows(html)))
         flat = html.replace("<wbr>", "")
         self.assertEqual(flat.count("定義と範囲"), 1)
@@ -94,25 +96,26 @@ class CompanyTableMetricsTest(unittest.TestCase):
         for env in ("preview", "production"):
             html = self.read(self.build(env), "companies/index.html")
             rows = table_rows(html)
-            detailed = [r for r in rows if r["cells"][-1] == "詳細"]
+            detailed = [r for r in rows if r["attrs"].get("data-detailed") == "true"]
             if env == "preview":
                 self.assertTrue(detailed, env)  # 本番は、事業概要が下書きの間、詳細掲載がなくてもよい（すべて準備中）
             expected = real_metrics([r["href"].split("/")[2] for r in detailed]) if detailed else {}
             for r in detailed:
                 slug = r["href"].split("/")[2]
                 margin, salary = expected[slug]["margin"], expected[slug]["salary"]
-                self.assertEqual(r["cells"][6], "—" if margin is None else f"{margin:,.1f}", f"{env} {slug} 営業利益率")
-                self.assertEqual(r["cells"][7], "—" if salary is None else f"{salary:,}", f"{env} {slug} 平均年間給与")
+                self.assertEqual(r["cells"][4].replace("−", "-"), "—" if margin is None else f"{margin:,.1f}", f"{env} {slug} 営業利益率")
+                self.assertEqual(r["cells"][5], "—" if salary is None else f"{salary:,}", f"{env} {slug} 平均年間給与")
                 self.assertEqual(r["attrs"]["data-sort-margin"], "" if margin is None else str(margin).removesuffix(".0"), slug)
                 self.assertEqual(r["attrs"]["data-sort-salary"], "" if salary is None else str(salary), slug)
 
     def test_coming_soon_companies_show_dashes_and_sort_last(self):
         for env in ("preview", "production"):
             rows = table_rows(self.read(self.build(env), "companies/index.html"))
-            coming = [r for r in rows if r["cells"][-1] == "準備中"]
+            coming = [r for r in rows if r["attrs"].get("data-detailed") == "false"]
             self.assertTrue(coming, env)
             for r in coming:
-                self.assertEqual((r["cells"][4], r["cells"][5], r["cells"][6], r["cells"][7]), ("—", "—", "—", "—"), env)
+                self.assertIn("準備中", r["cells"][0], env)
+                self.assertEqual((r["cells"][2], r["cells"][3], r["cells"][4], r["cells"][5]), ("—", "—", "—", "—"), env)
                 self.assertEqual((r["attrs"]["data-sort-margin"], r["attrs"]["data-sort-salary"]), ("", ""), env)  # 並べ替えでは、末尾
 
     def test_company_page_work_note_uses_the_shared_component(self):
