@@ -1,0 +1,56 @@
+---
+// 図：縦型のパワーMOSFETとIGBTの断面の違いと、使い分けの目安（模式図。仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const devices = [
+  { key: 'mos', name: 'パワーMOSFET', x: 10, bottom: 'n型の基板', back: 'ドレイン' },
+  { key: 'igbt', name: 'IGBT', x: 104, bottom: 'p型の層', back: 'コレクタ' },
+];
+---
+
+<FigureFrame id="fig-device-types" columns={2} title="パワーMOSFETとIGBTの違い（模式図）" caption="図：左は、縦型のパワーMOSFETとIGBTの断面。上の構造はほぼ同じで、IGBTは裏側にp型の層を一枚加えている。入のとき、この層から正孔（縁取りの丸）が電圧を受け止める層に流れ込み、抵抗が下がる。右は、使い分けの目安。扱う電圧が高いほどIGBTや炭化ケイ素の部品が、切り替えが速いほどMOSFETや窒化ガリウムの部品が向く。境目は目安で、目盛りは付けない。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="パワーMOSFETとIGBTの断面。IGBTは裏側にp型の層があり、そこから正孔が流れ込む">
+      {devices.map((d) => (
+        <>
+          <text class="fig-strong" x={d.x + 43} y="12" font-size="8" text-anchor="middle">{d.name}</text>
+          <rect class="fig-metal" x={d.x + 30} y="18" width="26" height="8" />
+          <text class="fig-text" x={d.x + 43} y="36" font-size="6" text-anchor="middle">ゲート</text>
+          <rect class="fig-film" x={d.x} y="40" width="86" height="64" />
+          <text class="fig-text" x={d.x + 43} y="70" font-size="7" text-anchor="middle">電圧を受け止める層</text>
+          <text class="fig-text" x={d.x + 43} y="80" font-size="6" text-anchor="middle">（ドーパントが少ない）</text>
+          <rect class={d.key === 'igbt' ? 'fig-resist' : 'fig-wafer'} x={d.x} y="104" width="86" height="20" />
+          <text class="fig-text" x={d.x + 43} y="117" font-size="7" text-anchor="middle">{d.bottom}</text>
+          <rect class="fig-metal" x={d.x} y="124" width="86" height="6" />
+          <text class="fig-text" x={d.x + 43} y="142" font-size="7" text-anchor="middle">{d.back}（裏側）</text>
+        </>
+      ))}
+      <circle class="fig-dot-alt" cx="132" cy="94" r="3.5" />
+      <circle class="fig-dot-alt" cx="148" cy="88" r="3.5" />
+      <circle class="fig-dot-alt" cx="164" cy="94" r="3.5" />
+      <path class="fig-arrow" d="M148 102v-8" />
+    </svg>
+    <span class="fig__name">断面の違い</span>
+    <span class="fig__note">IGBTは裏側のp型の層から正孔を入れる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="使い分けの目安：電圧が高いほどIGBTや炭化ケイ素、切り替えが速いほどMOSFETや窒化ガリウム">
+      <path class="fig-line" d="M30 136V14M26 20l4-6 4 6M30 136h160M184 132l6 4-6 4" />
+      <text class="fig-text" x="36" y="12" font-size="7">扱う電圧（高い）</text>
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">切り替えの速さ（速い）</text>
+      <rect class="fig-resist" x="38" y="22" width="62" height="40" />
+      <text class="fig-text" x="69" y="40" font-size="7" text-anchor="middle">シリコンの</text>
+      <text class="fig-text" x="69" y="50" font-size="7" text-anchor="middle">IGBT</text>
+      <rect class="fig-film" x="104" y="30" width="76" height="40" />
+      <text class="fig-text" x="142" y="48" font-size="7" text-anchor="middle">炭化ケイ素の</text>
+      <text class="fig-text" x="142" y="58" font-size="7" text-anchor="middle">MOSFET</text>
+      <rect class="fig-wafer" x="38" y="92" width="74" height="36" />
+      <text class="fig-text" x="75" y="108" font-size="7" text-anchor="middle">シリコンの</text>
+      <text class="fig-text" x="75" y="118" font-size="7" text-anchor="middle">MOSFET</text>
+      <rect class="fig-part" x="122" y="84" width="64" height="32" />
+      <text class="fig-text" x="154" y="98" font-size="7" text-anchor="middle">窒化ガリウムの</text>
+      <text class="fig-text" x="154" y="108" font-size="7" text-anchor="middle">トランジスタ</text>
+    </svg>
+    <span class="fig__name">使い分けの目安</span>
+    <span class="fig__note">電圧と切り替えの速さで選ぶ</span>
+  </li>
+</FigureFrame>

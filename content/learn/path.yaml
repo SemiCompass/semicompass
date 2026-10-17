@@ -110,6 +110,8 @@ fields:
     summary: 電気自動車などで大きな電力を制御する半導体と、その材料を学びます。
     units:
       - { type: learn, ref: power, folder: devices }
+      - { type: learn, ref: device-types }
+      - { type: learn, ref: inverter }
   - "no": 7
     slug: sensors
     title: センサー・計測
