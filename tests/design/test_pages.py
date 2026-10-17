@@ -511,12 +511,19 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("1. 半導体工学の基礎", index)
         self.assertIn('href="/learn/basics/"', index)  # 一覧には基礎編の9分野の入口を並べ、分野のページへ進む（仕様書 8.18）
         basic = index.split('id="tier-basic"')[1].split('id="tier-physics"')[0]
-        self.assertEqual(basic.count('class="learn-field-entry"'), 9)
+        self.assertEqual(len(re.findall(r'class="learn-field-entry[ "]', basic)), 9)
+        self.assertIn("前提知識", basic)  # 段ごとに、対象・前提知識・読む順を示す
+        self.assertIn("1から順に読むのがおすすめ", basic)
         physics = index.split('id="tier-physics"')[1].split("</main>")[0]  # 基礎編の下に、深掘り編「半導体の物理」のカード
         self.assertIn("半導体の物理", physics)
         self.assertIn("A. 固体物理学", physics)
-        self.assertIn('href="/learn/solid-state/"', physics)
-        self.assertIn("準備中", index.split('href="/learn/industry/"')[1].split("</a>")[0])  # 単元のない分野の入口は、準備中と示す
+        # 単元のない分野・カードは、リンクにせず、名前の横に「準備中」と示す（押す前に分かるように）
+        self.assertNotIn('href="/learn/solid-state/"', physics)
+        self.assertNotIn('href="/learn/industry/"', index.split("<main")[1])
+        self.assertIn("（準備中）", basic.split("9. 工場と業界")[1].split("</div>")[0])
+        start = index.split('class="learn-start"')[1].split("</div>")[0]  # 初めての人の始め方：基礎編の最初のページへ
+        self.assertIn('href="/learn/basics/test-page/"', start)
+        self.assertIn("初めての方は", start)
         field = self.read(dist, "learn/basics/index.html")
         self.assertIn('href="/learn/basics/test-page/"', field)
         self.assertIn("次の分野：", field)

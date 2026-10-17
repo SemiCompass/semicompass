@@ -1,24 +1,47 @@
 ---
-// 半導体を学ぶ（/learn/。要求定義書 FR-901、要件定義書 FR-901、仕様書 8.18）：二段の入口を並べる。
-// 基礎編（対象で分けた9分野）と、深掘り編「半導体の物理」（学問で分けたカード）。入口から分野のページ（/learn/{分野}/）へ進み、
-// その分野の単元を体系の順に学ぶ。単元がまだない分野は「準備中」とする（MV-08）
+// 半導体を学ぶ（/learn/。要求定義書 FR-901、要件定義書 FR-901、仕様書 8.18）：短い説明と、初めての人の始め方（基礎編の最初のページ）の後に、
+// 二段の入口を並べる。基礎編（対象で分けた9分野）と、深掘り編「半導体の物理」（学問で分けたカード）。
+// 入口から分野のページ（/learn/{分野}/）へ進む。単元がまだない分野は、リンクにせず「準備中」とする（MV-08）
 import { BUILD_ENV } from 'astro:env/server';
+import Button from '../../components/Button.astro';
 import LearnTierFields from '../../components/LearnTierFields.astro';
 import Page from '../../layouts/Page.astro';
 import { learnTiers } from '../../lib/learn';
 
 const tiers = learnTiers(BUILD_ENV === 'preview');
+// 始め方：基礎編の最初の分野の、最初のページ
+const firstField = tiers[0]?.fields.find((f) => f.units.length > 0);
+const first = firstField?.units[0];
 ---
 
 <Page
   title="半導体を学ぶ｜SemiCompass"
   heading="半導体を学ぶ"
-  description="半導体工学の基礎から、材料、設計、製造、パワー半導体、センサー、通信、業界までを分野ごとに順に学べます。動作を支える物理も、式の読み方に絞って学べます。"
+  description="半導体の仕組みから、製造、用途、業界までを分野ごとに学べます。動作の理由は、式の読み方に絞って学べます。"
   breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '半導体を学ぶ' }]}
   wide
 >
-  <p class="lead measure">基礎編では、半導体の世界に何があり、どう作られ、どう使われるかを、分野ごとに順に学べます。半導体の物理では、なぜそう動くのかを、式の形から読めることに絞って学べます。分野を選ぶと、その分野のページが学ぶ順に並んでいます。各ページの最後に、内容を確かめる問いがあります。</p>
+  <p class="lead measure">半導体の仕組みから、製造、用途、業界までを、分野ごとに学べます。各ページの最後に、内容を確かめる問いがあります。</p>
+  {firstField && first && (
+    <div class="learn-start">
+      <p class="learn-start__text">初めての方は、基礎編の「{firstField.field.mark}. {firstField.field.title}」から始めてください。</p>
+      <Button variant="primary" href={first.href}>最初のページ「{first.title}」を読む</Button>
+    </div>
+  )}
   <nav aria-label="分野を選ぶ">
     {tiers.map((entry) => <LearnTierFields entry={entry} />)}
   </nav>
 </Page>
+
+<style>
+  .learn-start {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-block-start: var(--space-4);
+  }
+  .learn-start__text {
+    margin: 0;
+  }
+</style>
