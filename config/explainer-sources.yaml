@@ -193,10 +193,48 @@ terms:
     sources:
       - {status: approved, role: supplementary, kind: government, publisher: 経済産業省, title: 半導体・デジタル産業戦略 令和6年5月31日 資料3, url: "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/0011/handeji_reviesd.pdf"}
 
+  ion-implantation:
+    term: イオン注入
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  dry-etching:
+    term: ドライエッチング
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  wet-etching:
+    term: ウェットエッチング
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  thermal-oxidation:
+    term: 熱酸化
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  epitaxial-growth:
+    term: エピタキシャル成長
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  damascene:
+    term: ダマシン
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  low-k-film:
+    term: Low-k膜
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  sem:
+    term: 走査型電子顕微鏡
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  tsv:
+    term: TSV
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
 # slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
 # ----------------------------------------------------------------------------
+
 processes:
   circuit-design:
     process: 回路設計(設計ツールを含む)
