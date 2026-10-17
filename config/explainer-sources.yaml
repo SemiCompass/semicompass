@@ -274,6 +274,9 @@ learn:
   process-materials:
     title: 製造に使う材料：ガス、薬液、感光材
     basis: reviewed
+  new-materials:
+    title: 新しい半導体材料：酸化ガリウム、ダイヤモンドなど
+    basis: reviewed
   what-is-semiconductor:
     title: 半導体とは何か
     basis: reviewed
