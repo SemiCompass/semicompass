@@ -26,24 +26,44 @@ const multi = spec.series.length > 1;
 const tableSeries = spec.tableSeries ?? spec.series; // まとめた系列の内訳は、表に出す
 const columns = [
   { key: 'period', label: spec.kind === 'hbar' ? '名前' : '期' },
-  ...tableSeries.map((s, i) => ({ key: `s${i}`, label: spec.tableSeries && s.note ? `${s.name}（${s.note}、${unit}）` : `${s.name}（${unit}）`, numeric: true })),
+  ...tableSeries.map((s, i) => ({ key: `s${i}`, label: spec.tableSeries && s.note ? `${s.name}（${s.note}、${s.unitLabel ?? unit}）` : `${s.name}（${s.unitLabel ?? unit}）`, numeric: true })),
 ];
 const rows = spec.categories.map((c, i) => ({
   period: c.label,
   ...Object.fromEntries(tableSeries.map((s, si) => [`s${si}`, s.values[i] === null || s.values[i] === undefined ? '—' : formatNumber(s.values[i] as number, spec.decimals)])),
 }));
 const legend = multi || spec.kind === 'stacked' ? spec.series : [];
+const legendTop = spec.kind === 'grouped'; // 並べた棒（売上高と営業利益）は、凡例をグラフの上に置く（仕様書 9.2）
+const caption = tableSeries.some((s) => s.unitLabel) ? title : `${title}（${unit}）`;
 ---
 
 <figure class="chart" aria-labelledby={`${id}-title`}>
   <Heading class="chart__title" id={`${id}-title`}>{title}</Heading>
   <p class="chart__meta">単位：{unit}。期間：{period}。マウスを重ねなくても、棒や点を選ぶ（タップ、クリック、キーボード）と数値が出ます。</p>
+  {legendTop && legend.length > 0 && (
+    <ul class="chart__legend chart__legend--top" aria-label="凡例">
+      {legend.map((s) => (
+        <li class="chart__legend-item">
+          <svg class="chart__swatch" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+            <defs>
+              <pattern id={`${id}-sw-${s.name}`} patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+                <rect width="7" height="7" fill="var(--chart-other)"></rect>
+                <line x1="0" y1="0" x2="0" y2="7" class="chart__hatch"></line>
+              </pattern>
+            </defs>
+            <rect width="16" height="16" fill={s.pattern ? `url(#${id}-sw-${s.name})` : `var(${s.color})`}></rect>
+          </svg>
+          <span>{s.name}{s.note ? `（${s.note}）` : ''}</span>
+        </li>
+      ))}
+    </ul>
+  )}
   <div class="chart__plot">
     <ChartSvg model={compact} title={`${title}（${unit}）`} uid={`${id}-c`} />
     <ChartSvg model={wide} title={`${title}（${unit}）`} uid={`${id}-w`} />
   </div>
   {spec.note && <p class="chart__note">{spec.note}</p>}
-  {legend.length > 0 && (
+  {!legendTop && legend.length > 0 && (
     <ul class="chart__legend" aria-label="凡例">
       {legend.map((s) => (
         <li class="chart__legend-item">
@@ -63,7 +83,7 @@ const legend = multi || spec.kind === 'stacked' ? spec.series : [];
   )}
   <details class="chart__table">
     <summary><span>表で見る</span></summary>
-    <DataTable caption={`${title}（${unit}）`} columns={columns} rows={rows} />
+    <DataTable caption={caption} columns={columns} rows={rows} />
   </details>
   <SourceLine title={source.title} publisher={source.publisher} accessedOn={source.accessedOn} />
 </figure>
@@ -103,6 +123,9 @@ const legend = multi || spec.kind === 'stacked' ? spec.series : [];
     list-style: none;
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
+  }
+  .chart__legend--top {
+    margin: 0 0 var(--space-3);
   }
   .chart__legend-item {
     display: inline-flex;

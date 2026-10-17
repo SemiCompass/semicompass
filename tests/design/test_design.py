@@ -464,7 +464,7 @@ class CompanyPageBuildTest(BuildTest):
     def test_component_page_has_every_chart_kind(self):
         html = (self.build("preview") / "dev" / "components" / "index.html").read_text(encoding="utf-8")
         self.assertGreaterEqual(html.count('class="chart-svg chart-svg--wide'), 5)
-        for needle in ("縦の棒", "積み上げの縦の棒", "横の棒", "折れ線", "url(#hatch-", "半導体関連以外"):
+        for needle in ("縦の棒", "並べた縦の棒", "積み上げの縦の棒", "横の棒", "折れ線", "url(#hatch-", "半導体関連以外"):
             self.assertIn(needle, html)
 
 

@@ -151,6 +151,30 @@ export function barSpec(rows: FinancialRow[], key: 'net_sales' | 'operating_inco
   };
 }
 
+/**
+ * 売上高と営業利益を、同じグラフに棒を2本並べて示す（仕様書 9.2）。期は、売上高のある期。
+ * 「表で見る」の表には、営業利益率（%）の列を足す（単位の違う列のため、列の名前に単位を書く）
+ */
+export function salesOperatingSpec(rows: FinancialRow[], colors: { net_sales: { color: string }; operating_income: { color: string } }): ChartSpec | null {
+  const used = rows.filter((r) => oku(r.net_sales) !== null);
+  if (used.length === 0) return null;
+  const sales = used.map((r) => oku(r.net_sales));
+  const op = used.map((r) => oku(r.operating_income));
+  const series = [{ name: '売上高', color: colors.net_sales.color, values: sales }];
+  if (op.some((v) => v !== null)) series.push({ name: '営業利益', color: colors.operating_income.color, values: op });
+  if (series.length === 1) series[0].color = '--chart-single'; // 営業利益がないときは、1系列のグラフ（仕様書 4.3）
+  const margin = used.map((r) => {
+    const s = r.net_sales.value;
+    const o = r.operating_income?.value;
+    return s != null && o != null && s > 0 ? Math.round((o / s) * 1000) / 10 : null;
+  });
+  return {
+    kind: series.length > 1 ? 'grouped' : 'bar', categories: used.map((r) => category(r.fiscal_period_end)), unit: '億円', decimals: 1, labelLatest: true, withChange: true,
+    series,
+    tableSeries: series.length > 1 ? [...series, { name: '営業利益率', color: colors.operating_income.color, values: margin, unitLabel: '%' }] : undefined,
+  };
+}
+
 const ORDER = ['semiconductor', 'partial', 'excluded'] as const;
 export interface ChartColors {
   segment_classification: Record<string, { color: string; pattern: boolean; legend: string }>;

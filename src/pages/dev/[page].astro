@@ -57,6 +57,11 @@ const periods = ['2021-03', '2022-03', '2023-03', '2024-03', '2025-03', '2026-03
 const demoSource = { title: 'サンプルの資料', publisher: 'サンプル', accessedOn: '2026-10-06' };
 const barDemo = { kind: 'bar' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: true, withChange: true,
   series: [{ name: '売上高', color: '--chart-single', values: [1200.5, 1500, 1320.8, 1800.2, 2100, 2443.5] }] };
+const groupedDemo = { kind: 'grouped' as const, categories: periods, unit: '億円', decimals: 1, labelLatest: true, withChange: true,
+  series: [
+    { name: '売上高', color: '--chart-cat-1', values: [1200.5, 1500, 1320.8, 1800.2, 2100, 2443.5] },
+    { name: '営業利益', color: '--chart-cat-3', values: [120.4, 180, -40.2, 260.5, 310, 402.3] },
+  ] };
 const demoOthers = [
   { name: 'その他事業A', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [300, 280, 260, 300, 280, 250] },
   { name: 'その他事業B', color: '--chart-other', pattern: true, note: '半導体関連以外', values: [100, 110, 120, 130, 140, 150] },
@@ -136,6 +141,7 @@ const sources = [
   <Chart id="demo-bar" title="縦の棒（1系列）" unit="億円" period="2021年3月期〜2026年3月期" spec={barDemo} source={demoSource} />
   <Chart id="demo-stacked" title="積み上げの縦の棒（セグメント別）" unit="億円" period="2021年3月期〜2026年3月期" spec={stackedDemo} source={demoSource} />
   <Chart id="demo-multi" title="積み上げの縦の棒（半導体関連が2つ以上）" unit="億円" period="2021年3月期〜2026年3月期" spec={multiSemiDemo} source={demoSource} />
+  <Chart id="demo-grouped" title="並べた縦の棒（売上高と営業利益）" unit="億円" period="2021年3月期〜2026年3月期" spec={groupedDemo} source={demoSource} />
   <Chart id="demo-hbar" title="横の棒（地域別）" unit="億円" period="2026年3月期" spec={hbarDemo} source={demoSource} />
   <Chart id="demo-line" title="折れ線" unit="人" period="2021年3月期〜2026年3月期" spec={lineDemo} source={demoSource} />
   <Chart id="demo-one" title="1件・最も大きい数値の例" unit="億円" period="2021年3月期" spec={zeroDemo} source={demoSource} />
