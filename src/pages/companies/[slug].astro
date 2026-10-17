@@ -23,7 +23,7 @@ import { buildDate } from '../../lib/buildDate';
 import { millionToOku } from '../../lib/format';
 import { chartBehind, irPeriodLabel, irStatus, loadIrPoints, loadOperationsDays, shiftCitations } from '../../lib/irPoints';
 import {
-  annualRows, barSpec, companyRows, dateLabel, employeeSpec, formatNumber, formatOku, isDetailed, loadAuto, loadChartColors, loadCompanies,
+  annualRows, companyRows, dateLabel, employeeSpec, formatNumber, formatOku, isDetailed, loadAuto, loadChartColors, loadCompanies, salesOperatingSpec,
   loadOverview, loadSegmentMap, loadSupply, periodLabel, periodRange, regionSpec, segmentSpec,
   type Company,
 } from '../../lib/companies';
@@ -59,8 +59,7 @@ const source = {
   publisher: 'EDINET',
   accessedOn: auto ? auto.updated_at.slice(0, 10) : '',
 };
-const sales = barSpec(rows, 'net_sales', '売上高', colors.metrics.net_sales);
-const operating = barSpec(rows, 'operating_income', '営業利益', colors.metrics.operating_income);
+const salesOperating = salesOperatingSpec(rows, colors.metrics);
 const segmentMap = loadSegmentMap(company.slug);
 const segment = segmentMap && latest ? segmentSpec(rows, segmentMap, colors, periodLabel(latest.fiscal_period_end)) : null;
 const region = regionSpec(rows, colors);
@@ -187,12 +186,11 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
           <p>期によって会計基準が違います（{standards.map((s) => standardName[s] ?? s).join('、')}）。違う基準の期を、単純には比べられません。</p>
         </Notice>
       )}
-      {sales ? (
-        <Chart id="sales" title="売上高の推移" unit="億円" period={periodRange(rows)} spec={sales} source={source} />
+      {salesOperating ? (
+        <Chart id="sales" title={salesOperating.series.length > 1 ? '売上高と営業利益の推移' : '売上高の推移'} unit="億円" period={periodRange(rows)} spec={salesOperating} source={source} />
       ) : (
         <StateMessage kind="empty" message="売上高のデータがありません。" />
       )}
-      {operating && <Chart id="operating" title="営業利益の推移" unit="億円" period={periodRange(rows)} spec={operating} source={source} />}
       <>
         {segment?.spec ? (
           <Chart id="segment" title="セグメント別の売上の推移" unit="億円" period={periodRange(rows.filter((r) => r.segments.length > 0))} spec={segment.spec} source={source} />

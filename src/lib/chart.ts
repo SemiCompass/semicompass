@@ -4,13 +4,14 @@
 import { formatNumber } from './format';
 
 export type Layout = 'compact' | 'wide';
-export type Kind = 'bar' | 'stacked' | 'hbar' | 'line';
+export type Kind = 'bar' | 'grouped' | 'stacked' | 'hbar' | 'line'; // grouped：期ごとに、系列の棒を横に並べる（仕様書 9.2 の売上高と営業利益）
 
 export interface Series {
   name: string;
   color: string; // CSSの変数の名前（--chart-single など。config/chart-colors.yaml）
   pattern?: boolean; // 斜線の模様
   note?: string; // 凡例に添える言葉（例：半導体関連）
+  unitLabel?: string; // 表の列の単位が、グラフの単位と違うとき（例：営業利益率の %）
   values: (number | null)[];
 }
 export interface Category {
@@ -123,7 +124,7 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
   const catW = horizontal ? Math.max(...spec.categories.map((c) => textWidth(c.short))) + 10 : 0;
   const plot = horizontal
     ? { l: Math.min(catW, layout === 'compact' ? 120 : 160), t: TOP, r: width - 12, b: height - 28 }
-    : { l: labelW + 6, t: stacked && spec.latestLabel ? TOP_STACKED_LABEL : TOP, r: width - 12, b: height - (layout === 'compact' ? 30 : 48) };
+    : { l: labelW + 6, t: (stacked && spec.latestLabel) || (spec.kind === 'grouped' && spec.labelLatest) ? TOP_STACKED_LABEL : TOP, r: width - 12, b: height - (layout === 'compact' ? 30 : 48) };
 
   const model: Model = {
     kind: spec.kind, layout, width, height, plot, yTicks: [], xTicks: [], hTicks: [], baseline: { x1: 0, y1: 0, x2: 0, y2: 0 },
@@ -132,9 +133,9 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
   const span = domMax - domMin || 1;
   const yOf = (v: number) => plot.b - ((v - domMin) / span) * (plot.b - plot.t);
   const xOfH = (v: number) => plot.l + ((v - domMin) / span) * (plot.r - plot.l);
-  const changeText = (i: number, value: number): string | null => {
+  const changeText = (i: number, value: number, si = 0): string | null => {
     if (!spec.withChange || i === 0) return null;
-    const prev = spec.series[0].values[i - 1];
+    const prev = spec.series[si].values[i - 1];
     if (prev === null || prev === undefined || prev === 0) return null;
     const ratio = Math.round(((value - prev) / Math.abs(prev)) * 1000) / 10;
     const arrow = ratio > 0 ? '↑' : ratio < 0 ? '↓' : '→';
@@ -201,13 +202,18 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
     return model;
   }
 
-  // 縦の棒（1系列）と、積み上げの縦の棒
-  const barW = Math.min(slot / 1.5, 56);
+  // 縦の棒（1系列）、並べた縦の棒、積み上げの縦の棒
+  const grouped = spec.kind === 'grouped';
+  const k = grouped ? spec.series.length : 1;
+  const gap = grouped ? 2 : 0; // 並べた棒の間のすき間（画素）
+  const barW = grouped ? Math.min((slot / 1.4 - gap * (k - 1)) / k, 32) : Math.min(slot / 1.5, 56);
   model.barWidth = barW;
+  const groupW = barW * k + gap * (k - 1);
   spec.categories.forEach((c, i) => {
-    const x = plot.l + slot * i + (slot - barW) / 2;
+    const x0 = plot.l + slot * i + (slot - groupW) / 2;
     let acc = 0;
     spec.series.forEach((s, si) => {
+      const x = grouped ? x0 + si * (barW + gap) : x0;
       const v = s.values[i];
       if (v === null || v === undefined) return;
       const from = stacked ? acc : 0;
@@ -217,12 +223,12 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
       const yBottom = yOf(Math.min(from, to));
       const h = Math.max(yBottom - yTop, 0);
       const text = `${formatNumber(v, spec.decimals)}${spec.unit}`;
-      const change = stacked ? null : changeText(i, v);
+      const change = stacked ? null : changeText(i, v, si);
       const lines = stacked
         ? [c.label, s.name, `${text}（${formatNumber((v / (totals[i] || 1)) * 100, 1)}%）`]
-        : [c.label, text, ...(change ? [change] : [])];
+        : [c.label, ...(grouped ? [s.name] : []), text, ...(change ? [change] : [])];
       model.data.push({ id: `${uid}-${si}-${i}`, shape: 'rect', x, y: yTop, w: barW, h, r: 0, color: s.color, pattern: !!s.pattern,
-        aria: `${c.label} ${stacked ? `${s.name} ` : ''}${text}`, tip: tip(x + barW / 2, yTop, lines, width, height) });
+        aria: `${c.label} ${stacked || grouped ? `${s.name} ` : ''}${text}`, tip: tip(x + barW / 2, yTop, lines, width, height) });
     });
     if (i === n - 1) {
       if (stacked) {
@@ -231,10 +237,15 @@ export function buildChart(spec: ChartSpec, layout: Layout, uid: string): Model 
           const top = yOf(Math.max(totals[i], 0));
           model.labels.push({ x: plot.r, y: top - 6 - (spec.latestLabel.length - 1) * 20, lines: spec.latestLabel, anchor: 'end', value: true });
         }
+      } else if (grouped && spec.labelLatest) {
+        // 並べた棒：最新の期の数値を、系列の名前と一緒に、棒の組の上へ行ごとに書く（細い棒の上に横に並べると、重なるため）
+        const lines = spec.series.map((s) => (s.values[i] == null ? null : `${s.name} ${formatNumber(s.values[i] as number, spec.decimals)}`)).filter((l): l is string => l !== null);
+        const top = yOf(Math.max(totals[i], 0));
+        model.labels.push({ x: plot.r, y: top - 6 - (lines.length - 1) * 20, lines, anchor: 'end', value: true });
       } else if (spec.labelLatest) {
         const v = spec.series[0].values[i] ?? 0;
         const text = formatNumber(v, spec.decimals);
-        model.labels.push({ x: Math.min(x + barW / 2, plot.r - textWidth(text) / 2), y: yOf(Math.max(v, 0)) - 6, lines: [text], anchor: 'middle', value: true });
+        model.labels.push({ x: Math.min(x0 + barW / 2, plot.r - textWidth(text) / 2), y: yOf(Math.max(v, 0)) - 6, lines: [text], anchor: 'middle', value: true });
       }
     }
   });

@@ -17,8 +17,8 @@ segment_classification:
     legend: 半導体関連以外
 # 指標ごとの色と線の種類
 metrics:
-  net_sales: { color: --chart-single, line: solid }
-  operating_income: { color: --chart-single, line: solid }
+  net_sales: { color: --chart-cat-1, line: solid } # 仕様書 9.2：売上高と営業利益を同じグラフに並べる
+  operating_income: { color: --chart-cat-3, line: solid }
   net_income: { color: --chart-single, line: solid }
   region_sales: { color: --chart-single, line: solid }
   employees: { color: --chart-single, line: solid }
