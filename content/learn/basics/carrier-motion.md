@@ -3,7 +3,7 @@ title: 電子と正孔の動き：ドリフトと拡散
 field: basics
 description: 半導体の中で電子と正孔が動く二つの仕組み、電界に押されて動く「ドリフト」と、濃いところから薄いところへ広がる「拡散」を説明する。動きやすさを表す移動度、二つの動きが釣り合うpn接合、電子と正孔が消える再結合も扱う。
 basis: reviewed
-draft: true
+draft: false
 published_at: '2026-10-17'
 ai_generated: true
 sources: []
