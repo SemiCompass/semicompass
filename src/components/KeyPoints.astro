@@ -9,7 +9,6 @@ interface Metric {
   unit: string; // 単位（例：億円）
   note?: string; // 比べる行（例：前期比 +0.5%、前期 28.7%）
   trend?: 'up' | 'down'; // 前期比の向き（色を付ける）
-  sub?: string; // 補足の行（売上高の「半導体関連 100.0%」）
   spark?: number[]; // 推移の線（古い順）
 }
 interface Props {
@@ -37,7 +36,6 @@ const path = (v: number[]) => {
         <dt>{m.label}</dt>
         <dd class="key-points__value"><span class="key-points__num">{m.value}</span><span class="key-points__unit">{m.unit}</span></dd>
         {m.note && <dd class:list={['key-points__note', m.trend && `key-points__note--${m.trend}`]}>{m.note}</dd>}
-        {m.sub && <dd class="key-points__sub">{m.sub}</dd>}
         {m.spark && m.spark.length > 1 && (() => {
           const p = path(m.spark);
           return (
@@ -103,12 +101,6 @@ const path = (v: number[]) => {
     font-size: var(--text-dense);
   }
   .key-points__note {
-    color: var(--color-text-muted);
-    font-size: var(--text-small);
-    line-height: var(--text-small-leading);
-    font-variant-numeric: tabular-nums;
-  }
-  .key-points__sub {
     color: var(--color-text-muted);
     font-size: var(--text-small);
     line-height: var(--text-small-leading);

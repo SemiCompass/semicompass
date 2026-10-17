@@ -79,21 +79,20 @@ const change = (cur: number | null, before: number | null) =>
 const marginOf = (r?: (typeof rows)[number]) =>
   r && r.net_sales.value != null && r.operating_income.value != null && r.net_sales.value > 0 ? (r.operating_income.value / r.net_sales.value) * 100 : null;
 const mineRow = companyRows(preview).find((r) => r.company.slug === company.slug);
-const metricOf = (label: string, key: 'net_sales' | 'operating_income', sub?: string) => {
+const metricOf = (label: string, key: 'net_sales' | 'operating_income') => {
   const cur = okuOf(latest?.[key].value);
   if (cur == null) return [];
   const ch = change(cur, okuOf(prev?.[key].value));
   return [{
     label, value: formatNumber(cur, 0), unit: '億円',
-    note: ch == null ? undefined : `前期比 ${signed(ch)}`, trend: ch == null ? undefined : ch >= 0 ? ('up' as const) : ('down' as const), sub,
+    note: ch == null ? undefined : `前期比 ${signed(ch)}`, trend: ch == null ? undefined : ch >= 0 ? ('up' as const) : ('down' as const),
     spark: rows.slice(-6).map((r) => okuOf(r[key].value)).filter((v): v is number => v != null),
   }];
 };
 const margin = marginOf(latest);
 const prevMargin = marginOf(prev);
 const metrics = [
-  // 売上高には、半導体関連の比率を補足の行で添える（セグメントの区分が確かめられた会社だけ）
-  ...metricOf('売上高', 'net_sales', segment?.ratio ? `半導体関連 ${formatNumber(segment.ratio.value, 1)}%` : undefined),
+  ...metricOf('売上高', 'net_sales'),
   ...metricOf('営業利益', 'operating_income'),
   ...(margin != null ? [{ label: '営業利益率', value: formatNumber(margin, 1), unit: '%', note: prevMargin != null ? `前期 ${formatNumber(prevMargin, 1)}%` : undefined }] : []),
   ...(mineRow?.salary != null
