@@ -1,0 +1,48 @@
+---
+// 図：電圧・電流・抵抗の関係と、抵抗を通してコンデンサに電気をためるときのたまり方（模式図。仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// たまり方の曲線（時定数で割った時間に対して、満ちた割合 1 − e^(−t/τ)）。形を示す模式図で、目盛りは付けない
+const curve = Array.from({ length: 31 }, (_, i) => {
+  const t = (i / 30) * 5;
+  const x = 30 + (t / 5) * 156;
+  const y = 130 - (1 - Math.exp(-t)) * 100;
+  return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`;
+}).join('');
+const tauX = 30 + (1 / 5) * 156;
+---
+
+<FigureFrame id="fig-electricity-basics" columns={2} title="電圧・電流・抵抗と、コンデンサのたまり方（模式図）" caption="図：左は、電池（電圧）が抵抗に電流を流す回路。電流は電池のプラス側から出て抵抗を通り、マイナス側へ戻る。電子は、その反対の向きに動く。右は、抵抗を通してコンデンサに電気をためるときの、たまった量の時間の変化。はじめは速く、満ちるにつれてゆっくりになる。抵抗と容量のかけ算（時定数）が大きいほど、曲線はゆるやかになる。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="電池のプラス側から抵抗へ電流が流れる回路。上の配線で、電流は右向き、電子は左向きに動く">
+      <path class="fig-line" d="M40 40h120v80H40z" />
+      <path class="fig-line" d="M32 72h16M36 84h8" />
+      <rect class="fig-part" x="140" y="62" width="40" height="36" />
+      <text class="fig-text" x="160" y="84" font-size="8" text-anchor="middle">抵抗</text>
+      <text class="fig-text" x="16" y="80" font-size="8" text-anchor="middle">電池</text>
+      <rect class="fig-part" x="28" y="66" width="24" height="28" />
+      <text class="fig-text" x="40" y="77" font-size="7" text-anchor="middle">＋</text>
+      <text class="fig-text" x="40" y="90" font-size="7" text-anchor="middle">−</text>
+      <path class="fig-arrow" d="M70 32h50M114 28l6 4-6 4" />
+      <text class="fig-strong" x="95" y="24" font-size="8" text-anchor="middle">電流</text>
+      <circle class="fig-dot" cx="96" cy="40" r="3" />
+      <path class="fig-dash" d="M120 54H72M78 50l-6 4 6 4" />
+      <text class="fig-text" x="96" y="68" font-size="7" text-anchor="middle">電子の動く向き</text>
+    </svg>
+    <span class="fig__name">電圧が電流を流す</span>
+    <span class="fig__note">電圧＝電流×抵抗（オームの法則）</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="コンデンサにたまる量は、はじめ速く増え、満ちるにつれてゆっくりになる">
+      <path class="fig-line" d="M30 20V130h160" />
+      <path class="fig-dash" d="M30 30h156" />
+      <text class="fig-text" x="34" y="26" font-size="7">いっぱい</text>
+      <path class="fig-arrow" d={curve} />
+      <path class="fig-dash" d={`M${tauX} 130V60`} />
+      <text class="fig-text" x={tauX} y="142" font-size="7" text-anchor="middle">時定数</text>
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">時間</text>
+      <text class="fig-text" x="6" y="14" font-size="7">たまった量</text>
+    </svg>
+    <span class="fig__name">コンデンサのたまり方</span>
+    <span class="fig__note">時定数＝抵抗×容量。大きいほどゆっくり</span>
+  </li>
+</FigureFrame>

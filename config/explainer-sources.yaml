@@ -277,6 +277,12 @@ learn:
   new-materials:
     title: 新しい半導体材料：酸化ガリウム、ダイヤモンドなど
     basis: reviewed
+  electricity-basics:
+    title: 電気の基礎：電圧、電流、抵抗
+    basis: reviewed
+  carrier-motion:
+    title: 電子と正孔の動き：ドリフトと拡散
+    basis: reviewed
   what-is-semiconductor:
     title: 半導体とは何か
     basis: reviewed
