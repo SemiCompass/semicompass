@@ -262,7 +262,7 @@ class PagesBuildTest(unittest.TestCase):
             html = self.read(dist, "companies/index.html")
             rows = re.findall(r"<tr[^>]*data-index", html)
             self.assertEqual(len(rows), len(self.companies), env)
-            for label in ("企業名", "証券コード", "企業区分", "工程", "売上高（億円）", "半導体関連の比率", "掲載の状態"):
+            for label in ("企業名", "工程", "売上高（億円）", "半導体関連の比率", "営業利益率", "平均年間給与", "詳しいページのある企業だけ"):
                 self.assertIn(label, html)
             self.assertIn('aria-sort="none"', html)
             self.assertNotIn("card", html.split("<main")[1].lower().replace("discard", ""))  # 一覧はカードの格子にしない（head の twitter:card は対象外）
@@ -306,7 +306,7 @@ class PagesBuildTest(unittest.TestCase):
         # 企業はすべて公開済み。下書き（draft: true）の企業を2社置いたコピーで、本番にだけ出ない（Coming Soon になる）ことを確かめる
         preview = self.read(self.drafts_site("preview"), "companies/index.html")
         production = self.read(self.drafts_site("production"), "companies/index.html")
-        self.assertEqual(preview.count(">詳細<") - production.count(">詳細<"), len(self.DRAFTS))
+        self.assertEqual(preview.count('data-detailed="true"') - production.count('data-detailed="true"'), len(self.DRAFTS))
 
     DRAFTS = ("tokyo-electron", "sony")
 

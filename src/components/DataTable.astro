@@ -11,6 +11,7 @@ interface Column {
   wrap?: boolean; // 長い文字の列：折り返す（数値の列は、折り返さない）
   sort?: 'ascending' | 'descending' | 'none'; // 並べ替えができる列。今の状態
   sortKey?: string; // スクリプトで並べ替える列の名前（行の data-sort-{名前}）。ある列は、見出しを押して並べ替えられる
+  html?: boolean; // セルの値を、組み立て済みのHTMLとして出す（企業一覧の段階の印や横棒。値は呼び出し側で文字をエスケープする）
 }
 interface Props {
   caption: string;
@@ -55,8 +56,12 @@ const { caption, columns, rows, rowData = [], emptyMessage = '該当するデー
         <tr {...(rowData[rowIndex] ?? {})}>
           {columns.map((c, i) => (
             i === 0
-              ? <th scope="row" class="is-first is-text">{row.__href ? <a href={row.__href}>{row[c.key]}</a> : row[c.key]}</th>
-              : <td class:list={[c.numeric ? 'is-numeric' : 'is-text', c.wrap && 'is-wrap']}>{row[c.key]}</td>
+              ? (c.html
+                  ? <th scope="row" class="is-first is-text" set:html={row[c.key]} />
+                  : <th scope="row" class="is-first is-text">{row.__href ? <a href={row.__href}>{row[c.key]}</a> : row[c.key]}</th>)
+              : c.html
+                ? <td class:list={[c.numeric ? 'is-numeric' : 'is-text', c.wrap && 'is-wrap']} set:html={row[c.key]} />
+                : <td class:list={[c.numeric ? 'is-numeric' : 'is-text', c.wrap && 'is-wrap']}>{row[c.key]}</td>
           ))}
         </tr>
       ))}
