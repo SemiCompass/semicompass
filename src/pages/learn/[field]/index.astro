@@ -1,34 +1,41 @@
 ---
 // 分野のページ（/learn/{分野}/。要件定義書 FR-901、仕様書 8.18）：その分野の単元を、小分けごとに体系の順に並べる。
-// 最後に前後の分野へのリンクを置く。単元がまだない分野は「準備中」と示す（MV-08）
+// 最後に前後の分野へのリンクを置く（同じ段の中だけ。基礎編と半導体の物理はまたがない）。単元がまだない分野は「準備中」と示す（MV-08）
 import { BUILD_ENV } from 'astro:env/server';
 import UnitList from '../../../components/LearnUnitList.astro';
 import Page from '../../../layouts/Page.astro';
-import { learnIndex, type FieldIndex } from '../../../lib/learn';
+import { fieldName, learnTiers, type FieldIndex } from '../../../lib/learn';
 
 export function getStaticPaths() {
-  const index = learnIndex(BUILD_ENV === 'preview');
-  return index.map((entry, i) => ({
-    params: { field: entry.field.slug },
-    props: { entry, previous: index[i - 1]?.field, next: index[i + 1]?.field },
-  }));
+  return learnTiers(BUILD_ENV === 'preview').flatMap(({ tier, fields }) =>
+    fields.map((entry, i) => ({
+      params: { field: entry.field.slug },
+      props: { entry, tierTitle: tier.title, previous: fields[i - 1]?.field, next: fields[i + 1]?.field },
+    })),
+  );
 }
-const { entry, previous, next } = Astro.props as {
+const { entry, tierTitle, previous, next } = Astro.props as {
   entry: FieldIndex;
+  tierTitle: string;
   previous?: FieldIndex['field'];
   next?: FieldIndex['field'];
 };
 const { field, lead, sections, units } = entry;
 const shown = sections.filter((s) => s.units.length > 0);
 const toc = shown.length > 0 ? shown.map(({ section }) => ({ id: `section-${section.slug}`, label: section.title })) : [];
-const name = (f: FieldIndex['field']) => `${f.no}. ${f.title}`;
+const name = fieldName;
 ---
 
 <Page
   title={`${field.title}｜半導体を学ぶ｜SemiCompass`}
   heading={name(field)}
   description={field.summary}
-  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: '半導体を学ぶ', href: '/learn/' }, { label: field.title }]}
+  breadcrumbs={[
+    { label: 'ホーム', href: '/' },
+    { label: '半導体を学ぶ', href: '/learn/' },
+    ...(field.tier === 'physics' ? [{ label: tierTitle, href: '/learn/#tier-physics' }] : []),
+    { label: field.title },
+  ]}
   toc={toc}
 >
   <p class="lead measure">{field.summary}</p>

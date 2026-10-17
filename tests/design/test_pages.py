@@ -372,8 +372,9 @@ class PagesBuildTest(unittest.TestCase):
                                    f"ai_generated: true\nterms: [cmp]\n{src}---\n## 解説\n\n試験用の解説である[S1]。\n"}
         return self.build_with("fixture", env, glossary, processes)
 
-    def learn_site(self, env: str = "preview") -> Path:
-        """学習のページ1件（図と理解度チェック付き）と、理解度チェック付きの用語1件を置いた、作業用のコピーで組み立てる。"""
+    def learn_site(self, env: str = "preview", physics: bool = False) -> Path:
+        """学習のページ1件（図と理解度チェック付き）と、理解度チェック付きの用語1件を置いた、作業用のコピーで組み立てる。
+        physics が true のときは、深掘り編「半導体の物理」のカードAに、式を含むページ1件（基礎編の学習のページと工程に効く）も置く。"""
         src = "sources:\n  - id: S1\n    title: 例の資料\n    publisher: 例の団体\n    url: https://example.com/a\n    accessed_on: '2026-01-01'\n"
         quiz = ("## 理解度チェック\n\n### 問1\n試験の問いである。\n\n1. 一つ目\n2. 二つ目\n3. 三つ目\n4. 四つ目\n\n"
                 "答え：3\n解説：試験の解説である。\n")
@@ -388,6 +389,9 @@ class PagesBuildTest(unittest.TestCase):
             elif field["slug"] == "industry":
                 field["units"] = []  # 単元のない分野の表示（準備中）を確かめるため、空にする
                 field.pop("sections", None)
+        for card in tree.get("physics", {}).get("cards", []):
+            card["units"] = [{"type": "learn", "ref": "test-deep"}] if physics and card["label"] == "A" else []
+            card.pop("sections", None)
         path = yaml.safe_dump(tree, allow_unicode=True, sort_keys=False)
         extra = {
             "content/learn/path.yaml": path,
@@ -396,15 +400,31 @@ class PagesBuildTest(unittest.TestCase):
                                                  f"## 一つ目の節\n\n試験用の本文である[S1]。\n\n{quiz}",
             "src/figures/learn/basics/test-page.astro": '<figure class="learn-figure-test"><svg role="img" aria-label="試験の図" viewBox="0 0 10 10"></svg><figcaption>図：試験の図。模式図、本サイトで作成</figcaption></figure>\n',
         }
-        return self.build_with("learn", env, glossary=glossary, extra=extra)
+        if physics:
+            extra.update({
+                "content/learn/solid-state/test-deep.md": f"---\ntitle: 試験の深掘りページ\nfield: solid-state\ndescription: 試験用の深掘りの説明である。\n"
+                                                          f"published_at: '2026-01-01'\nai_generated: true\napplies_to:\n"
+                                                          f"  - {{ type: learn, ref: test-page, folder: basics, note: 試験の現れ方である。 }}\n"
+                                                          f"  - {{ type: process, ref: {slug}, note: 工程での現れ方である。 }}\n{src}---\n"
+                                                          f"## 式\n\n$$n_i \\propto \\exp\\left(-\\frac{{E_g}}{{2kT}}\\right)$$\n\n"
+                                                          f"$E_g$ はバンドギャップである[S1]。\n\n## 式のどこを見るか\n\n指数の中を見る。\n\n"
+                                                          f"## 数値例\n\n試験の数値例である。\n\n{quiz}",
+                "src/figures/learn/solid-state/test-deep.astro": '<figure><svg role="img" aria-label="試験の図" viewBox="0 0 10 10"></svg><figcaption>図。模式図、本サイトで作成</figcaption></figure>\n',
+            })
+        return self.build_with("learn-physics" if physics else "learn", env, glossary=glossary, extra=extra)
 
     def test_learn_index_page_and_quiz(self):
         # 半導体を学ぶ（FR-901、FR-904）：一覧に分野と単元、学習のページに図・本文・理解度チェック、トップの入口は /learn/ へ
         dist = self.learn_site()
         index = self.read(dist, "learn/index.html")
         self.assertIn("1. 半導体工学の基礎", index)
-        self.assertIn('href="/learn/basics/"', index)  # 一覧には9分野の入口を並べ、分野のページへ進む（仕様書 8.18）
-        self.assertEqual(index.split("<main")[1].count('class="learn-field-entry"'), 9)
+        self.assertIn('href="/learn/basics/"', index)  # 一覧には基礎編の9分野の入口を並べ、分野のページへ進む（仕様書 8.18）
+        basic = index.split('id="tier-basic"')[1].split('id="tier-physics"')[0]
+        self.assertEqual(basic.count('class="learn-field-entry"'), 9)
+        physics = index.split('id="tier-physics"')[1].split("</main>")[0]  # 基礎編の下に、深掘り編「半導体の物理」のカード
+        self.assertIn("半導体の物理", physics)
+        self.assertIn("A. 固体物理学", physics)
+        self.assertIn('href="/learn/solid-state/"', physics)
         self.assertIn("準備中", index.split('href="/learn/industry/"')[1].split("</a>")[0])  # 単元のない分野の入口は、準備中と示す
         field = self.read(dist, "learn/basics/index.html")
         self.assertIn('href="/learn/basics/test-page/"', field)
@@ -413,6 +433,7 @@ class PagesBuildTest(unittest.TestCase):
         page = self.read(dist, "learn/basics/test-page/index.html")
         self.assertIn("learn-figure-test", page)
         self.assertIn('href="/learn/basics/"', page)  # パンくずリストの分野は、分野のページへ
+        self.assertNotIn("さらに深く", page)  # 深掘り編のページがないときは、枠を出さない（準備中とも書かない）
         quiz = re.findall(r'<section class="quiz"[^>]*data-quiz[^>]*>(.*?)</section>', page, re.S)[0]
         self.assertEqual(quiz.count('data-choice='), 4)
         self.assertIn('data-answer="3"', page)
@@ -422,6 +443,35 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn('href="/learn/"', home.split("<main")[1])
         term = self.read(dist, "glossary/cmp/index.html")
         self.assertIn('data-quiz data-page-type="term"', term)
+
+    def test_learn_physics_tier(self):
+        # 深掘り編「半導体の物理」（運用ルール書 4.2、仕様書 8.18）：式は MathML、本文の後に「基礎編のどこに効くか」、
+        # 効く先の基礎編のページと工程ページに「さらに深く」。学習の順は基礎編と別（基礎編から深掘り編へは進まない）
+        slug = self.processes[0]["slug"]
+        dist = self.learn_site(physics=True)
+        deep = self.read(dist, "learn/solid-state/test-deep/index.html")
+        self.assertIn('class="math-display"', deep)
+        self.assertNotIn("$$", deep)
+        self.assertGreaterEqual(deep.count("<math"), 2)  # 行の式と、文の中の式
+        self.assertNotIn('display="block"', deep)  # 行の式も中央揃えにしない
+        applies = deep.split('id="applies"')[1].split("</section>")[0]
+        self.assertIn('href="/learn/basics/test-page/"', applies)
+        self.assertIn("試験の現れ方である。", applies)
+        self.assertIn(f'href="/processes/{slug}/"', applies)
+        self.assertIn("半導体の物理", deep.split('aria-label="パンくずリスト"')[1].split("</nav>")[0])
+        self.assertNotIn('href="/companies/"', deep.split('id="next-read"')[1].split("</nav>")[0] if 'id="next-read"' in deep else "")
+        base = self.read(dist, "learn/basics/test-page/index.html")
+        deeper = base.split('id="deeper"')[1].split("</aside>")[0]
+        self.assertIn('href="/learn/solid-state/test-deep/"', deeper)
+        self.assertIn("A. 固体物理学", deeper)
+        self.assertNotIn("/learn/solid-state/", base.split('id="next-read"')[1].split("</nav>")[0])  # 基礎編の順は、深掘り編へ進まない
+        self.assertNotIn("<math", base)  # 基礎編のページの本文は、式にしない
+        self.assertIn('href="/learn/solid-state/test-deep/"', self.read(dist, f"processes/{slug}/index.html").split('id="deeper"')[1])
+        card = self.read(dist, "learn/solid-state/index.html")
+        self.assertIn("A. 固体物理学", card)
+        self.assertIn("次の分野：", card)  # カードの前後は、同じ段（深掘り編）の中だけ
+        self.assertIn('href="/learn/device-physics/"', card.split('class="learn-field-nav"')[1])
+        self.assertNotIn('href="/learn/industry/"', card.split('class="learn-field-nav"')[1])
 
     def test_learn_path_can_be_followed_to_the_end(self):
         # 要件定義書 AT-09：最初のページから、次の案内だけで最後までたどれ、最後に業績とニュース解説の入口に着く。
@@ -447,11 +497,11 @@ class PagesBuildTest(unittest.TestCase):
                       "src/figures/learn/basics/path-a.astro": figure, "src/figures/learn/devices/path-b.astro": figure})
         dist = self.build_with("learnpath", "production", extra=extra)
         first = self.read(dist, "learn/basics/path-a/index.html")
-        self.assertIn("次の分野（2. 結晶工学と半導体材料）の最初のページ：", first)
+        self.assertIn("次の分野（2. 半導体材料とウェーハ）の最初のページ：", first)
         self.assertIn('href="/learn/devices/path-b/"', first)
         second = self.read(dist, "learn/devices/path-b/index.html")
         self.assertIn("前の分野（1. 半導体工学の基礎）の最後のページ：", second)
-        self.assertIn("結晶工学と半導体材料", second.split('aria-label="パンくずリスト"')[1].split("</nav>")[0])  # パンくずは並べた分野（フォルダの devices ではない）
+        self.assertIn("半導体材料とウェーハ", second.split('aria-label="パンくずリスト"')[1].split("</nav>")[0])  # パンくずは並べた分野（フォルダの devices ではない）
         index = self.read(dist, "learn/process/index.html")
         self.assertIn("試験の小分け", index)
         self.assertIn(f'href="/processes/{slug}/"', index.split('id="section-front-end"')[1])

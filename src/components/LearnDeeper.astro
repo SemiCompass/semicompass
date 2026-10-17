@@ -1,0 +1,59 @@
+---
+// 「さらに深く」（仕様書 8.18）：基礎編のページ（学習・工程・用語）の末尾に、そのページに効く深掘り編「半導体の物理」のページを示す枠。
+// 深掘り編のページが公開されていないときは、呼ぶ側で出さない（準備中とも書かない）
+import type { DeeperLink } from '../lib/learn';
+
+interface Props {
+  links: DeeperLink[];
+}
+const { links } = Astro.props;
+---
+
+<aside aria-labelledby="deeper" class="learn-deeper">
+  <h2 id="deeper" class="learn-deeper__heading">さらに深く</h2>
+  <ul class="learn-deeper__list">
+    {links.map((l) => (
+      <li class="learn-deeper__item">
+        <a class="learn-deeper__title" href={l.href}>{l.title}</a>
+        <span class="learn-deeper__text">{l.card ? `半導体の物理 › ${l.card}。` : ''}{l.summary}</span>
+      </li>
+    ))}
+  </ul>
+</aside>
+
+<style>
+  .learn-deeper {
+    max-width: var(--content-max-width);
+    margin-block-start: var(--space-7);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
+  }
+  .learn-deeper__heading {
+    margin: 0;
+  }
+  .learn-deeper__list {
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .learn-deeper__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-block: var(--space-2);
+  }
+  .learn-deeper__title {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    font-weight: var(--font-weight-bold);
+  }
+  .learn-deeper__text {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+</style>

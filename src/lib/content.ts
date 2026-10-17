@@ -151,14 +151,32 @@ export interface LearnSection {
   summary?: string;
   units: LearnUnit[];
 }
+export type LearnTierSlug = 'basic' | 'physics';
 export interface LearnField {
-  no: number;
+  /** 基礎編の分野の番号（1〜9） */
+  no?: number;
+  /** 深掘り編のカードの記号（A〜） */
+  label?: string;
+  /** 基礎編（fields）か、深掘り編「半導体の物理」（physics.cards）か */
+  tier: LearnTierSlug;
+  /** 見出しに付ける番号か記号（「1」「A」） */
+  mark: string;
   slug: string;
   title: string;
   summary: string;
   units: LearnUnit[];
   /** 分野の中の小分け（任意）。units の後に、この順で並べる */
   sections?: LearnSection[];
+}
+export interface LearnTier {
+  slug: LearnTierSlug;
+  title: string;
+  summary: string;
+  fields: LearnField[];
+}
+/** 深掘り編のページが、基礎編のどのページに効くか（データ定義書 6.8） */
+export interface LearnAppliesTo extends LearnUnit {
+  note: string;
 }
 export interface LearnContent extends Common {
   title: string;
@@ -167,14 +185,36 @@ export interface LearnContent extends Common {
   processes?: string[];
   related_terms?: string[];
   companies?: string[];
+  applies_to?: LearnAppliesTo[];
 }
 export type LearnPage = Markdown<LearnContent> & { slug: string; field: string };
 
-export function loadLearnPath(): LearnField[] {
+// 基礎編の段の名前と説明（深掘り編の名前と説明は path.yaml の physics に持つ）
+const BASIC_TIER = { title: '基礎編', summary: '半導体の世界に何があり、どう作られ、どう使われるかを、分野ごとに学びます。' };
+
+/** 一覧の段：基礎編（fields）と、あれば深掘り編「半導体の物理」（physics） */
+export function loadLearnTiers(): LearnTier[] {
   const path = resolve(root, 'content/learn/path.yaml');
   if (!existsSync(path)) return [];
-  const data = parse(readFileSync(path, 'utf-8')) as { fields?: LearnField[] };
-  return [...(data.fields ?? [])].sort((a, b) => a.no - b.no);
+  type Raw = Omit<LearnField, 'tier' | 'mark'>;
+  const data = parse(readFileSync(path, 'utf-8')) as {
+    fields?: Raw[];
+    physics?: { title: string; summary: string; cards?: Raw[] };
+  };
+  const basic = [...(data.fields ?? [])]
+    .sort((a, b) => (a.no ?? 0) - (b.no ?? 0))
+    .map((f) => ({ ...f, tier: 'basic' as const, mark: String(f.no) }));
+  const tiers: LearnTier[] = [{ slug: 'basic', ...BASIC_TIER, fields: basic }];
+  if (data.physics) {
+    const cards = (data.physics.cards ?? []).map((c) => ({ ...c, tier: 'physics' as const, mark: c.label ?? '' }));
+    tiers.push({ slug: 'physics', title: data.physics.title, summary: data.physics.summary, fields: cards });
+  }
+  return tiers;
+}
+
+/** 分野とカード（基礎編、深掘り編の順） */
+export function loadLearnPath(): LearnField[] {
+  return loadLearnTiers().flatMap((t) => t.fields);
 }
 
 /** 学習のページ（公開してよいものだけ）。分野のフォルダの名前を field とする */

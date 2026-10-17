@@ -1,16 +1,19 @@
 ---
 // 学習のページ（/learn/{分野}/{slug}/。要求定義書 FR-901、FR-902、FR-904）：説明の一文 → 図 → 本文 → この技術に関わる企業
-// → 関係する工程と用語 → 次に読む → 理解度チェック → 出典。前後のリンクは content/learn/path.yaml の並びから作る
+// → 関係する工程と用語 → さらに深く → 次に読む → 理解度チェック → 出典。前後のリンクは content/learn/path.yaml の並びから作る。
+// 深掘り編「半導体の物理」のページは、本文（式／式のどこを見るか／数値例）の後に「基礎編のどこに効くか」を置き、本文の式を MathML で示す
 import { BUILD_ENV } from 'astro:env/server';
 import CompanyTable from '../../../components/CompanyTable.astro';
 import Quiz from '../../../components/Quiz.astro';
 import RichText from '../../../components/RichText.astro';
 import SourceList from '../../../components/SourceList.astro';
+import LearnDeeper from '../../../components/LearnDeeper.astro';
 import LearnPathNav from '../../../components/LearnPathNav.astro';
 import Page from '../../../layouts/Page.astro';
 import { companyRows, loadSupply } from '../../../lib/companies';
 import { loadLearnPages, loadLearnPath, loadTerms, type LearnPage } from '../../../lib/content';
-import { fieldOf, learnFigure, learnHref, neighbors } from '../../../lib/learn';
+import { appliesToLinks, deeperLinks, fieldOf, learnFigure, learnHref, neighbors } from '../../../lib/learn';
+import { displayMath } from '../../../lib/math';
 
 export function getStaticPaths() {
   return loadLearnPages(BUILD_ENV === 'preview').map((page) => ({ params: { field: page.field, slug: page.slug }, props: { page } }));
@@ -20,6 +23,10 @@ const preview = BUILD_ENV === 'preview';
 const f = page.front;
 // 分野は、path.yaml でこのページを並べた分野（フォルダと違うことがある。公開済みのURLを変えずに組み替えたため）
 const field = fieldOf(preview, learnHref(page)) ?? loadLearnPath().find((x) => x.slug === page.field);
+// 深掘り編のページか（path.yaml の physics のカードに並べたページ）
+const physics = field?.tier === 'physics';
+const applies = physics ? appliesToLinks(preview, page) : [];
+const deeper = physics ? [] : deeperLinks(preview, learnHref(page));
 const supply = loadSupply() as ReturnType<typeof loadSupply> & { processes: { slug: string; name: string }[] };
 const processes = (f.processes ?? []).map((slug) => supply.processes.find((p) => p.slug === slug)).filter((p) => p !== undefined);
 const terms = loadTerms(preview).filter((t) => (f.related_terms ?? []).includes(t.slug));
@@ -33,8 +40,10 @@ const sources = (f.sources ?? []).map((s) => ({
 const headed = page.sections.filter((s) => s.heading);
 const toc = [
   ...headed.map((s, i) => ({ id: `s${i}`, label: s.heading })),
+  ...(applies.length > 0 ? [{ id: 'applies', label: '基礎編のどこに効くか' }] : []),
   ...(rows.length > 0 ? [{ id: 'companies', label: 'この技術に関わる企業' }] : []),
   ...(processes.length + terms.length > 0 ? [{ id: 'related', label: '関係する工程と用語' }] : []),
+  ...(deeper.length > 0 ? [{ id: 'deeper', label: 'さらに深く' }] : []),
   ...(hasNav ? [{ id: 'next-read', label: '次に読む' }] : []),
   ...(page.quiz.length > 0 ? [{ id: 'quiz-title', label: '理解度チェック' }] : []),
   ...(sources.length > 0 ? [{ id: 'sources-heading', label: '出典' }] : []),
@@ -48,6 +57,7 @@ const toc = [
   breadcrumbs={[
     { label: 'ホーム', href: '/' },
     { label: '半導体を学ぶ', href: '/learn/' },
+    ...(physics ? [{ label: '半導体の物理', href: '/learn/#tier-physics' }] : []),
     { label: field?.title ?? page.field, href: `/learn/${field?.slug ?? page.field}/` },
     { label: f.title },
   ]}
@@ -62,9 +72,21 @@ const toc = [
   {page.sections.map((section) => (
     <>
       {section.heading && <h2 id={`s${headed.indexOf(section)}`}>{section.heading}</h2>}
-      {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+      {section.paragraphs.map((paragraph) => {
+        const block = physics ? displayMath(paragraph) : null;
+        return block ? <div class="math-display" set:html={block} /> : <p><RichText text={paragraph} math={physics} /></p>;
+      })}
     </>
   ))}
+
+  {applies.length > 0 && (
+    <section aria-labelledby="applies">
+      <h2 id="applies">基礎編のどこに効くか</h2>
+      <ul>
+        {applies.map((a) => <li><a href={a.link.href}>{a.link.title}</a>：{a.note}</li>)}
+      </ul>
+    </section>
+  )}
 
   {rows.length > 0 && (
     <section aria-labelledby="companies">
@@ -83,8 +105,19 @@ const toc = [
     </section>
   )}
 
+  {deeper.length > 0 && <LearnDeeper links={deeper} />}
+
   {hasNav && <LearnPathNav id="next-read" heading="次に読む" previous={previous} next={next} isLast={isLast} />}
 
   <Quiz questions={page.quiz} pageType="learn" />
   {sources.length > 0 && <SourceList sources={sources} heading="出典" />}
 </Page>
+
+<style>
+  .math-display {
+    max-width: var(--content-max-width);
+    margin-block: var(--space-4);
+    padding-inline-start: var(--space-4);
+    overflow-x: auto;
+  }
+</style>

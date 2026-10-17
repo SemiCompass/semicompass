@@ -1,0 +1,84 @@
+---
+// 半導体を学ぶの一覧（/learn/）の1つの段（基礎編、半導体の物理）：段の中見出しと説明、分野の入口の並び（仕様書 8.18）
+import { fieldName, type TierIndex } from '../lib/learn';
+
+interface Props {
+  entry: TierIndex;
+}
+const { tier, fields } = Astro.props.entry;
+const id = `tier-${tier.slug}`;
+---
+
+<section aria-labelledby={id} class="learn-tier">
+  <h2 id={id}>{tier.title}</h2>
+  <p class="measure">{tier.summary}</p>
+  <ul class="learn-fields__list">
+    {fields.map(({ field, units }) => (
+      <li>
+        <a class="learn-field-entry" href={`/learn/${field.slug}/`}>
+          <span class="learn-field-entry__title">{fieldName(field)}</span>
+          <span class="learn-field-entry__text">{field.summary}</span>
+          <span class="learn-field-entry__text">{units.length > 0 ? `${units.length}ページ` : '準備中'}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  @import "../styles/breakpoints.css";
+  .learn-tier {
+    margin-block-start: var(--space-7);
+  }
+  .learn-fields__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (--tablet) {
+    .learn-fields__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (--pc) {
+    .learn-fields__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .learn-fields__list li {
+    display: flex;
+  }
+  .learn-field-entry {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+    min-height: var(--target-min);
+    padding: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .learn-field-entry:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+  }
+  .learn-field-entry__title {
+    color: var(--color-primary);
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-lead-leading);
+    letter-spacing: var(--text-lead-tracking);
+  }
+  .learn-field-entry__text {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    letter-spacing: var(--text-small-tracking);
+  }
+</style>

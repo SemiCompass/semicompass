@@ -1,16 +1,18 @@
 ---
-// 用語ページ（/glossary/{slug}/。仕様書 9.5）：見出し（用語、読み）→ 短い定義（text-lead）→ 解説 → 関係する工程と企業 → 出典。
+// 用語ページ（/glossary/{slug}/。仕様書 9.5）：見出し（用語、読み）→ 短い定義（text-lead）→ 解説 → 関係する工程と企業 → さらに深く（あれば）→ 出典。
 // content/glossary/{slug}.md（データ定義書 6.6）から作る。draft: true は、プレビューのビルドだけ
 import { BUILD_ENV } from 'astro:env/server';
 import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
 import SourceList from '../../components/SourceList.astro';
+import LearnDeeper from '../../components/LearnDeeper.astro';
 import PageFeedback from '../../components/PageFeedback.astro';
 import Quiz from '../../components/Quiz.astro';
 import Tag from '../../components/Tag.astro';
 import Page from '../../layouts/Page.astro';
 import { loadCompanies, loadSupply } from '../../lib/companies';
 import { loadTerms } from '../../lib/content';
+import { deeperLinks } from '../../lib/learn';
 
 // 用語の図：src/figures/term/{slug}.astro があれば、短い定義の後、解説の前に出す（仕様書 7章、9.5）
 const figureModules = import.meta.glob<{ default: unknown }>('../../figures/term/*.astro', { eager: true });
@@ -28,9 +30,12 @@ const related = loadTerms(BUILD_ENV === 'preview').filter((t) => (f.related_term
 const sources = f.sources.map((s) => ({
   number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on, accessedOn: s.accessed_on, pages: s.pages,
 }));
+// 深掘り編「半導体の物理」で、この用語に効くページ（仕様書 8.18。公開済みのものがあるときだけ出す）
+const deeper = deeperLinks(BUILD_ENV === 'preview', `/glossary/${term.slug}/`);
 const toc = [
   ...term.sections.filter((s) => s.heading).map((s, i) => ({ id: `s${i}`, label: s.heading })),
   { id: 'related', label: '関係する工程と企業' },
+  ...(deeper.length > 0 ? [{ id: 'deeper', label: 'さらに深く' }] : []),
   ...(term.quiz.length > 0 ? [{ id: 'quiz-title', label: '理解度チェック' }] : []),
   { id: 'sources-heading', label: '出典' },
 ];
@@ -69,6 +74,7 @@ const toc = [
     )}
     {related.length > 0 && <p>関係する用語：{related.map((t, i) => <>{i > 0 && '、'}<a href={`/glossary/${t.slug}/`}>{t.front.term}</a></>)}</p>}
   </section>
+  {deeper.length > 0 && <LearnDeeper links={deeper} />}
   <Quiz questions={term.quiz} pageType="term" />
   <SourceList sources={sources} heading="出典" />
   <PageFeedback pageType="term" />

@@ -1,4 +1,6 @@
-# 半導体を学ぶの体系（データ定義書 6.8、運用ルール書 4.2）。研究分野に合わせた9分野と、各分野の単元の順番。
+# 半導体を学ぶの体系（データ定義書 6.8、運用ルール書 4.2）。二段で持つ。
+# fields：基礎編。対象（デバイス、工程、用途）で分けた9分野と、各分野の単元の順番。
+# physics：深掘り編「半導体の物理」。学問（物理、材料）で分けたカードと、各カードの単元の順番。学習の順は、基礎編と別に作る。
 # "no" は引用符で囲む（YAML 1.1 では no が false と読まれるため）。
 # units には、ページ（content/learn/{フォルダ}/{slug}.md、工程ページ、用語ページ）ができたものだけを書く。
 # 学習のページが分野と別のフォルダにあるときは folder を書く（公開済みのURLを変えないため）。sections は分野の中の小分け。
@@ -24,7 +26,7 @@ fields:
           - { type: learn, ref: scaling, folder: devices }
   - "no": 2
     slug: materials
-    title: 結晶工学と半導体材料
+    title: 半導体材料とウェーハ
     summary: シリコンの結晶とウェーハができるまでと、シリコン以外の半導体の材料を学びます。
     units: []
     sections:
@@ -140,3 +142,27 @@ fields:
           - { type: learn, ref: history }
           - { type: learn, ref: policy }
           - { type: learn, ref: japan-position }
+physics:
+  title: 半導体の物理
+  summary: 半導体の動作を支える物理を、式の形から何が読めるかに絞って学びます。導出はしません。基礎編を読んだ後で、または途中で「なぜ」が気になったときに。
+  cards:
+    - label: A
+      slug: solid-state
+      title: 固体物理学
+      summary: 結晶の中で電子がどう振る舞うかを、バンド、格子振動、統計の3つの柱で学びます。半導体がなぜ「半」導体なのか、なぜ熱と雑音が限界を決めるのかが式で読めるようになります。
+      units: []
+    - label: B
+      slug: device-physics
+      title: 半導体デバイス物理
+      summary: pn接合、MOS構造、トランジスタ、電極の動作を、ポテンシャルと電流の式で読みます。設計の原則が「なぜそうなっているか」に戻ってつながります。
+      units: []
+    - label: C
+      slug: optics
+      title: 光物性
+      summary: 半導体が光を吸収し、光を出し、光で電気を作る仕組みを式で読みます。イメージセンサー、LED、レーザー、太陽電池、光通信の土台です。
+      units: []
+    - label: D
+      slug: materials-physics
+      title: 結晶・材料の物理
+      summary: 結晶の欠陥、熱処理、結晶成長、材料の組み合わせ、寿命の表し方を、熱力学と拡散と統計の式で読みます。製造プロセスで「なぜその温度・その時間なのか」、信頼性で「寿命をどう数えるか」が分かります。
+      units: []

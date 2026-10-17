@@ -116,5 +116,75 @@ class LearnPageTest(Base):
         self.has(problems, "V-03", "重複", file="content/learn/path.yaml")
 
 
+
+DEEP_BODY = "## 式\n\n$$E = h\\nu$$\n\n記号の説明。[S1]\n\n## 式のどこを見るか\n\n係数を見る。\n\n## 数値例\n\n数値の例。\n\n" + QUIZ
+
+
+class PhysicsTierTest(Base):
+    """深掘り編「半導体の物理」（path.yaml の physics、学習のページの applies_to。データ定義書 6.8、運用ルール書 4.2）。"""
+
+    def setUp(self):
+        super().setUp()
+        self.base = LearnPageTest.write_learn(self)  # 基礎編のページ（basics/what-is-semiconductor）
+
+    def write_deep(self, front=None, body=DEEP_BODY, cards=None, slug="band-gap"):
+        front = {"title": "バンドギャップ", "field": "solid-state", "description": "バンドギャップの値から、材料の性質を読む。",
+                 "published_at": "2026-10-17", "ai_generated": True, "draft": True,
+                 "applies_to": [{"type": "learn", "ref": "what-is-semiconductor", "folder": "basics", "note": "材料の違いが値で読める。"}],
+                 "sources": [{"id": "S1", "title": "資料", "publisher": "発行元", "url": "https://example.org/a", "accessed_on": "2026-10-12"}],
+                 **(front or {})}
+        folder = self.root / "content" / "learn" / "solid-state"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"{slug}.md").write_text("---\n" + yaml.safe_dump(front, allow_unicode=True, sort_keys=False) + "---\n" + body, encoding="utf-8")
+        fig = self.root / "src" / "figures" / "learn" / "solid-state"
+        fig.mkdir(parents=True, exist_ok=True)
+        (fig / f"{slug}.astro").write_text("<figure></figure>\n", encoding="utf-8")
+        tree = path_yaml([{"type": "learn", "ref": "what-is-semiconductor"}])
+        tree["physics"] = {"title": "半導体の物理", "summary": "物理を式で読む。", "cards": cards or [
+            {"label": "A", "slug": "solid-state", "title": "固体物理学", "summary": "固体を学ぶ。", "units": [{"type": "learn", "ref": slug}]}]}
+        (self.root / "content" / "learn" / "path.yaml").write_text(yaml.safe_dump(tree, allow_unicode=True), encoding="utf-8")
+        return f"content/learn/solid-state/{slug}.md"
+
+    def errors(self, rel):
+        return [p for p in self.check() if p.file in (rel, "content/learn/path.yaml") and p.severity == "error"]
+
+    def test_valid_deep_page(self):
+        rel = self.write_deep()
+        self.assertEqual(self.errors(rel), [])
+        self.assertEqual([p for p in self.check() if p.file == self.base and p.severity == "error"], [])
+
+    def test_deep_page_needs_three_headings_and_applies_to(self):
+        rel = self.write_deep(front={"applies_to": []}, body="## 解説\n\n本文。[S1]\n\n" + QUIZ)
+        problems = self.check()
+        self.has(problems, "V-10", "式のどこを見るか", file=rel)
+        self.has(problems, "V-04", "applies_to", file=rel)
+
+    def test_applies_to_targets(self):
+        rel = self.write_deep(front={"applies_to": [
+            {"type": "learn", "ref": "what-is-semiconductor", "note": "フォルダがない。"},
+            {"type": "learn", "ref": "missing", "folder": "basics", "note": "ページがない。"},
+            {"type": "learn", "ref": "band-gap", "folder": "solid-state", "note": "深掘り編どうし。"}]})
+        problems = self.check()
+        self.has(problems, "V-04", "folder", file=rel)
+        self.has(problems, "V-04", "content/learn/basics/missing.md", file=rel)
+        self.has(problems, "V-02", "基礎編のページを書く", file=rel)
+
+    def test_reviewed_basis_and_applies_to_on_basic_page(self):
+        rel = self.write_deep(front={"basis": "reviewed"})
+        self.has(self.check(), "V-01", "basis: reviewed", file=rel)
+        LearnPageTest.write_learn(self, front={"applies_to": [{"type": "process", "ref": "x", "note": "基礎編には書かない。"}]})
+        self.write_deep()
+        self.has(self.check(), "V-01", "深掘り編のページだけ", file=self.base)
+
+    def test_card_labels_and_units(self):
+        self.write_deep(cards=[
+            {"label": "B", "slug": "solid-state", "title": "固体物理学", "summary": "固体を学ぶ。",
+             "units": [{"type": "learn", "ref": "band-gap"}, {"type": "learn", "ref": "what-is-semiconductor", "folder": "basics"}]}])
+        problems = self.check()
+        self.has(problems, "V-02", "A、B、C", file="content/learn/path.yaml")
+        self.has(problems, "V-02", "深掘り編のフォルダ", file="content/learn/path.yaml")
+        self.has(problems, "V-03", "重複", file="content/learn/path.yaml")
+
+
 if __name__ == "__main__":
     unittest.main()
