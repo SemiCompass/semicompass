@@ -190,7 +190,21 @@ export interface LearnContent extends Common {
 export type LearnPage = Markdown<LearnContent> & { slug: string; field: string };
 
 // 基礎編の段の名前と説明（深掘り編の名前と説明は path.yaml の physics に持つ）
-const BASIC_TIER = { title: '基礎編', summary: '半導体の世界に何があり、どう作られ、どう使われるかを、分野ごとに学びます。' };
+const BASIC_TIER = { title: '基礎編', summary: '半導体の全体像を、分野ごとにつかみます。' };
+
+/** 段ごとの対象・前提知識・読む順（一覧の段の説明の下に示す。仕様書 8.18） */
+export const TIER_GUIDE: Record<LearnTierSlug, { audience: string; prerequisite: string; order: string }> = {
+  basic: {
+    audience: '初めて半導体を学ぶ人、就職・転職を考えている人',
+    prerequisite: '中学校の理科の程度',
+    order: '1から順に読むのがおすすめです。興味のある分野から読むこともできます。',
+  },
+  physics: {
+    audience: '半導体が動く仕組みを深く理解したい人',
+    prerequisite: '高校の数学（指数・対数）と物理（電気）の程度',
+    order: '必要なカードから読めます。',
+  },
+};
 
 /** 一覧の段：基礎編（fields）と、あれば深掘り編「半導体の物理」（physics） */
 export function loadLearnTiers(): LearnTier[] {

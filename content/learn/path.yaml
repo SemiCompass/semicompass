@@ -9,7 +9,7 @@ fields:
   - "no": 1
     slug: basics
     title: 半導体工学の基礎
-    summary: 電気を通す・通さないの違いから、電子と正孔、pn接合、トランジスタの仕組みと微細化までを学びます。
+    summary: 半導体が電気を通したり止めたりできる仕組みと、トランジスタの働きを学びます。
     units: []
     sections:
       - slug: properties
@@ -27,7 +27,7 @@ fields:
   - "no": 2
     slug: materials
     title: 半導体材料とウェーハ
-    summary: シリコンの結晶とウェーハができるまでと、シリコン以外の半導体の材料を学びます。
+    summary: シリコンの結晶からウェーハができるまでと、シリコン以外の材料を学びます。
     units: []
     sections:
       - slug: crystal
@@ -43,7 +43,7 @@ fields:
   - "no": 3
     slug: design
     title: デバイス設計・回路
-    summary: トランジスタを組み合わせた論理回路から、プロセッサ、メモリ、アナログ回路、設計の進め方までを学びます。
+    summary: トランジスタを組み合わせて計算や記憶をする回路の仕組みと、設計の進め方を学びます。
     units: []
     sections:
       - slug: logic
@@ -68,7 +68,7 @@ fields:
   - "no": 4
     slug: process
     title: 製造プロセスと装置
-    summary: ウェーハの上に回路を作る前工程と、チップに切り分けて組み立てる後工程を、工程ごとに学びます。
+    summary: ウェーハに回路を作り、チップとして組み立てるまでの工程と装置を学びます。
     units: []
     sections:
       - slug: front-end
@@ -93,7 +93,7 @@ fields:
   - "no": 5
     slug: test
     title: 検査と信頼性
-    summary: できた半導体を確かめる方法と、長く使えることを確かめる考え方、壊れた理由を突き止める方法を学びます。
+    summary: できた半導体を確かめる方法と、長く使えるかを確かめる考え方を学びます。
     units:
       - { type: learn, ref: test-and-reliability }
       - { type: learn, ref: inspection }
@@ -102,13 +102,13 @@ fields:
   - "no": 6
     slug: power
     title: パワー半導体
-    summary: 電気自動車や再生可能エネルギーで電力を制御する半導体と、高い電圧に耐える材料と構造を学びます。
+    summary: 電気自動車などで大きな電力を制御する半導体と、その材料を学びます。
     units:
       - { type: learn, ref: power, folder: devices }
   - "no": 7
     slug: sensors
     title: センサー・計測
-    summary: 温度、圧力、加速度、光などを電気の信号に変えるセンサーの仕組みを学びます。
+    summary: 光や圧力などを電気の信号に変える、センサーの仕組みを学びます。
     units:
       - { type: learn, ref: mems-sensor, folder: devices }
       - { type: learn, ref: image-sensor, folder: devices }
@@ -116,13 +116,13 @@ fields:
   - "no": 8
     slug: communication
     title: 通信・信号処理
-    summary: 無線通信で使う高い周波数の信号を扱う半導体と、信号を強める仕組みを学びます。
+    summary: 無線通信で高い周波数の信号を扱う半導体の仕組みを学びます。
     units:
       - { type: learn, ref: rf, folder: devices }
   - "no": 9
     slug: industry
     title: 工場と業界
-    summary: 半導体の工場を支える技術と、設計・製造・組み立ての役割分担、業界の歩みと日本の位置を学びます。
+    summary: 工場を支える技術と、業界の役割分担、歴史、日本の位置を学びます。
     units: []
     sections:
       - slug: facilities
@@ -144,28 +144,28 @@ fields:
           - { type: learn, ref: japan-position }
 physics:
   title: 半導体の物理
-  summary: 半導体の動作を支える物理を、式の形から何が読めるかに絞って学びます。導出はしません。基礎編を読んだ後で、または途中で「なぜ」が気になったときに。
+  summary: 半導体が動く理由を、式の形から読み取ります。導出はしません。
   cards:
     - label: A
       slug: solid-state
       title: 固体物理学
-      summary: 結晶の中で電子がどう振る舞うかを、バンド、格子振動、統計の3つの柱で学びます。半導体がなぜ「半」導体なのか、なぜ熱と雑音が限界を決めるのかが式で読めるようになります。
+      summary: 結晶の中で電子がどう振る舞い、熱でどう変わるかを、式から読み取ります。
       units:
         - { type: learn, ref: band-gap }
         - { type: learn, ref: intrinsic-carrier }
     - label: B
       slug: device-physics
       title: 半導体デバイス物理
-      summary: pn接合、MOS構造、トランジスタ、電極の動作を、ポテンシャルと電流の式で読みます。設計の原則が「なぜそうなっているか」に戻ってつながります。
+      summary: pn接合やトランジスタが動く理由を、電位と電流の式から理解します。
       units:
         - { type: learn, ref: built-in-potential }
     - label: C
       slug: optics
       title: 光物性
-      summary: 半導体が光を吸収し、光を出し、光で電気を作る仕組みを式で読みます。イメージセンサー、LED、レーザー、太陽電池、光通信の土台です。
+      summary: 半導体が光を吸収し、光を出す仕組みを、式から読み取ります。
       units: []
     - label: D
       slug: materials-physics
       title: 結晶・材料の物理
-      summary: 結晶の欠陥、熱処理、結晶成長、材料の組み合わせ、寿命の表し方を、熱力学と拡散と統計の式で読みます。製造プロセスで「なぜその温度・その時間なのか」、信頼性で「寿命をどう数えるか」が分かります。
+      summary: 欠陥、熱処理、結晶成長の温度と時間の決まり方を、式から読み取ります。
       units: []
