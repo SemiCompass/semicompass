@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AG-12 の出力の形式",
+  "description": "形式の定義は schemas/agents/AG-12.output.schema.json（データ定義書 9.5）。ここでは参照だけを持つ。",
+  "$ref": "../../schemas/agents/AG-12.output.schema.json"
+}
