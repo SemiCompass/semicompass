@@ -53,6 +53,12 @@ def auto_with_announcement(slug, url):
     return json.dumps(data, ensure_ascii=False)
 
 
+def auto_without_announcements(slug):
+    data = json.loads((ROOT / "data" / "auto" / f"{slug}.json").read_text(encoding="utf-8"))
+    data["announcements"] = []
+    return json.dumps(data, ensure_ascii=False)
+
+
 @unittest.skipUnless(HAS_NODE, "node_modules がない")
 class IrPointsTest(unittest.TestCase):
     @classmethod
@@ -61,6 +67,8 @@ class IrPointsTest(unittest.TestCase):
             "content/ir-points/advantest/2027-03-q2.md": POINT,
             "data/auto/advantest.json": auto_with_announcement("advantest", "https://www.release.tdnet.info/inbs/test-a.pdf"),
             "data/auto/disco.json": auto_with_announcement("disco", "https://www.release.tdnet.info/inbs/test-d.pdf"),
+            # 決算発表のない企業の見本。リポジトリの data/auto に決算発表が加わっても、このテストが変わらないように空にする
+            "data/auto/tokyo-electron.json": auto_without_announcements("tokyo-electron"),
         }
         # ビルドの日を変えた2つの組み立てを、並べて動かす（tests/design の共通の仕組み）
         futures = {day: submit_build("production", lambda: make_site(extra_files=extra), {"BUILD_DATE": day})
