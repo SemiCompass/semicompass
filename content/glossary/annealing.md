@@ -5,7 +5,7 @@ aliases:
 - 熱処理
 - 焼きなまし
 name_en: annealing
-short_definition: ウェーハを加熱して、結晶の乱れを回復させたり、不純物を働く状態にしたりする処理である。
+short_definition: ウェーハを加熱して、結晶の乱れを回復させたり、不純物を活性化（働く状態に）したりする処理である。
 processes:
 - ion-implantation
 - oxidation-diffusion
@@ -13,7 +13,7 @@ related_terms:
 - ion-implantation
 - thermal-oxidation
 - silicon-wafer
-description: アニールは、ウェーハを加熱して、結晶の乱れを回復させたり、不純物を働く状態にしたりする熱処理。イオン注入の後などに行う。
+description: アニールは、ウェーハを加熱して、結晶の乱れを回復させたり、不純物を活性化（働く状態に）したりする熱処理。イオン注入の後などに行う。
 basis: reviewed
 published_at: '2026-10-18'
 draft: true
