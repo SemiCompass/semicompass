@@ -340,6 +340,34 @@ processes:
       - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: 解説:半導体テスト, url: "https://www.advantest.com/ja/about/business/"}
       - {status: approved, role: primary, kind: web, publisher: 株式会社アドバンテスト, title: アドバンテスト用語集, url: "https://www.advantest.com/ja/investors/ir-library/glossary/"}
       - {status: approved, role: supplementary, kind: association, publisher: 一般社団法人電子情報技術産業協会(JEITA), title: 半導体用語集(出所:ICガイドブック2009年版), url: "https://semicon.jeita.or.jp/word/word.html"}
+  photomask:
+    process: フォトマスクの製造
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  oxidation-diffusion:
+    process: 酸化・拡散
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  ion-implantation:
+    process: イオン注入
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  interconnect:
+    process: 配線
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  inspection-metrology:
+    process: 検査・計測
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  bonding:
+    process: ボンディング（ダイボンド、ワイヤボンド）
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  advanced-packaging:
+    process: 先端パッケージ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
 # 半導体を学ぶ（学習のページ。データ定義書 6.8）：運営者が確かめる方式（CLAUDE.md 6.4、運用ルール書 4.2）で書くページだけを指定する。キーはページの slug
 learn:
   epitaxial-growth:
