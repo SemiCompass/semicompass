@@ -15,8 +15,11 @@ related_terms:
 - cvd
 description: エピタキシャル成長は、結晶の基板の上に、基板の結晶の並びを引き継いだ単結晶の薄膜を成長させる方法。不純物の濃度を制御した層を作れる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

@@ -14,8 +14,11 @@ related_terms:
 - interposer
 description: バンプは、チップの電極の上に作る小さな金属の突起。フリップチップなどで、チップと基板を直接つなぐために使われる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

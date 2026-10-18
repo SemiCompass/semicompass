@@ -15,8 +15,11 @@ related_terms:
 - damascene
 description: Low-k膜は、比誘電率が低い絶縁膜。配線どうしの間に使い、電気をためる性質（寄生容量）を小さくして、信号の遅れと消費電力を抑える。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

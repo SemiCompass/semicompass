@@ -11,8 +11,11 @@ related_terms:
 - yield
 description: RCA洗浄は、薬液を順に使ってウェーハ表面の有機物、微粒子、金属不純物を取り除く湿式の洗浄方法。ウェーハ洗浄の基本となる方法である。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---
