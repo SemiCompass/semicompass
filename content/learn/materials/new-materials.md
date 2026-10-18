@@ -5,7 +5,10 @@ description: 研究が進む新しい半導体材料を、バンドギャップ�
 related_terms:
 - power-semiconductor
 basis: reviewed
-draft: true
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
+draft: false
 published_at: '2026-10-17'
 ai_generated: true
 sources: []
