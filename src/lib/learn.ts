@@ -37,7 +37,7 @@ export interface TierIndex {
   fields: FieldIndex[];
 }
 
-/** 分野の見出しの名前（「1. 半導体工学の基礎」「A. 固体物理学」の形） */
+/** 分野の見出しの名前（「1. 半導体の基礎」「A. 固体物理学」の形） */
 export const fieldName = (field: Pick<LearnField, 'mark' | 'title'>) => `${field.mark}. ${field.title}`;
 
 /** 単元（learn、process、term）を、リンク先の情報にする。ページのないものは null */
