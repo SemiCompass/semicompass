@@ -229,6 +229,42 @@ terms:
     term: TSV
     basis: reviewed
     sources: []   # 運営者が確かめるときの手元の資料は未選定
+  rca-cleaning:
+    term: RCA洗浄
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  ashing:
+    term: アッシング
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  annealing:
+    term: アニール
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  die-bonding:
+    term: ダイボンディング
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  bump:
+    term: バンプ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  flip-chip:
+    term: フリップチップ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  interposer:
+    term: インターポーザ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  clean-room:
+    term: クリーンルーム
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  immersion-lithography:
+    term: 液浸露光
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
 
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
