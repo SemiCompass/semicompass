@@ -2,6 +2,7 @@
 // 部品の一覧（仕様書 13章の3）：すべての部品の、すべての状態を並べて確かめるページ。
 // プレビューのビルド（BUILD_ENV=preview）でだけ出力する。本番のビルドでは、ページを作らない。検索に登録させない指定を付ける
 import { BUILD_ENV } from 'astro:env/server';
+import AdSlot from '../../components/AdSlot.astro';
 import Button from '../../components/Button.astro';
 import Chart from '../../components/Chart.astro';
 import Citation from '../../components/Citation.astro';
@@ -35,6 +36,7 @@ const toc = [
   { id: 'states', label: '状態の表示' },
   { id: 'sources', label: '出典' },
   { id: 'icons', label: '図と記号' },
+  { id: 'ads', label: '広告の枠' },
 ];
 
 const columns = [
@@ -194,9 +196,14 @@ const sources = [
     <span><Icon name="ai" />AI作成</span>
   </p>
 
+  <h2 id="ads">広告の枠</h2>
+  <p>本文の列の広告の枠（仕様書 8.23）。プレビューでは見本の枠を出し、本番では config/ads.yaml の enabled が true のときだけ出します。右の列の枠は、PCの幅で右の列の下端に出ます。</p>
+  <AdSlot page="term" position="after-body" />
+
   <Fragment slot="aside">
-    <p class="aside-note">右の列：目次の下に、正式公開で広告の枠を置きます（仕様書 6.2）。</p>
+    <p class="aside-note">右の列：目次の下。広告の枠は、右の列の下端に置きます（仕様書 8.23）。</p>
   </Fragment>
+  <AdSlot slot="aside-ad" page="term" position="aside" />
 </Page>
 
 <style>

@@ -3,6 +3,7 @@
 // 1件ずつ罫線で区切り、左に日付（月日を大きく、下に年と曜日）、右に分類・見出し・段階と企業のタグ。カードにしない。
 // content/news/ の draft: true は、プレビューのビルドだけ。0件のときは、データがない状態の表示
 import { BUILD_ENV } from 'astro:env/server';
+import AdSlot from '../../components/AdSlot.astro';
 import Phrase from '../../components/Phrase.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import Page from '../../layouts/Page.astro';
@@ -76,6 +77,7 @@ const categories = [...new Set(items.map((n) => n.front.category))];
           );
         })}
       </ol>
+      <AdSlot page="list" position="after-list" />
     </>
   )}
 </Page>

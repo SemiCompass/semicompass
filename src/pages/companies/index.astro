@@ -1,6 +1,7 @@
 ---
 // 企業一覧（/companies/。仕様書 9.3）：表（8.7）。段階の絞り込みと「詳しいページのある企業だけ」、件数、並べ替え。カードの格子にしない
 import { BUILD_ENV } from 'astro:env/server';
+import AdSlot from '../../components/AdSlot.astro';
 import CompanyTable from '../../components/CompanyTable.astro';
 import Page from '../../layouts/Page.astro';
 import { companyRows, loadSupply } from '../../lib/companies';
@@ -21,4 +22,5 @@ const detailedCount = rows.filter((r) => r.detailed).length;
   <CompanyTable rows={rows} caption="企業の一覧" processes={supply.processes}>
     <p class="measure"><a href="/processes/">工程ごとの一覧のページ</a>から、工程を選んで企業を見ることもできます。</p>
   </CompanyTable>
+  <AdSlot page="list" position="after-list" />
 </Page>

@@ -2,9 +2,11 @@
 // すべてのページの共通の枠（要件定義書 3.2）：ヘッダー、本文（<main>）、フッター
 import '../styles/global.css';
 import { BUILD_ENV } from 'astro:env/server';
+import AdLoader from '../components/AdLoader.astro';
 import ConsentBanner from '../components/ConsentBanner.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
+import { adMode, loadAds } from '../lib/ads';
 import { loadSite } from '../lib/site';
 
 interface Props {
@@ -26,6 +28,11 @@ const canonicalPath = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `$
 const canonicalUrl = new URL(canonicalPath, Astro.site).href;
 // アクセス解析（要件定義書 LG-03）：本番のビルドで、測定IDがあるときだけ。Cookieの利用の確認を出し、同意した閲覧者だけを計測する
 const gaId = BUILD_ENV === 'production' ? loadSite().ga4_measurement_id : '';
+// 広告（要件定義書 4.13 の「広告の表示の切り替え」）：本番で config/ads.yaml の enabled が true のときだけ、読み込みのスクリプトを出す。
+// Cookieの確認は、アクセス解析と広告の両方を1つで確かめる（LG-03）
+const ads = loadAds();
+const adClient = adMode(BUILD_ENV, ads) === 'live' ? ads.client : '';
+const consent = gaId !== '' || adClient !== '';
 // SNSで共有されたときの表示（OGP、Xのカード）。画像は全ページ共通の1枚
 const ogImage = new URL('/og-default.png', Astro.site).href;
 // 構造化データの中の「<」は、文字の参照にして、HTMLの終わりの印と取り違えないようにする
@@ -55,13 +62,14 @@ const ldJson = (data: object) => JSON.stringify(data).replace(/</g, '\\u003c');
     {jsonLd.map((data) => <script type="application/ld+json" set:html={ldJson(data)} />)}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
-  <body data-ga-id={gaId || undefined}>
+  <body data-ga-id={gaId || undefined} data-ad-client={adClient || undefined}>
     <a class="skip-link" href="#main">本文へ移動</a>
     <Header />
     <main id="main">
       <slot />
     </main>
-    <Footer analytics={gaId !== ''} />
-    {gaId && <ConsentBanner />}
+    <Footer analytics={consent} />
+    {consent && <ConsentBanner />}
+    {adClient && <AdLoader />}
   </body>
 </html>

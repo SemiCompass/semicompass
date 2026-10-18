@@ -6,6 +6,7 @@ import CompanyTable from '../../components/CompanyTable.astro';
 import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
 import SourceList from '../../components/SourceList.astro';
+import AdSlot from '../../components/AdSlot.astro';
 import PageFeedback from '../../components/PageFeedback.astro';
 import Quiz from '../../components/Quiz.astro';
 import StateMessage from '../../components/StateMessage.astro';
@@ -110,6 +111,8 @@ const toc = [
     <p><a href={`/companies/process/${process.slug}/`}>ほかの数値も含めて、一覧のページで比べる</a></p>
   </section>
 
+  <AdSlot page="process" position="after-companies" />
+
   <section aria-labelledby="terms">
     <h2 id="terms">関係する用語</h2>
     {terms.length > 0 ? (
@@ -135,6 +138,7 @@ const toc = [
   )}
 
   {content && <Quiz questions={content.quiz} pageType="process" />}
+  <AdSlot page="process" position="after-body" />
   {sources.length > 0 && <SourceList sources={sources} heading="出典" />}
   <PageFeedback pageType="process" />
 </Page>

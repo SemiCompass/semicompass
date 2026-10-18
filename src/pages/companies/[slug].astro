@@ -14,6 +14,7 @@ import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
 import SourceLine from '../../components/SourceLine.astro';
 import SourceList from '../../components/SourceList.astro';
+import AdSlot from '../../components/AdSlot.astro';
 import PageFeedback from '../../components/PageFeedback.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import Tag from '../../components/Tag.astro';
@@ -226,6 +227,7 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
         </>
       )}
     </section>
+    <AdSlot page="company" position="after-financials" />
 
     {peers.length > 1 && (
       <section aria-labelledby="peers">
@@ -311,6 +313,8 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
       </ul>
     </section>
 
+    <AdSlot page="company" position="after-body" />
+
     <section aria-labelledby="sources-heading">
       <SourceList sources={sources} heading="出典" />
       <h2 id="related"><Phrase text="関連するページ" /></h2>
@@ -324,6 +328,7 @@ const headingIds: Record<string, string> = { 事業概要: 'overview', 工程上
     </section>
     <PageFeedback pageType="company" />
     <Fragment slot="aside" />
+    <AdSlot slot="aside-ad" page="company" position="aside" />
   </Page>
 ) : (
   <Page title={title} heading={company.name} description={`${company.name}のページは、準備中です。`} breadcrumbs={breadcrumbs} noindex wide>

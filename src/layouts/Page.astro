@@ -4,7 +4,8 @@
 // スマートフォンとタブレット：1列。目次は、大見出しの後に、開閉式で置く
 // lead スロット：大見出しの後、目次の前に置くもの（企業ページの「この会社のポイント」。要件定義書 3.4の順）
 // head スロット：ページの頭（PageHead）の代わりに置くもの（企業ページの「企業の頭」。仕様書 8.8）。大見出しを必ず含める
-// aside スロット：右の列に、目次の下に置くもの（正式公開で、広告の枠を置く）。目次と同じ流れの中に置き、目次と一緒に張り付く
+// aside スロット：右の列に、目次の下に置くもの（ニュースの「この解説の企業」）。目次と同じ流れの中に置き、目次と一緒に張り付く
+// aside-ad スロット：右の列の下端に置く広告の枠（仕様書 8.23）。張り付かせない。目次が張り付く範囲は、右の列の上の部分に限り、広告と重ねない
 import Breadcrumb from '../components/Breadcrumb.astro';
 import PageHead from '../components/PageHead.astro';
 import Toc from '../components/Toc.astro';
@@ -50,10 +51,13 @@ const hasAside = !wide;
       <div class="page__body"><slot /></div>
       {hasAside && (
         <aside class="page__aside" aria-label="補足">
-          <div class="page__aside-sticky">
-            {toc.length > 0 && <Toc items={toc} variant="side" />}
-            <slot name="aside" />
+          <div class="page__aside-upper">
+            <div class="page__aside-sticky">
+              {toc.length > 0 && <Toc items={toc} variant="side" />}
+              <slot name="aside" />
+            </div>
           </div>
+          <slot name="aside-ad" />
         </aside>
       )}
     </div>
@@ -81,6 +85,14 @@ const hasAside = !wide;
     }
     /* 右の列は、本文と同じ高さに伸ばし、その中の1つのまとまり（目次と、その下の要素）を張り付ける。
        まとまりは、画面に収まる高さにし、収まらないときは、その中だけでスクロールする（下の要素と重ならない） */
+    /* 右の列は、上の部分（張り付く目次）と下端の広告の枠に分ける。張り付く範囲は上の部分の中だけ（仕様書 8.4、8.23） */
+    .page__aside {
+      display: flex;
+      flex-direction: column;
+    }
+    .page__aside-upper {
+      flex: 1 1 auto;
+    }
     .page__aside-sticky {
       position: sticky;
       top: var(--toc-sticky-top);

@@ -12,8 +12,12 @@ declare global {
 }
 
 const gaId = document.body.dataset.gaId ?? '';
+// 広告を出すビルド（<body data-ad-client>）でも、同じ1つの確認で選んでもらう（要件定義書 LG-03）。選んだ結果は、イベントで広告の読み込み（src/scripts/ads.ts）に伝える
+const adsOn = Boolean(document.body.dataset.adClient);
+export const CONSENT_EVENT = 'semicompass:consent';
+const announce = (choice: Choice) => document.dispatchEvent(new CustomEvent<Choice>(CONSENT_EVENT, { detail: choice }));
 
-function readChoice(): Choice | null {
+export function readChoice(): Choice | null {
   try {
     const v = localStorage.getItem(KEY);
     return v === 'granted' || v === 'denied' ? v : null;
@@ -66,7 +70,7 @@ export function track(name: string, params: Record<string, string>) {
   window.gtag?.('event', name, params);
 }
 
-if (gaId) {
+if (gaId || adsOn) {
   const banner = document.querySelector<HTMLElement>('[data-consent]');
   const show = () => {
     if (banner) banner.hidden = false;
@@ -81,12 +85,14 @@ if (gaId) {
     saveChoice('granted');
     hide();
     loadAnalytics();
+    announce('granted');
   });
   banner?.querySelector('[data-consent-reject-wrap] button')?.addEventListener('click', () => {
     const wasLoaded = loaded;
     saveChoice('denied');
     clearAnalyticsCookies();
     hide();
+    announce('denied');
     if (wasLoaded) location.reload(); // 読み込み済みのプログラムを止める
   });
   for (const opener of document.querySelectorAll('[data-consent-open]')) {

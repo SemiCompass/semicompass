@@ -1,0 +1,43 @@
+# 広告（AdSense）の設定（要件定義書 4.13 の AD-301「広告の表示の切り替え」、運用ルール書 5.1）。
+# enabled：広告を出すかどうか。既定は false（出さない）。true にするのは、AdSenseの審査に通った後の、
+#   広告の表示を始める変更案だけ（要求定義書 RL-06）。false のあいだ、本番の出力には広告のタグも枠も出さない。
+#   プレビューでは、true・false にかかわらず、AdSenseのコードを出さずに「見本の枠」を出す（画面とデザインの仕様書 8.23）。
+enabled: false
+# client：AdSenseのサイト運営者ID（ca-pub- と16桁の数字）。ページに書かれる公開の値で、秘密の情報ではない。
+#   enabled を true にするときに必須（空のままだと、ビルドを失敗させる）。
+client: ""
+# pages：広告の枠を置けるページの種類と、1ページの上限、置ける位置（運用ルール書 5.1。位置の詳細は仕様書 9.8）。
+#   ここにないページの種類（トップ、固定ページ、工程の一覧、Coming Soon など。5.1 の上限0）には、枠を置けない（置くとビルドを失敗させる）。
+#   slot：位置ごとのAdSenseの広告ユニットのID（数字）。審査に通った後に、運営者がAdSenseの画面で作って書く。
+#   enabled を true にするときは、使う位置の slot が必須。
+pages:
+  company:            # 企業ページ（詳細掲載）
+    limit: 3
+    positions:
+      after-financials: { slot: "" }   # 業績の欄の後
+      after-body: { slot: "" }         # 本文の後
+      aside: { slot: "" }              # PCの右の列
+  process:            # 工程ページ
+    limit: 2
+    positions:
+      after-companies: { slot: "" }    # 企業の一覧の後
+      after-body: { slot: "" }
+  term:               # 用語ページ
+    limit: 2
+    positions:
+      after-body: { slot: "" }
+      aside: { slot: "" }
+  news:               # ニュースの個別のページ
+    limit: 2
+    positions:
+      after-why: { slot: "" }          # 「なぜ重要か」の後
+      after-body: { slot: "" }
+  list:               # 一覧のページ（企業、ニュース、用語）
+    limit: 2
+    positions:
+      in-list: { slot: "" }            # 一覧の途中（まだ置いていない）
+      after-list: { slot: "" }         # 一覧の後
+  learn:              # 学習のページ
+    limit: 1
+    positions:
+      after-body: { slot: "" }
