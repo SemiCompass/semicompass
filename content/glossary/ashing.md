@@ -13,7 +13,7 @@ related_terms:
 - photoresist
 - plasma
 - dry-etching
-description: アッシングは、プラズマ中の酸素などで、不要になったフォトレジストを灰にするように取り除く処理。エッチングやイオン注入の後に行う。
+description: アッシング（灰化）は、プラズマ中の酸素などで、不要になったフォトレジストなど有機物をCO2やH2Oにして取り除く処理。エッチングやイオン注入の後に行う。
 basis: reviewed
 published_at: '2026-10-18'
 draft: true
