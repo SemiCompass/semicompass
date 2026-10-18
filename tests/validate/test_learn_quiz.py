@@ -96,7 +96,7 @@ class LearnPageTest(Base):
         # 9分野への組み替え（データ定義書 6.8）：別のフォルダのページは folder で、分野の小分けは sections で並べる
         rel = self.write_learn(field="devices", unit=False)
         tree = {"schema_version": 1, "fields": [
-            {"no": 1, "slug": "basics", "title": "半導体工学の基礎", "summary": "基礎を学ぶ。", "units": [],
+            {"no": 1, "slug": "basics", "title": "半導体の基礎", "summary": "基礎を学ぶ。", "units": [],
              "sections": [{"slug": "transistor", "title": "トランジスタ",
                            "units": [{"type": "learn", "ref": "what-is-semiconductor", "folder": "devices"}]}]}]}
         (self.root / "content" / "learn" / "path.yaml").write_text(yaml.safe_dump(tree, allow_unicode=True), encoding="utf-8")
@@ -107,7 +107,7 @@ class LearnPageTest(Base):
     def test_folder_mismatch_and_duplicate_unit(self):
         self.write_learn()
         tree = {"schema_version": 1, "fields": [
-            {"no": 1, "slug": "basics", "title": "半導体工学の基礎", "summary": "基礎を学ぶ。",
+            {"no": 1, "slug": "basics", "title": "半導体の基礎", "summary": "基礎を学ぶ。",
              "units": [{"type": "learn", "ref": "what-is-semiconductor"}, {"type": "learn", "ref": "what-is-semiconductor", "folder": "power"}],
              "sections": [{"slug": "a", "title": "小分け", "units": [{"type": "learn", "ref": "what-is-semiconductor"}]}]}]}
         (self.root / "content" / "learn" / "path.yaml").write_text(yaml.safe_dump(tree, allow_unicode=True), encoding="utf-8")
