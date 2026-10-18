@@ -3,6 +3,7 @@
 // まとまりは、左に行の名前、右に用語を2列（タブレット以下は1列）。各用語は、名前・読み（名前と同じときは省く）・短い定義。
 // 用語がまだないときは、準備中の表示
 import { BUILD_ENV } from 'astro:env/server';
+import AdSlot from '../../components/AdSlot.astro';
 import StateMessage from '../../components/StateMessage.astro';
 import Page from '../../layouts/Page.astro';
 import { GLOSSARY_HEADING_ORDER, glossaryHeading, loadTerms } from '../../lib/content';
@@ -55,6 +56,7 @@ const sameReading = (term: string, reading: string) => kana(term) === kana(readi
           </dl>
         </section>
       ))}
+      <AdSlot page="list" position="after-list" />
     </>
   )}
 </Page>

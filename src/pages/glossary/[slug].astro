@@ -6,6 +6,7 @@ import { BUILD_ENV } from 'astro:env/server';
 import Phrase from '../../components/Phrase.astro';
 import RichText from '../../components/RichText.astro';
 import SourceList from '../../components/SourceList.astro';
+import AdSlot from '../../components/AdSlot.astro';
 import LearnDeeper from '../../components/LearnDeeper.astro';
 import PageFeedback from '../../components/PageFeedback.astro';
 import Quiz from '../../components/Quiz.astro';
@@ -117,8 +118,10 @@ const toc = [
   )}
   {deeper.length > 0 && <LearnDeeper links={deeper} />}
   <Quiz questions={term.quiz} pageType="term" />
+  <AdSlot page="term" position="after-body" />
   <SourceList sources={sources} heading="出典" />
   <PageFeedback pageType="term" />
+  <AdSlot slot="aside-ad" page="term" position="aside" />
 </Page>
 
 <style>

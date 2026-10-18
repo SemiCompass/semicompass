@@ -199,6 +199,8 @@
   --unit-num-size: 2.5rem; /* 8.18 単元の一覧の番号の丸 */
   --learn-start-width: 22rem; /* 8.18 一覧の「初めての方へ」の枠の幅（PC） */
   --aside-max-height: calc(100vh - var(--toc-sticky-top) * 2); /* 右の列の張り付く部分が、画面に収まる高さ */
+  --ad-height: 250px; /* 8.23 広告の領域の高さ（タブレット・PCの本文の列、PCの右の列）。広告の大きさは画素で決まるため px */
+  --ad-height-compact: 100px; /* 8.23 スマートフォンの本文の列（枠全体で画面の3分の1以下。AD-405） */
 }
 
 @media (--tablet) {

@@ -1,0 +1,8 @@
+---
+// 広告の読み込み（src/scripts/ads.ts）をページに付ける部品。Base が、本番で config/ads.yaml の enabled が true のときだけ使う。
+// 使わないビルドでは、どのページのHTMLも、このスクリプトを読み込まない（要求定義書 RL-06）
+---
+
+<script>
+  import '../scripts/ads';
+</script>

@@ -1,0 +1,85 @@
+---
+// 広告の枠（画面とデザインの仕様書 8.23、9.8。要件定義書 LG-02、UI-05、AD-301、AD-405）。広告のコードは、この部品の中だけに書く。
+// 出すものは config/ads.yaml と BUILD_ENV で決まる（src/lib/ads.ts）：
+//   本番で enabled: false … 何も出さない（枠も空の要素も出さない。CSSで隠さない）
+//   プレビュー        … 見本の枠（AdSenseのコードは出さない）
+//   本番で enabled: true … 「広告」の表示と、AdSenseの広告ユニット（読み込みは src/scripts/ads.ts。Cookieの確認を選んだ後）
+// 「広告」の表示を消す引数は持たない（LG-02）。position="aside" は PCの右の列の下端（Page の aside-ad の欄）に置く
+import { BUILD_ENV } from 'astro:env/server';
+import { adMode, loadAds, slotFor } from '../lib/ads';
+
+interface Props {
+  page: string; // ページの種類（config/ads.yaml の pages のキー）
+  position: string; // 位置（同じく positions のキー）
+}
+const { page, position } = Astro.props;
+const ads = loadAds();
+const mode = adMode(BUILD_ENV, ads);
+const slot = slotFor(ads, page, position, mode);
+const aside = position === 'aside';
+---
+
+{mode !== 'off' && (
+  <aside class:list={['ad', { 'ad--aside': aside }]} aria-label="広告" data-ad-frame data-ad-page={page} data-ad-position={position} data-ad-pc-only={aside ? '' : undefined}>
+    <p class="ad__label">広告</p>
+    <div class="ad__area">
+      {mode === 'sample' ? (
+        <p class="ad__sample">広告の枠の見本（プレビューだけに表示）</p>
+      ) : (
+        <ins class="adsbygoogle ad__unit" data-ad-unit data-ad-client={ads.client} data-ad-slot={slot}></ins>
+      )}
+    </div>
+  </aside>
+)}
+
+<style>
+  @import "../styles/breakpoints.css";
+
+  /* 本文の部品（カード、注記、要点の枠）と同じ面・角・線・影を使わない（DS-05）。張り付かせない（AD-406） */
+  .ad {
+    margin-block: var(--space-7);
+    padding: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-none);
+    background: var(--color-surface-sunken);
+  }
+  .ad__label {
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--text-small-leading);
+  }
+  /* 高さを先に確保して、読み込みでページがずれないようにする（UI-05）。スマートフォンは画面の3分の1以下（AD-405） */
+  .ad__area {
+    height: var(--ad-height-compact);
+    overflow: hidden;
+  }
+  .ad__unit {
+    display: block;
+    width: 100%;
+    height: var(--ad-height-compact);
+  }
+  .ad__sample {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  @media (--tablet) {
+    .ad__area,
+    .ad__unit {
+      height: var(--ad-height);
+    }
+  }
+  /* PCの右の列の枠は、PCより狭い幅では出さない（運用ルール書 5.2）。広告を要求する前だけの指定で、
+     読み込んだ後（data-ad-loaded）は、幅が狭くなっても隠さない（AdSenseのポリシーで、広告を隠すことは禁止） */
+  .ad--aside:not([data-ad-loaded]) {
+    display: none;
+  }
+  @media (--pc) {
+    .ad--aside:not([data-ad-loaded]) {
+      display: block;
+    }
+  }
+</style>

@@ -9,6 +9,7 @@ import Notice from '../../../../components/Notice.astro';
 import PendingNotice from '../../../../components/PendingNotice.astro';
 import RichText from '../../../../components/RichText.astro';
 import SourceList from '../../../../components/SourceList.astro';
+import AdSlot from '../../../../components/AdSlot.astro';
 import PageFeedback from '../../../../components/PageFeedback.astro';
 import Tag from '../../../../components/Tag.astro';
 import Page from '../../../../layouts/Page.astro';
@@ -79,10 +80,13 @@ const toc = [
     </div>
   </Fragment>
   {sections.map((section, i) => (
-    <section>
-      <h2 id={`s${i}`}>{section.heading}</h2>
-      {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
-    </section>
+    <Fragment>
+      <section>
+        <h2 id={`s${i}`}>{section.heading}</h2>
+        {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+      </section>
+      {section.heading === 'なぜ重要か' && <AdSlot page="news" position="after-why" />}
+    </Fragment>
   ))}
   <section aria-labelledby="related">
     <h2 id="related">関係する企業・工程</h2>
@@ -95,6 +99,7 @@ const toc = [
       </p>
     )}
   </section>
+  <AdSlot page="news" position="after-body" />
   <SourceList sources={sources} heading="出典" />
   {(older || newer) && (
     <nav class="pn-nav" aria-label="前後の解説">
