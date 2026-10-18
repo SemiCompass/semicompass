@@ -13,8 +13,11 @@ related_terms:
 - plasma
 description: イオン注入は、不純物の原子をイオンにして加速し、ウェーハの表面近くに打ち込む加工。シリコンに電気の通り方が異なる領域を作り、トランジスタを形成する。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

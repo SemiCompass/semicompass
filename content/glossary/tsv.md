@@ -15,8 +15,11 @@ related_terms:
 - back-grinding
 description: TSV（シリコン貫通電極）は、チップを厚さ方向に貫く電極。積み重ねたチップどうしを短い距離で多数つなぎ、HBMなどに使われる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

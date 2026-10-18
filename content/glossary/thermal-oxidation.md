@@ -12,8 +12,11 @@ related_terms:
 - cvd
 description: 熱酸化は、高温の酸素や水蒸気の中でシリコンを加熱し、表面に酸化シリコンの膜を作る方法。膜質がよく、絶縁や素子の分離に使われる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

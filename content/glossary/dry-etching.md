@@ -13,8 +13,11 @@ related_terms:
 - photoresist
 description: ドライエッチングは、ガスをプラズマにして反応させ、ウェーハ上の膜を削るエッチング。縦方向に深く削れるため、微細な回路の形成に使われる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

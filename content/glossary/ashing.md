@@ -15,8 +15,11 @@ related_terms:
 - dry-etching
 description: アッシング（灰化）は、プラズマ中の酸素などで、不要になったフォトレジストなど有機物をCO2やH2Oにして取り除く処理。エッチングやイオン注入の後に行う。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

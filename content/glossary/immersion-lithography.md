@@ -14,8 +14,11 @@ related_terms:
 - euv
 description: 液浸露光は、露光装置のレンズとウェーハの間を液体で満たして露光する方式。液体の屈折率を利用して、より細かいパターンを写せる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

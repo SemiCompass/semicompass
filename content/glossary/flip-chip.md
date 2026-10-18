@@ -14,8 +14,11 @@ related_terms:
 - interposer
 description: フリップチップは、チップの電極のある面を下に向け、バンプで基板に直接つなぐ接続方式。ワイヤを使わず、短い経路で多数の端子をつなげる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

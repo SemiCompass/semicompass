@@ -15,8 +15,11 @@ related_terms:
 - silicon-wafer
 description: アニールは、ウェーハを加熱して、結晶の乱れを回復させたり、不純物を活性化（働く状態に）したりする熱処理。イオン注入の後などに行う。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

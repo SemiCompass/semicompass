@@ -14,8 +14,11 @@ related_terms:
 - mold-compound
 description: ダイボンディングは、切り出したチップ（ダイ）を、基板やリードフレームに接着して固定する後工程。この後にワイヤボンディングなどで電気的につなぐ。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

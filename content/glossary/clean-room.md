@@ -12,8 +12,11 @@ related_terms:
 - photoresist
 description: クリーンルームは、空気中の微粒子や温度、湿度を管理した部屋。ウェーハ上の微細な回路に微粒子が付いて不良になるのを防ぐ。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

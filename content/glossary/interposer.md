@@ -14,8 +14,11 @@ related_terms:
 - bump
 description: インターポーザは、チップと基板の間に挟み、配線を引き回して複数のチップをつなぐ中継の板。HBMとプロセッサを並べる構成などに使われる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-18'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

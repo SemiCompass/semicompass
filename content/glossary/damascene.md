@@ -15,8 +15,11 @@ related_terms:
 - sputtering
 description: ダマシンは、絶縁膜に配線の溝を先に掘り、金属を埋め込んで余分をCMPで除く配線の形成方法。銅の配線に使われる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---

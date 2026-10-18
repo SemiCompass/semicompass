@@ -14,8 +14,11 @@ related_terms:
 - silicon-wafer
 description: ウェットエッチングは、薬液で膜を溶かして取り除くエッチング。等方的に進み、微細な形には不向きだが、膜の全面の除去などに使われる。
 basis: reviewed
+reviewed_on: '2026-10-18'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-17'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---
