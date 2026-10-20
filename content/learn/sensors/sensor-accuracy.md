@@ -10,8 +10,11 @@ related_terms:
 - yield
 - semiconductor-tester
 basis: reviewed
+reviewed_on: '2026-10-20'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-20'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---
