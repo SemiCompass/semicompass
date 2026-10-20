@@ -1,0 +1,55 @@
+---
+// 図：信号を計算で整える（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-dsp" columns={2} title="信号を計算で整える（模式図）" caption="図：左は、デジタル信号処理の流れ。なめらかな信号を数字の並びにして、計算で雑音を減らし、ほしい形に整える。右は、誤りの訂正。送る側が確かめるための情報を付け、受ける側は、それを使って誤りを見つけて直す。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="なめらかな信号をAD変換し、計算で整える">
+      <polyline class="fig-line" points="10,40 16,32 22,46 28,28 34,50 40,30 46,44 52,34 58,48 64,36"/>
+      <text class="fig-text" x="37" y="66" font-size="7" text-anchor="middle">雑音あり</text>
+      <rect class="fig-film" x="70" y="22" width="60" height="40" />
+      <text class="fig-text" x="100" y="38" font-size="7" text-anchor="middle">数字にして</text>
+      <text class="fig-text" x="100" y="48" font-size="7" text-anchor="middle">計算する</text>
+      <path class="fig-arrow" d="M64 42h6M130 42h8"/>
+      <path class="fig-arrow" d="M140 42c8 -20 14 -20 20 0s12 20 20 0" />
+      <text class="fig-text" x="160" y="66" font-size="7" text-anchor="middle">整った信号</text>
+      <rect class="fig-part" x="30" y="94" width="140" height="30" />
+      <text class="fig-text" x="100" y="108" font-size="7" text-anchor="middle">掛け算と足し算の繰り返し</text>
+      <text class="fig-text" x="100" y="118" font-size="6.5" text-anchor="middle">フィルターや雑音の除去</text>
+    </svg>
+    <span class="fig__name">計算で整える</span>
+    <span class="fig__note">雑音を減らして形を整える</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="送る値、途中の誤り、受けた値、直した値">
+      <text class="fig-text" x="14" y="24" font-size="7" text-anchor="start">送る</text>
+      <rect class="fig-film" x="40" y="12" width="18" height="18" />
+      <rect class="fig-film" x="62" y="12" width="18" height="18" />
+      <rect class="fig-film" x="84" y="12" width="18" height="18" />
+      <rect class="fig-film" x="106" y="12" width="18" height="18" />
+      <rect class="fig-film" x="128" y="12" width="18" height="18" />
+      <rect class="fig-strong" x="150" y="12" width="18" height="18" />
+      <text class="fig-text" x="159" y="38" font-size="6.5" text-anchor="middle">確かめる情報</text>
+      <text class="fig-text" x="14" y="66" font-size="7" text-anchor="start">受けた</text>
+      <rect class="fig-film" x="40" y="54" width="18" height="18" />
+      <rect class="fig-film" x="62" y="54" width="18" height="18" />
+      <rect class="fig-film" x="84" y="54" width="18" height="18" />
+      <rect class="fig-film" x="106" y="54" width="18" height="18" />
+      <rect class="fig-film" x="128" y="54" width="18" height="18" />
+      <rect class="fig-dash" x="84" y="54" width="18" height="18" />
+      <rect class="fig-strong" x="150" y="54" width="18" height="18" />
+      <text class="fig-text" x="93" y="82" font-size="7" text-anchor="middle">誤り</text>
+      <text class="fig-text" x="14" y="114" font-size="7" text-anchor="start">直した</text>
+      <rect class="fig-film" x="40" y="102" width="18" height="18" />
+      <rect class="fig-film" x="62" y="102" width="18" height="18" />
+      <rect class="fig-film" x="84" y="102" width="18" height="18" />
+      <rect class="fig-film" x="106" y="102" width="18" height="18" />
+      <rect class="fig-film" x="128" y="102" width="18" height="18" />
+      <rect class="fig-strong" x="150" y="102" width="18" height="18" />
+      <path class="fig-arrow" d="M100 82v14M96 92l4 6 4-6"/>
+    </svg>
+    <span class="fig__name">誤りの訂正</span>
+    <span class="fig__note">確かめる情報で直す</span>
+  </li>
+</FigureFrame>

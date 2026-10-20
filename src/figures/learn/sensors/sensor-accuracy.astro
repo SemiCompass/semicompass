@@ -1,0 +1,36 @@
+---
+// 図：出力のずれと、補正の流れ（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-sensor-accuracy" columns={2} title="出力のずれと、補正の流れ（模式図）" caption="図：左は、校正。測る量に対して、本来の出力（点線）と、実際の出力（実線）にずれがある。ずれを調べて補正の値を記録し、使うときに出力を直す。右は、補正の流れ。センサーの小さな信号を増幅し、デジタルに変え、計算で補正してから、機器の回路に渡す。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="測る量と出力">
+      <path class="fig-line" d="M24 120h160M24 120V20" />
+      <path class="fig-dash" d="M24 112L176 28" />
+      <path class="fig-arrow" d="M24 100L176 52" />
+      <text class="fig-text" x="104" y="138" font-size="7.5" text-anchor="middle">測る量</text>
+      <text class="fig-text" x="30" y="16" font-size="7.5" text-anchor="start">出力</text>
+      <text class="fig-text" x="150" y="24" font-size="7" text-anchor="start">本来</text>
+      <text class="fig-text" x="150" y="76" font-size="7" text-anchor="start">実際</text>
+      <path class="fig-line" d="M100 86v-10M96 80l4-4 4 4" />
+    </svg>
+    <span class="fig__name">ずれを調べる</span>
+    <span class="fig__note">基準と見比べて補正の値を記録する</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="センサー、増幅、デジタル変換、補正の計算、機器の回路へと進む流れ">
+      <rect class="fig-part" x="20" y="12" width="160" height="22" />
+      <text class="fig-text" x="100" y="27" font-size="7.5" text-anchor="middle">センサーの小さな信号</text>
+      <rect class="fig-film" x="20" y="46" width="160" height="22" />
+      <text class="fig-text" x="100" y="61" font-size="7.5" text-anchor="middle">増幅する</text>
+      <rect class="fig-part" x="20" y="80" width="160" height="22" />
+      <text class="fig-text" x="100" y="95" font-size="7.5" text-anchor="middle">デジタルの値に変える</text>
+      <rect class="fig-film" x="20" y="114" width="160" height="22" />
+      <text class="fig-text" x="100" y="129" font-size="7.5" text-anchor="middle">記録した補正の値で計算して直す</text>
+      <path class="fig-arrow" d="M100 34v12M96 42l4 4 4-4M100 68v12M96 76l4 4 4-4M100 102v12M96 110l4 4 4-4"/>
+    </svg>
+    <span class="fig__name">補正の流れ</span>
+    <span class="fig__note">計算で整えてから渡す</span>
+  </li>
+</FigureFrame>

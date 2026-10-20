@@ -502,3 +502,21 @@ learn:
   building-a-fab:
     title: 工場を建てて動かすまで
     basis: reviewed
+  temperature-sensor:
+    title: 温度を測る：温度センサー
+    basis: reviewed
+  magnetic-sensor:
+    title: 磁気を感じる：ホール素子と磁気センサー
+    basis: reviewed
+  sensor-accuracy:
+    title: センサーの正しさを保つ：校正と補正
+    basis: reviewed
+  high-speed-link:
+    title: 速く、少ない電力で運ぶ：チップの間の高速通信
+    basis: reviewed
+  optical-communication:
+    title: 光で運ぶ：光通信と半導体
+    basis: reviewed
+  dsp:
+    title: 信号を計算で整える：デジタル信号処理
+    basis: reviewed
