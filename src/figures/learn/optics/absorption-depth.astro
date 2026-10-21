@@ -1,0 +1,58 @@
+---
+// 図：シリコンの吸収係数の波長変化と、厚さ10 μmの層で吸収される割合（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// PVEducation「Optical Properties of Silicon」（300 K）の吸収係数（cm^-1）
+const data = [
+  { nm: 400, a: 9.52e4 },
+  { nm: 500, a: 1.11e4 },
+  { nm: 600, a: 4.14e3 },
+  { nm: 700, a: 1.9e3 },
+  { nm: 800, a: 8.5e2 },
+  { nm: 900, a: 3.06e2 },
+  { nm: 1000, a: 64 },
+  { nm: 1100, a: 3.5 },
+];
+const tx = (nm: number) => 40 + ((nm - 400) / 700) * 148;
+const ly = (a: number) => 126 - (Math.log10(a) - 0) * 20;
+const line = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${tx(d.nm).toFixed(1)} ${ly(d.a).toFixed(1)}`).join('');
+// 厚さ10 μm（1e-3 cm）の層で吸収される割合。本サイトで計算
+const frac = (a: number) => 100 * (1 - Math.exp(-a * 1e-3));
+const bars = [400, 600, 800, 900, 1000].map((nm) => ({ nm, v: frac(data.find((d) => d.nm === nm)!.a) }));
+const bx = (v: number) => 62 + (v / 100) * 96;
+---
+
+<FigureFrame id="fig-absorption-depth" columns={2} title="波長が長いほど、光は深くまで届く" caption="図：左は、シリコンの吸収係数の波長変化（縦は対数の目盛り。1目盛りで10倍）。右は、厚さ10 μmの層で吸収される光の割合。吸収係数はPVEducation「Optical Properties of Silicon」（300 K）、割合は本サイトで計算">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="シリコンの吸収係数は、400 nmの約10万 cm^-1から、1,100 nmの約3.5 cm^-1まで、波長が長いほど急に小さくなる">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[0, 2, 4].map((e) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(10 ** e)}h150`} />
+          <text class="fig-text" x="36" y={ly(10 ** e) + 3} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+        </>
+      ))}
+      {[400, 700, 1100].map((nm) => (
+        <text class="fig-text" x={tx(nm)} y="138" font-size="7" text-anchor="middle">{nm}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">波長（nm）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">吸収係数（cm⁻¹）</text>
+      <path class="fig-arrow" d={line} />
+    </svg>
+    <span class="fig__name">吸収係数と波長</span>
+    <span class="fig__note">長い波長ほど、吸収されにくい</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`厚さ10 μmの層で吸収される割合：400 nmはほぼ100%、600 nmで約${Math.round(bars[1].v)}%、800 nmで約${Math.round(bars[2].v)}%、900 nmで約${Math.round(bars[3].v)}%、1,000 nmで約${Math.round(bars[4].v)}%`}>
+      <path class="fig-line" d="M62 20V136h128" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="58" y={36 + i * 24} font-size="7" text-anchor="end">{b.nm} nm</text>
+          <rect class={i < 2 ? 'fig-film' : 'fig-wafer'} x="62" y={26 + i * 24} width={bx(b.v) - 62} height="14" />
+          <text class="fig-text" x={bx(b.v) + 3} y={36 + i * 24} font-size="7">{b.v >= 99.5 ? 'ほぼ100' : Math.round(b.v)}%</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">10 μmで吸収される割合</span>
+    <span class="fig__note">波長が長いと、大半が通り抜ける</span>
+  </li>
+</FigureFrame>

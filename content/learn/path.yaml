@@ -210,7 +210,9 @@ physics:
       slug: optics
       title: 光物性
       summary: 半導体が光を吸収し、光を出す仕組みを、式から読み取ります。
-      units: []
+      units:
+        - { type: learn, ref: absorption-depth }
+        - { type: learn, ref: direct-indirect }
     - label: D
       slug: materials-physics
       title: 結晶・材料の物理
