@@ -218,6 +218,7 @@ physics:
         - { type: learn, ref: mosfet-current }
         - { type: learn, ref: schottky-barrier }
         - { type: learn, ref: quantum-confinement }
+        - { type: learn, ref: diffusion-length }
     - label: C
       slug: optics
       title: 光物性

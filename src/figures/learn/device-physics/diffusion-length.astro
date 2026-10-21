@@ -1,0 +1,53 @@
+---
+// 図：過剰なキャリアの濃度の減り方、寿命ごとの拡散長（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// 電子の移動度 1500 cm^2/(V s)（ハドレーの講義）、300 K。寿命は例示の仮定
+const kT = 8.617333262e-5 * 300;
+const D = 1500 * kT;
+const rows = [1e-6, 1e-4].map((t) => ({ t, l: Math.sqrt(D * t) * 1e4 }));
+const bx = (v: number) => 62 + (v / 800) * 112;
+const tx = (u: number) => 40 + (u / 4) * 148;
+const ty = (f: number) => 126 - f * 110;
+const curve = Array.from({ length: 41 }, (_, i) => i / 10)
+  .map((u, i) => `${i === 0 ? 'M' : 'L'}${tx(u).toFixed(1)} ${ty(Math.exp(-u)).toFixed(1)}`)
+  .join('');
+const names = ['1 μs', '100 μs'];
+---
+
+<FigureFrame id="fig-diffusion-length" columns={2} title="拡散長だけ進むと、キャリアは約37％に減る" caption="図：左は、過剰な少数キャリアの濃度が、距離 x とともに exp(−x/L) で減る様子（横軸は x を L で割った値、縦軸は表面を1とした割合）。右は、電子の移動度1,500 cm²/(V·s)、300 Kで、寿命を1 μs と100 μs と仮定したときの拡散長。移動度はグラーツ工科大学の講義資料、寿命は例示の仮定、計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="過剰な少数キャリアの濃度は距離とともに指数で減り、拡散長の位置で約37％になる">
+      <path class="fig-line" d="M40 12V126h150" />
+      <path class="fig-dash" d={`M40 ${ty(Math.exp(-1))}H${tx(1)}V126`} />
+      <path class="fig-arrow" d={curve} />
+      {[0, 1, 2, 3, 4].map((u) => (
+        <text class="fig-text" x={tx(u)} y="138" font-size="7" text-anchor="middle">{u}</text>
+      ))}
+      {[0, 0.5, 1].map((f) => (
+        <text class="fig-text" x="36" y={ty(f) + 3} font-size="7" text-anchor="end">{f}</text>
+      ))}
+      <text class="fig-text" x={tx(1) + 6} y={ty(Math.exp(-1)) - 4} font-size="7">約37％</text>
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">距離 x ÷ 拡散長 L</text>
+    </svg>
+    <span class="fig__name">濃度の減り方</span>
+    <span class="fig__note">L で約37％、3L で約5％</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`拡散長：寿命1 μsで約${rows[0].l.toFixed(0)} μm、100 μsで約${rows[1].l.toFixed(0)} μm`}>
+      <path class="fig-line" d="M62 30V110h128" />
+      {rows.map((r, i) => (
+        <>
+          <text class="fig-text" x="58" y={58 + i * 30} font-size="7" text-anchor="end">{names[i]}</text>
+          <rect class={i === 0 ? 'fig-film' : 'fig-wafer'} x="62" y={46 + i * 30} width={bx(r.l) - 62} height="16" />
+          <text class="fig-text" x={bx(r.l) + 3} y={58 + i * 30} font-size="7">{r.l.toFixed(0)} μm</text>
+        </>
+      ))}
+      {[0, 200, 400, 600].map((e) => (
+        <text class="fig-text" x={62 + (e / 800) * 112} y="122" font-size="7" text-anchor="middle">{e}</text>
+      ))}
+      <text class="fig-text" x="190" y="138" font-size="7" text-anchor="end">拡散長 L（μm）</text>
+    </svg>
+    <span class="fig__name">寿命と拡散長</span>
+    <span class="fig__note">寿命100倍で、10倍</span>
+  </li>
+</FigureFrame>
