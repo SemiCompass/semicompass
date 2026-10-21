@@ -215,4 +215,8 @@ physics:
       slug: materials-physics
       title: 結晶・材料の物理
       summary: 欠陥、熱処理、結晶成長の温度と時間の決まり方を、式から読み取ります。
-      units: []
+      units:
+        - { type: learn, ref: arrhenius }
+        - { type: learn, ref: diffusion }
+        - { type: learn, ref: oxidation }
+        - { type: learn, ref: lattice-mismatch }

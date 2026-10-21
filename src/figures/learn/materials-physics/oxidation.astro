@@ -1,0 +1,65 @@
+---
+// 図：1,000℃での酸化膜厚の時間変化（ドライとウェット）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const k = 8.617333262e-5;
+const kT = k * 1273.15;
+// ワシントン大学の講義資料（Chapter 6）の定数で、τ = 0 として本サイトで計算
+const calc = (c1: number, e1: number, c2: number, e2: number) => {
+  const B = c1 * Math.exp(-e1 / kT);
+  const A = B / (c2 * Math.exp(-e2 / kT));
+  return (h: number) => (A / 2) * (Math.sqrt(1 + (4 * B * h) / (A * A)) - 1) * 1000; // nm
+};
+const dry = calc(772, 1.23, 6.23e6, 2.0);
+const wet = calc(214, 0.71, 8.95e7, 2.05);
+const tx = (h: number) => 40 + (h / 4) * 148;
+const ly = (n: number) => 126 - (n / 1000) * 110;
+const path = (f: (h: number) => number) =>
+  Array.from({ length: 41 }, (_, i) => i * 0.1)
+    .map((h, i) => `${i === 0 ? 'M' : 'L'}${tx(h).toFixed(1)} ${ly(f(h)).toFixed(1)}`)
+    .join('');
+const bars = [
+  { name: 'ドライ', v: dry(1) },
+  { name: 'ウェット', v: wet(1) },
+];
+const bx = (n: number) => 62 + (n / 400) * 112;
+---
+
+<FigureFrame id="fig-oxidation" columns={2} title="酸化膜は、厚くなるほど増え方が鈍る" caption="図：左は、1,000℃でのウェット酸化とドライ酸化の膜厚の時間変化（ディール・グローブのモデル、τ＝0）。右は、1時間での膜厚。定数はワシントン大学の講義資料（Chapter 6）、計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`1,000℃での酸化膜厚：4時間でウェット酸化は約${Math.round(wet(4))} nm、ドライ酸化は約${Math.round(dry(4))} nm`}>
+      <path class="fig-line" d="M40 12V126h150" />
+      {[0, 250, 500, 750, 1000].map((n) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(n)}h150`} />
+          <text class="fig-text" x="36" y={ly(n) + 3} font-size="7" text-anchor="end">{n}</text>
+        </>
+      ))}
+      {[0, 1, 2, 3, 4].map((h) => (
+        <text class="fig-text" x={tx(h)} y="138" font-size="7" text-anchor="middle">{h}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">時間（時間）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">nm</text>
+      <path class="fig-arrow" d={path(wet)} />
+      <path class="fig-line" d={path(dry)} />
+      <text class="fig-text" x="120" y={ly(wet(3)) - 6} font-size="7">ウェット</text>
+      <text class="fig-text" x="120" y={ly(dry(3)) - 6} font-size="7">ドライ</text>
+    </svg>
+    <span class="fig__name">膜厚と時間</span>
+    <span class="fig__note">線は上に向かうほど寝る</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`1,000℃で1時間酸化したときの膜厚：ドライ約${Math.round(bars[0].v)} nm、ウェット約${Math.round(bars[1].v)} nm`}>
+      <path class="fig-line" d="M62 30V110h128" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="58" y={55 + i * 36} font-size="7" text-anchor="end">{b.name}</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="62" y={42 + i * 36} width={bx(b.v) - 62} height="18" />
+          <text class="fig-text" x={bx(b.v) + 3} y={55 + i * 36} font-size="7">{Math.round(b.v)} nm</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="128" font-size="7" text-anchor="end">1,000℃で1時間</text>
+    </svg>
+    <span class="fig__name">1時間での膜厚</span>
+    <span class="fig__note">ウェットは約7倍厚い</span>
+  </li>
+</FigureFrame>

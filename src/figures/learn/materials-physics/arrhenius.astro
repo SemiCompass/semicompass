@@ -1,0 +1,56 @@
+---
+// 図：ホウ素の拡散係数の温度変化と、活性化エネルギーごとの1,000℃から1,100℃での増え方（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const k = 8.617333262e-5;
+// ホウ素：D0 = 1.0 cm2/s、Ea = 3.5 eV（ワシントン大学の講義資料）で、本サイトで計算
+const d = (c: number) => 1.0 * Math.exp(-3.5 / (k * (c + 273.15)));
+const tx = (c: number) => 40 + ((c - 900) / 300) * 148;
+const ly = (v: number) => 126 - (Math.log10(v) + 17) * 24;
+const curve = Array.from({ length: 16 }, (_, i) => 900 + i * 20)
+  .map((c, i) => `${i === 0 ? 'M' : 'L'}${tx(c).toFixed(1)} ${ly(d(c)).toFixed(1)}`)
+  .join('');
+const ratio = (ea: number) => Math.exp((ea / k) * (1 / 1273.15 - 1 / 1373.15));
+const bars = [
+  { name: '酸化の B', ea: 1.23 },
+  { name: 'ホウ素の拡散', ea: 3.5 },
+  { name: 'Si 自己拡散', ea: 4.76 },
+].map((b) => ({ ...b, r: ratio(b.ea) }));
+const bx = (r: number) => 70 + (r / 30) * 116;
+---
+
+<FigureFrame id="fig-arrhenius" columns={2} title="温度が上がると、拡散は指数の形で速くなる" caption="図：左は、シリコン中のホウ素の拡散係数の温度変化（縦は対数の目盛り。1目盛りで10倍）。右は、1,000℃から1,100℃に上げたときの増え方で、活性化エネルギーが大きいほど増える。係数はワシントン大学の講義資料（Chapter 6、7）、計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="ホウ素の拡散係数は、900℃の約1×10^-17から、1,200℃の約1×10^-12 cm2/sまで、温度とともに指数の形で増える">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[-16, -15, -14, -13, -12].map((e) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(10 ** e)}h150`} />
+          <text class="fig-text" x="36" y={ly(10 ** e) + 3} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+        </>
+      ))}
+      {[900, 1000, 1100, 1200].map((c) => (
+        <text class="fig-text" x={tx(c)} y="138" font-size="7" text-anchor="middle">{c}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">温度（℃）</text>
+      <text class="fig-text" x="4" y="152" font-size="7">縦：cm²/s</text>
+      <path class="fig-arrow" d={curve} />
+    </svg>
+    <span class="fig__name">ホウ素の拡散係数</span>
+    <span class="fig__note">温度とともに、桁で増える</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`1,000℃から1,100℃での増え方：酸化のBは約${bars[0].r.toFixed(1)}倍、ホウ素の拡散は約${bars[1].r.toFixed(0)}倍、Si自己拡散は約${bars[2].r.toFixed(0)}倍`}>
+      <path class="fig-line" d="M70 20V120h120" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="66" y={42 + i * 34} font-size="7" text-anchor="end">{b.name}</text>
+          <rect class={i === 1 ? 'fig-film' : 'fig-wafer'} x="70" y={30 + i * 34} width={bx(b.r) - 70} height="16" />
+          <text class="fig-text" x={bx(b.r) + 3} y={42 + i * 34} font-size="7">{b.r.toFixed(1)}倍</text>
+          <text class="fig-text" x="70" y={58 + i * 34} font-size="6">Ea {b.ea} eV</text>
+        </>
+      ))}
+    </svg>
+    <span class="fig__name">1,000℃→1,100℃の増え方</span>
+    <span class="fig__note">Ea が大きいほど、温度に敏感</span>
+  </li>
+</FigureFrame>
