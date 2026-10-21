@@ -373,6 +373,9 @@ learn:
   epitaxial-growth:
     title: 化合物半導体はどう作るか：エピタキシャル成長
     basis: reviewed
+  wide-gap:
+    title: シリコンの限界とワイドギャップ半導体
+    basis: reviewed
   process-materials:
     title: 製造に使う材料：ガス、薬液、感光材
     basis: reviewed
@@ -566,7 +569,7 @@ learn:
     title: 高い電圧に耐える仕組み：パワー半導体の耐圧
     basis: reviewed
   sic-gan:
-    title: 炭化ケイ素と窒化ガリウム：新しい材料のパワー半導体
+    title: 炭化ケイ素と窒化ガリウム：結晶、素子、作る難しさ
     basis: reviewed
   applications:
     title: パワー半導体が使われる場所：電気自動車から電力の設備まで
