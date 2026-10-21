@@ -12,15 +12,18 @@ fields:
     summary: 半導体が電気を通したり止めたりできる仕組みと、トランジスタの働きを学びます。
     units:
       - { type: learn, ref: electricity-basics }
+      - { type: learn, ref: circuit-elements }
     sections:
       - slug: properties
         title: 半導体の性質
         units:
           - { type: learn, ref: what-is-semiconductor }
+          - { type: learn, ref: nanometer-scale }
           - { type: learn, ref: electrons-and-holes }
           - { type: learn, ref: pn-junction }
           - { type: learn, ref: carrier-motion }
           - { type: learn, ref: energy-band }
+          - { type: learn, ref: digital-thinking }
       - slug: transistor
         title: トランジスタ
         units:
@@ -37,6 +40,9 @@ fields:
         units:
           - { type: learn, ref: crystal, folder: silicon }
           - { type: learn, ref: wafer-types, folder: silicon }
+          - { type: learn, ref: wafer-finishing, folder: silicon }
+          - { type: learn, ref: crystal-defects, folder: silicon }
+          - { type: learn, ref: wafer-specs, folder: silicon }
           - { type: process, ref: wafer }
       - slug: materials
         title: 半導体の材料

@@ -1,0 +1,32 @@
+---
+// 図：ウェーハの見た目と、主な仕様（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-wafer-specs" columns={2} title="ウェーハの見た目と、主な仕様（模式図）" caption="図：左は、ウェーハの上から見た図。縁に、結晶の向きを示す切り欠き（ノッチ）がある。右は、主な仕様の四つの項目。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="円形のウェーハの縁にある切り欠き">
+      <circle class="fig-wafer" cx="100" cy="70" r="54" />
+      <path class="fig-dash" d="M46 70h108"/>
+      <text class="fig-text" x="100" y="66" font-size="7" text-anchor="middle">直径</text>
+      <path class="fig-resist" d="M92 124 l8 -8 l8 8 z"/>
+      <text class="fig-text" x="100" y="146" font-size="7" text-anchor="middle">ノッチ</text>
+    </svg>
+    <span class="fig__name">ウェーハの見た目</span>
+    <span class="fig__note">縁の切り欠きで向きを示す</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="直径と厚さ、面方位、導電型と抵抗率、表面の状態">
+      <rect class="fig-film" x="16" y="12" width="168" height="28" />
+      <text class="fig-text" x="100" y="30" font-size="7.5" text-anchor="middle">直径と厚さ</text>
+      <rect class="fig-film" x="16" y="46" width="168" height="28" />
+      <text class="fig-text" x="100" y="64" font-size="7.5" text-anchor="middle">面方位</text>
+      <rect class="fig-film" x="16" y="80" width="168" height="28" />
+      <text class="fig-text" x="100" y="98" font-size="7.5" text-anchor="middle">導電型と抵抗率</text>
+      <rect class="fig-film" x="16" y="114" width="168" height="28" />
+      <text class="fig-text" x="100" y="132" font-size="7.5" text-anchor="middle">表面の状態</text>
+    </svg>
+    <span class="fig__name">主な仕様</span>
+    <span class="fig__note">用途によって選ぶ</span>
+  </li>
+</FigureFrame>

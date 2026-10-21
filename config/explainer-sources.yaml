@@ -496,6 +496,24 @@ learn:
   energy-environment:
     title: 電力と環境：工場が向き合う課題
     basis: reviewed
+  wafer-finishing:
+    title: ウェーハに仕上げる：切断から研磨まで
+    basis: reviewed
+  crystal-defects:
+    title: 結晶の乱れ：欠陥と不純物
+    basis: reviewed
+  wafer-specs:
+    title: ウェーハの仕様を読む：大きさ、厚さ、向き、抵抗
+    basis: reviewed
+  circuit-elements:
+    title: 回路の基本の部品：抵抗、コンデンサー、コイル、ダイオード
+    basis: reviewed
+  digital-thinking:
+    title: 二つの状態で表す：デジタルの考え方
+    basis: reviewed
+  nanometer-scale:
+    title: 小さな世界の大きさ：マイクロメートルとナノメートル
+    basis: reviewed
   compound:
     title: シリコン以外の半導体：化合物半導体
     basis: reviewed

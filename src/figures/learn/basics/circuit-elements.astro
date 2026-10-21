@@ -1,0 +1,29 @@
+---
+// 図：四つの基本の部品（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-circuit-elements" columns={2} title="四つの基本の部品（模式図）" caption="図：電気回路の基本の部品。抵抗は電流を制限する。コンデンサーは電気をためる。コイルは電流の変化に逆らう。ダイオードは電流を一方向にだけ流す。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="抵抗とコンデンサー">
+      <path class="fig-line" d="M10 40h30l6-12 12 24 12-24 12 24 6-12h30M10 40h0"/>
+      <text class="fig-text" x="100" y="18" font-size="7.5" text-anchor="middle">抵抗</text>
+      <text class="fig-text" x="100" y="62" font-size="6.5" text-anchor="middle">電流を制限する</text>
+      <path class="fig-line" d="M10 110h70M120 110h70M80 90v40M120 90v40"/>
+      <text class="fig-text" x="100" y="142" font-size="6.5" text-anchor="middle">コンデンサー（電気をためる）</text>
+    </svg>
+    <span class="fig__name">抵抗とコンデンサー</span>
+    <span class="fig__note">電流を制限する、電気をためる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="コイルとダイオード">
+      <path class="fig-line" d="M10 40h28c0-16 20-16 20 0c0-16 20-16 20 0c0-16 20-16 20 0h30"/>
+      <text class="fig-text" x="100" y="18" font-size="7.5" text-anchor="middle">コイル</text>
+      <text class="fig-text" x="100" y="62" font-size="6.5" text-anchor="middle">電流の変化に逆らう</text>
+      <path class="fig-line" d="M10 110h50M140 110h50M60 92v36l40-18z M104 92v36"/>
+      <text class="fig-text" x="100" y="142" font-size="6.5" text-anchor="middle">ダイオード（一方向に流す）</text>
+    </svg>
+    <span class="fig__name">コイルとダイオード</span>
+    <span class="fig__note">電流の変化に逆らう、一方向に流す</span>
+  </li>
+</FigureFrame>
