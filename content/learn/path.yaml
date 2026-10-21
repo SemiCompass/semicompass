@@ -211,6 +211,8 @@ physics:
         - { type: learn, ref: built-in-potential }
         - { type: learn, ref: depletion-width }
         - { type: learn, ref: diode-equation }
+        - { type: learn, ref: mos-threshold }
+        - { type: learn, ref: mosfet-current }
     - label: C
       slug: optics
       title: 光物性
