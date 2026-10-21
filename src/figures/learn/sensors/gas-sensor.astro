@@ -1,0 +1,35 @@
+---
+// 図：ガスセンサーの断面と、信号の変化（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-gas-sensor" columns={2} title="ガスセンサーの断面と、信号の変化（模式図）" caption="図：左は、半導体式ガスセンサーの断面。ヒーターで温めた金属の酸化物の膜に、ガスが付く。右は、信号の変化。ガスがあると、電気の流れやすさが上がる。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="ヒーターの上の膜に、ガスの分子が付く">
+      <rect class="fig-wafer" x="30" y="100" width="140" height="20" />
+      <text class="fig-text" x="100" y="114" font-size="7" text-anchor="middle">基板</text>
+      <rect class="fig-resist" x="50" y="84" width="100" height="16" />
+      <text class="fig-text" x="100" y="96" font-size="7" text-anchor="middle">ヒーター</text>
+      <rect class="fig-film" x="50" y="64" width="100" height="20" />
+      <text class="fig-text" x="100" y="78" font-size="7" text-anchor="middle">金属の酸化物の膜</text>
+      <circle class="fig-dot" cx="70" cy="40" r="3"/>
+      <circle class="fig-dot" cx="100" cy="30" r="3"/>
+      <circle class="fig-dot" cx="130" cy="44" r="3"/>
+      <path class="fig-arrow" d="M70 46v14M66 54l4 6 4-6M130 50v10"/>
+      <text class="fig-text" x="100" y="16" font-size="7" text-anchor="middle">ガスの分子</text>
+    </svg>
+    <span class="fig__name">センサーの断面</span>
+    <span class="fig__note">膜を温めて使う</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="ガスがあると、電気の流れやすさが上がる">
+      <path class="fig-line" d="M14 120h176M14 120V16"/>
+      <path class="fig-arrow" d="M14 100h60 L84 50 h100"/>
+      <text class="fig-text" x="24" y="14" font-size="7" text-anchor="start">電気の流れやすさ</text>
+      <text class="fig-text" x="44" y="134" font-size="7" text-anchor="middle">ガスなし</text>
+      <text class="fig-text" x="134" y="134" font-size="7" text-anchor="middle">ガスあり</text>
+    </svg>
+    <span class="fig__name">信号の変化</span>
+    <span class="fig__note">流れやすさの変化を読み取る</span>
+  </li>
+</FigureFrame>

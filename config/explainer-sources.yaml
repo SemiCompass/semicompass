@@ -538,3 +538,21 @@ learn:
   thin-film-materials:
     title: 回路を作る薄い膜の材料：絶縁膜、金属膜、バリア
     basis: reviewed
+  sensor-signal-chain:
+    title: 小さな信号を取り出す：増幅とデジタルへの変換
+    basis: reviewed
+  gas-sensor:
+    title: 空気の成分を感じる：ガスセンサー
+    basis: reviewed
+  sensor-fusion:
+    title: 複数のセンサーを合わせる：センサーフュージョン
+    basis: reviewed
+  clock-generation:
+    title: 正確な時刻の合図を作る：クロックの生成と位相同期
+    basis: reviewed
+  security-chip:
+    title: 秘密を守る：暗号とセキュリティのための半導体
+    basis: reviewed
+  protocol-layers:
+    title: つなぎ方の決まり：通信の規格と階層
+    basis: reviewed
