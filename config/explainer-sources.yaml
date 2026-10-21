@@ -424,6 +424,9 @@ learn:
   power:
     title: 電力を操る：パワー半導体
     basis: reviewed
+  manufacturing-reliability:
+    title: 作り方と信頼性：製造、パッケージ、試験
+    basis: reviewed
   sensor-signal-chain:
     title: 小さな信号を取り出す：増幅とデジタルへの変換
     basis: reviewed

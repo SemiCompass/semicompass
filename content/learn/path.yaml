@@ -133,6 +133,7 @@ fields:
       - { type: learn, ref: wide-gap }
       - { type: learn, ref: sic-gan }
       - { type: learn, ref: applications }
+      - { type: learn, ref: manufacturing-reliability }
   - "no": 7
     slug: sensors
     title: センサー・計測
