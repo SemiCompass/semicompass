@@ -200,7 +200,9 @@ physics:
       units:
         - { type: learn, ref: band-gap }
         - { type: learn, ref: intrinsic-carrier }
+        - { type: learn, ref: effective-mass }
         - { type: learn, ref: fermi-distribution }
+        - { type: learn, ref: phonon-thermal-conductivity }
         - { type: learn, ref: thermal-design }
     - label: B
       slug: device-physics

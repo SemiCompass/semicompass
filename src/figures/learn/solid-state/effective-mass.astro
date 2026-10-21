@@ -1,0 +1,44 @@
+---
+// 図：バンドの曲がりと有効質量の模式図、シリコンとヒ化ガリウムの実効状態密度（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// イリノイ大学 ECE 340 Lecture 8 の300 Kの Nc（cm^-3）
+const mats = [
+  { name: 'Si', nc: 2.82e19, label: '2.82×10¹⁹' },
+  { name: 'GaAs', nc: 4.37e17, label: '4.37×10¹⁷' },
+];
+const bx = (v: number) => 62 + ((Math.log10(v) - 16) / 4) * 112;
+---
+
+<FigureFrame id="fig-effective-mass" columns={2} title="バンドが急に曲がるほど電子は軽く、席は少ない" caption="図：左は、結晶の中でのエネルギー E と波数 k の関係の模式図。曲がりが急なバンドは有効質量が小さく、緩やかなバンドは大きい。右は、300 Kの伝導帯の実効状態密度 Nc（横軸は対数の目盛り）。値はイリノイ大学 ECE 340 Lecture 8、有効質量と Nc の式はペルージャ大学の講義資料">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="E-k図：曲がりが急なバンドは有効質量が小さく、緩やかなバンドは有効質量が大きい">
+      <path class="fig-line" d="M20 150V8M16 14l4-6 4 6M20 150h170" />
+      <path class="fig-arrow" d="M70 12Q100 130 130 12" />
+      <path class="fig-line" d="M30 40Q100 130 170 40" />
+      <text class="fig-text" x="8" y="30" font-size="7">曲がりが急：軽い</text>
+      <text class="fig-text" x="104" y="106" font-size="7">緩やか：重い</text>
+      <text class="fig-text" x="188" y="146" font-size="7" text-anchor="end">波数 k →</text>
+      <text class="fig-text" x="26" y="12" font-size="7" dx="6">E</text>
+    </svg>
+    <span class="fig__name">バンドの曲がりと有効質量</span>
+    <span class="fig__note">模式図</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="300 Kの伝導帯の実効状態密度：シリコン2.82×10^19、GaAs 4.37×10^17 cm^-3">
+      <path class="fig-line" d="M62 30V110h128" />
+      {mats.map((m, i) => (
+        <>
+          <text class="fig-text" x="58" y={58 + i * 30} font-size="7" text-anchor="end">{m.name}</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="62" y={46 + i * 30} width={bx(m.nc) - 62} height="16" />
+          <text class="fig-text" x={bx(m.nc) + 3} y={58 + i * 30} font-size="7">{m.label}</text>
+        </>
+      ))}
+      {[16, 18, 20].map((e) => (
+        <text class="fig-text" x={62 + ((e - 16) / 4) * 112} y="122" font-size="7" text-anchor="middle">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+      ))}
+      <text class="fig-text" x="190" y="138" font-size="7" text-anchor="end">Nc（cm⁻³、対数）</text>
+    </svg>
+    <span class="fig__name">実効状態密度 Nc</span>
+    <span class="fig__note">質量16倍で、約65倍</span>
+  </li>
+</FigureFrame>
