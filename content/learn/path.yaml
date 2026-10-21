@@ -200,12 +200,17 @@ physics:
       units:
         - { type: learn, ref: band-gap }
         - { type: learn, ref: intrinsic-carrier }
+        - { type: learn, ref: fermi-distribution }
+        - { type: learn, ref: thermal-design }
     - label: B
       slug: device-physics
       title: 半導体デバイス物理
       summary: pn接合やトランジスタが動く理由を、電位と電流の式から理解します。
       units:
+        - { type: learn, ref: drift-diffusion }
         - { type: learn, ref: built-in-potential }
+        - { type: learn, ref: depletion-width }
+        - { type: learn, ref: diode-equation }
     - label: C
       slug: optics
       title: 光物性
