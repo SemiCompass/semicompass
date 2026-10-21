@@ -16,7 +16,7 @@ applies_to:
   folder: power
   note: 逆方向の電圧に耐える仕組みが、空乏層の幅で説明できる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:
