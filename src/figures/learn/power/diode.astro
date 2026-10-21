@@ -1,0 +1,40 @@
+---
+// 図：パワー用のダイオードの構造と、二つの種類の違い（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-diode" columns={2} title="パワー用のダイオードの構造と、二つの種類の違い（模式図）" caption="図：左は、パワー用のpn接合のダイオードの断面。p型とn型のあいだに、ドーパントの少ない厚い層があり、逆向きの電圧はこの層が受け止める。順方向では、この層に電子と正孔がたまる。右は、二つのダイオードの違い。pn接合は、粒がたまるので順方向の抵抗は小さいが、逆回復がある。ショットキーバリアダイオードは、粒がたまらず速いが、シリコンでは高い電圧に向かない。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="p型、厚い層、n型の順に重なったダイオードの断面">
+      <rect class="fig-film" x="40" y="20" width="120" height="24" />
+      <text class="fig-text" x="100" y="36" font-size="7.5" text-anchor="middle">p型</text>
+      <rect class="fig-wafer" x="40" y="44" width="120" height="56" />
+      <text class="fig-text" x="100" y="68" font-size="7.5" text-anchor="middle">厚い層</text>
+      <text class="fig-text" x="100" y="80" font-size="6.5" text-anchor="middle">ドーパントが少ない</text>
+      <rect class="fig-film" x="40" y="100" width="120" height="24" />
+      <text class="fig-text" x="100" y="116" font-size="7.5" text-anchor="middle">n型</text>
+      <circle class="fig-dot" cx="60" cy="88" r="2.5"/>
+      <circle class="fig-dot" cx="140" cy="88" r="2.5"/>
+      <text class="fig-text" x="100" y="140" font-size="7" text-anchor="middle">順方向では粒がたまる</text>
+    </svg>
+    <span class="fig__name">pn接合のダイオード</span>
+    <span class="fig__note">厚い層が電圧を受け止める</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="pn接合のダイオードと、ショットキーバリアダイオードの比較">
+      <rect class="fig-film" x="10" y="14" width="86" height="60" />
+      <text class="fig-text" x="53" y="34" font-size="7.5" text-anchor="middle">pn接合</text>
+      <text class="fig-text" x="53" y="48" font-size="6.5" text-anchor="middle">粒がたまる</text>
+      <text class="fig-text" x="53" y="60" font-size="6.5" text-anchor="middle">逆回復あり</text>
+      <rect class="fig-part" x="104" y="14" width="86" height="60" />
+      <text class="fig-text" x="147" y="34" font-size="7.5" text-anchor="middle">ショットキー</text>
+      <text class="fig-text" x="147" y="48" font-size="6.5" text-anchor="middle">粒がたまらない</text>
+      <text class="fig-text" x="147" y="60" font-size="6.5" text-anchor="middle">逆回復ほぼなし</text>
+      <text class="fig-text" x="53" y="96" font-size="6.5" text-anchor="middle">高い電圧に向く</text>
+      <text class="fig-text" x="147" y="96" font-size="6.5" text-anchor="middle">速い切り替えに向く</text>
+      <text class="fig-text" x="100" y="126" font-size="7" text-anchor="middle">炭化ケイ素なら両立できる</text>
+    </svg>
+    <span class="fig__name">二つのダイオード</span>
+    <span class="fig__note">たまる粒の有無で性質が違う</span>
+  </li>
+</FigureFrame>
