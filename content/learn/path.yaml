@@ -135,6 +135,9 @@ fields:
       - { type: learn, ref: temperature-sensor, folder: sensors }
       - { type: learn, ref: magnetic-sensor, folder: sensors }
       - { type: learn, ref: sensor-accuracy, folder: sensors }
+      - { type: learn, ref: sensor-signal-chain, folder: sensors }
+      - { type: learn, ref: gas-sensor, folder: sensors }
+      - { type: learn, ref: sensor-fusion, folder: sensors }
   - "no": 8
     slug: communication
     title: 通信・信号処理
@@ -144,6 +147,9 @@ fields:
       - { type: learn, ref: high-speed-link, folder: communication }
       - { type: learn, ref: optical-communication, folder: communication }
       - { type: learn, ref: dsp, folder: communication }
+      - { type: learn, ref: clock-generation, folder: communication }
+      - { type: learn, ref: security-chip, folder: communication }
+      - { type: learn, ref: protocol-layers, folder: communication }
   - "no": 9
     slug: industry
     title: 工場と業界
