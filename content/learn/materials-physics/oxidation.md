@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: 酸化膜が絶縁体として働く前提を、膜厚の側から確かめられる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

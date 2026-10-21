@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: pn接合の深さが、熱処理の温度と時間で決まる関係が分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

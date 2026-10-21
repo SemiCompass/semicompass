@@ -16,7 +16,7 @@ applies_to:
   folder: process
   note: 低い温度で成長させる理由を、不純物の広がりの面から読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

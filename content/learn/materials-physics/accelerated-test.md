@@ -16,7 +16,7 @@ applies_to:
   folder: process
   note: 熱で進む現象の式が、工程でも試験でも同じ形であることが分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

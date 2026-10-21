@@ -16,7 +16,7 @@ applies_to:
   folder: process
   note: 高温の熱処理で、原子が動きやすくなる背景が読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

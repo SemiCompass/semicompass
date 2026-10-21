@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: 熱で電子が増える式と同じ形であることが分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

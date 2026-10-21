@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: バンドギャップより長い波長で、吸収が急に弱まる理由を数値で確かめられる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:
