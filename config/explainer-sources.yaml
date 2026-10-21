@@ -380,10 +380,16 @@ learn:
     title: 新しい半導体材料：酸化ガリウム、ダイヤモンドなど
     basis: reviewed
   device-types:
-    title: パワー半導体の種類：ダイオード、MOSFET、IGBT
+    title: トランジスタ：パワーMOSFETとIGBT
     basis: reviewed
   inverter:
     title: 電力を変換する回路：インバーターとコンバーター
+    basis: reviewed
+  diode:
+    title: ダイオード：電気の向きをそろえる
+    basis: reviewed
+  loss-and-heat:
+    title: 損失と熱：電力はどこで失われるか
     basis: reviewed
   electricity-basics:
     title: 電気の基礎：電圧、電流、抵抗
