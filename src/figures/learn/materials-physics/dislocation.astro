@@ -1,0 +1,48 @@
+---
+// 図：刃状転位の模式図、バーガースベクトルと結合の長さ（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// イリノイ大学 ECE 340 Lecture 2 の格子定数 5.43 Å と結合の長さ 2.35 Å、arXiv:mtrl-th/9604006 の 3.84 Å・2.22 Å
+const rows = [
+  { n: '完全転位 b', v: 3.84 },
+  { n: '部分転位', v: 2.22 },
+  { n: '結合の長さ', v: 2.35 },
+];
+const bx = (v: number) => 62 + (v / 6) * 112;
+const top = [0, 1, 2, 3, 4];
+const bottom = [0, 1, 2, 3];
+---
+
+<FigureFrame id="fig-dislocation" columns={2} title="転位は、余分な半面の端にできる線" caption="図：左は、刃状転位の模式図。上半分に余分な半面（中央の列）が入り、その下端が転位の線（紙面に垂直）になる。右は、シリコンの転位のバーガースベクトルの大きさと、結合の長さ。3.84 Å と 2.22 Å は arXiv:mtrl-th/9604006、2.35 Å はイリノイ大学 ECE 340 Lecture 2">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="格子状に並んだ原子の上半分に余分な半面があり、その下端に転位がある">
+      {[0, 1, 2].map((r) => top.map((q) => (
+        <circle class="fig-wafer" cx={30 + q * 34} cy={14 + r * 22} r="8" />
+      )))}
+      {[3, 4, 5].map((r) => bottom.map((q) => (
+        <circle class="fig-wafer" cx={47 + q * 34} cy={14 + r * 22} r="8" />
+      )))}
+      <circle class="fig-dash" cx={98} cy={58} r="13" />
+      <text class="fig-text" x="100" y="152" font-size="7" text-anchor="middle">点線の丸が、転位の線の位置</text>
+    </svg>
+    <span class="fig__name">刃状転位の模式図</span>
+    <span class="fig__note">余分な半面の下端</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="シリコンの完全転位のバーガースベクトルは3.84 Å、部分転位は2.22 Å、結合の長さは2.35 Å">
+      <path class="fig-line" d="M62 30V120h128" />
+      {rows.map((r, i) => (
+        <>
+          <text class="fig-text" x="58" y={50 + i * 24} font-size="6" text-anchor="end">{r.n}</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="62" y={38 + i * 24} width={bx(r.v) - 62} height="16" />
+          <text class="fig-text" x={bx(r.v) + 3} y={50 + i * 24} font-size="7">{r.v} Å</text>
+        </>
+      ))}
+      {[0, 2, 4, 6].map((e) => (
+        <text class="fig-text" x={62 + (e / 6) * 112} y="132" font-size="7" text-anchor="middle">{e}</text>
+      ))}
+      <text class="fig-text" x="190" y="148" font-size="7" text-anchor="end">長さ（Å）</text>
+    </svg>
+    <span class="fig__name">バーガースベクトルの大きさ</span>
+    <span class="fig__note">a／√2 ≈ 3.84 Å</span>
+  </li>
+</FigureFrame>
