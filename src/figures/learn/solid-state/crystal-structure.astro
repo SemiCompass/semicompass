@@ -1,0 +1,48 @@
+---
+// 図：ダイヤモンド構造を（100）方向から見た模式図、格子定数と結合の長さ（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// イリノイ大学 ECE 340 Lecture 2 の値（Å）
+const a = 5.43;
+const d = 2.35;
+// 面心立方の1組目と、(1/4,1/4,1/4)だけずれた2組目を、上から見た位置
+const first = [[0, 0], [0.5, 0.5], [0.5, 0], [0, 0.5], [1, 0], [0, 1], [1, 1], [1, 0.5], [0.5, 1]];
+const second = [[0.25, 0.25], [0.75, 0.75], [0.75, 0.25], [0.25, 0.75]];
+const px = (u: number) => 35 + u * 130;
+const py = (v: number) => 130 - v * 110;
+const bx = (v: number) => 62 + (v / 6) * 112;
+---
+
+<FigureFrame id="fig-crystal-structure" columns={2} title="シリコンは、格子定数0.543 nmの立方体に原子8個" caption="図：左は、ダイヤモンド構造の単位格子を真上から見た模式図。原子の位置を、面心立方の1組目（濃い丸）と、ずれて重なる2組目（薄い丸）に分けて示す。右は、格子定数と、最も近い原子との距離（結合の長さ）。値はイリノイ大学 ECE 340 Lecture 2">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="ダイヤモンド構造の単位格子を上から見た図。面心立方の並びが2組、ずれて重なっている">
+      <rect class="fig-line" x={px(0)} y={py(1)} width="130" height="110" fill="none" />
+      {first.map(([u, v]) => (
+        <circle class="fig-wafer" cx={px(u)} cy={py(v)} r="6" />
+      ))}
+      {second.map(([u, v]) => (
+        <circle class="fig-film" cx={px(u)} cy={py(v)} r="6" />
+      ))}
+      <text class="fig-text" x={px(0.5)} y="150" font-size="7" text-anchor="middle">a（格子定数）</text>
+    </svg>
+    <span class="fig__name">単位格子を上から見る</span>
+    <span class="fig__note">模式図</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="格子定数は5.43 Å、結合の長さは2.35 Å">
+      <path class="fig-line" d="M62 30V110h128" />
+      {[{ n: '格子定数 a', v: a }, { n: '結合の長さ d', v: d }].map((b, i) => (
+        <>
+          <text class="fig-text" x="58" y={58 + i * 30} font-size="6" text-anchor="end">{b.n}</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="62" y={46 + i * 30} width={bx(b.v) - 62} height="16" />
+          <text class="fig-text" x={bx(b.v) + 3} y={58 + i * 30} font-size="7">{b.v} Å</text>
+        </>
+      ))}
+      {[0, 3, 6].map((e) => (
+        <text class="fig-text" x={62 + (e / 6) * 112} y="122" font-size="7" text-anchor="middle">{e}</text>
+      ))}
+      <text class="fig-text" x="190" y="138" font-size="7" text-anchor="end">長さ（Å）</text>
+    </svg>
+    <span class="fig__name">格子定数と結合の長さ</span>
+    <span class="fig__note">d = √3 a／4</span>
+  </li>
+</FigureFrame>
