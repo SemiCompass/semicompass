@@ -1,0 +1,48 @@
+---
+// 図：井戸の中の準位の模式図、井戸の幅と1番目の準位（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// m* = 0.0665 m0（nextnano の値）、E1 = π²ħ²/(2 m* L²)。幅 5・10・20 nm（meV）
+const E1 = (L: number) => {
+  const hbar = 1.054571817e-34;
+  const m = 0.0665 * 9.1093837015e-31;
+  const q = 1.602176634e-19;
+  return ((Math.PI ** 2 * hbar ** 2) / (2 * m * (L * 1e-9) ** 2) / q) * 1000;
+};
+const rows = [5, 10, 20].map((L) => ({ L, e: E1(L) }));
+const bx = (v: number) => 62 + (v / 330) * 112;
+---
+
+<FigureFrame id="fig-quantum-confinement" columns={2} title="井戸が狭いほど、電子の準位は高い" caption="図：左は、壁が無限に高い井戸の中の準位の模式図（準位の高さは 1：4：9 の比）。右は、有効質量 0.0665 m0 の電子の1番目の準位を、井戸の幅ごとに計算した値。有効質量は nextnano の資料、計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="壁が高い井戸の中に、とびとびの準位がある。準位の間隔は上ほど広い">
+      <path class="fig-line" d="M60 12V140H140V12" />
+      <path class="fig-arrow" d="M60 128H140" />
+      <path class="fig-line" d="M60 94H140" />
+      <path class="fig-line" d="M60 36H140" />
+      <text class="fig-text" x="148" y="131" font-size="7">n = 1</text>
+      <text class="fig-text" x="148" y="97" font-size="7">n = 2</text>
+      <text class="fig-text" x="148" y="39" font-size="7">n = 3</text>
+      <text class="fig-text" x="100" y="154" font-size="7" text-anchor="middle">井戸の幅 L</text>
+    </svg>
+    <span class="fig__name">井戸の中の準位</span>
+    <span class="fig__note">模式図</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`1番目の準位：幅5 nmで約${rows[0].e.toFixed(0)} meV、10 nmで約${rows[1].e.toFixed(1)} meV、20 nmで約${rows[2].e.toFixed(1)} meV`}>
+      <path class="fig-line" d="M62 30V120h128" />
+      {rows.map((r, i) => (
+        <>
+          <text class="fig-text" x="58" y={50 + i * 24} font-size="7" text-anchor="end">{r.L} nm</text>
+          <rect class={i === 1 ? 'fig-wafer' : 'fig-film'} x="62" y={38 + i * 24} width={bx(r.e) - 62} height="16" />
+          <text class="fig-text" x={bx(r.e) + 3} y={50 + i * 24} font-size="7">{r.e.toFixed(1)} meV</text>
+        </>
+      ))}
+      {[0, 100, 200, 300].map((e) => (
+        <text class="fig-text" x={62 + (e / 330) * 112} y="132" font-size="7" text-anchor="middle">{e}</text>
+      ))}
+      <text class="fig-text" x="190" y="148" font-size="7" text-anchor="end">1番目の準位（meV）</text>
+    </svg>
+    <span class="fig__name">幅と1番目の準位</span>
+    <span class="fig__note">幅が半分で、4倍</span>
+  </li>
+</FigureFrame>

@@ -217,6 +217,7 @@ physics:
         - { type: learn, ref: mos-threshold }
         - { type: learn, ref: mosfet-current }
         - { type: learn, ref: schottky-barrier }
+        - { type: learn, ref: quantum-confinement }
     - label: C
       slug: optics
       title: 光物性
