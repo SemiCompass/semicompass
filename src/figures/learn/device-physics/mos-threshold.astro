@@ -1,0 +1,61 @@
+---
+// 図：MOS構造の模式図と、基板の濃度としきい値の関係（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const q = 1.602176634e-19;
+const kT = 8.617333262e-5 * 300;
+const e0 = 8.854e-14;
+const eox = 3.9 * e0;
+const es = 11.7 * e0;
+const ni = 1e10;
+// VT − VFB（V）。酸化膜の厚さ tox は仮定の値。本サイトで計算
+const d = (NA: number, tox: number) => {
+  const pf = kT * Math.log(NA / ni);
+  return 2 * pf + Math.sqrt(2 * q * es * NA * 2 * pf) / (eox / tox);
+};
+const tx = (e: number) => 40 + ((e - 15) / 3) * 148;
+const ly = (v: number) => 126 - (v / 2) * 110;
+const path = (tox: number) =>
+  Array.from({ length: 31 }, (_, i) => 15 + i * 0.1)
+    .map((e, i) => `${i === 0 ? 'M' : 'L'}${tx(e).toFixed(1)} ${ly(d(10 ** e, tox)).toFixed(1)}`)
+    .join('');
+---
+
+<FigureFrame id="fig-mos-threshold" columns={2} title="しきい値は、基板の濃度が高いほど、酸化膜が厚いほど上がる" caption="図：左は、MOS構造の模式図。ゲートの電圧が酸化膜をはさんで、半導体の表面にチャネルを作る。右は、しきい値電圧とフラットバンド電圧の差 VT−VFB を、基板の濃度ごとに計算したもの（酸化膜の厚さ5 nmと2.5 nmは仮定の値）。式は UCSB と MIT OpenCourseWare の資料、計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="MOS構造：上からゲート、酸化膜、p型の基板。基板の表面にチャネルの層ができる">
+      <rect class="fig-strong" x="40" y="14" width="120" height="22" />
+      <rect class="fig-film" x="40" y="36" width="120" height="12" />
+      <rect class="fig-wafer" x="40" y="48" width="120" height="86" />
+      <path class="fig-dash" d="M40 62H160" />
+      <text class="fig-text" x="166" y="30" font-size="7">ゲート</text>
+      <text class="fig-text" x="166" y="45" font-size="7">酸化膜</text>
+      <text class="fig-text" x="166" y="58" font-size="7">チャネル</text>
+      <text class="fig-text" x="166" y="100" font-size="7">p型の基板</text>
+      <text class="fig-text" x="100" y="152" font-size="7" text-anchor="middle">VT 以上で、表面が反転する</text>
+    </svg>
+    <span class="fig__name">MOS構造</span>
+    <span class="fig__note">模式図</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="VT−VFBは、基板の濃度が10の15乗から10の18乗に増えると、酸化膜5 nmで約0.6 Vから約1.8 Vに増え、2.5 nmでは約0.6 Vから約1.4 Vに増える">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[0, 1, 2].map((v) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(v)}h150`} />
+          <text class="fig-text" x="36" y={ly(v) + 3} font-size="7" text-anchor="end">{v}</text>
+        </>
+      ))}
+      {[15, 16, 17, 18].map((e) => (
+        <text class="fig-text" x={tx(e)} y="138" font-size="7" text-anchor="middle">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">基板の濃度（cm⁻³）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">VT−VFB（V）</text>
+      <path class="fig-arrow" d={path(5e-7)} />
+      <path class="fig-line" d={path(2.5e-7)} />
+      <text class="fig-text" x="46" y="30" font-size="7">太線：酸化膜 5 nm</text>
+      <text class="fig-text" x="46" y="42" font-size="7">細線：酸化膜 2.5 nm</text>
+    </svg>
+    <span class="fig__name">濃度としきい値</span>
+    <span class="fig__note">薄い酸化膜ほど、しきい値が低い</span>
+  </li>
+</FigureFrame>
