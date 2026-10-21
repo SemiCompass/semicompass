@@ -239,5 +239,6 @@ physics:
         - { type: learn, ref: oxidation }
         - { type: learn, ref: lattice-mismatch }
         - { type: learn, ref: point-defects }
+        - { type: learn, ref: dislocation }
         - { type: learn, ref: vapor-growth }
         - { type: learn, ref: accelerated-test }
