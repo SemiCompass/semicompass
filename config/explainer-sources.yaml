@@ -520,3 +520,21 @@ learn:
   dsp:
     title: 信号を計算で整える：デジタル信号処理
     basis: reviewed
+  high-voltage:
+    title: 高い電圧に耐える仕組み：パワー半導体の耐圧
+    basis: reviewed
+  sic-gan:
+    title: 炭化ケイ素と窒化ガリウム：新しい材料のパワー半導体
+    basis: reviewed
+  applications:
+    title: パワー半導体が使われる場所：電気自動車から電力の設備まで
+    basis: reviewed
+  design-for-test:
+    title: テストしやすい回路を作る：テストのための設計
+    basis: reviewed
+  yield-management:
+    title: 歩留まりを管理する：不良を減らす考え方
+    basis: reviewed
+  thin-film-materials:
+    title: 回路を作る薄い膜の材料：絶縁膜、金属膜、バリア
+    basis: reviewed

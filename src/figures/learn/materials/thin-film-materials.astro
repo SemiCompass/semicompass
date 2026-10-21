@@ -1,0 +1,44 @@
+---
+// 図：チップの断面の膜と、ゲートの絶縁膜（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-thin-film-materials" columns={2} title="チップの断面の膜と、ゲートの絶縁膜（模式図）" caption="図：左は、チップの断面の膜の重なり。シリコンの上に、絶縁膜と金属の配線が重なり、銅の配線はバリア膜で囲まれる。右は、ゲートの絶縁膜。酸化シリコンを薄くしすぎると電気が漏れるので、誘電率の高い膜を厚くして、同じ効きを得る。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="シリコン、絶縁膜、バリア膜に囲まれた銅の配線">
+      <rect class="fig-wafer" x="16" y="100" width="168" height="24" />
+      <text class="fig-text" x="100" y="116" font-size="7" text-anchor="middle">シリコン</text>
+      <rect class="fig-film" x="16" y="56" width="168" height="44" />
+      <text class="fig-text" x="36" y="92" font-size="7" text-anchor="middle">絶縁膜</text>
+      <rect class="fig-resist" x="60" y="62" width="36" height="22" />
+      <rect class="fig-metal" x="66" y="66" width="24" height="14" />
+      <text class="fig-text" x="78" y="96" font-size="6.5" text-anchor="middle">銅の配線</text>
+      <rect class="fig-metal" x="120" y="62" width="36" height="22" />
+      <text class="fig-text" x="138" y="76" font-size="6.5" text-anchor="middle">配線</text>
+      <rect class="fig-film" x="16" y="24" width="168" height="32" />
+      <text class="fig-text" x="100" y="44" font-size="7" text-anchor="middle">絶縁膜</text>
+      <text class="fig-text" x="100" y="18" font-size="7" text-anchor="middle">バリア膜が銅を囲む</text>
+    </svg>
+    <span class="fig__name">膜の重なり</span>
+    <span class="fig__note">絶縁膜、金属、バリア膜</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="薄い酸化シリコンは電気が漏れ、誘電率の高い厚い膜は漏れにくい">
+      <rect class="fig-metal" x="20" y="30" width="70" height="14" />
+      <text class="fig-text" x="55" y="24" font-size="7" text-anchor="middle">ゲート</text>
+      <rect class="fig-film" x="20" y="44" width="70" height="8" />
+      <text class="fig-text" x="55" y="116" font-size="6.5" text-anchor="middle">酸化シリコン（薄い）</text>
+      <path class="fig-dash" d="M40 52v24M70 52v24"/>
+      <rect class="fig-wafer" x="20" y="76" width="70" height="24" />
+      <text class="fig-text" x="55" y="130" font-size="7" text-anchor="middle">電気が漏れる</text>
+      <rect class="fig-metal" x="110" y="30" width="70" height="14" />
+      <text class="fig-text" x="145" y="24" font-size="7" text-anchor="middle">ゲート</text>
+      <rect class="fig-part" x="110" y="44" width="70" height="22" />
+      <text class="fig-text" x="145" y="80" font-size="6.5" text-anchor="middle">誘電率の高い膜（厚い）</text>
+      <rect class="fig-wafer" x="110" y="88" width="70" height="24" />
+      <text class="fig-text" x="145" y="126" font-size="7" text-anchor="middle">漏れにくい</text>
+    </svg>
+    <span class="fig__name">ゲートの絶縁膜</span>
+    <span class="fig__note">厚くしても同じ効きを得る</span>
+  </li>
+</FigureFrame>

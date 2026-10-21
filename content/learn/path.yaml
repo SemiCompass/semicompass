@@ -45,6 +45,7 @@ fields:
           - { type: learn, ref: epitaxial-growth }
           - { type: learn, ref: new-materials }
           - { type: learn, ref: process-materials }
+          - { type: learn, ref: thin-film-materials }
   - "no": 3
     slug: design
     title: デバイス設計・回路
@@ -104,6 +105,8 @@ fields:
       - { type: learn, ref: inspection }
       - { type: learn, ref: reliability-tests }
       - { type: learn, ref: failure-analysis }
+      - { type: learn, ref: design-for-test }
+      - { type: learn, ref: yield-management }
   - "no": 6
     slug: power
     title: パワー半導体
@@ -112,6 +115,9 @@ fields:
       - { type: learn, ref: power, folder: devices }
       - { type: learn, ref: device-types }
       - { type: learn, ref: inverter }
+      - { type: learn, ref: high-voltage }
+      - { type: learn, ref: sic-gan }
+      - { type: learn, ref: applications }
   - "no": 7
     slug: sensors
     title: センサー・計測
