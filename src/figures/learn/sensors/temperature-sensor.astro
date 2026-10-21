@@ -1,0 +1,36 @@
+---
+// 図：温度を電圧で読み取る（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-temperature-sensor" columns={2} title="温度を電圧で読み取る（模式図）" caption="図：左は、ダイオードに一定の電流を流したときの、温度と両端の電圧の関係。温度が上がると、電圧はほぼ決まった割合で下がる。右は、チップの中の温度センサー。熱が出やすい場所のそばに小さなセンサーを作り込み、温度が高すぎるときは、回路の動きを抑えて守る。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="ダイオードの電圧と温度の関係。温度が上がると電圧は下がる">
+      <path class="fig-line" d="M24 120h160M24 120V20" />
+      <path class="fig-arrow" d="M40 36L170 104" />
+      <text class="fig-text" x="104" y="138" font-size="7.5" text-anchor="middle">温度</text>
+      <text class="fig-text" x="30" y="16" font-size="7.5" text-anchor="start">電圧</text>
+      <text class="fig-text" x="96" y="26" font-size="7.5" text-anchor="start">温度が上がる</text>
+      <text class="fig-text" x="96" y="36" font-size="7.5" text-anchor="start">と電圧は下がる</text>
+    </svg>
+    <span class="fig__name">電圧と温度</span>
+    <span class="fig__note">ほぼ決まった割合で下がる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="チップの中の、熱が出やすい場所のそばに温度センサーを置き、温度を見張る回路につなぐ">
+      <rect class="fig-wafer" x="20" y="20" width="160" height="80" />
+      <circle class="fig-part" cx="70" cy="52" r="16" />
+      <text class="fig-text" x="70" y="56" font-size="7.5" text-anchor="middle">熱</text>
+      <rect class="fig-part" x="100" y="40" width="26" height="18" />
+      <text class="fig-text" x="113" y="52" font-size="6.5" text-anchor="middle">温度</text>
+      <rect class="fig-film" x="138" y="64" width="34" height="26" />
+      <text class="fig-text" x="155" y="75" font-size="6.5" text-anchor="middle">見張る</text>
+      <text class="fig-text" x="155" y="85" font-size="6.5" text-anchor="middle">回路</text>
+      <path class="fig-arrow" d="M126 49h18v15" />
+      <path class="fig-dash" d="M86 52h14" />
+      <text class="fig-text" x="100" y="122" font-size="7.5" text-anchor="middle">高すぎたら動きを抑える</text>
+    </svg>
+    <span class="fig__name">チップの中のセンサー</span>
+    <span class="fig__note">熱の出やすい場所のそばに置く</span>
+  </li>
+</FigureFrame>

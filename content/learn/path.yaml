@@ -120,12 +120,18 @@ fields:
       - { type: learn, ref: mems-sensor, folder: devices }
       - { type: learn, ref: image-sensor, folder: devices }
       - { type: learn, ref: optoelectronics, folder: devices }
+      - { type: learn, ref: temperature-sensor, folder: sensors }
+      - { type: learn, ref: magnetic-sensor, folder: sensors }
+      - { type: learn, ref: sensor-accuracy, folder: sensors }
   - "no": 8
     slug: communication
     title: 通信・信号処理
     summary: 無線通信で高い周波数の信号を扱う半導体の仕組みを学びます。
     units:
       - { type: learn, ref: rf, folder: devices }
+      - { type: learn, ref: high-speed-link, folder: communication }
+      - { type: learn, ref: optical-communication, folder: communication }
+      - { type: learn, ref: dsp, folder: communication }
   - "no": 9
     slug: industry
     title: 工場と業界
