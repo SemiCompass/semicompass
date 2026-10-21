@@ -130,6 +130,7 @@ fields:
       - { type: learn, ref: device-types }
       - { type: learn, ref: loss-and-heat }
       - { type: learn, ref: high-voltage }
+      - { type: learn, ref: wide-gap }
       - { type: learn, ref: sic-gan }
       - { type: learn, ref: applications }
   - "no": 7
