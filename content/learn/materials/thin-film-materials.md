@@ -13,8 +13,11 @@ related_terms:
 - low-k-film
 - damascene
 basis: reviewed
+reviewed_on: '2026-10-21'
+review_methods:
+- operator_knowledge
 published_at: '2026-10-21'
-draft: true
+draft: false
 ai_generated: true
 sources: []
 ---
