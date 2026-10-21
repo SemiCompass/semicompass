@@ -213,6 +213,8 @@ physics:
       units:
         - { type: learn, ref: absorption-depth }
         - { type: learn, ref: direct-indirect }
+        - { type: learn, ref: recombination }
+        - { type: learn, ref: refractive-index }
     - label: D
       slug: materials-physics
       title: 結晶・材料の物理

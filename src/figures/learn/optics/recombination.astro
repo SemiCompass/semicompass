@@ -1,0 +1,52 @@
+---
+// 図：再結合係数を 1e-10 cm3/s と置いたときの、再結合の数と結びつくまでの時間（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const B = 1e-10; // 桁の目安（nextnano の解説）。本サイトで計算
+const tx = (e: number) => 40 + ((e - 16) / 3) * 140;
+const lyR = (v: number) => 126 - ((Math.log10(v) - 22) / 6) * 110;
+const lyT = (v: number) => 126 - ((Math.log10(v) + 9) / 3) * 110;
+const exps = [16, 17, 18, 19];
+const lineR = exps.map((e, i) => `${i === 0 ? 'M' : 'L'}${tx(e)} ${lyR(B * 10 ** (2 * e)).toFixed(1)}`).join('');
+const lineT = exps.map((e, i) => `${i === 0 ? 'M' : 'L'}${tx(e)} ${lyT(1 / (B * 10 ** e)).toFixed(1)}`).join('');
+---
+
+<FigureFrame id="fig-recombination" columns={2} title="濃度が上がると、再結合は急に増え、時間は短くなる" caption="図：再結合係数 B を10の−10乗 cm³/s と置いて計算した、濃度 n（n と p が等しい場合）と、再結合の数 R（左）、結びつくまでの時間 τ（右）の関係。横軸は濃度の指数、縦軸は対数の目盛り。B の値は、直接遷移の材料の桁の目安で、本サイトで計算した">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="再結合の数 R は、濃度が10の16乗から19乗に増えると、10の22乗から10の28乗まで、濃度の2乗で増える">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[22, 24, 26, 28].map((e) => (
+        <>
+          <path class="fig-dash" d={`M40 ${lyR(10 ** e)}h150`} />
+          <text class="fig-text" x="36" y={lyR(10 ** e) + 3} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+        </>
+      ))}
+      {exps.map((e) => (
+        <text class="fig-text" x={tx(e)} y="138" font-size="7" text-anchor="middle">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">濃度（cm⁻³）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">R（cm⁻³s⁻¹）</text>
+      <path class="fig-arrow" d={lineR} />
+    </svg>
+    <span class="fig__name">再結合の数 R</span>
+    <span class="fig__note">濃度が10倍で、100倍になる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="結びつくまでの時間 τ は、濃度が10の16乗から19乗に増えると、1 μsから1 nsまで短くなる">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[-9, -8, -7, -6].map((e) => (
+        <>
+          <path class="fig-dash" d={`M40 ${lyT(10 ** e)}h150`} />
+          <text class="fig-text" x="36" y={lyT(10 ** e) + 3} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+        </>
+      ))}
+      {exps.map((e) => (
+        <text class="fig-text" x={tx(e)} y="138" font-size="7" text-anchor="middle">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">濃度（cm⁻³）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">τ（秒）</text>
+      <path class="fig-arrow" d={lineT} />
+    </svg>
+    <span class="fig__name">結びつくまでの時間 τ</span>
+    <span class="fig__note">濃度が10倍で、1/10になる</span>
+  </li>
+</FigureFrame>

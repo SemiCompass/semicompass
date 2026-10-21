@@ -1,0 +1,42 @@
+---
+// 図：全反射の模式図と、波長1,000 nmのシリコンと石英ガラスの屈折率（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// 屈折率（波長1,000 nm）：シリコンはPVEducation、石英ガラスはarXiv:0805.0091（300 K）
+const mats = [
+  { name: 'シリコン', n: 3.57 },
+  { name: '石英ガラス', n: 1.45086 },
+];
+const bx = (n: number) => 70 + (n / 4) * 110;
+const thc = (Math.asin(1.45086 / 3.57) * 180) / Math.PI;
+---
+
+<FigureFrame id="fig-refractive-index" columns={2} title="屈折率の差が大きいほど、光を閉じ込めやすい" caption="図：左は、屈折率の大きい側（下）から境目に当たる光の模式図。垂直な線との角が臨界角より大きいと、すべて跳ね返される。右は、波長1,000 nmの屈折率。シリコンはPVEducation「Optical Properties of Silicon」、石英ガラスはarXiv:0805.0091の300 Kの値。臨界角は本サイトで計算">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="屈折率の大きい材料から小さい材料へ向かう光が、境目で全反射して、下の材料の中に戻る模式図">
+      <path class="fig-line" d="M10 70H190" />
+      <path class="fig-dash" d="M100 20V140" />
+      <text class="fig-text" x="14" y="62" font-size="7">屈折率が小さい（石英ガラス）</text>
+      <text class="fig-text" x="14" y="152" font-size="7">屈折率が大きい（シリコン）</text>
+      <path class="fig-arrow" d="M40 130L100 70M96 78l4-8-9 2" />
+      <path class="fig-arrow" d="M100 70L160 130M154 124l6 6-8 1" />
+      <text class="fig-text" x="104" y="36" font-size="7">垂直な線</text>
+    </svg>
+    <span class="fig__name">全反射の模式図</span>
+    <span class="fig__note">臨界角は約{thc.toFixed(1)}°</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="波長1,000 nmの屈折率：シリコン3.570、石英ガラス1.451">
+      <path class="fig-line" d="M70 30V120h120" />
+      {mats.map((m, i) => (
+        <>
+          <text class="fig-text" x="66" y={58 + i * 38} font-size="7" text-anchor="end">{m.name}</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="70" y={44 + i * 38} width={bx(m.n) - 70} height="18" />
+          <text class="fig-text" x={bx(m.n) + 3} y={58 + i * 38} font-size="7">{m.n.toFixed(3)}</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="136" font-size="7" text-anchor="end">波長1,000 nm（屈折率）</text>
+    </svg>
+    <span class="fig__name">屈折率の比べ</span>
+    <span class="fig__note">差が大きく、臨界角が小さい</span>
+  </li>
+</FigureFrame>
