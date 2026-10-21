@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: バンドギャップの値のほかに、バンドの形が光の出やすさを決めることが分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:
