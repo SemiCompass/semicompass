@@ -1,0 +1,39 @@
+---
+// 図：インゴットからウェーハへの流れと、表面の変化（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-wafer-finishing" columns={2} title="インゴットからウェーハへの流れと、表面の変化（模式図）" caption="図：左は、インゴットをウェーハに仕上げる流れ。切る、端を丸める、厚さをそろえる、傷んだ層を取る、磨く、洗って検査する。右は、表面の変化。切った直後は凹凸と傷んだ層があり、仕上げると平らになる。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="切る、端を丸める、厚さをそろえる、傷んだ層を取る、磨く、洗って検査する">
+      <rect class="fig-part" x="40" y="4" width="120" height="18" />
+      <text class="fig-text" x="100" y="17" font-size="7" text-anchor="middle">切る</text>
+      <rect class="fig-film" x="40" y="28" width="120" height="18" />
+      <text class="fig-text" x="100" y="41" font-size="7" text-anchor="middle">端を丸める</text>
+      <rect class="fig-film" x="40" y="52" width="120" height="18" />
+      <text class="fig-text" x="100" y="65" font-size="7" text-anchor="middle">厚さと平らさをそろえる</text>
+      <rect class="fig-film" x="40" y="76" width="120" height="18" />
+      <text class="fig-text" x="100" y="89" font-size="7" text-anchor="middle">傷んだ層を取り除く</text>
+      <rect class="fig-film" x="40" y="100" width="120" height="18" />
+      <text class="fig-text" x="100" y="113" font-size="7" text-anchor="middle">鏡のように磨く</text>
+      <rect class="fig-film" x="40" y="124" width="120" height="18" />
+      <text class="fig-text" x="100" y="137" font-size="7" text-anchor="middle">洗って検査する</text>
+    </svg>
+    <span class="fig__name">仕上げの流れ</span>
+    <span class="fig__note">段階を重ねて整える</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="切った直後の凹凸のある表面と、磨いた後の平らな表面">
+      <path class="fig-line" d="M10 50l10-8 10 10 10-12 10 12 10-8 10 8 10-10 10 12 10-6 10 8 10-10 10 10 10-8 10 8 10-8 10 8"/>
+      <rect class="fig-wafer" x="10" y="56" width="180" height="18" />
+      <text class="fig-text" x="100" y="30" font-size="7" text-anchor="middle">切った直後</text>
+      <text class="fig-text" x="100" y="69" font-size="7" text-anchor="middle">ウェーハ</text>
+      <path class="fig-line" d="M10 108h180"/>
+      <rect class="fig-wafer" x="10" y="108" width="180" height="18" />
+      <text class="fig-text" x="100" y="100" font-size="7" text-anchor="middle">磨いた後</text>
+      <text class="fig-text" x="100" y="121" font-size="7" text-anchor="middle">ウェーハ</text>
+    </svg>
+    <span class="fig__name">表面の変化</span>
+    <span class="fig__note">凹凸と傷んだ層が取り除かれる</span>
+  </li>
+</FigureFrame>

@@ -1,0 +1,29 @@
+---
+// 図：アナログとデジタルの波形と、しきい値（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-digital-thinking" columns={2} title="アナログとデジタルの波形と、しきい値（模式図）" caption="図：左は、アナログの信号（連続して変わる）と、デジタルの信号（高い状態と低い状態の二つ）。右は、しきい値。しきい値より高ければ高い状態、低ければ低い状態と見なすので、多少揺らいでも区別できる。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="連続して変わるアナログと、二つの状態のデジタル">
+      <text class="fig-text" x="10" y="20" font-size="7" text-anchor="start">アナログ</text>
+      <path class="fig-arrow" d="M10 54 Q 40 20 70 54 T 130 54 T 190 54"/>
+      <text class="fig-text" x="10" y="96" font-size="7" text-anchor="start">デジタル</text>
+      <path class="fig-line" d="M10 134h26v-24h24v24h24v-24h24v24h26v-24h20"/>
+    </svg>
+    <span class="fig__name">アナログとデジタル</span>
+    <span class="fig__note">連続した値と、二つの状態</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="しきい値より高ければ高い状態、低ければ低い状態">
+      <path class="fig-dash" d="M10 70h180"/>
+      <text class="fig-text" x="100" y="64" font-size="7" text-anchor="middle">しきい値</text>
+      <path class="fig-arrow" d="M10 34 q 40 -8 80 0 t 100 -4"/>
+      <text class="fig-text" x="100" y="22" font-size="7" text-anchor="middle">高い状態</text>
+      <path class="fig-arrow" d="M10 110 q 40 8 80 0 t 100 4"/>
+      <text class="fig-text" x="100" y="134" font-size="7" text-anchor="middle">低い状態</text>
+    </svg>
+    <span class="fig__name">しきい値</span>
+    <span class="fig__note">揺らいでも状態を間違えにくい</span>
+  </li>
+</FigureFrame>
