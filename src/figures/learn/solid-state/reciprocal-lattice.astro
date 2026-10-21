@@ -1,0 +1,48 @@
+---
+// 図：Γ点からX点までの波数の線上の伝導帯の底、特別な点の波数の大きさ（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// 格子定数 a = 0.543 nm（イリノイ大学 ECE 340 Lecture 2）、単位は 2π/a
+const g = (2 * Math.PI) / 0.543;
+const rows = [
+  { n: '伝導帯の底', v: 0.85 * g },
+  { n: 'L点', v: (Math.sqrt(3) / 2) * g },
+  { n: 'X点', v: g },
+];
+const bx = (v: number) => 62 + (v / 14) * 112;
+const px = (u: number) => 30 + u * 140;
+---
+
+<FigureFrame id="fig-reciprocal-lattice" columns={2} title="シリコンの伝導帯の底は、X点の少し手前にある" caption="図：左は、Γ点（k=0）からX点まで〈100〉方向の波数の線と、伝導帯の底の位置（約85％）。右は、特別な点の波数の大きさ（格子定数0.543 nm から計算）。位置はウィーン工科大学の学位論文の解説、格子定数はイリノイ大学 ECE 340 Lecture 2、計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="Γ点からX点までの線上で、伝導帯の底はX点の約85％の位置にある">
+      <path class="fig-line" d={`M${px(0)} 90H${px(1)}`} />
+      <path class="fig-line" d={`M${px(0)} 80V100M${px(1)} 80V100`} />
+      <circle class="fig-strong" cx={px(0.85)} cy="90" r="6" />
+      <text class="fig-text" x={px(0)} y="116" font-size="7" text-anchor="middle">Γ</text>
+      <text class="fig-text" x={px(1)} y="116" font-size="7" text-anchor="middle">X</text>
+      <text class="fig-text" x={px(0.85)} y="68" font-size="7" text-anchor="middle">伝導帯の底</text>
+      <text class="fig-text" x={px(0.85)} y="78" font-size="7" text-anchor="middle">約85％</text>
+      <text class="fig-text" x="100" y="140" font-size="7" text-anchor="middle">〈100〉方向の波数</text>
+    </svg>
+    <span class="fig__name">Γ点からX点まで</span>
+    <span class="fig__note">谷は全部で6個</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`波数の大きさ：伝導帯の底 約${rows[0].v.toFixed(2)}、L点 約${rows[1].v.toFixed(2)}、X点 約${rows[2].v.toFixed(2)} nm^-1`}>
+      <path class="fig-line" d="M62 30V120h128" />
+      {rows.map((r, i) => (
+        <>
+          <text class="fig-text" x="58" y={50 + i * 24} font-size="6" text-anchor="end">{r.n}</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="62" y={38 + i * 24} width={bx(r.v) - 62} height="16" />
+          <text class="fig-text" x={bx(r.v) + 3} y={50 + i * 24} font-size="7">{r.v.toFixed(2)}</text>
+        </>
+      ))}
+      {[0, 5, 10].map((e) => (
+        <text class="fig-text" x={62 + (e / 14) * 112} y="132" font-size="7" text-anchor="middle">{e}</text>
+      ))}
+      <text class="fig-text" x="190" y="148" font-size="7" text-anchor="end">波数の大きさ（nm⁻¹）</text>
+    </svg>
+    <span class="fig__name">特別な点の波数</span>
+    <span class="fig__note">2π/a ≈ 11.57 nm⁻¹</span>
+  </li>
+</FigureFrame>
