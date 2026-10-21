@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: pn接合の電流が、拡散で決まる理由が読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

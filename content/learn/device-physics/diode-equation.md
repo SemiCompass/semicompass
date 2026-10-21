@@ -16,7 +16,7 @@ applies_to:
   folder: power
   note: パワーダイオードで、順方向の電圧が決まる仕組みが読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

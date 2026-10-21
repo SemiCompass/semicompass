@@ -16,7 +16,7 @@ applies_to:
   folder: devices
   note: 受光の部品の表面で、光が反射される条件を読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

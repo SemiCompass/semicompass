@@ -16,7 +16,7 @@ applies_to:
   folder: process
   note: パッケージの熱抵抗が、素子の温度に効く関係が読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: 電子と正孔の濃度の積が、現象の速さを決めることが分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

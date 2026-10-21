@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: n型とp型で、フェルミ準位の位置が違う理由が分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:
