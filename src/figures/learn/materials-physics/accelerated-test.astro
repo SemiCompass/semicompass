@@ -1,0 +1,57 @@
+---
+// 図：使用時55℃（素子内部75℃）に対する、試験温度ごとの加速係数（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const k = 8.63e-5; // ルネサス エレクトロニクスの資料と同じ値
+const af = (ea: number, ts: number) => Math.exp((ea / k) * (1 / 348.15 - 1 / (ts + 273.15)));
+const tx = (c: number) => 40 + ((c - 100) / 100) * 148;
+const ly = (v: number) => 126 - Math.log10(v) * 40;
+const path = (ea: number) =>
+  Array.from({ length: 21 }, (_, i) => 100 + i * 5)
+    .map((c, i) => `${i === 0 ? 'M' : 'L'}${tx(c).toFixed(1)} ${ly(af(ea, c)).toFixed(1)}`)
+    .join('');
+const bars = [
+  { name: '0.3 eV', v: 8.52 },
+  { name: '0.7 eV', v: 148.2 },
+];
+const bx = (v: number) => 62 + (v / 160) * 112;
+---
+
+<FigureFrame id="fig-accelerated-test" columns={2} title="試験の温度を上げると、寿命の見積もりが何倍にも縮む" caption="図：左は、素子内部の試験温度と加速係数の関係（使用時は素子内部75℃、縦は対数の目盛り）。右は、素子内部170℃での加速係数で、ルネサス エレクトロニクスの資料に載る値。左の計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="試験温度を高くするほど加速係数は大きくなり、活性化エネルギー0.7 eVのほうが0.3 eVより急に増える">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[1, 10, 100, 1000].map((v) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(v)}h150`} />
+          <text class="fig-text" x="36" y={ly(v) + 3} font-size="7" text-anchor="end">{v}</text>
+        </>
+      ))}
+      {[100, 150, 200].map((c) => (
+        <text class="fig-text" x={tx(c)} y="138" font-size="7" text-anchor="middle">{c}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">試験の温度（℃、素子内部）</text>
+      <text class="fig-text" x="4" y="152" font-size="7">縦：加速係数</text>
+      <path class="fig-arrow" d={path(0.7)} />
+      <path class="fig-line" d={path(0.3)} />
+      <text class="fig-text" x="100" y="36" font-size="7">0.7 eV</text>
+      <text class="fig-text" x="130" y="104" font-size="7">0.3 eV</text>
+    </svg>
+    <span class="fig__name">試験温度と加速係数</span>
+    <span class="fig__note">Ea が大きいほど、急に増える</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="素子内部170℃での加速係数：0.3 eVで8.52、0.7 eVで148.2">
+      <path class="fig-line" d="M62 30V110h128" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="58" y={55 + i * 36} font-size="7" text-anchor="end">{b.name}</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="62" y={42 + i * 36} width={bx(b.v) - 62} height="18" />
+          <text class="fig-text" x={bx(b.v) + 3} y={55 + i * 36} font-size="7">{b.v}</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="128" font-size="7" text-anchor="end">170℃と75℃の組み合わせ</text>
+    </svg>
+    <span class="fig__name">資料の例の加速係数</span>
+    <span class="fig__note">約17倍の差が出る</span>
+  </li>
+</FigureFrame>
