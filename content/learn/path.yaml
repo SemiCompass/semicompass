@@ -198,6 +198,7 @@ physics:
       title: 固体物理学
       summary: 結晶の中で電子がどう振る舞い、熱でどう変わるかを、式から読み取ります。
       units:
+        - { type: learn, ref: crystal-structure }
         - { type: learn, ref: band-gap }
         - { type: learn, ref: intrinsic-carrier }
         - { type: learn, ref: effective-mass }
