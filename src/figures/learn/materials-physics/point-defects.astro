@@ -1,0 +1,50 @@
+---
+// 図：空孔の模式図と、形成エンタルピー1 eV と仮定したときの空孔の割合の温度変化（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const k = 8.617333262e-5;
+// 仮定：HF = 1 eV、SF = 0。本サイトで計算
+const c = (t: number) => Math.exp(-1 / (k * t));
+const tx = (t: number) => 40 + ((t - 300) / 1200) * 148;
+const ly = (v: number) => 126 - (Math.log10(v) + 17) * 6.2;
+const curve = Array.from({ length: 25 }, (_, i) => 300 + i * 50)
+  .map((t, i) => `${i === 0 ? 'M' : 'L'}${tx(t).toFixed(1)} ${ly(c(t)).toFixed(1)}`)
+  .join('');
+const cols = [0, 1, 2, 3, 4];
+const rows = [0, 1, 2, 3];
+---
+
+<FigureFrame id="fig-point-defects" columns={2} title="空孔は、温度が高いほど桁で増える" caption="図：左は、結晶から原子が1個抜けた空孔の模式図。右は、形成エンタルピーを1 eV、形成エントロピーを0と仮定したときの、空孔の割合の温度変化（縦は対数の目盛り）。実際の金属やシリコンの値ではなく、式の読み方を確かめる計算で、本サイトで計算した">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="格子状に並んだ原子の中で、1か所だけ原子が抜けて空いている模式図">
+      {rows.map((r) => cols.map((q) => (
+        r === 1 && q === 2 ? (
+          <circle class="fig-dash" cx={30 + q * 34} cy={24 + r * 32} r="10" />
+        ) : (
+          <circle class="fig-wafer" cx={30 + q * 34} cy={24 + r * 32} r="10" />
+        )
+      )))}
+      <text class="fig-text" x="100" y="146" font-size="7" text-anchor="middle">点線の丸が、空孔（抜けた原子の席）</text>
+    </svg>
+    <span class="fig__name">空孔の模式図</span>
+    <span class="fig__note">原子が1個抜けた席</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="空孔の割合は、300 Kの約1.6×10^-17から、1,500 Kの約4.4×10^-4まで、温度とともに増える">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[-16, -12, -8, -4].map((e) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(10 ** e)}h150`} />
+          <text class="fig-text" x="36" y={ly(10 ** e) + 3} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+        </>
+      ))}
+      {[300, 900, 1500].map((t) => (
+        <text class="fig-text" x={tx(t)} y="138" font-size="7" text-anchor="middle">{t}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">温度（K）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">割合</text>
+      <path class="fig-arrow" d={curve} />
+    </svg>
+    <span class="fig__name">空孔の割合（仮定の値）</span>
+    <span class="fig__note">300 Kから1,500 Kで、約13桁増える</span>
+  </li>
+</FigureFrame>

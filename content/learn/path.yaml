@@ -220,5 +220,6 @@ physics:
         - { type: learn, ref: diffusion }
         - { type: learn, ref: oxidation }
         - { type: learn, ref: lattice-mismatch }
+        - { type: learn, ref: point-defects }
         - { type: learn, ref: vapor-growth }
         - { type: learn, ref: accelerated-test }
