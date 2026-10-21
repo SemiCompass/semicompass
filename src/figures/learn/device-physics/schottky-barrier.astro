@@ -1,0 +1,47 @@
+---
+// 図：金属と半導体の接触のバンド（模式図）、障壁の高さと飽和電流密度（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// ハドレーの講義のリチャードソン定数 110 A/(K^2 cm^2)、300 K
+const kT = 8.617333262e-5 * 300;
+const bars = [0.7, 0.8].map((pb) => ({ pb, js: 110 * 300 ** 2 * Math.exp(-pb / kT) }));
+const bx = (v: number) => 62 + ((Math.log10(v) + 8) / 4) * 112;
+const labels = ['1.7×10⁻⁵', '3.6×10⁻⁷'];
+---
+
+<FigureFrame id="fig-schottky-barrier" columns={2} title="障壁が0.1 eV高いと、電流の飽和値は約48分の1" caption="図：左は、n型半導体と金属の接触のエネルギー図の模式図（高さは実際の比ではない）。右は、障壁の高さを0.7 eVと0.8 eVと仮定したときの、300 Kの飽和電流密度（横軸は対数の目盛り）。リチャードソン定数 110 A/(K²·cm²) はグラーツ工科大学の講義資料、計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="金属と、n型半導体の接触。金属のフェルミ準位から、半導体の伝導帯の端までの高さが、障壁の高さである">
+      <path class="fig-line" d="M20 150V8M16 14l4-6 4 6" />
+      <path class="fig-dash" d="M20 100H190" />
+      <path class="fig-arrow" d="M80 46Q92 82 130 84H190" />
+      <path class="fig-line" d="M80 46V100" />
+      <path class="fig-line" d="M80 150V120" />
+      <text class="fig-text" x="86" y="76" font-size="7">φB</text>
+      <text class="fig-text" x="150" y="78" font-size="7">伝導帯</text>
+      <text class="fig-text" x="150" y="114" font-size="7">フェルミ準位</text>
+      <text class="fig-text" x="30" y="130" font-size="7">金属</text>
+      <text class="fig-text" x="150" y="140" font-size="7">半導体</text>
+      <text class="fig-text" x="26" y="12" font-size="7" dx="6">E</text>
+    </svg>
+    <span class="fig__name">接触のエネルギー図</span>
+    <span class="fig__note">模式図</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="飽和電流密度：障壁0.7 eVで約1.7×10^-5、0.8 eVで約3.6×10^-7 A/cm2">
+      <path class="fig-line" d="M62 30V110h128" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="58" y={58 + i * 30} font-size="7" text-anchor="end">{b.pb} eV</text>
+          <rect class={i === 0 ? 'fig-wafer' : 'fig-film'} x="62" y={46 + i * 30} width={bx(b.js) - 62} height="16" />
+          <text class="fig-text" x={bx(b.js) + 3} y={58 + i * 30} font-size="7">{labels[i]}</text>
+        </>
+      ))}
+      {[-8, -6, -4].map((e) => (
+        <text class="fig-text" x={62 + ((e + 8) / 4) * 112} y="122" font-size="7" text-anchor="middle">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+      ))}
+      <text class="fig-text" x="190" y="138" font-size="7" text-anchor="end">JS（A/cm²、対数）</text>
+    </svg>
+    <span class="fig__name">障壁の高さと飽和電流</span>
+    <span class="fig__note">0.1 eVで、約48倍</span>
+  </li>
+</FigureFrame>

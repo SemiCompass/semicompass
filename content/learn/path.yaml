@@ -215,6 +215,7 @@ physics:
         - { type: learn, ref: diode-equation }
         - { type: learn, ref: mos-threshold }
         - { type: learn, ref: mosfet-current }
+        - { type: learn, ref: schottky-barrier }
     - label: C
       slug: optics
       title: 光物性
