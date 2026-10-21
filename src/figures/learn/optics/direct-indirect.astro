@@ -1,0 +1,38 @@
+---
+// 図：直接遷移と間接遷移のバンドの模式図（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-direct-indirect" columns={2} title="伝導帯の底と価電子帯の頂上が、そろっているか、ずれているか" caption="図：横軸は結晶の中での電子の運動量、縦軸はエネルギーの模式図。左の直接遷移では、運動量を変えずに光を出して結びつく。右の間接遷移では、結晶の振動（フォノン）が運動量の差を埋める必要がある">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="直接遷移：伝導帯の底と価電子帯の頂上が同じ運動量の位置にあり、真下に落ちて光を出す">
+      <path class="fig-line" d="M20 150V8M16 14l4-6 4 6M20 150h170" />
+      <path class="fig-film" d="M45 12Q100 100 155 12" fill="none" stroke-width="2" />
+      <path class="fig-wafer" d="M45 144Q100 60 155 144" fill="none" stroke-width="2" />
+      <circle class="fig-film" cx="100" cy="56" r="4" />
+      <circle class="fig-dash" cx="100" cy="100" r="4" />
+      <path class="fig-arrow" d="M100 62V92M96 86l4 6 4-6" />
+      <text class="fig-text" x="108" y="82" font-size="8">光</text>
+      <text class="fig-text" x="188" y="146" font-size="7" text-anchor="end">運動量 →</text>
+      <text class="fig-text" x="100" y="136" font-size="7" text-anchor="middle" dy="22">運動量が変わらない</text>
+    </svg>
+    <span class="fig__name">直接遷移</span>
+    <span class="fig__note">GaAs など。光を出しやすい</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="間接遷移：伝導帯の底が価電子帯の頂上と別の運動量の位置にあり、フォノンで運動量をそろえてから光を出す">
+      <path class="fig-line" d="M20 150V8M16 14l4-6 4 6M20 150h170" />
+      <path class="fig-film" d="M75 12Q130 100 185 12" fill="none" stroke-width="2" />
+      <path class="fig-wafer" d="M25 144Q80 60 135 144" fill="none" stroke-width="2" />
+      <circle class="fig-film" cx="130" cy="56" r="4" />
+      <circle class="fig-dash" cx="80" cy="100" r="4" />
+      <path class="fig-dash" d="M126 56H86" />
+      <path class="fig-arrow" d="M80 62V92M76 86l4 6 4-6" />
+      <text class="fig-text" x="88" y="50" font-size="7">フォノン</text>
+      <text class="fig-text" x="88" y="82" font-size="8">光</text>
+      <text class="fig-text" x="100" y="158" font-size="7" text-anchor="middle">運動量がずれ、フォノンが必要</text>
+    </svg>
+    <span class="fig__name">間接遷移</span>
+    <span class="fig__note">Si、Ge など。光を出しにくい</span>
+  </li>
+</FigureFrame>
