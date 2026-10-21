@@ -1,0 +1,53 @@
+---
+// 図：格子定数の違いと、重ねたときの原子の並びのずれ（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// 格子定数（Å）：Schubert「Materials II」の値
+const si = 5.43095;
+const gaas = 5.6533;
+const nx = (a: number) => 20 + ((a - 5.4) / 0.3) * 160;
+// 模式図：間隔を大きく強調して描く（実際の差は約4.1%）
+const subst = Array.from({ length: 7 }, (_, i) => 24 + i * 22);
+const film = Array.from({ length: 7 }, (_, i) => 24 + i * 24);
+---
+
+<FigureFrame id="fig-lattice-mismatch" columns={2} title="原子の間隔が違うと、並びがずれていく" caption="図：左は、下地と膜の原子の並びが食い違っていく様子の模式図（ずれは実際より大きく描いている）。右は、シリコンとヒ化ガリウム（GaAs）の格子定数を数直線に置いたもの。値は Schubert「Materials II」、差の割合は本サイトで計算">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="下地の原子の並びより、膜の原子の並びの間隔が広いため、右へ行くほど位置がずれていく模式図">
+      <text class="fig-text" x="4" y="30" font-size="8">膜</text>
+      <text class="fig-text" x="4" y="110" font-size="8">下地</text>
+      {film.map((x) => (
+        <circle class="fig-film" cx={x + 8} cy="44" r="7" />
+      ))}
+      {subst.map((x) => (
+        <circle class="fig-wafer" cx={x + 8} cy="96" r="7" />
+      ))}
+      {film.map((x, i) => (
+        <path class="fig-dash" d={`M${x + 8} 51V89`} />
+      ))}
+      <text class="fig-text" x="100" y="140" font-size="7" text-anchor="middle">右へ行くほど、ずれが大きくなる</text>
+    </svg>
+    <span class="fig__name">原子の並びの食い違い</span>
+    <span class="fig__note">模式図。ずれは強調している</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`格子定数の数直線：シリコン${si} Å、GaAs ${gaas} Å。差は約4.1%`}>
+      <path class="fig-line" d="M20 90h160" />
+      {[5.4, 5.5, 5.6, 5.7].map((a) => (
+        <>
+          <path class="fig-line" d={`M${nx(a)} 86v8`} />
+          <text class="fig-text" x={nx(a)} y="106" font-size="7" text-anchor="middle">{a.toFixed(1)}</text>
+        </>
+      ))}
+      <circle class="fig-wafer" cx={nx(si)} cy="90" r="5" />
+      <circle class="fig-film" cx={nx(gaas)} cy="90" r="5" />
+      <text class="fig-text" x={nx(si)} y="70" font-size="8" text-anchor="middle">Si</text>
+      <text class="fig-text" x={nx(si)} y="60" font-size="6" text-anchor="middle">{si}</text>
+      <text class="fig-text" x={nx(gaas)} y="70" font-size="8" text-anchor="middle">GaAs</text>
+      <text class="fig-text" x={nx(gaas)} y="60" font-size="6" text-anchor="middle">{gaas}</text>
+      <text class="fig-text" x="180" y="130" font-size="7" text-anchor="end">格子定数（Å）</text>
+      <text class="fig-text" x="100" y="148" font-size="8" text-anchor="middle">差は約4.1%</text>
+    </svg>
+    <span class="fig__name">格子定数の比べ</span>
+    <span class="fig__note">目盛りは5.4 Åから始めている</span>
+  </li>
+</FigureFrame>
