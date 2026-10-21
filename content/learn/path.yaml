@@ -76,6 +76,9 @@ fields:
         title: 設計の進め方
         units:
           - { type: learn, ref: design-flow, folder: logic }
+          - { type: learn, ref: low-power, folder: logic }
+          - { type: learn, ref: clock-timing, folder: logic }
+          - { type: learn, ref: design-rules, folder: logic }
           - { type: process, ref: circuit-design }
   - "no": 4
     slug: process
@@ -87,13 +90,16 @@ fields:
         title: 前工程
         units:
           - { type: process, ref: cleaning }
+          - { type: learn, ref: cleaning-contamination }
           - { type: process, ref: deposition }
+          - { type: learn, ref: deposition-methods }
           - { type: process, ref: lithography }
           - { type: learn, ref: resolution }
           - { type: process, ref: etching }
           - { type: learn, ref: plasma-process }
           - { type: learn, ref: doping-and-anneal }
           - { type: process, ref: cmp }
+          - { type: learn, ref: planarization }
           - { type: learn, ref: interconnect }
       - slug: back-end
         title: 後工程

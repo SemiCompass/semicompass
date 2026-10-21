@@ -478,6 +478,24 @@ learn:
   energy-environment:
     title: 電力と環境：工場が向き合う課題
     basis: reviewed
+  wafer-finishing:
+    title: ウェーハに仕上げる：切断から研磨まで
+    basis: reviewed
+  crystal-defects:
+    title: 結晶の乱れ：欠陥と不純物
+    basis: reviewed
+  wafer-specs:
+    title: ウェーハの仕様を読む：大きさ、厚さ、向き、抵抗
+    basis: reviewed
+  circuit-elements:
+    title: 回路の基本の部品：抵抗、コンデンサー、コイル、ダイオード
+    basis: reviewed
+  digital-thinking:
+    title: 二つの状態で表す：デジタルの考え方
+    basis: reviewed
+  nanometer-scale:
+    title: 小さな世界の大きさ：マイクロメートルとナノメートル
+    basis: reviewed
   compound:
     title: シリコン以外の半導体：化合物半導体
     basis: reviewed
@@ -538,21 +556,21 @@ learn:
   thin-film-materials:
     title: 回路を作る薄い膜の材料：絶縁膜、金属膜、バリア
     basis: reviewed
-  wafer-finishing:
-    title: ウェーハに仕上げる：切断から研磨まで
+  low-power:
+    title: 電力を抑える設計：低消費電力の考え方
     basis: reviewed
-  crystal-defects:
-    title: 結晶の乱れ：欠陥と不純物
+  clock-timing:
+    title: 時刻をそろえる：クロックとタイミング
     basis: reviewed
-  wafer-specs:
-    title: ウェーハの仕様を読む：大きさ、厚さ、向き、抵抗
+  design-rules:
+    title: 製造と設計をつなぐ：設計ルールと部品の一覧
     basis: reviewed
-  circuit-elements:
-    title: 回路の基本の部品：抵抗、コンデンサー、コイル、ダイオード
+  deposition-methods:
+    title: 膜をつける方法：成膜の種類と選び方
     basis: reviewed
-  digital-thinking:
-    title: 二つの状態で表す：デジタルの考え方
+  cleaning-contamination:
+    title: 汚れを取る：洗浄と汚染の管理
     basis: reviewed
-  nanometer-scale:
-    title: 小さな世界の大きさ：マイクロメートルとナノメートル
+  planarization:
+    title: 表面を平らにする：平坦化と研磨
     basis: reviewed
