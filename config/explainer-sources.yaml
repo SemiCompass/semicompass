@@ -538,3 +538,21 @@ learn:
   thin-film-materials:
     title: 回路を作る薄い膜の材料：絶縁膜、金属膜、バリア
     basis: reviewed
+  low-power:
+    title: 電力を抑える設計：低消費電力の考え方
+    basis: reviewed
+  clock-timing:
+    title: 時刻をそろえる：クロックとタイミング
+    basis: reviewed
+  design-rules:
+    title: 製造と設計をつなぐ：設計ルールと部品の一覧
+    basis: reviewed
+  deposition-methods:
+    title: 膜をつける方法：成膜の種類と選び方
+    basis: reviewed
+  cleaning-contamination:
+    title: 汚れを取る：洗浄と汚染の管理
+    basis: reviewed
+  planarization:
+    title: 表面を平らにする：平坦化と研磨
+    basis: reviewed
