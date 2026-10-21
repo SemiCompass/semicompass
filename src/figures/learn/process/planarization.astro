@@ -1,0 +1,33 @@
+---
+// 図：凹凸と焦点、化学機械研磨のしくみ（模式図）（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-planarization" columns={2} title="凹凸と焦点、化学機械研磨のしくみ（模式図）" caption="図：左は、表面の凹凸と露光の焦点。凹凸があると、高い所には焦点が合っても、低い所には合わない。右は、化学機械研磨。ウェーハを回転するパッドに押し当て、研磨剤を含む液体を流して削る。目盛りのない模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="凹凸の表面に、焦点の合う範囲が一部しか届かない">
+      <path class="fig-dash" d="M10 62h180"/>
+      <text class="fig-text" x="100" y="52" font-size="7" text-anchor="middle">焦点が合う高さ</text>
+      <rect class="fig-wafer" x="10" y="62" width="30" height="48" />
+      <rect class="fig-wafer" x="70" y="80" width="30" height="30" />
+      <rect class="fig-wafer" x="130" y="62" width="30" height="48" />
+      <rect class="fig-wafer" x="10" y="110" width="180" height="16" />
+      <text class="fig-text" x="100" y="142" font-size="7" text-anchor="middle">低い所は焦点が合わない</text>
+    </svg>
+    <span class="fig__name">凹凸と焦点</span>
+    <span class="fig__note">焦点が合う範囲はごく狭い</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 150" role="img" aria-label="ウェーハ、研磨剤を含む液体、パッド">
+      <rect class="fig-film" x="40" y="14" width="120" height="26" />
+      <text class="fig-text" x="100" y="31" font-size="7" text-anchor="middle">ウェーハ（下向き）</text>
+      <path class="fig-arrow" d="M100 40v10M96 46l4 6 4-6"/>
+      <text class="fig-text" x="100" y="66" font-size="7" text-anchor="middle">研磨剤を含む液体</text>
+      <rect class="fig-part" x="30" y="76" width="140" height="30" />
+      <text class="fig-text" x="100" y="95" font-size="7" text-anchor="middle">回転するパッド</text>
+      <text class="fig-text" x="100" y="128" font-size="7" text-anchor="middle">高い所から削れる</text>
+    </svg>
+    <span class="fig__name">化学機械研磨</span>
+    <span class="fig__note">化学と機械の働きで削る</span>
+  </li>
+</FigureFrame>
