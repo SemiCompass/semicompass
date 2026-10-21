@@ -538,3 +538,21 @@ learn:
   thin-film-materials:
     title: 回路を作る薄い膜の材料：絶縁膜、金属膜、バリア
     basis: reviewed
+  environment-control:
+    title: 揺れと温度を抑える：装置を置く環境
+    basis: reviewed
+  safety-management:
+    title: 安全を守る：薬品・ガス・排気の管理
+    basis: reviewed
+  equipment-maintenance:
+    title: 装置を保つ：保守と稼働率
+    basis: reviewed
+  capital-investment:
+    title: 巨額の投資と回収：設備投資の考え方
+    basis: reviewed
+  reading-financials:
+    title: 決算資料の読み方：半導体企業を見る観点
+    basis: reviewed
+  standards-and-ip:
+    title: 共通の決まりと設計の部品：標準と設計資産
+    basis: reviewed
