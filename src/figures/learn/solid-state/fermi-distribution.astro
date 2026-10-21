@@ -1,0 +1,53 @@
+---
+// 図：フェルミ分布の形と、電子の濃度に対する Ec−EF（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const k = 8.617333262e-5;
+const kT = k * 300;
+const Nc = 2.9e19; // MIT 6.720J Lecture 3 のシリコンの値
+const f = (x: number) => 1 / (1 + Math.exp(x));
+const tx = (x: number) => 40 + ((x + 6) / 12) * 148;
+const ly = (v: number) => 126 - v * 110;
+const curve = Array.from({ length: 49 }, (_, i) => -6 + i * 0.25)
+  .map((x, i) => `${i === 0 ? 'M' : 'L'}${tx(x).toFixed(1)} ${ly(f(x)).toFixed(1)}`)
+  .join('');
+const bars = [16, 17, 18].map((e) => ({ e, v: kT * Math.log(Nc / 10 ** e) }));
+const bx = (v: number) => 70 + (v / 0.25) * 110;
+---
+
+<FigureFrame id="fig-fermi-distribution" columns={2} title="席の埋まる確率は、フェルミ準位を境に切り替わる" caption="図：左は、フェルミ分布 f(E)。横軸はフェルミ準位からの差を kT で割った値（E−EF）/kT。右は、300 Kのシリコンで、電子の濃度ごとに必要な、伝導帯の底とフェルミ準位の差 Ec−EF（Nc は MIT 6.720J の値、計算は本サイト）">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="フェルミ分布は、E−EFが0で確率1/2、負で1に近づき、正で0に近づく">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[0, 0.5, 1].map((v) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(v)}h150`} />
+          <text class="fig-text" x="36" y={ly(v) + 3} font-size="7" text-anchor="end">{v}</text>
+        </>
+      ))}
+      {[-6, 0, 6].map((x) => (
+        <text class="fig-text" x={tx(x)} y="138" font-size="7" text-anchor="middle">{x}</text>
+      ))}
+      <path class="fig-dash" d={`M${tx(0)} 12V126`} />
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">（E−EF）/kT</text>
+      <text class="fig-text" x="4" y="8" font-size="7">f(E)</text>
+      <path class="fig-arrow" d={curve} />
+    </svg>
+    <span class="fig__name">フェルミ分布</span>
+    <span class="fig__note">EFで確率1/2になる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`電子の濃度が10の16乗、17乗、18乗のとき、Ec−EFは約${bars[0].v.toFixed(2)}、${bars[1].v.toFixed(2)}、${bars[2].v.toFixed(2)} eV`}>
+      <path class="fig-line" d="M70 24V116h120" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="66" y={52 + i * 28} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{b.e}</tspan> cm⁻³</text>
+          <rect class={i === 1 ? 'fig-film' : 'fig-wafer'} x="70" y={40 + i * 28} width={bx(b.v) - 70} height="16" />
+          <text class="fig-text" x={bx(b.v) + 3} y={52 + i * 28} font-size="7">{b.v.toFixed(3)} eV</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="132" font-size="7" text-anchor="end">Ec−EF（eV）</text>
+    </svg>
+    <span class="fig__name">濃度とフェルミ準位</span>
+    <span class="fig__note">10倍で約60 meV近づく</span>
+  </li>
+</FigureFrame>

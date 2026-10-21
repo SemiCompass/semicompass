@@ -1,0 +1,54 @@
+---
+// 図：ドリフトの速さと電界の関係、拡散係数（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+// Tishk International University のスライドの移動度（cm2/Vs）と、kT/q = 0.0259 V（本サイトで計算）
+const mu = { n: 1400, p: 470 };
+const kTq = 8.617333262e-5 * 300;
+const tx = (e: number) => 40 + (e / 1000) * 148;
+const ly = (v: number) => 126 - (v / 1.5e6) * 110;
+const bars = [
+  { name: '電子', d: mu.n * kTq },
+  { name: '正孔', d: mu.p * kTq },
+];
+const bx = (d: number) => 62 + (d / 40) * 112;
+---
+
+<FigureFrame id="fig-drift-diffusion" columns={2} title="電界で動く速さと、拡散の速さは、移動度で結ばれる" caption="図：左は、電界とドリフトの速さの関係（v = μE。電界が強くなって速さが頭打ちになる領域は含めない）。右は、アインシュタインの関係 D = (kT/q)μ から求めた300 Kの拡散係数。移動度は Tishk International University のスライド、計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="電界1,000 V/cmで、電子のドリフトの速さは1.4×10^6 cm/s、正孔は4.7×10^5 cm/s">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[0, 5e5, 1e6, 1.5e6].map((v) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(v)}h150`} />
+          <text class="fig-text" x="36" y={ly(v) + 3} font-size="7" text-anchor="end">{v === 0 ? 0 : `${v / 1e6}`}</text>
+        </>
+      ))}
+      {[0, 500, 1000].map((e) => (
+        <text class="fig-text" x={tx(e)} y="138" font-size="7" text-anchor="middle">{e}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">電界（V/cm）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">速さ（10⁶ cm/s）</text>
+      <path class="fig-arrow" d={`M${tx(0)} ${ly(0)}L${tx(1000)} ${ly(mu.n * 1000)}`} />
+      <path class="fig-line" d={`M${tx(0)} ${ly(0)}L${tx(1000)} ${ly(mu.p * 1000)}`} />
+      <text class="fig-text" x="120" y={ly(mu.n * 700) - 6} font-size="7">電子</text>
+      <text class="fig-text" x="130" y={ly(mu.p * 800) - 6} font-size="7">正孔</text>
+    </svg>
+    <span class="fig__name">ドリフトの速さ</span>
+    <span class="fig__note">移動度が傾きにあたる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`300 Kの拡散係数：電子約${bars[0].d.toFixed(0)} cm2/s、正孔約${bars[1].d.toFixed(0)} cm2/s`}>
+      <path class="fig-line" d="M62 30V110h128" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="58" y={58 + i * 30} font-size="7" text-anchor="end">{b.name}</text>
+          <rect class={i === 0 ? 'fig-film' : 'fig-wafer'} x="62" y={46 + i * 30} width={bx(b.d) - 62} height="16" />
+          <text class="fig-text" x={bx(b.d) + 3} y={58 + i * 30} font-size="7">{b.d.toFixed(0)}</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="126" font-size="7" text-anchor="end">拡散係数（cm²/s）</text>
+    </svg>
+    <span class="fig__name">拡散係数</span>
+    <span class="fig__note">電子のほうが速い</span>
+  </li>
+</FigureFrame>

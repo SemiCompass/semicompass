@@ -1,0 +1,53 @@
+---
+// 図：逆方向の電圧と空乏層の幅、濃度ごとの耐圧の目安（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const q = 1.602176634e-19;
+const eps = 11.9 * 8.8541878128e-14; // F/cm（CERN のシリコンの比誘電率、NIST の真空の誘電率）
+const N = 1e16;
+const w = (vr: number) => Math.sqrt(((2 * eps * (0.72 + vr)) / q) * (2 / N)) * 1e4; // μm
+const tx = (v: number) => 40 + (v / 10) * 148;
+const ly = (u: number) => 126 - (u / 2) * 110;
+const curve = Array.from({ length: 21 }, (_, i) => i * 0.5)
+  .map((v, i) => `${i === 0 ? 'M' : 'L'}${tx(v).toFixed(1)} ${ly(w(v)).toFixed(1)}`)
+  .join('');
+const vb = (n: number) => (eps * 3e5 ** 2) / (2 * q * n);
+const bars = [1e15, 1e16, 1e17].map((n) => ({ e: Math.log10(n), v: vb(n) }));
+const bx = (v: number) => 70 + ((Math.log10(v) + 0.5) / 3.5) * 110;
+---
+
+<FigureFrame id="fig-depletion-width" columns={2} title="逆方向の電圧で空乏層が広がり、濃度が低いほど耐圧が高い" caption="図：左は、NA=ND=10の16乗 cm⁻³ のシリコンで、逆方向の電圧と空乏層の幅の関係（内蔵電位0.72 V）。右は、片側の濃度ごとの耐圧の目安（絶縁破壊電界3.0×10⁵ V/cm、横軸は対数の目盛り）。式は Hadley（グラーツ工科大学）、比誘電率は CERN、絶縁破壊電界は東芝デバイス＆ストレージ。計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`逆方向の電圧が0 Vで空乏層の幅は約${w(0).toFixed(2)} μm、10 Vで約${w(10).toFixed(1)} μm`}>
+      <path class="fig-line" d="M40 12V126h150" />
+      {[0, 1, 2].map((u) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(u)}h150`} />
+          <text class="fig-text" x="36" y={ly(u) + 3} font-size="7" text-anchor="end">{u}</text>
+        </>
+      ))}
+      {[0, 5, 10].map((v) => (
+        <text class="fig-text" x={tx(v)} y="138" font-size="7" text-anchor="middle">{v}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">逆方向の電圧（V）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">幅（μm）</text>
+      <path class="fig-arrow" d={curve} />
+    </svg>
+    <span class="fig__name">空乏層の幅</span>
+    <span class="fig__note">電圧の平方根で広がる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`耐圧の目安：濃度10の15乗で約${bars[0].v.toFixed(0)} V、16乗で約${bars[1].v.toFixed(0)} V、17乗で約${bars[2].v.toFixed(0)} V`}>
+      <path class="fig-line" d="M70 24V116h120" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="66" y={52 + i * 28} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{b.e}</tspan> cm⁻³</text>
+          <rect class={i === 1 ? 'fig-film' : 'fig-wafer'} x="70" y={40 + i * 28} width={bx(b.v) - 70} height="16" />
+          <text class="fig-text" x={bx(b.v) + 3} y={52 + i * 28} font-size="7">約{b.v.toFixed(0)} V</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="132" font-size="7" text-anchor="end">耐圧の目安（V、対数）</text>
+    </svg>
+    <span class="fig__name">濃度と耐圧の目安</span>
+    <span class="fig__note">濃度10分の1で、耐圧は10倍</span>
+  </li>
+</FigureFrame>

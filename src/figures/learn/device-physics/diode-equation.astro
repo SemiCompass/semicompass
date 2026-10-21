@@ -1,0 +1,56 @@
+---
+// 図：ダイオードの電流の電圧依存（理想係数1と1.79）と、電流を10倍にする電圧（仕様書 7章、8.18）
+import FigureFrame from '../../../components/FigureFrame.astro';
+const VT = 8.617333262e-5 * 300;
+const tx = (v: number) => 40 + (v / 0.7) * 148;
+const ly = (e: number) => 126 - (e / 12) * 110;
+const curve = (n: number) =>
+  Array.from({ length: 15 }, (_, i) => i * 0.05)
+    .map((v, i) => `${i === 0 ? 'M' : 'L'}${tx(v).toFixed(1)} ${ly(Math.min(12, v / (n * VT) / Math.LN10)).toFixed(1)}`)
+    .join('');
+const bars = [
+  { name: '理想（n=1）', mv: Math.LN10 * VT * 1000 },
+  { name: '測定例（n≈1.79）', mv: Math.LN10 * 1.79 * 8.617333262e-5 * 320.95 * 1000 },
+];
+const bx = (v: number) => 80 + (v / 130) * 100;
+---
+
+<FigureFrame id="fig-diode-equation" columns={2} title="順方向の電流は、電圧とともに指数で増える" caption="図：左は、順方向の電流 I と飽和電流 IS の比の対数（縦は10の何乗かを表す）。右は、電流を10倍にするのに必要な電圧の増加。測定例の理想係数は arXiv:1608.05638 の値（47.8℃での報告値）。右の測定例は320.95 Kで計算、左の曲線は300 Kで計算。計算は本サイト">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label="順方向の電圧が上がると、電流は指数関数で増え、理想係数が大きいほど増え方は緩やかになる">
+      <path class="fig-line" d="M40 12V126h150" />
+      {[0, 4, 8, 12].map((e) => (
+        <>
+          <path class="fig-dash" d={`M40 ${ly(e)}h150`} />
+          <text class="fig-text" x="36" y={ly(e) + 3} font-size="7" text-anchor="end">10<tspan baseline-shift="super" font-size="5">{e}</tspan></text>
+        </>
+      ))}
+      {[0, 0.35, 0.7].map((v) => (
+        <text class="fig-text" x={tx(v)} y="138" font-size="7" text-anchor="middle">{v}</text>
+      ))}
+      <text class="fig-text" x="190" y="152" font-size="7" text-anchor="end">順方向の電圧（V）</text>
+      <text class="fig-text" x="4" y="8" font-size="7">I/IS</text>
+      <path class="fig-arrow" d={curve(1)} />
+      <path class="fig-line" d={curve(1.79)} />
+      <text class="fig-text" x="100" y="40" font-size="7">n = 1</text>
+      <text class="fig-text" x="150" y="104" font-size="7">n = 1.79</text>
+    </svg>
+    <span class="fig__name">電流と電圧</span>
+    <span class="fig__note">縦は対数。直線に見える</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 160" role="img" aria-label={`電流を10倍にする電圧の増加：理想で約${bars[0].mv.toFixed(0)} mV、測定例で約${bars[1].mv.toFixed(0)} mV`}>
+      <path class="fig-line" d="M80 30V110h110" />
+      {bars.map((b, i) => (
+        <>
+          <text class="fig-text" x="76" y={58 + i * 30} font-size="6" text-anchor="end">{b.name}</text>
+          <rect class={i === 0 ? 'fig-film' : 'fig-wafer'} x="80" y={46 + i * 30} width={bx(b.mv) - 80} height="16" />
+          <text class="fig-text" x={bx(b.mv) + 3} y={58 + i * 30} font-size="7">{b.mv.toFixed(0)} mV</text>
+        </>
+      ))}
+      <text class="fig-text" x="190" y="126" font-size="7" text-anchor="end">電流10倍あたり</text>
+    </svg>
+    <span class="fig__name">電流を10倍にする電圧</span>
+    <span class="fig__note">理想は約60 mV</span>
+  </li>
+</FigureFrame>
