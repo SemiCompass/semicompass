@@ -12,7 +12,7 @@ applies_to:
   folder: silicon
   note: 結晶の原子の並びと、波数の世界との対応が読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

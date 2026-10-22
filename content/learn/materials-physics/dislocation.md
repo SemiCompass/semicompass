@@ -12,7 +12,7 @@ applies_to:
   folder: silicon
   note: 結晶の原子の並びが、どの面とどの向きですべりやすいかを決めることが分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

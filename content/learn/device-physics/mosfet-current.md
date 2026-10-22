@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: 微細化でゲートの電圧を下げにくい理由が読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

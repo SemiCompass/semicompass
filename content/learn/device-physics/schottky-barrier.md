@@ -12,7 +12,7 @@ applies_to:
   folder: power
   note: ショットキーバリアダイオードの電流が、障壁の高さで決まることが読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

@@ -16,7 +16,7 @@ applies_to:
   folder: sensors
   note: 温度が上がると、熱の逃げ方が変わることを読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:
