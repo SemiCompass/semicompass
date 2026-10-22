@@ -59,7 +59,7 @@ export function parseReport(body: string): ReportSection[] {
     const lines = chunk.split('\n').map((l) => l.trim()).filter(Boolean);
     if (lines.length === 0) continue;
     let rest = lines;
-    while (rest.length > 0 && /^##\s+/.test(rest[0])) {
+    while (rest.length > 0 && /^#{2,3}\s+/.test(rest[0])) {
       if (/^###\s+/.test(rest[0])) {
         current?.blocks.push({ kind: 'h3', text: rest[0].replace(/^###\s+/, '') });
       } else {
