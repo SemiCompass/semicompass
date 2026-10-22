@@ -15,6 +15,7 @@ import Tag from '../../../../components/Tag.astro';
 import Page from '../../../../layouts/Page.astro';
 import { companyRows, dateLabel, formatNumber, loadCompanies, loadSupply } from '../../../../lib/companies';
 import { CATEGORY_LABEL, loadNews, type NewsItem } from '../../../../lib/news';
+import { loadThemes, themeTags } from '../../../../lib/themes';
 
 export function getStaticPaths() {
   return loadNews(BUILD_ENV === 'preview').map((n) => ({ params: { year: n.year, month: n.month, slug: n.slug }, props: { news: n } }));
@@ -31,6 +32,7 @@ const processTags = f.tags.processes.flatMap((slug) => {
   const p = supply.processes.find((x) => x.slug === slug);
   return p ? [{ slug, name: p.name }] : [];
 });
+const themeTagList = themeTags(f.tags.themes ?? [], loadThemes(BUILD_ENV === 'preview'));
 const sections = news.sections.filter((s) => s.heading);
 // この解説の企業（8.22）：関係する企業のうち、詳しいページのある企業を2社まで
 const rowsAll = companyRows(BUILD_ENV === 'preview');
@@ -90,12 +92,13 @@ const toc = [
   ))}
   <section aria-labelledby="related">
     <h2 id="related">関係する企業・工程</h2>
-    {companyTags.length === 0 && processTags.length === 0 ? (
+    {companyTags.length === 0 && processTags.length === 0 && themeTagList.length === 0 ? (
       <p>関係する企業・工程のタグは、ありません。</p>
     ) : (
       <p class="news-tags">
         {companyTags.map((c) => <Tag href={`/companies/${c.slug}/`} kind="企業">{c.name}</Tag>)}
         {processTags.map((p) => <Tag href={`/processes/${p.slug}/`} kind="工程">{p.name}</Tag>)}
+        {themeTagList.map((t) => <Tag href={`/themes/${t.slug}/`} kind="テーマ">{t.name}</Tag>)}
       </p>
     )}
   </section>

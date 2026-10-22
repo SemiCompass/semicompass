@@ -1,0 +1,89 @@
+---
+// テーマの一覧（/themes/。仕様書 9.9）：1件ずつ罫線で区切り、テーマの名前・説明・関連する企業の数と更新日を並べる。カードにしない。
+// content/themes/ の draft: true は、プレビューのビルドだけ。0件のときは、データがない状態の表示
+import { BUILD_ENV } from 'astro:env/server';
+import AdSlot from '../../components/AdSlot.astro';
+import Phrase from '../../components/Phrase.astro';
+import StateMessage from '../../components/StateMessage.astro';
+import Page from '../../layouts/Page.astro';
+import { dateLabel } from '../../lib/format';
+import { companyCount, loadThemes } from '../../lib/themes';
+
+const themes = loadThemes(BUILD_ENV === 'preview');
+---
+
+<Page
+  title="テーマの一覧｜SemiCompass"
+  heading="テーマ"
+  description="生成AIやデータセンターなど、いま関心の高い話題ごとに、関係する工程と企業をまとめています。"
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: 'テーマ' }]}
+  wide
+>
+  {themes.length === 0 ? (
+    <StateMessage kind="empty" message="テーマのページは、まだありません。" actionLabel="ニュース解説を見る" actionHref="/news/" />
+  ) : (
+    <>
+      <p class="lead measure">話題ごとに、半導体のどの工程が関わり、どの企業が何を担っているかをまとめています。</p>
+      <ol class="theme-list">
+        {themes.map((t) => (
+          <li class="theme-list__item">
+            <h2 class="theme-list__title"><a href={t.url}><Phrase text={t.front.title} /></a></h2>
+            <p class="theme-list__desc">{t.front.description}</p>
+            <p class="theme-list__meta">
+              <span>関連する企業 {companyCount(t.front)}社</span>
+              <span>更新日：<time datetime={t.front.updated_at ?? t.front.published_at}>{dateLabel(t.front.updated_at ?? t.front.published_at)}</time></span>
+            </p>
+          </li>
+        ))}
+      </ol>
+      <AdSlot page="list" position="after-list" />
+    </>
+  )}
+</Page>
+
+<style>
+  .theme-list {
+    max-width: var(--content-max-width);
+    margin: 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-text);
+    list-style: none;
+  }
+  .theme-list__item {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-5);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .theme-list__title {
+    margin: 0;
+    font-size: var(--text-h3);
+    line-height: var(--text-h3-leading);
+    font-feature-settings: "palt";
+  }
+  .theme-list__title a,
+  .theme-list__title a:visited {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .theme-list__title a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+  .theme-list__desc {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .theme-list__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

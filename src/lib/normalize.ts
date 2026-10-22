@@ -16,7 +16,7 @@ function unicodeKatakanaToHiragana(text: string): string {
 }
 
 export interface SearchEntry {
-  type: 'company' | 'process' | 'term' | 'news';
+  type: 'company' | 'process' | 'term' | 'theme' | 'news';
   name: string; // 表示する名前（企業は略称）
   url: string;
   code?: string; // 証券コード

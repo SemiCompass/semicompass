@@ -31,6 +31,11 @@
   本文の見出しが「## 事業概要」「## 工程上の位置づけ」の2つだけで、この順。`#` がない（V-10）。
   本文の [S1] などの番号がすべて sources の id にある（V-07）。sources の資料で本文に出てこないものは警告（V-08）。
   「事業概要」の文字数が300〜500字（データ定義書 2.6 の数え方）を外れたら警告（V-12）
+* テーマ（D16、データ定義書 6.7）：content/themes/*.md の front matter は schemas/content/theme.schema.json。
+  ファイル名と theme が同じ（V-02）。groups の企業・工程、processes、terms、learn の参照先がある（V-04）。
+  根拠（basis）の番号が sources にある、1社がテーマの中で重複しない、others が10社まで（V-25。10社を超えるのは警告）。
+  本文は「何が起きているか」「半導体のどこに関わるか」の2つの見出し（V-10）、600〜1,000字（V-12、警告）。
+  ニュースの tags.themes が content/themes/ にある（V-04）
 * ニュース（D11、データ定義書 6.2）と config/news.yaml（7.3）：content/news/*.md の front matter は
   news.schema.json、config/news.yaml は schemas/config/news.schema.json で検査する（draft: true も検査する）。
   ファイル名が {yyyy}-{mm}-{slug} の形で、年月が published_at と一致する（V-02、V-09）。
@@ -89,6 +94,7 @@ SCHEMAS = {
     "events": "schemas/data/events.schema.json",
     "learn-path": "schemas/content/learn-path.schema.json",
     "ir-point": "schemas/content/ir-point.schema.json",
+    "theme": "schemas/content/theme.schema.json",
 }
 OVERVIEW_HEADINGS = ["事業概要", "工程上の位置づけ"]  # データ定義書 6.4
 OVERVIEW_LENGTH = (300, 500)  # 「事業概要」の文字数の目安（V-12）
@@ -221,6 +227,8 @@ def kind_of(path: Path, root: Path) -> str | None:
         return "learn"
     if rel.startswith("content/ir-points/") and rel.endswith(".md") and rel.count("/") == 3:
         return "ir-point"
+    if rel.startswith("content/themes/") and rel.endswith(".md") and rel.count("/") == 2:
+        return "theme"
     if rel == "content/learn/path.yaml":
         return "learn-path"
     if rel == "data/events.yaml":
@@ -247,6 +255,7 @@ def collect_files(root: Path) -> list[tuple[str, Path]]:
     files += [("news", p) for p in sorted((root / "content" / "news").glob("*.md"))]
     files += [("learn", p) for p in sorted((root / "content" / "learn").glob("*/*.md"))]
     files += [("ir-point", p) for p in sorted((root / "content" / "ir-points").glob("*/*.md"))]
+    files += [("theme", p) for p in sorted((root / "content" / "themes").glob("*.md"))]
     for kind, rel in (("learn-path", "content/learn/path.yaml"), ("events", "data/events.yaml"), ("supply-chain", "data/supply-chain.yaml"), ("xbrl-map", "config/xbrl-map.yaml"),
                       ("explainer-sources", "config/explainer-sources.yaml"), ("news-config", "config/news.yaml")):
         if (root / rel).is_file():
@@ -265,7 +274,7 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
         try:
             if kind == "auto":
                 data, pitfalls = load_json(path), []
-            elif kind in ("overview", "term", "process", "news", "learn", "ir-point"):
+            elif kind in ("overview", "term", "process", "news", "learn", "ir-point", "theme"):
                 data, pitfalls, bodies[rel] = load_markdown(path)
             else:
                 data, pitfalls = load_yaml(path)
@@ -296,8 +305,9 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     names = company_names(companies)
     problems += check_terms(terms, supply, explainer, names)
     problems += check_process_pages(processes, supply, explainer, terms, names)
+    themes = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "theme" and isinstance(d, dict)}
     problems += check_news({rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "news" and isinstance(d, dict)},
-                           companies, supply)
+                           companies, supply, {Path(rel).stem for rel in themes})
     ir_points = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "ir-point" and isinstance(d, dict)}
     if ir_points:
         segments = {rel: d for rel, (k, _, d) in loaded.items() if k == "segment-map" and isinstance(d, dict)}
@@ -305,6 +315,7 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     learn_pages = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "learn" and isinstance(d, dict)}
     learn_path = next((d for k, _, d in loaded.values() if k == "learn-path"), None)
     problems += check_learn(learn_pages, learn_path, supply, terms, companies, explainer, names, root)
+    problems += check_themes(themes, companies, supply, terms, learn_pages)
     for rel, (_, body) in {**terms, **processes, **learn_pages}.items():  # V-24：理解度チェックの形
         problems += check_quiz(rel, body)
     events = next((d for k, _, d in loaded.values() if k == "events"), None)
@@ -1191,6 +1202,89 @@ def check_events(data: dict, today: date | None = None) -> list[Problem]:
 
 # ---- ニュースと、config/news.yaml（データ定義書 6.2、7.3） ----
 
+# ---- テーマ（データ定義書 6.7、運用ルール書 4.6） ----
+
+THEME_HEADINGS = ["何が起きているか", "半導体のどこに関わるか"]  # 6.7（V-10）
+THEME_LENGTH = (600, 1000)  # 本文の文字数の目安（V-12）
+THEME_OTHERS_MAX = 10  # 掲載企業の外の企業の上限（暫定。V-25）
+
+
+def check_themes(themes: dict[str, tuple[dict, str]], companies: dict[str, dict], supply,
+                 terms: dict[str, tuple[dict, str]], learn_pages: dict[str, tuple[dict, str]]) -> list[Problem]:
+    """テーマの検査（V-02、V-04、V-07、V-08、V-10、V-12、V-25）。draft: true も検査する。"""
+    out: list[Problem] = []
+    company_slugs = {(d.get("slug") if isinstance(d.get("slug"), str) else Path(rel).stem) for rel, d in companies.items()}
+    process_slugs = _slugs(supply, "processes")
+    term_slugs = {Path(rel).stem for rel in terms}
+    learn_keys = {(Path(rel).parent.name, Path(rel).stem) for rel in learn_pages}
+    for rel, (data, body) in themes.items():
+        slug = Path(rel).stem
+        if data.get("theme") != slug:
+            out.append(Problem(rel, "/theme", "V-02", f"ファイル名（{slug}）と theme（{data.get('theme')}）が一致しない"))
+        source_ids = _source_ids(data, rel, out)
+        seen: set[str] = set()
+        others = 0
+        groups = data.get("groups") if isinstance(data.get("groups"), list) else []
+        for g, group in enumerate(groups):
+            if not isinstance(group, dict):
+                continue
+            ref = group.get("process")
+            if isinstance(ref, str) and process_slugs is not None and ref not in process_slugs:
+                out.append(Problem(rel, pointer(["groups", g, "process"]), "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
+            for key in ("companies", "others"):
+                for i, entry in enumerate(group.get(key) or []):
+                    if not isinstance(entry, dict):
+                        continue
+                    if key == "companies":
+                        name = entry.get("company")
+                        if isinstance(name, str) and name not in company_slugs:
+                            out.append(Problem(rel, pointer(["groups", g, key, i, "company"]), "V-04", f"企業 {name} が企業マスタにない"))
+                    else:
+                        others += 1
+                        name = entry.get("name")
+                    if isinstance(name, str):
+                        if name in seen:
+                            out.append(Problem(rel, pointer(["groups", g, key, i]), "V-25", f"{name} が、テーマの中で2回以上載っている"))
+                        seen.add(name)
+                    for b, basis in enumerate(entry.get("basis") or []):
+                        if isinstance(basis, str) and basis not in source_ids:
+                            out.append(Problem(rel, pointer(["groups", g, key, i, "basis", b]), "V-25", f"根拠の {basis} が sources にない"))
+        if others > THEME_OTHERS_MAX:
+            out.append(Problem(rel, "/groups", "V-25", f"掲載企業の外の企業が {others}社で、目安（{THEME_OTHERS_MAX}社まで）を超えている", "warning"))
+        for i, ref in enumerate(data.get("processes") or []):
+            if isinstance(ref, str) and process_slugs is not None and ref not in process_slugs:
+                out.append(Problem(rel, pointer(["processes", i]), "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
+        for i, ref in enumerate(data.get("terms") or []):
+            if isinstance(ref, str) and ref not in term_slugs:
+                out.append(Problem(rel, pointer(["terms", i]), "V-04", f"用語 {ref} が content/glossary/ にない"))
+        for i, unit in enumerate(data.get("learn") or []):
+            if isinstance(unit, dict) and (unit.get("folder"), unit.get("ref")) not in learn_keys:
+                out.append(Problem(rel, pointer(["learn", i]), "V-04", f"学習のページ {unit.get('folder')}/{unit.get('ref')} が content/learn/ にない"))
+
+        sections, outside = split_body(body)
+        headings = [(level, text) for level, text, _ in sections[1:]]
+        if [t for _, t in headings] != THEME_HEADINGS or any(level != 2 for level, _ in headings):
+            found = " / ".join("#" * level + " " + text for level, text in headings) or "なし"
+            out.append(Problem(rel, "(本文)", "V-10", "本文の見出しは「## 何が起きているか」「## 半導体のどこに関わるか」の2つだけで、この順にする"
+                               f"（実際：{found[:200]}）"))
+        if any(line.strip() for line in sections[0][2]):
+            out.append(Problem(rel, "(本文)", "V-10", "最初の見出しより前に文章がある。本文は2つの見出しの下だけに書く"))
+        count = count_characters([line for _, _, lines in sections[1:] for line in lines])
+        _length_warning(rel, "(本文)", "本文", count, *THEME_LENGTH, out)
+        cited = set(_CITATION.findall("\n".join(outside)))
+        for number in sorted(cited - source_ids, key=lambda n: int(n[1:])):
+            out.append(Problem(rel, "(本文)", "V-07", f"本文の [{number}] が、sources にない"))
+        used = cited | {b for group in groups if isinstance(group, dict) for key in ("companies", "others")
+                        for entry in group.get(key) or [] if isinstance(entry, dict) for b in entry.get("basis") or []}
+        for i, source in enumerate(data.get("sources") or []):
+            if isinstance(source, dict) and isinstance(source.get("id"), str) and source["id"] not in used:
+                out.append(Problem(rel, pointer(["sources", i, "id"]), "V-08", f"sources の {source['id']} が、本文でも企業の根拠でも使われていない",
+                                   "warning"))
+        if isinstance(data.get("description"), str):
+            _length_warning(rel, "/description", "description", count_characters([data["description"]]), *DESCRIPTION_LENGTH, out)
+    return out
+
+
 NEWS_HEADINGS = ["何が起きたか", "なぜ重要か", "関係する企業・工程とサプライチェーン上の位置"]  # 6.2
 NEWS_LENGTH = (400, 700)  # 本文の文字数の目安（V-12）
 NEWS_FILE = re.compile(r"([0-9]{4})-([0-9]{2})-([a-z0-9]+(?:-[a-z0-9]+)*)")
@@ -1214,8 +1308,8 @@ def _company_display_names(data: dict) -> set[str]:
     return {_name_key(n) for n in [data.get("name"), *(data.get("short_names") or [])] if isinstance(n, str) and n.strip()}
 
 
-def check_news(news: dict[str, tuple[dict, str]], companies: dict[str, dict], supply) -> list[Problem]:
-    """ニュースの検査（スキーマで確かめられない整合）。draft: true も検査する。"""
+def check_news(news: dict[str, tuple[dict, str]], companies: dict[str, dict], supply, themes: set[str] | None = None) -> list[Problem]:
+    """ニュースの検査（スキーマで確かめられない整合）。draft: true も検査する。themes は content/themes/ のテーマの slug（None は確かめない）。"""
     out: list[Problem] = []
     company_slugs = {(d.get("slug") if isinstance(d.get("slug"), str) else Path(rel).stem): d for rel, d in companies.items()}
     process_slugs = _slugs(supply, "processes")
@@ -1255,6 +1349,10 @@ def check_news(news: dict[str, tuple[dict, str]], companies: dict[str, dict], su
             for i, ref in enumerate(tags.get("processes") or []):
                 if isinstance(ref, str) and ref not in process_slugs:
                     out.append(Problem(rel, pointer(["tags", "processes", i]), "V-04", f"工程 {ref} が data/supply-chain.yaml にない"))
+        if themes is not None:
+            for i, ref in enumerate(tags.get("themes") or []):
+                if isinstance(ref, str) and ref not in themes:
+                    out.append(Problem(rel, pointer(["tags", "themes", i]), "V-04", f"テーマ {ref} が content/themes/ にない"))
         if data.get("overseas") is True:
             if not tag_companies:
                 # 資料から日本企業との関わりが言えないときは、企業を無理に付けない。警告にとどめ、運営者が判断する

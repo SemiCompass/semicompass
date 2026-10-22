@@ -32,11 +32,16 @@ pages:
     positions:
       after-why: { slot: "" }          # 「なぜ重要か」の後
       after-body: { slot: "" }
-  list:               # 一覧のページ（企業、ニュース、用語）
+  list:               # 一覧のページ（企業、ニュース、用語、テーマ）
     limit: 2
     positions:
       in-list: { slot: "" }            # 一覧の途中（まだ置いていない）
       after-list: { slot: "" }         # 一覧の後
+  theme:              # テーマのページ（仕様書 9.9）
+    limit: 2
+    positions:
+      after-companies: { slot: "" }    # 関連企業の一覧の後
+      after-body: { slot: "" }
   learn:              # 学習のページ
     limit: 1
     positions:

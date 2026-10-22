@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -226,6 +227,8 @@ class PagesBuildTest(unittest.TestCase):
             probe.learnpath_site()
             probe.events_site()
             probe.nolearn_site()
+            probe.theme_site("preview")
+            probe.theme_site("production")
         finally:
             cls._prefetch = False
 
@@ -668,6 +671,54 @@ class PagesBuildTest(unittest.TestCase):
                 page.unlink()
             return site
         return self._built("nolearn-production", "production", work)
+
+    def theme_site(self, env: str) -> Path:
+        """テーマ2件（公開1件、下書き1件）と、公開したテーマのタグを付けたニュース1件を置いた、作業用のコピーで組み立てる（仕様書 9.9）。"""
+        sys.path.insert(0, str(ROOT / "tests" / "validate"))
+        from test_themes import BODY, theme_front  # noqa: E402
+        front = theme_front(draft=False, learn=[{"folder": "power", "ref": "diode"}], processes=["advanced-packaging"])
+        front["groups"][0]["companies"] += [{"company": "adeka", "role": "封止に使う材料を作る。", "basis": ["S2"]},
+                                            {"company": "disco", "role": "ウェーハを薄く削る装置を作る。", "basis": ["S2"]}]
+        draft = theme_front(theme="data-center", title="データセンターと半導体（下書き）", draft=True)
+        dump = lambda f, body=BODY: "---\n" + yaml.safe_dump(f, allow_unicode=True, sort_keys=False) + "---\n" + body
+        real = sorted((ROOT / "content" / "news").glob("*.md"))[0]
+        news = {real.name: real.read_text(encoding="utf-8").replace("  themes: []", "  themes:\n  - generative-ai")}
+        return self.build_with("themes", env, news=news,
+                               extra={"content/themes/generative-ai.md": dump(front), "content/themes/data-center.md": dump(draft)})
+
+    def test_theme_pages(self):
+        # テーマの一覧とテーマのページ（仕様書 9.9、FR-602）：掲載企業は証券コードの順、外の企業は後ろで名前と国・地域だけ（リンクなし）
+        dist = self.theme_site("production")
+        listing = self.read(dist, "themes/index.html").split("<main")[1]
+        self.assertIn('href="/themes/generative-ai/"', listing)
+        self.assertIn("関連する企業 4社", listing)
+        self.assertNotIn("data-center", listing)  # 下書きは本番に出さない
+        self.assertFalse((dist / "themes" / "data-center" / "index.html").exists())
+        page = self.read(dist, "themes/generative-ai/index.html").split("<main")[1]
+        self.assertIn("このページに載せる企業", page)
+        self.assertIn("HBMの積層と検査", page)
+        order = [page.index(f'href="/companies/{slug}/"') for slug in ("adeka", "disco", "advantest")]
+        self.assertEqual(order, sorted(order), "掲載企業が証券コードの順でない")
+        self.assertLess(order[-1], page.index("SKハイニックス"))
+        self.assertIn("韓国", page)
+        self.assertIn("準備中", page)  # Coming Soon の企業（adeka）
+        self.assertIn('href="/processes/advanced-packaging/"', page)
+        self.assertIn('href="/learn/power/diode/"', page)
+        self.assertIn("このテーマのニュース", page)
+        self.assertIn('href="/disclaimer/"', page)
+        self.assertNotIn("注目銘柄", page)
+        news = sorted((dist / "news").glob("*/*/*/index.html"))
+        self.assertTrue(any('href="/themes/generative-ai/"' in n.read_text(encoding="utf-8") for n in news), "ニュースにテーマのタグがない")
+        index = json.loads(self.read(dist, "search-index.json"))
+        self.assertTrue(any(e["type"] == "theme" and e["url"] == "/themes/generative-ai/" for e in index))
+
+    def test_theme_draft_is_built_in_preview(self):
+        dist = self.theme_site("preview")
+        self.assertTrue((dist / "themes" / "data-center" / "index.html").exists())
+
+    def test_empty_theme_list(self):
+        html = self.read(self.build_empty("preview"), "themes/index.html").split("<main")[1]
+        self.assertIn("テーマのページは、まだありません", html)
 
     def test_learn_index_without_pages_keeps_glossary_entry(self):
         # 学習のページが1つもない間は、トップの入口を用語集へ（要件定義書 3.3）。リポジトリの学習のページは公開済みのため、
