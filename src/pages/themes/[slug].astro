@@ -1,8 +1,9 @@
 ---
-// テーマのページ（/themes/{slug}/。仕様書 9.9）：頭（「テーマ」、大見出し、日付）→ 掲載の基準の枠 → 本文（2つの中見出し）→
-//   関連する企業（まとまりごと。掲載企業は証券コードの順、掲載企業の外の企業は名前の順）→ 関係する工程・用語・学ぶ →
-//   このテーマのニュース（新しい順に5件まで）→ 免責の短い文（UI-07）→ 出典。右の列に目次。
-// content/themes/{slug}.md（データ定義書 6.7）から作る。draft: true は、プレビューのビルドだけ
+// テーマのページ（/themes/{slug}/。仕様書 9.9）：業界レポートの形（運用ルール書 4.6）。頭（「テーマ」、大見出し、日付）→ 要旨の枠 →
+//   市場の動き（段落とグラフ）→ バリューチェーン（段落と図）→ 日本企業の位置（段落、掲載の基準の枠、関連する企業）→
+//   論点と今後の注目点（発表元の見方／本サイトの見方）→ 関係する工程・用語・学ぶ → このテーマのニュース（5件まで）→ 免責の短い文 → 出典。
+// content/themes/{slug}.md（データ定義書 6.7）と、図 src/figures/theme/{slug}-market.astro・{slug}-value-chain.astro から作る。
+// draft: true は、プレビューのビルドだけ
 import { BUILD_ENV } from 'astro:env/server';
 import AdSlot from '../../components/AdSlot.astro';
 import Citation from '../../components/Citation.astro';
@@ -15,8 +16,10 @@ import { companyRows, dateLabel, loadSupply } from '../../lib/companies';
 import { loadLearnPages, loadTerms } from '../../lib/content';
 import { learnHref } from '../../lib/learn';
 import { loadNews } from '../../lib/news';
-import { groupRows, loadThemes, type Theme } from '../../lib/themes';
+import { groupRows, loadThemes, REPORT_HEADINGS, type Theme } from '../../lib/themes';
 
+// 図（データ定義書 6.7）：市場の動きのグラフと、バリューチェーンの図。ないときは出さない（検査 V-25 で知らせる）
+const figureModules = import.meta.glob<{ default: unknown }>('../../figures/theme/*.astro', { eager: true });
 const preview = BUILD_ENV === 'preview';
 export function getStaticPaths() {
   return loadThemes(BUILD_ENV === 'preview').map((t) => ({ params: { slug: t.slug }, props: { theme: t } }));
@@ -56,10 +59,15 @@ const news = loadNews(preview).filter((n) => (n.front.tags.themes ?? []).include
 const sources = f.sources.map((s) => ({
   number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on, accessedOn: s.accessed_on, pages: s.pages,
 }));
-const sections = theme.sections.filter((s) => s.heading);
+const figure = (name: string) => (figureModules[`../../figures/theme/${theme.slug}-${name}.astro`]?.default ?? null) as any;
+const MarketFigure = figure('market');
+const ChainFigure = figure('value-chain');
+const summary = theme.report.find((s) => s.heading === '要旨');
+const body = theme.report.filter((s) => s.heading !== '要旨');
+const sectionId = (heading: string) => `s${REPORT_HEADINGS.indexOf(heading as (typeof REPORT_HEADINGS)[number])}`;
 const toc = [
-  ...sections.map((s, i) => ({ id: `s${i}`, label: s.heading })),
-  { id: 'companies', label: '関連する企業' },
+  ...(summary ? [{ id: 's0', label: '要旨' }] : []),
+  ...body.map((s) => ({ id: sectionId(s.heading), label: s.heading })),
   ...(related.length > 0 ? [{ id: 'related', label: '関係する工程・用語・学ぶ' }] : []),
   ...(news.length > 0 ? [{ id: 'news', label: 'このテーマのニュース' }] : []),
   { id: 'sources-heading', label: '出典' },
@@ -85,52 +93,74 @@ const toc = [
       {f.updated_at && <span>更新日：<time datetime={f.updated_at}>{dateLabel(f.updated_at)}</time></span>}
       <span>作成者：<a href="/about/">hysd（SemiCompass運営者）</a></span>
     </p>
-    <div class="criteria">
-      <p class="criteria__title">このページに載せる企業</p>
-      <p class="criteria__text">{f.criteria}</p>
-    </div>
   </header>
-  {sections.map((section, i) => (
-    <section>
-      <h2 id={`s${i}`}>{section.heading}</h2>
-      {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+  {summary && (
+    <section class="summary" aria-labelledby="s0">
+      <h2 class="summary__title" id="s0">要旨</h2>
+      <ul class="summary__list">
+        {summary.blocks.flatMap((b) => (b.kind === 'ul' ? b.items : [])).map((item) => <li><RichText text={item} /></li>)}
+      </ul>
+    </section>
+  )}
+  {body.map((section) => (
+    <section aria-labelledby={sectionId(section.heading)}>
+      <h2 id={sectionId(section.heading)}>{section.heading}</h2>
+      {section.blocks.map((b) =>
+        b.kind === 'h3' ? (
+          <>
+            <h3 class="view-title">{b.text}</h3>
+            {b.text === '本サイトの見方' && <p class="view-note">SemiCompassの見方です。投資の判断の材料ではありません。</p>}
+          </>
+        ) : b.kind === 'ul' ? (
+          <ul>{b.items.map((item) => <li><RichText text={item} /></li>)}</ul>
+        ) : (
+          <p><RichText text={b.text} /></p>
+        ),
+      )}
+      {section.heading === '市場の動き' && MarketFigure && <MarketFigure />}
+      {section.heading === 'バリューチェーン' && ChainFigure && <ChainFigure />}
+      {section.heading === '日本企業の位置' && (
+        <>
+          <div class="criteria">
+            <p class="criteria__title">このページに載せる企業</p>
+            <p class="criteria__text">{f.criteria}</p>
+          </div>
+          {groups.map((g) => (
+            <section class="theme-group" aria-labelledby={g.id}>
+              <h3 class="theme-group__title" id={g.id}>
+                <span>{g.label}</span>
+                {g.process && g.stage && (
+                  <a class:list={['stage-chip', `stage-chip--${g.stage.color}`]} href={`/processes/${g.process.slug}/`}><span class="visually-hidden">工程：</span>{g.stage.name}・{g.process.name}</a>
+                )}
+              </h3>
+              <ul class="theme-rows">
+                {g.rows.map((r) => (
+                  <li class="theme-row">
+                    <p class="theme-row__name">
+                      {r.kind === 'listed' ? (
+                        <>
+                          <a class:list={['theme-company', { 'theme-company--pending': !r.detailed }]} href={`/companies/${r.slug}/`}>{r.name}</a>
+                          {!r.detailed && <span class="theme-badge">準備中</span>}
+                        </>
+                      ) : (
+                        <>
+                          <span class="theme-other">{r.name}</span>
+                          <span class="theme-region">{r.region}</span>
+                        </>
+                      )}
+                    </p>
+                    <p class="theme-row__role"><Phrase text={r.role} />{r.basis.map((n) => <Citation number={n} />)}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          <p class="theme-note">掲載企業は工程ごとに証券コードの順です。掲載の基準は<a href="/editorial-policy/">編集方針</a>にあります。</p>
+          <AdSlot page="theme" position="after-companies" />
+        </>
+      )}
     </section>
   ))}
-  <section aria-labelledby="companies">
-    <h2 id="companies">関連する企業</h2>
-    {groups.map((g) => (
-      <section class="theme-group" aria-labelledby={g.id}>
-        <h3 class="theme-group__title" id={g.id}>
-          <span>{g.label}</span>
-          {g.process && g.stage && (
-            <a class:list={['stage-chip', `stage-chip--${g.stage.color}`]} href={`/processes/${g.process.slug}/`}><span class="visually-hidden">工程：</span>{g.stage.name}・{g.process.name}</a>
-          )}
-        </h3>
-        <ul class="theme-rows">
-          {g.rows.map((r) => (
-            <li class="theme-row">
-              <p class="theme-row__name">
-                {r.kind === 'listed' ? (
-                  <>
-                    <a class:list={['theme-company', { 'theme-company--pending': !r.detailed }]} href={`/companies/${r.slug}/`}>{r.name}</a>
-                    {!r.detailed && <span class="theme-badge">準備中</span>}
-                  </>
-                ) : (
-                  <>
-                    <span class="theme-other">{r.name}</span>
-                    <span class="theme-region">{r.region}</span>
-                  </>
-                )}
-              </p>
-              <p class="theme-row__role"><Phrase text={r.role} />{r.basis.map((n) => <Citation number={n} />)}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-    ))}
-    <p class="theme-note">掲載企業は工程ごとに証券コードの順です。掲載の基準は<a href="/editorial-policy/">編集方針</a>にあります。</p>
-  </section>
-  <AdSlot page="theme" position="after-companies" />
   {related.length > 0 && (
     <section aria-labelledby="related">
       <h2 id="related">関係する工程・用語・学ぶ</h2>
@@ -183,10 +213,45 @@ const toc = [
     font-size: var(--text-small);
     line-height: var(--text-small-leading);
   }
+  /* 要旨（8.20 の要点の枠と同じ形） */
+  .summary {
+    max-width: var(--content-max-width);
+    margin-block-end: var(--space-6);
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
+  }
+  .summary__title {
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-small-leading);
+  }
+  .summary__list {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding-inline-start: var(--space-5);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead-leading);
+  }
+  /* 論点と今後の注目点（9.9） */
+  .view-title {
+    margin-block: var(--space-5) var(--space-2);
+    font-size: var(--text-h3);
+    line-height: var(--text-h3-leading);
+  }
+  .view-note {
+    margin-block: 0 var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+  }
   /* 掲載の基準（8.20 の要点の枠と同じ形） */
   .criteria {
     max-width: var(--content-max-width);
-    margin-block-start: var(--space-5);
+    margin-block: var(--space-5);
     padding: var(--space-5);
     border-radius: var(--radius-card);
     background: var(--color-surface-sunken);

@@ -134,8 +134,11 @@ def real_site(env: str) -> Path:
 
 # テーマの試験用のファイル（データ定義書 6.7）。tests/validate/test_themes.py と同じ形。
 # tests/validate を読み込まない（sys.path に足すと、同じ名前のテスト（test_ir_points）が入れ替わるため）
-THEME_BODY = "## 何が起きているか\n\n" + "生成AIの計算に使う半導体の需要が増えている。[S1]" * 12 + \
-             "\n\n## 半導体のどこに関わるか\n\n" + "高帯域のメモリを積み重ねる工程と、その検査に装置が使われる。" * 12 + "\n"
+_FILL = "生成AIの計算に使う半導体の需要が増え、後工程の装置と材料の出荷が伸びている。[S1]"
+THEME_BODY = ("## 要旨\n\n- 要点の一つ目である。[S1]\n- 要点の二つ目である。\n- 要点の三つ目である。\n\n"
+              "## 市場の動き\n\n" + _FILL * 15 + "\n\n## バリューチェーン\n\n" + _FILL * 15 + "\n\n"
+              "## 日本企業の位置\n\n" + _FILL * 10 + "\n\n"
+              "## 論点と今後の注目点\n\n### 発表元の見方\n\n" + _FILL * 5 + "\n\n### 本サイトの見方\n\n" + _FILL * 5 + "\n")
 
 
 def theme_front(**extra):
@@ -703,7 +706,9 @@ class PagesBuildTest(unittest.TestCase):
         real = sorted((ROOT / "content" / "news").glob("*.md"))[0]
         news = {real.name: real.read_text(encoding="utf-8").replace("  themes: []", "  themes:\n  - generative-ai")}
         return self.build_with("themes", env, news=news,
-                               extra={"content/themes/generative-ai.md": dump(front), "content/themes/data-center.md": dump(draft)})
+                               extra={"content/themes/generative-ai.md": dump(front), "content/themes/data-center.md": dump(draft),
+                                      "src/figures/theme/generative-ai-market.astro": '<figure id="fig-theme-market"></figure>\n',
+                                      "src/figures/theme/generative-ai-value-chain.astro": '<figure id="fig-theme-chain"></figure>\n'})
 
     def test_theme_pages(self):
         # テーマの一覧とテーマのページ（仕様書 9.9、FR-602）：掲載企業は証券コードの順、外の企業は後ろで名前と国・地域だけ（リンクなし）
@@ -714,6 +719,11 @@ class PagesBuildTest(unittest.TestCase):
         self.assertNotIn("data-center", listing)  # 下書きは本番に出さない
         self.assertFalse((dist / "themes" / "data-center" / "index.html").exists())
         page = self.read(dist, "themes/generative-ai/index.html").split("<main")[1]
+        # レポートの並び（仕様書 9.9）：要旨 → 市場の動き（グラフ）→ バリューチェーン（図）→ 日本企業の位置（基準と企業）→ 論点
+        marks = ['class="summary"', 'id="s1"', 'id="fig-theme-market"', 'id="s2"', 'id="fig-theme-chain"', 'id="s3"',
+                 "このページに載せる企業", 'href="/companies/adeka/"', "発表元の見方", "本サイトの見方", "投資の判断の材料ではありません"]
+        at = [page.index(m) for m in marks]
+        self.assertEqual(at, sorted(at), "レポートの並びが仕様書 9.9 と違う")
         self.assertIn("このページに載せる企業", page)
         self.assertIn("HBMの積層と検査", page)
         order = [page.index(f'href="/companies/{slug}/"') for slug in ("adeka", "disco", "advantest")]
