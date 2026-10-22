@@ -9,8 +9,10 @@ import StateMessage from '../../components/StateMessage.astro';
 import Page from '../../layouts/Page.astro';
 import { loadCompanies, loadSupply } from '../../lib/companies';
 import { CATEGORY_LABEL, loadNews } from '../../lib/news';
+import { loadThemes, themeTags } from '../../lib/themes';
 
 const items = loadNews(BUILD_ENV === 'preview');
+const themes = loadThemes(BUILD_ENV === 'preview');
 const companies = loadCompanies();
 const supply = loadSupply() as unknown as { processes: { slug: string; stage: string }[]; categories: { slug: string; name: string }[] };
 const companyTags = (slugs: string[]) =>
@@ -66,10 +68,11 @@ const categories = [...new Set(items.map((n) => n.front.category))];
               <div class="news-list__body">
                 <p class="news-list__cat"><span class="visually-hidden">分類：{CATEGORY_LABEL[n.front.category]}</span><span aria-hidden="true">{CATEGORY_LABEL[n.front.category]}</span></p>
                 <h2 class="news-list__title"><a href={n.url}><Phrase text={n.front.title} /></a></h2>
-                {(stagesOf(n).length > 0 || companyTags(n.front.tags.companies).length > 0) && (
+                {(stagesOf(n).length > 0 || companyTags(n.front.tags.companies).length > 0 || themeTags(n.front.tags.themes ?? [], themes).length > 0) && (
                   <p class="news-list__tags">
                     {stagesOf(n).map((st) => <a class:list={['ntag', `ntag--${st.color}`]} href={`/companies/process/${st.slug}/`}><span class="ntag__dot" aria-hidden="true"></span>{st.name}</a>)}
                     {companyTags(n.front.tags.companies).map((c) => <a class="ntag" href={`/companies/${c.slug}/`}><span class="visually-hidden">企業：</span>{c.name}</a>)}
+                    {themeTags(n.front.tags.themes ?? [], themes).map((t) => <a class="ntag" href={`/themes/${t.slug}/`}><span class="visually-hidden">テーマ：</span>{t.name}</a>)}
                   </p>
                 )}
               </div>

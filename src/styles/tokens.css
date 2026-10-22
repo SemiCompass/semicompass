@@ -170,6 +170,7 @@
   --date-col-width: 4.5rem; /* 9.1 トップのニュースとイベントの、左の日付の列の幅 */
   --company-bar-width: 4.5rem; /* 9.3 企業一覧の売上高の横棒の幅 */
   --process-main-width: 18rem; /* 9.4 工程の一覧の、左の列（工程の名前と説明）の幅（PC） */
+  --theme-company-width: 16rem; /* 9.9 テーマのページの関連する企業の、左の列（企業名）の幅（PC） */
   --glossary-head-width: 4rem; /* 9.5 用語集の、行の名前の列の幅 */
   --glossary-index-height: 4rem; /* 9.5 張り付いた読みの行の並びの高さ（移動したときに見出しが隠れないように） */
   --quiz-num-size: 1.625rem; /* 8.17 選択肢の番号の丸（26px） */

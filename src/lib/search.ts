@@ -1,9 +1,10 @@
-// 検索用データ（FR-701）：ビルドのときに、企業・工程・用語・ニュースから作る。画面の検索（src/scripts/search.ts）が読む（/search-index.json）。
+// 検索用データ（FR-701）：ビルドのときに、企業・工程・用語・テーマ・ニュースから作る。画面の検索（src/scripts/search.ts）が読む（/search-index.json）。
 // 全角と半角、ひらがなとカタカナ、大文字と小文字は、同じものとして扱う（normalizeForSearch）。
 import { loadCompanies, loadSupply } from './companies';
 import { loadTerms } from './content';
 import { dateLabel } from './format';
 import { loadNews } from './news';
+import { loadThemes } from './themes';
 import { normalizeForSearch, type SearchEntry } from './normalize';
 
 const keys = (...values: (string | undefined)[]): string[] =>
@@ -26,6 +27,9 @@ export function buildIndex(preview: boolean): SearchEntry[] {
   for (const t of loadTerms(preview)) {
     entries.push({ type: 'term', name: t.front.term, url: `/glossary/${t.slug}/`, detail: t.front.short_definition,
       keys: keys(t.front.term, t.front.reading, ...(t.front.aliases ?? []), t.front.name_en, t.front.abbreviation_of) });
+  }
+  for (const t of loadThemes(preview)) {
+    entries.push({ type: 'theme', name: t.front.title, url: t.url, detail: t.front.description, keys: keys(t.front.title, t.slug) });
   }
   const companies = loadCompanies();
   for (const n of loadNews(preview)) {

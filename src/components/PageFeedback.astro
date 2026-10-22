@@ -1,10 +1,10 @@
 ---
-// 疑問の解決ボタン（要件定義書 FR-709、要求定義書 VM-01）：企業・工程・用語・ニュースのページの末尾に置く。
+// 疑問の解決ボタン（要件定義書 FR-709、要求定義書 VM-01）：企業・工程・用語・ニュース・テーマのページの末尾に置く。
 // 押した結果は、Cookieの利用に同意しているときだけ、GA4のイベント page_feedback（ページの種類、URL、回答）として送る
 import Button from './Button.astro';
 
 interface Props {
-  pageType: 'company' | 'process' | 'term' | 'news';
+  pageType: 'company' | 'process' | 'term' | 'news' | 'theme';
 }
 const { pageType } = Astro.props;
 ---

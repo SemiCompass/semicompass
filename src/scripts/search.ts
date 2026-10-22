@@ -1,9 +1,9 @@
 // 検索（FR-701、仕様書 8.6、9.7）：検索用データ（/search-index.json）を、最初に使うときに読み、入力のたびに候補を出す。
 // 上下の矢印のキーで候補を選び、Enter で開く。Escape で閉じる。選んでいない Enter は、検索の結果（/search/?q=…）へ移る。
-// /search/ のページでは、結果を、種類（企業、工程、用語、ニュース）ごとの見出しで並べる。
+// /search/ のページでは、結果を、種類（企業、工程、用語、テーマ、ニュース）ごとの見出しで並べる。
 import { search, type SearchEntry } from '../lib/normalize';
 
-const TYPE_LABEL: Record<SearchEntry['type'], string> = { company: '企業', process: '工程', term: '用語', news: 'ニュース' };
+const TYPE_LABEL: Record<SearchEntry['type'], string> = { company: '企業', process: '工程', term: '用語', theme: 'テーマ', news: 'ニュース' };
 let indexPromise: Promise<SearchEntry[]> | null = null;
 const loadIndex = () => (indexPromise ??= fetch('/search-index.json').then((r) => (r.ok ? (r.json() as Promise<SearchEntry[]>) : [])).catch(() => []));
 
@@ -126,7 +126,7 @@ if (results) {
       frag.append(name.slice(0, at), mark, name.slice(at + query.length));
       return frag;
     };
-    for (const type of ['company', 'process', 'term', 'news'] as const) {
+    for (const type of ['company', 'process', 'term', 'theme', 'news'] as const) {
       const group = found.filter((e) => e.type === type);
       if (group.length === 0) continue;
       const section = document.createElement('section');

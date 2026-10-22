@@ -1,0 +1,364 @@
+---
+// テーマのページ（/themes/{slug}/。仕様書 9.9）：頭（「テーマ」、大見出し、日付）→ 掲載の基準の枠 → 本文（2つの中見出し）→
+//   関連する企業（まとまりごと。掲載企業は証券コードの順、掲載企業の外の企業は名前の順）→ 関係する工程・用語・学ぶ →
+//   このテーマのニュース（新しい順に5件まで）→ 免責の短い文（UI-07）→ 出典。右の列に目次。
+// content/themes/{slug}.md（データ定義書 6.7）から作る。draft: true は、プレビューのビルドだけ
+import { BUILD_ENV } from 'astro:env/server';
+import AdSlot from '../../components/AdSlot.astro';
+import Citation from '../../components/Citation.astro';
+import PageFeedback from '../../components/PageFeedback.astro';
+import Phrase from '../../components/Phrase.astro';
+import RichText from '../../components/RichText.astro';
+import SourceList from '../../components/SourceList.astro';
+import Page from '../../layouts/Page.astro';
+import { companyRows, dateLabel, loadSupply } from '../../lib/companies';
+import { loadLearnPages, loadTerms } from '../../lib/content';
+import { learnHref } from '../../lib/learn';
+import { loadNews } from '../../lib/news';
+import { groupRows, loadThemes, type Theme } from '../../lib/themes';
+
+const preview = BUILD_ENV === 'preview';
+export function getStaticPaths() {
+  return loadThemes(BUILD_ENV === 'preview').map((t) => ({ params: { slug: t.slug }, props: { theme: t } }));
+}
+const { theme } = Astro.props as { theme: Theme };
+const f = theme.front;
+const supply = loadSupply() as unknown as { processes: { slug: string; name: string; stage: string; short_description?: string }[]; categories: { slug: string; name: string }[] };
+const rows = companyRows(preview);
+const companies = rows.map((r) => r.company);
+const detailed = new Set(rows.filter((r) => r.detailed).map((r) => r.company.slug));
+const stageColor: Record<string, string> = { design: 'neutral', materials: 'materials', 'front-end': 'front', 'back-end': 'back' };
+const groups = f.groups.map((g, i) => {
+  const p = g.process ? supply.processes.find((x) => x.slug === g.process) : undefined;
+  const stage = p ? supply.categories.find((c) => c.slug === p.stage) : undefined;
+  return { id: `g${i}`, label: g.label, process: p, stage: stage && p ? { name: stage.name, color: stageColor[p.stage] ?? 'neutral' } : undefined,
+    rows: groupRows(g, companies, detailed) };
+});
+// 関係する工程・用語・学ぶ（8.14 の関連ページの形）
+const terms = loadTerms(preview);
+const learnPages = loadLearnPages(preview);
+const related = [
+  ...(f.processes ?? []).flatMap((slug) => {
+    const p = supply.processes.find((x) => x.slug === slug);
+    return p ? [{ kind: '工程', href: `/processes/${slug}/`, title: p.name, summary: p.short_description ?? '' }] : [];
+  }),
+  ...(f.terms ?? []).flatMap((slug) => {
+    const t = terms.find((x) => x.slug === slug);
+    return t ? [{ kind: '用語', href: `/glossary/${slug}/`, title: t.front.term, summary: t.front.short_definition }] : [];
+  }),
+  ...(f.learn ?? []).flatMap((u) => {
+    const page = learnPages.find((x) => x.field === u.folder && x.slug === u.ref);
+    return page ? [{ kind: '学ぶ', href: learnHref(page), title: page.front.title, summary: page.front.description }] : [];
+  }),
+];
+// このテーマのニュース：tags.themes にこのテーマがあるもの。新しい順に5件まで
+const news = loadNews(preview).filter((n) => (n.front.tags.themes ?? []).includes(theme.slug));
+const sources = f.sources.map((s) => ({
+  number: Number(s.id.slice(1)), title: s.title, publisher: s.publisher, url: s.url, publishedOn: s.published_on, accessedOn: s.accessed_on, pages: s.pages,
+}));
+const sections = theme.sections.filter((s) => s.heading);
+const toc = [
+  ...sections.map((s, i) => ({ id: `s${i}`, label: s.heading })),
+  { id: 'companies', label: '関連する企業' },
+  ...(related.length > 0 ? [{ id: 'related', label: '関係する工程・用語・学ぶ' }] : []),
+  ...(news.length > 0 ? [{ id: 'news', label: 'このテーマのニュース' }] : []),
+  { id: 'sources-heading', label: '出典' },
+];
+---
+
+<Page
+  title={`${f.title}｜テーマ｜SemiCompass`}
+  heading={f.title}
+  description={f.description}
+  breadcrumbs={[{ label: 'ホーム', href: '/' }, { label: 'テーマ', href: '/themes/' }, { label: f.title }]}
+  toc={toc}
+  publishedAt={f.published_at}
+  updatedAt={f.updated_at}
+  schemaType="Article"
+  noindex={f.draft === true}
+>
+  <header class="theme-head" slot="head">
+    <p class="theme-head__kicker">テーマ</p>
+    <h1 class="theme-head__title"><Phrase text={f.title} /></h1>
+    <p class="theme-head__dates">
+      <span>公開日：<time datetime={f.published_at}>{dateLabel(f.published_at)}</time></span>
+      {f.updated_at && <span>更新日：<time datetime={f.updated_at}>{dateLabel(f.updated_at)}</time></span>}
+      <span>作成者：<a href="/about/">hysd（SemiCompass運営者）</a></span>
+    </p>
+    <div class="criteria">
+      <p class="criteria__title">このページに載せる企業</p>
+      <p class="criteria__text">{f.criteria}</p>
+    </div>
+  </header>
+  {sections.map((section, i) => (
+    <section>
+      <h2 id={`s${i}`}>{section.heading}</h2>
+      {section.paragraphs.map((paragraph) => <p><RichText text={paragraph} /></p>)}
+    </section>
+  ))}
+  <section aria-labelledby="companies">
+    <h2 id="companies">関連する企業</h2>
+    {groups.map((g) => (
+      <section class="theme-group" aria-labelledby={g.id}>
+        <h3 class="theme-group__title" id={g.id}>
+          <span>{g.label}</span>
+          {g.process && g.stage && (
+            <a class:list={['stage-chip', `stage-chip--${g.stage.color}`]} href={`/processes/${g.process.slug}/`}><span class="visually-hidden">工程：</span>{g.stage.name}・{g.process.name}</a>
+          )}
+        </h3>
+        <ul class="theme-rows">
+          {g.rows.map((r) => (
+            <li class="theme-row">
+              <p class="theme-row__name">
+                {r.kind === 'listed' ? (
+                  <>
+                    <a class:list={['theme-company', { 'theme-company--pending': !r.detailed }]} href={`/companies/${r.slug}/`}>{r.name}</a>
+                    {!r.detailed && <span class="theme-badge">準備中</span>}
+                  </>
+                ) : (
+                  <>
+                    <span class="theme-other">{r.name}</span>
+                    <span class="theme-region">{r.region}</span>
+                  </>
+                )}
+              </p>
+              <p class="theme-row__role"><Phrase text={r.role} />{r.basis.map((n) => <Citation number={n} />)}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+    <p class="theme-note">掲載企業は工程ごとに証券コードの順です。掲載の基準は<a href="/editorial-policy/">編集方針</a>にあります。</p>
+  </section>
+  <AdSlot page="theme" position="after-companies" />
+  {related.length > 0 && (
+    <section aria-labelledby="related">
+      <h2 id="related">関係する工程・用語・学ぶ</h2>
+      <ul class="related-list">
+        {related.map((r) => (
+          <li><span class="related-list__kind">{r.kind}</span><a href={r.href}>{r.title}</a>{r.summary && <span class="related-list__summary">{r.summary}</span>}</li>
+        ))}
+      </ul>
+    </section>
+  )}
+  {news.length > 0 && (
+    <section aria-labelledby="news">
+      <h2 id="news">このテーマのニュース</h2>
+      <ol class="theme-news">
+        {news.slice(0, 5).map((n) => (
+          <li><time datetime={n.front.published_at}>{dateLabel(n.front.published_at)}</time><a href={n.url}><Phrase text={n.front.title} /></a></li>
+        ))}
+      </ol>
+      {news.length > 5 && <p class="theme-note"><a href="/news/">ニュース解説の一覧を見る</a></p>}
+    </section>
+  )}
+  <p class="theme-disclaimer">このページは、公開資料にもとづいて関係する企業を整理したものです。特定の企業の株式の売買を勧めるものではありません。詳しくは<a href="/disclaimer/">免責事項</a>をご覧ください。</p>
+  <AdSlot page="theme" position="after-body" />
+  <SourceList sources={sources} heading="出典" />
+  <PageFeedback pageType="theme" />
+</Page>
+
+<style>
+  @import "../../styles/breakpoints.css";
+  .theme-head {
+    margin-block-end: var(--space-6);
+  }
+  .theme-head__kicker {
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .theme-head__title {
+    margin: 0;
+    font-size: var(--text-h1);
+    line-height: var(--text-h1-leading);
+  }
+  .theme-head__dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-3) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  /* 掲載の基準（8.20 の要点の枠と同じ形） */
+  .criteria {
+    max-width: var(--content-max-width);
+    margin-block-start: var(--space-5);
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-sunken);
+  }
+  .criteria__title {
+    margin: 0 0 var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--text-small-leading);
+  }
+  .criteria__text {
+    margin: 0;
+  }
+  /* 関連する企業（9.9） */
+  .theme-group {
+    margin-block-start: var(--space-5);
+  }
+  .theme-group__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-h3);
+    line-height: var(--text-h3-leading);
+  }
+  .theme-rows {
+    margin: 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    list-style: none;
+  }
+  .theme-row {
+    display: grid;
+    gap: var(--space-1) var(--space-4);
+    padding-block: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  @media (--pc) {
+    .theme-row {
+      grid-template-columns: var(--theme-company-width) minmax(0, 1fr);
+    }
+  }
+  .theme-row__name,
+  .theme-row__role {
+    margin: 0;
+    min-width: 0;
+  }
+  .theme-row__role {
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .theme-company,
+  .theme-company:visited {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+  }
+  .theme-company--pending,
+  .theme-company--pending:visited {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-normal);
+  }
+  .theme-badge {
+    display: inline-block;
+    margin-inline-start: var(--space-2);
+    padding-inline: var(--space-1);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-control);
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+    white-space: nowrap;
+  }
+  .theme-other {
+    color: var(--color-text);
+  }
+  .theme-region {
+    margin-inline-start: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+  }
+  .theme-note,
+  .theme-disclaimer {
+    margin-block: var(--space-4) 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  .theme-disclaimer {
+    margin-block-start: var(--space-7);
+  }
+  /* 関連ページ（8.14） */
+  .related-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .related-list li {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .related-list a {
+    font-weight: var(--font-weight-bold);
+  }
+  .related-list__kind,
+  .related-list__summary {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+  }
+  /* このテーマのニュース（9.6 の一覧の形を縮めたもの） */
+  .theme-news {
+    margin: 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-text);
+    list-style: none;
+  }
+  .theme-news li {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .theme-news time {
+    color: var(--color-text-muted);
+    font-size: var(--text-small);
+    line-height: var(--text-small-leading);
+    font-variant-numeric: tabular-nums;
+  }
+  .theme-news a {
+    font-weight: var(--font-weight-bold);
+  }
+  /* 段階のチップ（8.20） */
+  .stage-chip,
+  .stage-chip:visited {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--tag-height-sm);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--stage-tint);
+    color: var(--stage-ink);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  .stage-chip::before {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--stage-ink);
+    content: "";
+  }
+  .stage-chip--neutral {
+    --stage-ink: var(--color-text);
+    --stage-tint: var(--color-stage-neutral-tint);
+  }
+  .stage-chip--materials {
+    --stage-ink: var(--color-stage-materials);
+    --stage-tint: var(--color-stage-materials-tint);
+  }
+  .stage-chip--front {
+    --stage-ink: var(--color-stage-front);
+    --stage-tint: var(--color-stage-front-tint);
+  }
+  .stage-chip--back {
+    --stage-ink: var(--color-stage-back);
+    --stage-tint: var(--color-stage-back-tint);
+  }
+</style>
