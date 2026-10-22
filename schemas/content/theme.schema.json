@@ -1,0 +1,388 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/content/theme.schema.json",
+  "title": "テーマ（D16）の front matter",
+  "description": "データ定義書（第1段階）6.1、6.7。content/themes/{slug}.md の先頭の項目（front matter）だけを検査する。ファイル名と theme の一致（V-02）、参照先の存在（V-04）、basis の番号が sources にあること・1社の重複・others の社数（V-25）、本文の見出し（V-10）と字数（V-12）は、別の検査で行う。並び順は表示のときに決めるため、ファイルの中の順番には意味を持たせない（FR-602）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "theme",
+    "title",
+    "description",
+    "published_at",
+    "ai_generated",
+    "sources",
+    "criteria",
+    "groups"
+  ],
+  "properties": {
+    "theme": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 60
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "criteria": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "companies"
+            ]
+          },
+          {
+            "required": [
+              "others"
+            ]
+          }
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "process": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "minLength": 2,
+            "maxLength": 60
+          },
+          "companies": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "company",
+                "role",
+                "basis"
+              ],
+              "properties": {
+                "company": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                  "minLength": 2,
+                  "maxLength": 60
+                },
+                "role": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "basis": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^S[0-9]+$"
+                  }
+                }
+              }
+            }
+          },
+          "others": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "region",
+                "role",
+                "basis"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "name_en": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "region": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20
+                },
+                "role": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "basis": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^S[0-9]+$"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "processes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "minLength": 2,
+        "maxLength": 60
+      }
+    },
+    "terms": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "minLength": 2,
+        "maxLength": 60
+      }
+    },
+    "learn": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "folder",
+          "ref"
+        ],
+        "properties": {
+          "folder": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "minLength": 2,
+            "maxLength": 60
+          },
+          "ref": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "minLength": 2,
+            "maxLength": 60
+          }
+        }
+      }
+    },
+    "published_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date"
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date"
+    },
+    "draft": {
+      "type": "boolean"
+    },
+    "ai_generated": {
+      "type": "boolean"
+    },
+    "under_review": {
+      "type": "boolean"
+    },
+    "corrections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "date",
+          "severity",
+          "description"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "severity": {
+            "enum": [
+              "major",
+              "normal"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "issue": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "publisher"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^S[0-9]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https?://\\S+$"
+          },
+          "published_on": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "accessed_on": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "format": "date"
+          },
+          "doc_id": {
+            "type": "string",
+            "pattern": "^S100[0-9A-Z]{4}$"
+          },
+          "pages": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "web",
+              "government",
+              "association",
+              "book",
+              "paper"
+            ],
+            "description": "出典の種類。book（書籍）は author と pages が必要。paper（論文）は author が必要（url は任意）。それ以外、または省略したときは url と accessed_on が必要。"
+          },
+          "author": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "isbn": {
+            "type": "string",
+            "pattern": "^[0-9Xx-]{10,17}$"
+          },
+          "doi": {
+            "type": "string",
+            "pattern": "^10\\.[0-9]{4,9}/\\S+$"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "book"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "author",
+                "pages"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "paper"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "author"
+              ]
+            }
+          },
+          {
+            "if": {
+              "not": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "book",
+                      "paper"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "url",
+                "accessed_on"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
