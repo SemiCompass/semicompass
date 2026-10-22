@@ -720,7 +720,7 @@ class PagesBuildTest(unittest.TestCase):
         self.assertFalse((dist / "themes" / "data-center" / "index.html").exists())
         page = self.read(dist, "themes/generative-ai/index.html").split("<main")[1]
         # レポートの並び（仕様書 9.9）：要旨 → 市場の動き（グラフ）→ バリューチェーン（図）→ 日本企業の位置（基準と企業）→ 論点
-        marks = ["要点の一つ目", 'id="s1"', 'id="fig-theme-market"', 'id="s2"', 'id="fig-theme-chain"', 'id="s3"',
+        marks = ['class="summary"', 'id="s1"', 'id="fig-theme-market"', 'id="s2"', 'id="fig-theme-chain"', 'id="s3"',
                  "このページに載せる企業", 'href="/companies/adeka/"', "発表元の見方", "本サイトの見方", "投資の判断の材料ではありません"]
         at = [page.index(m) for m in marks]
         self.assertEqual(at, sorted(at), "レポートの並びが仕様書 9.9 と違う")
