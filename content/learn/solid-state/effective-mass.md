@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: ヒ化ガリウムで電子が速く動ける理由を、有効質量で説明できる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

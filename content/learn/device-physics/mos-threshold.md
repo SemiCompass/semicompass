@@ -16,7 +16,7 @@ applies_to:
   folder: basics
   note: 酸化膜を薄くする理由が、しきい値や容量の式から読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

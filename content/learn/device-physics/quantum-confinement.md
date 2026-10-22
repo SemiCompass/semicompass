@@ -12,7 +12,7 @@ applies_to:
   folder: basics
   note: 結晶が十分に小さいと、エネルギーが連続でなくなることが分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

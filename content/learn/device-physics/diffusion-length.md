@@ -12,7 +12,7 @@ applies_to:
   folder: devices
   note: 光で生まれたキャリアが、電極まで届く距離の目安が読める。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:

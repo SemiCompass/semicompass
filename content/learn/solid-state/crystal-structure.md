@@ -12,7 +12,7 @@ applies_to:
   folder: basics
   note: 半導体の結晶が、どれだけ密に原子が詰まったものかが分かる。
 basis: sources
-draft: true
+draft: false
 published_at: '2026-10-21'
 ai_generated: true
 sources:
