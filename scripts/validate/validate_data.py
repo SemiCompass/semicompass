@@ -34,7 +34,9 @@
 * テーマ（D16、データ定義書 6.7）：content/themes/*.md の front matter は schemas/content/theme.schema.json。
   ファイル名と theme が同じ（V-02）。groups の企業・工程、processes、terms、learn の参照先がある（V-04）。
   根拠（basis）の番号が sources にある、1社がテーマの中で重複しない、others が10社まで（V-25。10社を超えるのは警告）。
-  本文は「何が起きているか」「半導体のどこに関わるか」の2つの見出し（V-10）、600〜1,000字（V-12、警告）。
+  本文は「要旨」「市場の動き」「バリューチェーン」「日本企業の位置」「論点と今後の注目点」の5つの中見出しと、
+  最後の見出しの下の「発表元の見方」「本サイトの見方」の小見出し、要旨の3つの箇条書き（V-10）。3,000〜5,000字（V-12、警告）。
+  図 src/figures/theme/{slug}-market.astro と {slug}-value-chain.astro がある（V-25。draft: true のときは警告）。
   ニュースの tags.themes が content/themes/ にある（V-04）
 * ニュース（D11、データ定義書 6.2）と config/news.yaml（7.3）：content/news/*.md の front matter は
   news.schema.json、config/news.yaml は schemas/config/news.schema.json で検査する（draft: true も検査する）。
@@ -315,7 +317,7 @@ def validate(root: Path = REPO_ROOT, schema_root: Path = REPO_ROOT, only: Path |
     learn_pages = {rel: (d, bodies[rel]) for rel, (k, _, d) in loaded.items() if k == "learn" and isinstance(d, dict)}
     learn_path = next((d for k, _, d in loaded.values() if k == "learn-path"), None)
     problems += check_learn(learn_pages, learn_path, supply, terms, companies, explainer, names, root)
-    problems += check_themes(themes, companies, supply, terms, learn_pages)
+    problems += check_themes(themes, companies, supply, terms, learn_pages, root)
     for rel, (_, body) in {**terms, **processes, **learn_pages}.items():  # V-24：理解度チェックの形
         problems += check_quiz(rel, body)
     events = next((d for k, _, d in loaded.values() if k == "events"), None)
@@ -1204,13 +1206,16 @@ def check_events(data: dict, today: date | None = None) -> list[Problem]:
 
 # ---- テーマ（データ定義書 6.7、運用ルール書 4.6） ----
 
-THEME_HEADINGS = ["何が起きているか", "半導体のどこに関わるか"]  # 6.7（V-10）
-THEME_LENGTH = (600, 1000)  # 本文の文字数の目安（V-12）
+THEME_HEADINGS = ["要旨", "市場の動き", "バリューチェーン", "日本企業の位置", "論点と今後の注目点"]  # 6.7（V-10）
+THEME_VIEW_HEADINGS = ["発表元の見方", "本サイトの見方"]  # 「論点と今後の注目点」の小見出し（V-10）
+THEME_SUMMARY_ITEMS = 3  # 要旨の箇条書きの数（V-10）
+THEME_FIGURES = ("market", "value-chain")  # src/figures/theme/{slug}-{名前}.astro（V-25）
+THEME_LENGTH = (3000, 5000)  # 本文の文字数の目安（V-12）
 THEME_OTHERS_MAX = 10  # 掲載企業の外の企業の上限（暫定。V-25）
 
 
 def check_themes(themes: dict[str, tuple[dict, str]], companies: dict[str, dict], supply,
-                 terms: dict[str, tuple[dict, str]], learn_pages: dict[str, tuple[dict, str]]) -> list[Problem]:
+                 terms: dict[str, tuple[dict, str]], learn_pages: dict[str, tuple[dict, str]], root: Path | None = None) -> list[Problem]:
     """テーマの検査（V-02、V-04、V-07、V-08、V-10、V-12、V-25）。draft: true も検査する。"""
     out: list[Problem] = []
     company_slugs = {(d.get("slug") if isinstance(d.get("slug"), str) else Path(rel).stem) for rel, d in companies.items()}
@@ -1263,12 +1268,27 @@ def check_themes(themes: dict[str, tuple[dict, str]], companies: dict[str, dict]
 
         sections, outside = split_body(body)
         headings = [(level, text) for level, text, _ in sections[1:]]
-        if [t for _, t in headings] != THEME_HEADINGS or any(level != 2 for level, _ in headings):
+        if [t for level, t in headings if level == 2] != THEME_HEADINGS or any(level not in (2, 3) for level, _ in headings):
             found = " / ".join("#" * level + " " + text for level, text in headings) or "なし"
-            out.append(Problem(rel, "(本文)", "V-10", "本文の見出しは「## 何が起きているか」「## 半導体のどこに関わるか」の2つだけで、この順にする"
-                               f"（実際：{found[:200]}）"))
+            out.append(Problem(rel, "(本文)", "V-10", "本文の中見出しは「## 要旨」「## 市場の動き」「## バリューチェーン」「## 日本企業の位置」"
+                               f"「## 論点と今後の注目点」の5つで、この順にする（実際：{found[:200]}）"))
+        subs = [text for level, text in headings if level == 3]
+        last = next((i for i, (level, text) in enumerate(headings) if level == 2 and text == THEME_HEADINGS[-1]), None)
+        view_subs = [text for level, text in headings[last + 1:] if level == 3] if last is not None else []
+        if view_subs != THEME_VIEW_HEADINGS or len(subs) != len(view_subs):
+            out.append(Problem(rel, "(本文)", "V-10", "小見出し（###）は、「論点と今後の注目点」の下の「発表元の見方」「本サイトの見方」の2つだけで、この順にする"))
+        summary = next((lines for level, text, lines in sections[1:] if level == 2 and text == THEME_HEADINGS[0]), None)
+        if summary is not None:
+            items = [line for line in summary if line.strip()]
+            if len(items) != THEME_SUMMARY_ITEMS or not all(re.match(r"^\s*[-*]\s+\S", line) for line in items):
+                out.append(Problem(rel, "(本文)", "V-10", f"要旨は、{THEME_SUMMARY_ITEMS}つの箇条書き（`- `）だけにする"))
         if any(line.strip() for line in sections[0][2]):
-            out.append(Problem(rel, "(本文)", "V-10", "最初の見出しより前に文章がある。本文は2つの見出しの下だけに書く"))
+            out.append(Problem(rel, "(本文)", "V-10", "最初の見出しより前に文章がある。本文は5つの中見出しの下だけに書く"))
+        if root is not None:
+            for name in THEME_FIGURES:
+                if not (root / "src" / "figures" / "theme" / f"{slug}-{name}.astro").is_file():
+                    out.append(Problem(rel, "(図)", "V-25", f"図 src/figures/theme/{slug}-{name}.astro がない",
+                                       "warning" if data.get("draft") is True else "error"))
         count = count_characters([line for _, _, lines in sections[1:] for line in lines])
         _length_warning(rel, "(本文)", "本文", count, *THEME_LENGTH, out)
         cited = set(_CITATION.findall("\n".join(outside)))

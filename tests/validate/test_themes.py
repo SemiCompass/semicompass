@@ -9,8 +9,12 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_validate_data import Base  # noqa: E402
 
-BODY = "## 何が起きているか\n\n" + "生成AIの計算に使う半導体の需要が増えている。[S1]" * 12 + \
-       "\n\n## 半導体のどこに関わるか\n\n" + "高帯域のメモリを積み重ねる工程と、その検査に装置が使われる。" * 12 + "\n"
+FILL = "生成AIの計算に使う半導体の需要が増え、後工程の装置と材料の出荷が伸びている。[S1]"
+BODY = ("## 要旨\n\n- 要点の一つ目である。[S1]\n- 要点の二つ目である。\n- 要点の三つ目である。\n\n"
+        "## 市場の動き\n\n" + FILL * 15 + "\n\n"
+        "## バリューチェーン\n\n" + FILL * 15 + "\n\n"
+        "## 日本企業の位置\n\n" + FILL * 10 + "\n\n"
+        "## 論点と今後の注目点\n\n### 発表元の見方\n\n" + FILL * 5 + "\n\n### 本サイトの見方\n\n" + FILL * 5 + "\n")
 
 
 def theme_front(**extra):
@@ -30,7 +34,12 @@ def theme_front(**extra):
 
 
 class ThemeTest(Base):
-    def write_theme(self, name="generative-ai", body=BODY, **extra):
+    def write_theme(self, name="generative-ai", body=BODY, figures=True, **extra):
+        if figures:
+            fig = self.root / "src" / "figures" / "theme"
+            fig.mkdir(parents=True, exist_ok=True)
+            for part in ("market", "value-chain"):
+                (fig / f"{name}-{part}.astro").write_text("<figure></figure>\n", encoding="utf-8")
         folder = self.root / "content" / "themes"
         folder.mkdir(parents=True, exist_ok=True)
         (folder / f"{name}.md").write_text("---\n" + yaml.safe_dump(theme_front(**extra), allow_unicode=True, sort_keys=False) + "---\n" + body,
@@ -73,10 +82,26 @@ class ThemeTest(Base):
     def test_headings_length_and_citations(self):
         rel = self.write_theme(body="## 何が起きたか\n\n短い。[S7]\n")
         problems = self.check()
-        self.has(problems, "V-10", "何が起きているか", file=rel)
+        self.has(problems, "V-10", "要旨", file=rel)
         self.has(problems, "V-12", "本文", file=rel)
         self.has(problems, "V-07", "S7", file=rel)
         self.has(problems, "V-08", "S1", file=rel)  # S1 は本文でも根拠でも使われていない
+
+    def test_summary_bullets_and_view_subheadings(self):
+        body = BODY.replace("- 要点の三つ目である。\n", "").replace("### 本サイトの見方", "### 私たちの見方")
+        rel = self.write_theme(body=body)
+        problems = self.check()
+        self.has(problems, "V-10", "3つの箇条書き", file=rel)
+        self.has(problems, "V-10", "本サイトの見方", file=rel)
+
+    def test_missing_figures(self):
+        rel = self.write_theme(figures=False)
+        draft = [p for p in self.check() if p.file == rel and p.rule == "V-25" and "src/figures/theme" in p.message]
+        self.assertEqual({p.severity for p in draft}, {"warning"})
+        rel = self.write_theme(figures=False, draft=False)
+        published = [p for p in self.check() if p.file == rel and p.rule == "V-25" and "src/figures/theme" in p.message]
+        self.assertEqual(len(published), 2)
+        self.assertEqual({p.severity for p in published}, {"error"})
 
     def test_schema_requires_companies_or_others(self):
         rel = self.write_theme(groups=[{"label": "空のまとまり"}])
