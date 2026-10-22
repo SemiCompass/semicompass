@@ -1,0 +1,1 @@
+{"at": "2026-10-23T06:24:38+09:00", "run_id": "39856898779", "agent": "AG-10", "model": "claude-sonnet-5-5", "input_tokens": 4, "output_tokens": 3973, "cache_write_tokens": 5790, "cache_read_tokens": 0, "cost_usd": 0.054213, "cost_jpy": 8.1319, "status": "ok", "subject": "news-candidates"}
