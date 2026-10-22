@@ -179,9 +179,9 @@ def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] 
     os.symlink(ROOT / "node_modules", work / "node_modules")
     for directory, files in (("glossary", glossary or {}), ("processes", processes or {}), ("news", news or {})):
         (work / "content" / directory).mkdir(parents=True)
-    (work / "content" / "themes").mkdir(parents=True, exist_ok=True)  # テーマも、リポジトリの中身を写さない（extra_files で置く）
         for filename, text in files.items():
             (work / "content" / directory / filename).write_text(text, encoding="utf-8")
+    (work / "content" / "themes").mkdir(parents=True, exist_ok=True)  # テーマも、リポジトリの中身を写さない（extra_files で置く）
     for relpath, text in (extra_files or {}).items():  # そのほかのファイル（学習のページ、図など。作業用のコピーからの相対の位置）
         (work / relpath).parent.mkdir(parents=True, exist_ok=True)
         (work / relpath).write_text(text, encoding="utf-8")
