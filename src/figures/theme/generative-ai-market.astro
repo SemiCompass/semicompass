@@ -1,0 +1,32 @@
+---
+// 図1：世界の半導体市場の推移（テーマ「生成AIと半導体」の市場の動き）。
+// 数値は WSTS 2026年春季半導体市場予測（2024年・2025年は実績、2026年・2027年は予測）。単位は10億ドル。
+// その他は、市場の合計からメモリとロジックを引いた値（ディスクリート、アナログ、センサーなど）
+import Chart from '../../components/Chart.astro';
+import type { ChartSpec } from '../../lib/chart';
+
+const year = (y: number, forecast: boolean) => ({ label: `${y}年${forecast ? '（予測）' : ''}`, short: `${String(y).slice(2)}${forecast ? '予' : ''}`, lines: [`${y}年`, forecast ? '予測' : '実績'] });
+const spec: ChartSpec = {
+  kind: 'stacked',
+  categories: [year(2024, false), year(2025, false), year(2026, true), year(2027, true)],
+  series: [
+    { name: 'メモリ', color: '--chart-cat-1', values: [165.5, 230.0, 803.9, 1062.1] },
+    { name: 'ロジック', color: '--chart-cat-3', values: [215.8, 299.5, 411.4, 522.8] },
+    { name: 'その他', color: '--chart-other', pattern: true, values: [249.2, 266.1, 295.9, 328.8] },
+  ],
+  unit: '10億ドル',
+  decimals: 1,
+  labelLatest: false,
+  latestLabel: ['合計 1兆9,137億ドル'],
+  note: '2026年と2027年は予測です。その他は、市場の合計からメモリとロジックを引いた値です。',
+};
+---
+
+<Chart
+  id="theme-market"
+  title="図1 世界の半導体市場の推移"
+  unit="10億ドル"
+  period="2024年〜2027年"
+  spec={spec}
+  source={{ title: 'WSTS 2026年春季半導体市場予測', publisher: 'WSTS日本協議会', accessedOn: '2026-10-22' }}
+/>

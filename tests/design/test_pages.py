@@ -159,14 +159,14 @@ def theme_front(**extra):
 
 def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] | None = None, news: dict[str, str] | None = None,
               extra_files: dict[str, str] | None = None) -> Path:
-    """サイトの作業用のコピーを作る。**content/glossary/、content/processes/、content/news/ は、リポジトリの中身を写さず、空にして、
+    """サイトの作業用のコピーを作る。**content/glossary/、content/processes/、content/news/、content/themes/ は、リポジトリの中身を写さず、空にして、
     glossary、processes、news のファイル（名前 → 本文）だけを置く**。リポジトリの実際の content/ は、書き換えない。
     これで、用語・工程の件数が0件のときの表示を、リポジトリの中身（用語が増えても）に左右されずに確かめられる。"""
     work = Path(tempfile.mkdtemp())
     for name in ("src", "data", "config", "content", "public", "package.json", "astro.config.mjs", "tsconfig.json"):
         source = ROOT / name
         if name == "content":
-            shutil.copytree(source, work / name, ignore=shutil.ignore_patterns("glossary", "processes", "news"))
+            shutil.copytree(source, work / name, ignore=shutil.ignore_patterns("glossary", "processes", "news", "themes"))
         elif source.is_dir():
             shutil.copytree(source, work / name)
         elif source.is_file():
@@ -181,6 +181,7 @@ def make_site(glossary: dict[str, str] | None = None, processes: dict[str, str] 
         (work / "content" / directory).mkdir(parents=True)
         for filename, text in files.items():
             (work / "content" / directory / filename).write_text(text, encoding="utf-8")
+    (work / "content" / "themes").mkdir(parents=True, exist_ok=True)  # テーマも、リポジトリの中身を写さない（extra_files で置く）
     for relpath, text in (extra_files or {}).items():  # そのほかのファイル（学習のページ、図など。作業用のコピーからの相対の位置）
         (work / relpath).parent.mkdir(parents=True, exist_ok=True)
         (work / relpath).write_text(text, encoding="utf-8")
