@@ -1,0 +1,58 @@
+---
+// 図2：EUV露光で2ナノの回路を描くまで（テーマ「2ナノの最先端半導体」のバリューチェーン）。模式図、本サイトで作成
+import FigureFrame from '../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-theme-2nm-chain" columns={2} title="図2 EUV露光で2ナノの回路を描くまで（模式図）" caption="図：マスクブランクスに回路の模様を描いてマスクにし、欠陥を検査する。ウェーハにフォトレジストを塗り、マスクを通してEUVの光を当てて現像し、トランジスタや配線の形を作る。寸法は簡単にした模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="マスクブランクス：平らな板の上に、光を反射する膜を重ねる">
+      <rect class="fig-film" x="30" y="84" width="140" height="24" />
+      <rect class="fig-metal" x="30" y="72" width="140" height="12" />
+    </svg>
+    <span class="fig__name">1. マスクブランクス</span>
+    <span class="fig__note">平らな板の上に、EUVの光を反射する膜を重ねる</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="マスクと検査：回路の模様を描き、欠陥がないかを検査する。ペリクルでマスクを守る">
+      <rect class="fig-film" x="30" y="84" width="140" height="24" />
+      <rect class="fig-metal" x="30" y="72" width="140" height="12" />
+      <rect class="fig-part" x="46" y="62" width="18" height="10" />
+      <rect class="fig-part" x="82" y="62" width="18" height="10" />
+      <rect class="fig-part" x="118" y="62" width="18" height="10" />
+      <path class="fig-dash" d="M30 44h140" />
+    </svg>
+    <span class="fig__name">2. マスクと検査</span>
+    <span class="fig__note">回路の模様を描いて検査し、ペリクルでほこりから守る</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="塗布・露光・現像：ウェーハにフォトレジストを塗り、EUVの光を当てて模様を残す">
+      <rect class="fig-wafer" x="30" y="84" width="140" height="24" />
+      <rect class="fig-resist" x="46" y="72" width="18" height="12" />
+      <rect class="fig-resist" x="82" y="72" width="18" height="12" />
+      <rect class="fig-resist" x="118" y="72" width="18" height="12" />
+      <path class="fig-arrow" d="M55 30v34M91 30v34M127 30v34" />
+    </svg>
+    <span class="fig__name">3. 塗布・露光・現像</span>
+    <span class="fig__note">フォトレジストを塗り、EUVの光を当てて模様を残す</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="GAAトランジスタ：薄い板を重ね、ゲートで四方を囲む">
+      <rect class="fig-wafer" x="30" y="100" width="140" height="14" />
+      <rect class="fig-metal" x="70" y="40" width="60" height="60" />
+      <rect class="fig-film" x="40" y="52" width="120" height="8" />
+      <rect class="fig-film" x="40" y="66" width="120" height="8" />
+      <rect class="fig-film" x="40" y="80" width="120" height="8" />
+    </svg>
+    <span class="fig__name">4. GAAトランジスタ</span>
+    <span class="fig__note">薄い板（ナノシート）を重ね、ゲートで四方を囲む</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-film" x="3" y="8" width="18" height="8" /></svg>板・ナノシート</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-metal" x="3" y="8" width="18" height="8" /></svg>反射膜・ゲート</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-part" x="3" y="8" width="18" height="8" /></svg>マスクの模様</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-resist" x="3" y="8" width="18" height="8" /></svg>フォトレジスト</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-wafer" x="3" y="8" width="18" height="8" /></svg>ウェーハ</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-dash" d="M3 12h18" /></svg>ペリクル</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-arrow" d="M12 3v18" /></svg>EUVの光</li>
+  </ul>
+</FigureFrame>
