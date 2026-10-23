@@ -67,7 +67,7 @@ learn:
   - { folder: logic, ref: design-rules }
   - { folder: devices, ref: scaling }
 published_at: '2026-10-23'
-draft: true
+draft: false
 ai_generated: true
 sources:
   - id: S1
