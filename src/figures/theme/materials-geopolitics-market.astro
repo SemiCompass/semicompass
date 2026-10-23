@@ -1,0 +1,26 @@
+---
+// 図1：地域別の半導体材料の市場（2025年）。テーマ「材料の地政学」の市場の動き。
+// 数値は SEMI の発表（2026年5月14日）。単位は10億ドル。その他の地域は、市場の合計（73.2）から上位3地域を引いた値（日本、北米、欧州などを含む）
+import Chart from '../../components/Chart.astro';
+import type { ChartSpec } from '../../lib/chart';
+
+const region = (name: string) => ({ label: name, short: name, lines: [name] });
+const spec: ChartSpec = {
+  kind: 'hbar',
+  categories: [region('台湾'), region('中国'), region('韓国'), region('その他の地域')],
+  series: [{ name: '材料の市場', color: '--chart-single', values: [21.7, 15.6, 11.2, 24.7] }],
+  unit: '10億ドル',
+  decimals: 1,
+  labelLatest: false,
+  note: 'その他の地域は、市場の合計（732億ドル）から上位3地域を引いた値で、日本、北米、欧州などを含みます。材料を使う工場のある地域で数えています。',
+};
+---
+
+<Chart
+  id="theme-materials-market"
+  title="図1 地域別の半導体材料の市場（2025年）"
+  unit="10億ドル"
+  period="2025年"
+  spec={spec}
+  source={{ title: '2025年の世界半導体材料市場、過去最高の732億ドルに到達', publisher: 'SEMI', accessedOn: '2026-10-23' }}
+/>
