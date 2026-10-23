@@ -1,0 +1,32 @@
+---
+// 図1：TSMCのウェーハの売上高の技術別の内訳（2026年7〜9月期）。テーマ「2ナノの最先端半導体」の市場の動き。
+// 数値は TSMC の 2026年第3四半期の決算の発表（2026年10月15日）。単位は%。
+// 「10ナノ以上など」は、100%から2ナノ、3ナノ、5ナノ、7ナノを引いた値
+import Chart from '../../components/Chart.astro';
+import type { ChartSpec } from '../../lib/chart';
+
+const spec: ChartSpec = {
+  kind: 'hbar',
+  categories: [
+    { label: '2ナノ', short: '2nm', lines: ['2ナノ'] },
+    { label: '3ナノ', short: '3nm', lines: ['3ナノ'] },
+    { label: '5ナノ', short: '5nm', lines: ['5ナノ'] },
+    { label: '7ナノ', short: '7nm', lines: ['7ナノ'] },
+    { label: '10ナノ以上など', short: 'その他', lines: ['10ナノ以上など'] },
+  ],
+  series: [{ name: 'ウェーハの売上高に占める割合', color: '--chart-single', values: [8, 33, 28, 10, 21] }],
+  unit: '%',
+  decimals: 0,
+  labelLatest: false,
+  note: '10ナノ以上などは、100%から2ナノ、3ナノ、5ナノ、7ナノの割合を引いた値です。',
+};
+---
+
+<Chart
+  id="theme-2nm-market"
+  title="図1 TSMCのウェーハの売上高の技術別の内訳"
+  unit="%"
+  period="2026年7〜9月期"
+  spec={spec}
+  source={{ title: '3Q26 Earnings Release', publisher: 'TSMC', accessedOn: '2026-10-23' }}
+/>
