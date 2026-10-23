@@ -1,0 +1,60 @@
+---
+// 図2：チップレットを1つのパッケージにまとめるまで（テーマ「先端パッケージとチップレット」のバリューチェーン）。
+// 4のウェーハとパネルの取れる数は、レゾナックの説明（EE Times Japan、2025年9月8日）による。模式図、本サイトで作成
+import FigureFrame from '../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-theme-packaging-chain" columns={2} title="図2 チップレットを1つのパッケージにまとめるまで（模式図）" caption="図：機能ごとに分けて作ったチップを中継の基板（インターポーザー）の上に並べてつなぎ、パッケージの基板に載せる。インターポーザーが大きくなると、円いウェーハより角形のパネルの方が多く取れる。寸法は簡単にした模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="チップレット：大きな回路を、機能ごとの小さなチップに分けて作る">
+      <rect class="fig-wafer" x="30" y="50" width="56" height="40" />
+      <rect class="fig-wafer" x="100" y="50" width="30" height="40" />
+      <rect class="fig-wafer" x="140" y="50" width="30" height="18" />
+      <rect class="fig-wafer" x="140" y="72" width="30" height="18" />
+    </svg>
+    <span class="fig__name">1. チップレット</span>
+    <span class="fig__note">大きな回路を、機能ごとの小さなチップに分けて作る</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="インターポーザー：チップとメモリを中継の基板の上に並べ、細かい配線でつなぐ">
+      <rect class="fig-film" x="24" y="84" width="152" height="12" />
+      <rect class="fig-wafer" x="62" y="58" width="56" height="26" />
+      <rect class="fig-wafer" x="30" y="58" width="26" height="26" />
+      <rect class="fig-wafer" x="124" y="58" width="26" height="26" />
+      <path class="fig-line" d="M56 90h68" />
+    </svg>
+    <span class="fig__name">2. インターポーザーに並べる</span>
+    <span class="fig__note">チップとメモリを中継の基板に並べ、細かい配線でつなぐ</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="パッケージの基板：インターポーザーを基板に載せ、試験して完成する">
+      <rect class="fig-metal" x="14" y="98" width="172" height="14" />
+      <rect class="fig-film" x="24" y="84" width="152" height="12" />
+      <rect class="fig-wafer" x="62" y="58" width="56" height="26" />
+      <rect class="fig-wafer" x="30" y="58" width="26" height="26" />
+      <rect class="fig-wafer" x="124" y="58" width="26" height="26" />
+    </svg>
+    <span class="fig__name">3. パッケージの基板に載せる</span>
+    <span class="fig__note">インターポーザーを基板に載せ、試験して完成する</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="ウェーハとパネル：300ミリメートルのウェーハから大きなインターポーザーは4個、510×515ミリメートルのパネルからは24個取れる">
+      <circle class="fig-film" cx="52" cy="70" r="40" />
+      <rect class="fig-part" x="30" y="44" width="21" height="25" />
+      <rect class="fig-part" x="53" y="44" width="21" height="25" />
+      <rect class="fig-part" x="30" y="71" width="21" height="25" />
+      <rect class="fig-part" x="53" y="71" width="21" height="25" />
+      <rect class="fig-film" x="108" y="30" width="80" height="80" />
+      <path class="fig-dash" d="M121 30v80M135 30v80M148 30v80M161 30v80M175 30v80M108 50h80M108 70h80M108 90h80" />
+    </svg>
+    <span class="fig__name">4. ウェーハとパネル</span>
+    <span class="fig__note">大きなインターポーザーは、ウェーハから4個、パネルから24個取れる</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-wafer" x="3" y="8" width="18" height="8" /></svg>チップ・メモリ</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-part" x="3" y="8" width="18" height="8" /></svg>取れるインターポーザー</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-film" x="3" y="8" width="18" height="8" /></svg>インターポーザー・ウェーハ・パネル</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-metal" x="3" y="8" width="18" height="8" /></svg>パッケージの基板</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><path class="fig-line" d="M3 12h18" /></svg>細かい配線</li>
+  </ul>
+</FigureFrame>

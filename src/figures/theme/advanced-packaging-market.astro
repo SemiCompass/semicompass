@@ -1,0 +1,31 @@
+---
+// 図1：後工程の装置の世界の販売額の予測（テーマ「先端パッケージとチップレット」の市場の動き）。
+// 数値は SEMI の装置の市場の予測（2026年7月14日）。2026年と2028年の値だけが示されている。単位は億ドル
+import Chart from '../../components/Chart.astro';
+import type { ChartSpec } from '../../lib/chart';
+
+const spec: ChartSpec = {
+  kind: 'grouped',
+  categories: [
+    { label: '2026年（予測）', short: '26予', lines: ['2026年', '予測'] },
+    { label: '2028年（予測）', short: '28予', lines: ['2028年', '予測'] },
+  ],
+  series: [
+    { name: '組立・パッケージングの装置', color: '--chart-cat-1', values: [67, 86] },
+    { name: '試験の装置', color: '--chart-cat-3', values: [153, 208] },
+  ],
+  unit: '億ドル',
+  decimals: 0,
+  labelLatest: true,
+  note: '2026年と2028年は、SEMIの予測です。SEMIの発表には、2027年の値はありません。',
+};
+---
+
+<Chart
+  id="theme-packaging-market"
+  title="図1 後工程の装置の世界の販売額の予測"
+  unit="億ドル"
+  period="2026年と2028年（予測）"
+  spec={spec}
+  source={{ title: 'Global Semiconductor Equipment Sales Forecast to Reach a Record $229 Billion in 2028', publisher: 'SEMI', accessedOn: '2026-10-23' }}
+/>
