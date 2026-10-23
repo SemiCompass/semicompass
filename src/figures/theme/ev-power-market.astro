@@ -1,0 +1,32 @@
+---
+// 図1：パワー半導体の世界市場（2025年と2035年の予測）。テーマ「電気自動車とパワー半導体」の市場の動き。
+// 数値は富士経済の調査（2026年4月28日の発表。EE Times Japan、2026年5月1日）。単位は億円
+import Chart from '../../components/Chart.astro';
+import type { ChartSpec } from '../../lib/chart';
+
+const spec: ChartSpec = {
+  kind: 'stacked',
+  categories: [
+    { label: '2025年', short: '25', lines: ['2025年', '実績'] },
+    { label: '2035年（予測）', short: '35予', lines: ['2035年', '予測'] },
+  ],
+  series: [
+    { name: 'シリコンのパワー半導体', color: '--chart-cat-1', values: [32182, 48418] },
+    { name: '次世代のパワー半導体（SiC、GaNなど）', color: '--chart-cat-3', values: [5368, 25077] },
+  ],
+  unit: '億円',
+  decimals: 0,
+  labelLatest: false,
+  latestLabel: ['合計 7兆3,495億円'],
+  note: '2035年は予測です。次世代のパワー半導体は、SiC、GaN、酸化ガリウムなどを使うものです。',
+};
+---
+
+<Chart
+  id="theme-ev-market"
+  title="図1 パワー半導体の世界市場"
+  unit="億円"
+  period="2025年と2035年（予測）"
+  spec={spec}
+  source={{ title: 'パワー半導体世界市場、2035年は7兆円超え（富士経済の調査）', publisher: 'EE Times Japan', accessedOn: '2026-10-23' }}
+/>
