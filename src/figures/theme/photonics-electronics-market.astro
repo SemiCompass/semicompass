@@ -1,0 +1,29 @@
+---
+// 図1：世界のデータセンターの電力の消費（テーマ「光電融合」の市場の動き）。
+// 数値は IEA「Energy and AI」の要旨（2024年は推計、2030年と2035年は基本のシナリオの見通し）。単位はテラワット時
+import Chart from '../../components/Chart.astro';
+import type { ChartSpec } from '../../lib/chart';
+
+const spec: ChartSpec = {
+  kind: 'bar',
+  categories: [
+    { label: '2024年', short: '24', lines: ['2024年'] },
+    { label: '2030年（見通し）', short: '30見', lines: ['2030年', '見通し'] },
+    { label: '2035年（見通し）', short: '35見', lines: ['2035年', '見通し'] },
+  ],
+  series: [{ name: 'データセンターの電力の消費', color: '--chart-single', values: [415, 945, 1200] }],
+  unit: 'テラワット時',
+  decimals: 0,
+  labelLatest: true,
+  note: '2030年と2035年は、IEAの基本のシナリオの見通しです。2035年は、シナリオによって700〜1,700テラワット時の幅があります。',
+};
+---
+
+<Chart
+  id="theme-photonics-market"
+  title="図1 世界のデータセンターの電力の消費"
+  unit="テラワット時"
+  period="2024年〜2035年（見通し）"
+  spec={spec}
+  source={{ title: 'Energy and AI Executive summary', publisher: '国際エネルギー機関（IEA）', accessedOn: '2026-10-23' }}
+/>
