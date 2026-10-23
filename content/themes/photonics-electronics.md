@@ -58,7 +58,7 @@ learn:
   - { folder: optics, ref: direct-indirect }
   - { folder: optics, ref: refractive-index }
 published_at: '2026-10-23'
-draft: true
+draft: false
 ai_generated: true
 sources:
   - id: S1

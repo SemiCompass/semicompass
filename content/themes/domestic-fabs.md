@@ -37,7 +37,7 @@ learn:
   - { folder: industry, ref: capital-investment }
   - { folder: facilities, ref: building-a-fab }
 published_at: '2026-10-23'
-draft: true
+draft: false
 ai_generated: true
 sources:
   - id: S1
