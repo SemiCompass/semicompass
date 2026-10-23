@@ -54,8 +54,8 @@ learn:
   - { folder: process, ref: advanced-packaging }
   - { folder: devices, ref: memory }
   - { folder: logic, ref: processor }
-published_at: '2026-10-22'
-draft: true
+published_at: '2026-10-23'
+draft: false
 ai_generated: true
 sources:
   - id: S1
