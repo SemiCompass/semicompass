@@ -264,7 +264,7 @@ class MenuTest(unittest.TestCase):
     def test_menu_yaml(self):
         data = yaml.safe_load((ROOT / "config" / "menu.yaml").read_text(encoding="utf-8"))
         self.assertEqual([(i["label"], i["path"]) for i in data["main"]],
-                         [("企業", "/companies/"), ("工程", "/processes/"), ("ニュース", "/news/"), ("学ぶ", "/learn/")])
+                         [("企業", "/companies/"), ("工程", "/processes/"), ("ニュース", "/news/"), ("テーマ", "/themes/"), ("学ぶ", "/learn/")])
         for item in [*data["main"], *(link for g in data["footer"] for link in g["links"])]:
             self.assertRegex(item["path"], r"^/[a-z0-9/-]*/$")
         paths = {link["path"] for g in data["footer"] for link in g["links"]}

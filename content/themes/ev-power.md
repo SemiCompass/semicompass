@@ -40,7 +40,7 @@ learn:
   - { folder: power, ref: applications }
   - { folder: power, ref: manufacturing-reliability }
 published_at: '2026-10-23'
-draft: true
+draft: false
 ai_generated: true
 sources:
   - id: S1
