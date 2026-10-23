@@ -62,7 +62,7 @@ learn:
   - { folder: process, ref: advanced-packaging }
   - { folder: process, ref: interconnect }
 published_at: '2026-10-23'
-draft: true
+draft: false
 ai_generated: true
 sources:
   - id: S1
