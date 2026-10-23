@@ -1,0 +1,47 @@
+---
+// 図2：国の支援を受けた主な工場と、作る半導体（テーマ「国内の新工場と国の支援」のバリューチェーン）。模式図、本サイトで作成
+import FigureFrame from '../../components/FigureFrame.astro';
+---
+
+<FigureFrame id="fig-theme-fabs-chain" columns={2} title="図2 国の支援を受けた主な工場と、作る半導体（模式図）" caption="図：国の支援を受けた主な工場の場所と、作る半導体の種類。工場ごとに、ロジック、メモリ、最先端のロジックと役割が分かれる。模式図、本サイトで作成">
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="熊本県：JASMがロジック半導体を作る">
+      <rect class="fig-wafer" x="40" y="60" width="120" height="50" />
+      <rect class="fig-part" x="60" y="36" width="80" height="24" />
+    </svg>
+    <span class="fig__name">熊本県（JASM）</span>
+    <span class="fig__note">ロジック半導体。第1工場は2024年12月に量産</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="三重県・岩手県：キオクシアが3次元フラッシュメモリを作る">
+      <rect class="fig-film" x="60" y="94" width="80" height="12" />
+      <rect class="fig-film" x="60" y="80" width="80" height="12" />
+      <rect class="fig-film" x="60" y="66" width="80" height="12" />
+      <rect class="fig-film" x="60" y="52" width="80" height="12" />
+      <rect class="fig-film" x="60" y="38" width="80" height="12" />
+    </svg>
+    <span class="fig__name">三重県・岩手県（キオクシア）</span>
+    <span class="fig__note">3次元フラッシュメモリ。北上の第2製造棟は2025年9月に稼働</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="広島県：マイクロンがEUV露光を使うDRAMを作る">
+      <rect class="fig-film" x="40" y="60" width="120" height="50" />
+      <path class="fig-dash" d="M70 20v40M100 20v40M130 20v40" />
+    </svg>
+    <span class="fig__name">広島県（マイクロン）</span>
+    <span class="fig__note">DRAM。EUV露光を使う1γ世代の計画</span>
+  </li>
+  <li class="fig__panel">
+    <svg class="fig__svg" viewBox="0 0 200 140" role="img" aria-label="北海道：ラピダスが2ナノのロジック半導体を目指す">
+      <rect class="fig-part" x="50" y="50" width="100" height="60" />
+      <path class="fig-dash" d="M70 50v60M90 50v60M110 50v60M130 50v60" />
+    </svg>
+    <span class="fig__name">北海道（ラピダス）</span>
+    <span class="fig__note">2ナノのロジック半導体。2027年の量産を目指す</span>
+  </li>
+  <ul class="fig__legend" slot="legend" aria-hidden="true">
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-wafer" x="3" y="8" width="18" height="8" /></svg>ロジック</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-film" x="3" y="8" width="18" height="8" /></svg>メモリ</li>
+    <li><svg class="fig__key" viewBox="0 0 24 24"><rect class="fig-part" x="3" y="8" width="18" height="8" /></svg>最先端のロジック</li>
+  </ul>
+</FigureFrame>

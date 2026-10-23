@@ -1,0 +1,28 @@
+---
+// 図1：国の主な支援（助成の上限額と、研究開発の委託の累計）。テーマ「国内の新工場と国の支援」の市場の動き。
+// 数値は経済産業省の資料（2024年5月、2024年11月）と報道（2026年4月）。単位は億円。
+// 四日市など（3次元フラッシュメモリ）は2022年と2024年の認定の合計、東広島（DRAM）は2022年と2023年の認定の合計。
+// ラピダスは、2022〜2026年度の研究開発の委託の累計で、助成の上限額とは性格が違う
+import Chart from '../../components/Chart.astro';
+import type { ChartSpec } from '../../lib/chart';
+
+const item = (name: string) => ({ label: name, short: name, lines: [name] });
+const spec: ChartSpec = {
+  kind: 'hbar',
+  categories: [item('千歳（ラピダス）'), item('熊本（JASM第2）'), item('熊本（JASM第1）'), item('四日市など（NAND）'), item('東広島（DRAM）')],
+  series: [{ name: '国の支援', color: '--chart-single', values: [23540, 7320, 4760, 2429, 2135] }],
+  unit: '億円',
+  decimals: 0,
+  labelLatest: false,
+  note: 'ラピダスは2022〜2026年度の研究開発の委託の累計、そのほかは認定を受けた計画の助成の上限額です。四日市など（3次元フラッシュメモリ）と東広島（DRAM）は、2回の認定の合計です。',
+};
+---
+
+<Chart
+  id="theme-fabs-market"
+  title="図1 国内の半導体工場への国の主な支援"
+  unit="億円"
+  period="2022年度〜2026年度"
+  spec={spec}
+  source={{ title: '半導体に関する最近の政策動向について、半導体政策の動向（経済産業省）、ラピダスに6千億円追加支援（共同通信）', publisher: '経済産業省ほか', accessedOn: '2026-10-23' }}
+/>
