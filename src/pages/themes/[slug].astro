@@ -1,5 +1,5 @@
 ---
-// テーマのページ（/themes/{slug}/。仕様書 9.9）：業界レポートの形（運用ルール書 4.6）。頭（「テーマ」、大見出し、日付）→ 要旨の枠 →
+// テーマのページ（/themes/{slug}/。仕様書 9.9）：業界レポートの形（運用ルール書 4.6）。頭（「テーマ」、大見出し、日付）→ アイキャッチ（あるとき）→ 要旨の枠 →
 //   市場の動き（段落とグラフ）→ バリューチェーン（段落と図）→ 日本企業の位置（段落、掲載の基準の枠、関連する企業）→
 //   論点と今後の注目点（発表元の見方／本サイトの見方）→ 関係する工程・用語・学ぶ → このテーマのニュース（5件まで）→ 免責の短い文 → 出典。
 // content/themes/{slug}.md（データ定義書 6.7）と、図 src/figures/theme/{slug}-market.astro・{slug}-value-chain.astro から作る。
@@ -94,6 +94,13 @@ const toc = [
       <span>作成者：<a href="/about/">hysd（SemiCompass運営者）</a></span>
     </p>
   </header>
+  {theme.eyecatch && (
+    <figure class="eyecatch">
+      <img class="eyecatch__img" src={theme.eyecatch.src} srcset={theme.eyecatch.srcset} sizes="100vw"
+        width={theme.eyecatch.width} height={theme.eyecatch.height} alt="" decoding="async" fetchpriority="high" />
+      <figcaption class="eyecatch__note">イメージ画像（生成AIで作成）</figcaption>
+    </figure>
+  )}
   {summary && (
     <section class="summary" aria-labelledby="s0">
       <h2 class="summary__title" id="s0">要旨</h2>
@@ -214,6 +221,24 @@ const toc = [
     line-height: var(--text-small-leading);
   }
   /* 要旨（8.20 の要点の枠と同じ形） */
+  .eyecatch {
+    max-width: var(--content-max-width);
+    margin: 0 0 var(--space-6);
+  }
+  .eyecatch__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    border-radius: var(--radius-card);
+    object-fit: cover;
+  }
+  .eyecatch__note {
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-leading);
+  }
   .summary {
     max-width: var(--content-max-width);
     margin-block-end: var(--space-6);

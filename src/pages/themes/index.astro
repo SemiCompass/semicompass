@@ -1,5 +1,5 @@
 ---
-// テーマの一覧（/themes/。仕様書 9.9）：1件ずつ罫線で区切り、テーマの名前・説明・関連する企業の数と更新日を並べる。カードにしない。
+// テーマの一覧（/themes/。仕様書 9.9）：1件ずつ罫線で区切り、アイキャッチ（あるとき）、テーマの名前・説明・関連する企業の数と更新日を並べる。カードにしない。
 // content/themes/ の draft: true は、プレビューのビルドだけ。0件のときは、データがない状態の表示
 import { BUILD_ENV } from 'astro:env/server';
 import AdSlot from '../../components/AdSlot.astro';
@@ -26,13 +26,18 @@ const themes = loadThemes(BUILD_ENV === 'preview');
       <p class="lead measure">話題ごとに、半導体のどの工程が関わり、どの企業が何を担っているかをまとめています。</p>
       <ol class="theme-list">
         {themes.map((t) => (
-          <li class="theme-list__item">
-            <h2 class="theme-list__title"><a href={t.url}><Phrase text={t.front.title} /></a></h2>
-            <p class="theme-list__desc">{t.front.description}</p>
-            <p class="theme-list__meta">
-              <span>関連する企業 {companyCount(t.front)}社</span>
-              <span>更新日：<time datetime={t.front.updated_at ?? t.front.published_at}>{dateLabel(t.front.updated_at ?? t.front.published_at)}</time></span>
-            </p>
+          <li class:list={['theme-list__item', { 'theme-list__item--image': t.eyecatch }]}>
+            {t.eyecatch && (
+              <img class="theme-list__img" src={t.eyecatch.src} width={t.eyecatch.width} height={t.eyecatch.height} alt="" loading="lazy" decoding="async" />
+            )}
+            <div class="theme-list__text">
+              <h2 class="theme-list__title"><a href={t.url}><Phrase text={t.front.title} /></a></h2>
+              <p class="theme-list__desc">{t.front.description}</p>
+              <p class="theme-list__meta">
+                <span>関連する企業 {companyCount(t.front)}社</span>
+                <span>更新日：<time datetime={t.front.updated_at ?? t.front.published_at}>{dateLabel(t.front.updated_at ?? t.front.published_at)}</time></span>
+              </p>
+            </div>
           </li>
         ))}
       </ol>
@@ -42,6 +47,8 @@ const themes = loadThemes(BUILD_ENV === 'preview');
 </Page>
 
 <style>
+  @import "../../styles/breakpoints.css";
+
   .theme-list {
     max-width: var(--content-max-width);
     margin: 0;
@@ -51,9 +58,30 @@ const themes = loadThemes(BUILD_ENV === 'preview');
   }
   .theme-list__item {
     display: grid;
-    gap: var(--space-1);
+    gap: var(--space-3);
     padding-block: var(--space-5);
     border-bottom: var(--border-width) solid var(--color-border);
+  }
+  .theme-list__text {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  /* アイキャッチ（仕様書 9.9）：スマートフォンは名前の上に幅いっぱい、タブレットとPCは左に小さく */
+  .theme-list__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    border-radius: var(--radius-card);
+    object-fit: cover;
+  }
+  @media (--tablet) {
+    .theme-list__item--image {
+      grid-template-columns: var(--theme-thumb-width) minmax(0, 1fr);
+      gap: var(--space-5);
+      align-items: start;
+    }
   }
   .theme-list__title {
     margin: 0;
