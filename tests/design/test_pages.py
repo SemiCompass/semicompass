@@ -719,9 +719,13 @@ class PagesBuildTest(unittest.TestCase):
         self.assertIn("関連する企業 4社", listing)
         self.assertNotIn("data-center", listing)  # 下書きは本番に出さない
         self.assertFalse((dist / "themes" / "data-center" / "index.html").exists())
+        # アイキャッチ（仕様書 1.7、9.9）：一覧は小さな画像（遅れて読み込む）。画像は飾り（alt=""）
+        self.assertRegex(listing, r'<img class="theme-list__img" src="/images/themes/generative-ai-800\.webp"[^>]*alt=""[^>]*loading="lazy"')
         page = self.read(dist, "themes/generative-ai/index.html").split("<main")[1]
-        # レポートの並び（仕様書 9.9）：要旨 → 市場の動き（グラフ）→ バリューチェーン（図）→ 日本企業の位置（基準と企業）→ 論点
-        marks = ['class="summary"', 'id="s1"', 'id="fig-theme-market"', 'id="s2"', 'id="fig-theme-chain"', 'id="s3"',
+        # レポートの並び（仕様書 9.9）：アイキャッチ → 要旨 → 市場の動き（グラフ）→ バリューチェーン（図）→ 日本企業の位置（基準と企業）→ 論点
+        self.assertIn('srcset="/images/themes/generative-ai-800.webp 800w, /images/themes/generative-ai-1600.webp 1600w"', page)
+        self.assertIn('width="1600" height="800"', page)
+        marks = ['class="eyecatch"', "イメージ画像（生成AIで作成）", 'class="summary"', 'id="s1"', 'id="fig-theme-market"', 'id="s2"', 'id="fig-theme-chain"', 'id="s3"',
                  "このページに載せる企業", 'href="/companies/adeka/"', "発表元の見方", "本サイトの見方", "投資の判断の材料ではありません"]
         at = [page.index(m) for m in marks]
         self.assertEqual(at, sorted(at), "レポートの並びが仕様書 9.9 と違う")
@@ -745,6 +749,13 @@ class PagesBuildTest(unittest.TestCase):
     def test_theme_draft_is_built_in_preview(self):
         dist = self.theme_site("preview")
         self.assertTrue((dist / "themes" / "data-center" / "index.html").exists())
+        # 画像のないテーマ：アイキャッチを出さず、要旨から始める。一覧でも画像の場所を空けない（仕様書 9.9）
+        page = self.read(dist, "themes/data-center/index.html").split("<main")[1]
+        self.assertNotIn('class="eyecatch"', page)
+        self.assertNotIn("イメージ画像", page)
+        listing = self.read(dist, "themes/index.html").split("<main")[1]
+        item = listing[listing.index('href="/themes/data-center/"') - 400:listing.index('href="/themes/data-center/"')]
+        self.assertNotIn("theme-list__item--image", item.split("<li")[-1])
 
     def test_empty_theme_list(self):
         html = self.read(self.build_empty("preview"), "themes/index.html").split("<main")[1]

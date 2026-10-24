@@ -40,7 +40,23 @@ export interface ThemeFront {
   ai_generated: boolean;
   sources: Source[];
 }
-export type Theme = Markdown<ThemeFront> & { slug: string; url: string; report: ReportSection[] };
+// アイキャッチ（仕様書 1.7、7章、9.9）：public/images/themes/{slug}-800.webp と -1600.webp。2つともあるときだけ出す
+export const EYECATCH_WIDTHS = [800, 1600] as const;
+export interface Eyecatch {
+  src: string; // 幅800の画像（srcset の既定）
+  srcset: string;
+  width: number;
+  height: number;
+}
+export type Theme = Markdown<ThemeFront> & { slug: string; url: string; report: ReportSection[]; eyecatch: Eyecatch | null };
+
+/** テーマのアイキャッチの画像を探す。ないとき（どちらかの幅が欠けるときも）は null */
+export function findEyecatch(slug: string, publicDir = 'public'): Eyecatch | null {
+  const files = EYECATCH_WIDTHS.map((w) => ({ w, path: `/images/themes/${slug}-${w}.webp` }));
+  if (!files.every((f) => existsSync(resolve(process.cwd(), publicDir, f.path.slice(1))))) return null;
+  const largest = EYECATCH_WIDTHS[EYECATCH_WIDTHS.length - 1];
+  return { src: files[0].path, srcset: files.map((f) => `${f.path} ${f.w}w`).join(', '), width: largest, height: largest / 2 };
+}
 
 // ---- レポートの本文（データ定義書 6.7、運用ルール書 4.6）：5つの中見出しと、その中の段落・小見出し・箇条書き ----
 export const REPORT_HEADINGS = ['要旨', '市場の動き', 'バリューチェーン', '日本企業の位置', '論点と今後の注目点'] as const;
@@ -85,7 +101,7 @@ export function loadThemes(preview: boolean, dir = 'content/themes'): Theme[] {
       const slug = f.replace(/\.md$/, '');
       const text = readFileSync(resolve(path, f), 'utf-8');
       const body = text.replace(/\r\n/g, '\n').replace(/^---\n[\s\S]*?\n---\n?/, '');
-      return { ...parseMarkdown<ThemeFront>(text), slug, url: `/themes/${slug}/`, report: parseReport(body) };
+      return { ...parseMarkdown<ThemeFront>(text), slug, url: `/themes/${slug}/`, report: parseReport(body), eyecatch: findEyecatch(slug) };
     })
     .filter((t) => visible(t.front, preview))
     .sort((a, b) => b.front.published_at.localeCompare(a.front.published_at) || a.slug.localeCompare(b.slug));
