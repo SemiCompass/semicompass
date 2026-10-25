@@ -1,0 +1,116 @@
+{
+ "ranked": [
+  {
+   "title": "800Vを一気に6Vへ、ルネサスが開発するAIサーバ用20kW級電源",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/23/news043.html",
+   "published_on": "2026-10-23",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "掲載企業のAIサーバ用電源の開発を伝える報道。量産開始や採用の発表とは読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 2,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 8,
+   "category_full": false
+  },
+  {
+   "title": "次世代半導体の基盤作りが進展 2nmや光チップレットも",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/24/news008.html",
+   "published_on": "2026-10-24",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "次世代半導体の基盤作りの進展を伝える報道。企業名や詳細は見出しからは不明。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 2,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "Intel、アリゾナ最先端工場「Fab 62」を28年末までに稼働へ",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/23/news044.html",
+   "published_on": "2026-10-23",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c02",
+   "semiconductor_related": true,
+   "category": "investment",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "米国の工場の稼働時期を伝える報道。国内拠点ではなく、日本企業への影響は間接的。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 2,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "「冷める前の光」サブピコ秒で抽出、光電融合の新原理",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/23/news040.html",
+   "published_on": "2026-10-23",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c04",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "光電融合の新原理の報道。研究段階とみられ、掲載企業の名前も見出しにない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 1
+}
