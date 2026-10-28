@@ -13,6 +13,8 @@ related_terms:
 - cmp
 - low-k-film
 - sputtering
+- barrier-metal
+- via
 description: 銅配線は、チップの中の配線に銅を使う技術。アルミニウムより電気抵抗が低く、細い配線でも信号の遅れを抑えやすい。溝を埋めて削るダマシンの方法で作る。
 basis: reviewed
 published_at: '2026-10-28'
