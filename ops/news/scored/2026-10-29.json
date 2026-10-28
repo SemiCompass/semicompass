@@ -1,0 +1,263 @@
+{
+ "ranked": [
+  {
+   "title": "RL78ファミリを拡充し、スマート家電のシステム制御に最適化した超低消費電力16ビットマイコン「RL78/G21」を発売",
+   "url": "https://www.renesas.com/ja/about/newsroom/renesas-expands-rl78-family-ultra-low-power-16-bit-rl78g21-mcu-optimized-smart-appliance-system",
+   "published_on": "2026-10-28",
+   "source": "renesas-press",
+   "publisher": "ルネサス エレクトロニクス プレスルーム",
+   "kind": "company",
+   "reliability": "high",
+   "company": "renesas-electronics",
+   "reporting_hint": "primary",
+   "id": "c02",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "掲載企業の新製品発売。量産開始や主要顧客の採用は見出しにない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "投資家の皆様へ 2027年3月期 第2四半期(中間期)決算短信〔IFRS〕(連結)",
+   "url": "https://www.advantest.com/ja/news/2026/mpd9kn0000000ger-att/J_FR_FY2026_2Q.pdf",
+   "published_on": "2026-10-28",
+   "source": "advantest-news",
+   "publisher": "アドバンテスト ニュース",
+   "kind": "company",
+   "reliability": "high",
+   "company": "advantest",
+   "reporting_hint": "primary",
+   "id": "c08",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "advantest"
+   ],
+   "reason": "通常の中間決算短信で、業績予想の修正は見出しから読み取れない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "ソシオネクスト26年度Q2は黒字回復、予想も上方修正",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/28/news082.html",
+   "published_on": "2026-10-28",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c10",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "socionext"
+   ],
+   "reason": "黒字回復と予想の上方修正の報道。変動幅は見出しから不明。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "キヤノン26年Q3、メモリ向け装置が好調 NIL検証も進む",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/28/news050.html",
+   "published_on": "2026-10-28",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c11",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "canon"
+   ],
+   "reason": "メモリ向け装置の好調とNIL検証の進展を伝える決算報道。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 2,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "スマート家電や産業用アプリケーションにおいて、なぜ16ビットMCUが今も重要なのか",
+   "url": "https://www.renesas.com/ja/blogs/why-16-bit-mcus-still-matter-smart-home-appliance-and-industrial-applications",
+   "published_on": "2026-10-28",
+   "source": "renesas-press",
+   "publisher": "ルネサス エレクトロニクス プレスルーム",
+   "kind": "company",
+   "reliability": "high",
+   "company": "renesas-electronics",
+   "reporting_hint": "primary",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "MCUの重要性を説明する発信で、新たな事実は見出しから読み取れない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "ITプラットフォーム市場動向および2025年度サーバ出荷実績",
+   "url": "https://www.jeita.or.jp/japanese/topics/2026/1028.pdf",
+   "published_on": "2026-10-28",
+   "source": "jeita-topics",
+   "publisher": "電子情報技術産業協会（JEITA） お知らせ",
+   "kind": "association",
+   "reliability": "high",
+   "company": null,
+   "reporting_hint": "primary",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "supply_demand",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "サーバ出荷実績の公表。前年比の変化幅は見出しから読み取れない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "ソニーがスマホ用1/1.56型新センサー、ハイエンドで培った技術継承",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/28/news045.html",
+   "published_on": "2026-10-28",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c12",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "sony"
+   ],
+   "reason": "スマホ用の新センサー報道。量産開始や採用の発表は読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "投資家の皆様へ 「2026年度第2四半期 決算説明会」プレゼンテーションを掲載",
+   "url": "https://www.advantest.com/ja/investors/ir-library/result/",
+   "published_on": "2026-10-28",
+   "source": "advantest-news",
+   "publisher": "アドバンテスト ニュース",
+   "kind": "company",
+   "reliability": "high",
+   "company": "advantest",
+   "reporting_hint": "primary",
+   "id": "c09",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "advantest"
+   ],
+   "reason": "決算説明会資料の掲載で、同日の決算短信と内容が重なると見られる。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 0,
+    "reliability": 3
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "DSP負荷を抑え200Gbps 低電力シリコン光変調器",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/28/news025.html",
+   "published_on": "2026-10-28",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c15",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "シリコン光変調器の技術報道。掲載企業の関与は見出しにない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 8
+}
