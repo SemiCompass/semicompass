@@ -12,6 +12,7 @@ processes:
 related_terms:
 - exposure-tool
 - reticle
+- defect-inspection
 description: オーバーレイは、露光で新しく写すパターンを、ウェーハにすでにある下の層のパターンに正しく重ねること、また、そのずれの量。微細化で厳しい精度が求められる。
 basis: reviewed
 published_at: '2026-10-28'
