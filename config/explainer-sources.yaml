@@ -512,6 +512,32 @@ terms:
     basis: reviewed
     sources: []   # 運営者が確かめるときの手元の資料は未選定
 
+  # 2026-10-28 運営者が指定（チャットで用語を選択。8回目）。basis: reviewed
+  defect-inspection:
+    term: 欠陥検査
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  foup:
+    term: FOUP
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  underfill:
+    term: アンダーフィル
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  3d-integration:
+    term: 三次元実装
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  silicon-photonics:
+    term: シリコンフォトニクス
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  automotive-semiconductor:
+    term: 車載半導体
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
 # slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
