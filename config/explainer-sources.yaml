@@ -368,6 +368,32 @@ terms:
     basis: reviewed
     sources: []   # 運営者が確かめるときの手元の資料は未選定
 
+  # 2026-10-28 運営者が指定（チャットで用語を選択。4回目）。basis: reviewed
+  barrier-metal:
+    term: バリアメタル
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  via:
+    term: ビア
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  package-substrate:
+    term: パッケージ基板
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  redistribution-layer:
+    term: 再配線層
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  probe-card:
+    term: プローブカード
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  sputtering-target:
+    term: スパッタリングターゲット
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
 # slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
