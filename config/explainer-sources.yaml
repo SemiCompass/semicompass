@@ -326,6 +326,48 @@ terms:
     basis: reviewed
     sources: []   # 運営者が確かめるときの手元の資料は未選定
 
+  # 2026-10-28 運営者が指定（チャットで用語を選択。3回目）。basis: reviewed
+  analog-semiconductor:
+    term: アナログ半導体
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  logic-semiconductor:
+    term: ロジック半導体
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  image-sensor:
+    term: イメージセンサ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  mems:
+    term: MEMS
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  compound-semiconductor:
+    term: 化合物半導体
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  ultrapure-water:
+    term: 超純水
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  soi-wafer:
+    term: SOIウェーハ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  mask-blanks:
+    term: マスクブランクス
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  sram:
+    term: SRAM
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  copper-interconnect:
+    term: 銅配線
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
 # slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
