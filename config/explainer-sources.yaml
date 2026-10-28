@@ -266,6 +266,48 @@ terms:
     basis: reviewed
     sources: []   # 運営者が確かめるときの手元の資料は未選定
 
+  # 2026-10-28 運営者が指定（チャットで用語を選択）。basis: reviewed
+  mosfet:
+    term: MOSFET
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  cmos:
+    term: CMOS
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  igbt:
+    term: IGBT
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  dopant:
+    term: ドーパント
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  sic:
+    term: 炭化ケイ素（SiC）
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  gan:
+    term: 窒化ガリウム（GaN）
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  dram:
+    term: DRAM
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  nand-flash:
+    term: NAND型フラッシュメモリ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  pellicle:
+    term: ペリクル
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  lead-frame:
+    term: リードフレーム
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
 # slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
