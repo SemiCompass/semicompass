@@ -470,6 +470,48 @@ terms:
     basis: reviewed
     sources: []   # 運営者が確かめるときの手元の資料は未選定
 
+  # 2026-10-28 運営者が指定（チャットで用語を選択。7回目）。basis: reviewed
+  transistor:
+    term: トランジスタ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  integrated-circuit:
+    term: 集積回路
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  diode:
+    term: ダイオード
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  band-gap:
+    term: バンドギャップ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  leakage-current:
+    term: リーク電流
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  threshold-voltage:
+    term: しきい値電圧
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  high-k-metal-gate:
+    term: High-k・メタルゲート
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  silicide:
+    term: シリサイド
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  reticle:
+    term: レチクル
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+  overlay:
+    term: オーバーレイ
+    basis: reviewed
+    sources: []   # 運営者が確かめるときの手元の資料は未選定
+
 # ----------------------------------------------------------------------------
 # 工程(MVPの10工程。運用ルール書4.1)
 # slug は data/supply-chain.yaml の工程の slug に合わせ済み(2026-10-07)
