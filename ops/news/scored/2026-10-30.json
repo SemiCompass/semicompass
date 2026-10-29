@@ -1,0 +1,201 @@
+{
+ "ranked": [
+  {
+   "title": "Volkswagenのゾーン型SDVにNXP製MCU採用 27年に1号機発表",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/29/news048.html",
+   "published_on": "2026-10-29",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c08",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": true,
+   "listed_companies": [],
+   "reason": "海外の大手自動車メーカーによる車載MCUの採用で、顧客採用の基準に当たる。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "2026年12月期 第3四半期 決算概要",
+   "url": "https://www.renesas.com/ja/about/newsroom/renesas-reports-financial-results-third-quarter-ended-september-30-2026",
+   "published_on": "2026-10-29",
+   "source": "renesas-press",
+   "publisher": "ルネサス エレクトロニクス プレスルーム",
+   "kind": "company",
+   "reliability": "high",
+   "company": "renesas-electronics",
+   "reporting_hint": "primary",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "通常の四半期決算概要で、予想修正の記載は見出しから読み取れない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "業績予想に関するお知らせ",
+   "url": "https://www.renesas.com/ja/about/newsroom/renesas-announces-consolidated-forecasts-2026-10-29",
+   "published_on": "2026-10-29",
+   "source": "renesas-press",
+   "publisher": "ルネサス エレクトロニクス プレスルーム",
+   "kind": "company",
+   "reliability": "high",
+   "company": "renesas-electronics",
+   "reporting_hint": "primary",
+   "id": "c02",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "業績予想の修正の発表だが、変動幅が見出しから分からないため基準に当たると読めない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "AI需要でルネサス好調、売上高3割増 増産投資も加速",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/29/news072.html",
+   "published_on": "2026-10-29",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c04",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "決算の報道で、予想修正かどうかは見出しから読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "EUV増産の鍵は「光学系」 ASMLとZeissの挑戦",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/29/news058.html",
+   "published_on": "2026-10-29",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c06",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "EUV装置の光学系を扱う海外2社の話で、掲載企業の名前は見出しにない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 2,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "「世界初」900V GaN双方向スイッチ AIデータセンターSSTへ",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/29/news036.html",
+   "published_on": "2026-10-29",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c09",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "GaNスイッチの新製品の報道で、掲載企業や採用の発表は見出しにない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "硬いシリコンを「曲げ伸ばし」でテラヘルツ波を制御",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2610/29/news034.html",
+   "published_on": "2026-10-29",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c10",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "シリコンを使った研究成果で、日本企業への影響は見出しから読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 0,
+    "supply_chain": 0,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 3,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 3
+}
