@@ -1,0 +1,203 @@
+{
+ "ranked": [
+  {
+   "title": "キオクシア「明らかにスーパーサイクル」、純利益は半期で2兆円超",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/02/news034.html",
+   "published_on": "2026-11-02",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c08",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "kioxia"
+   ],
+   "reason": "掲載企業の大幅な利益の報道だが、予想の修正かは見出しから分からない。",
+   "reporting": "press",
+   "score": {
+    "impact": 3,
+    "supply_chain": 2,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 9,
+   "category_full": false
+  },
+  {
+   "title": "Infineon、1200V SiCをPCBに埋め込み EV向け",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/02/news066.html",
+   "published_on": "2026-11-02",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c04",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "海外企業のSiC製品の技術報道で、採用や量産の発表は見出しにない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 2,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "SEMICON Europa 2025 2026.11.10〜2026.11.13 ミュンヘン | ドイツ",
+   "url": "https://www.tel.co.jp/news/event/2026/20261102_001.html",
+   "published_on": "2026-11-02",
+   "source": "tel-news",
+   "publisher": "東京エレクトロン ニュース",
+   "kind": "company",
+   "reliability": "high",
+   "company": "tokyo-electron",
+   "reporting_hint": "primary",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [
+    "tokyo-electron"
+   ],
+   "reason": "展示会の開催案内で、見出しからは新しい事実が読み取れないため低めにした。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "半導体／FA好調の三菱電機、26年度2Qは純利益92％増",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/02/news047.html",
+   "published_on": "2026-11-02",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c06",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "mitsubishi-electric"
+   ],
+   "reason": "中間期の決算報道で、予想の修正かどうかは見出しから分からない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "「半導体屋」の本領発揮 Infineonが挑む量子チップ製造",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/02/news046.html",
+   "published_on": "2026-11-02",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c07",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "海外企業の量子チップ製造の取り組みで、量産開始などは読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "車載SoC世界市場、2035年に380億米ドル規模へ",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/02/news024.html",
+   "published_on": "2026-11-02",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c09",
+   "semiconductor_related": true,
+   "category": "supply_demand",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "車載SoCの長期の市場予測で、前年比の大きな変化は読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 2,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "投資家の皆様へ 自己株式の取得状況に関するお知らせ",
+   "url": "https://www.advantest.com/ja/news/2026/mpd9kn0000000ifv-att/J_Info_20261102.pdf",
+   "published_on": "2026-11-02",
+   "source": "advantest-news",
+   "publisher": "アドバンテスト ニュース",
+   "kind": "company",
+   "reliability": "high",
+   "company": "advantest",
+   "reporting_hint": "primary",
+   "id": "c02",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "advantest"
+   ],
+   "reason": "自己株式の取得状況の通知で、業績予想の修正ではないため低めにした。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 0,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 5,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 3
+}
