@@ -100,3 +100,5 @@ https://eetimes.itmedia.co.jp/ee/articles/2611/02/news046.html 2026-11-03
 https://eetimes.itmedia.co.jp/ee/articles/2611/02/news034.html 2026-11-03
 https://eetimes.itmedia.co.jp/ee/articles/2611/02/news024.html 2026-11-03
 https://eetimes.itmedia.co.jp/ee/articles/2611/02/news023.html 2026-11-03
+https://www.renesas.com/ja/blogs/collaboration-deployment-how-renesas-and-canonical-help-you-ship-secure-edge-ai-faster 2026-11-04
+https://www.nedo.go.jp/news/press/AA5_101967.html 2026-11-04

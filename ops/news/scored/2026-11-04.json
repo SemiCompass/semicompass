@@ -1,0 +1,35 @@
+{
+ "ranked": [
+  {
+   "title": "From Collaboration to Deployment: How Renesas and Canonical Help You Ship Secure Edge AI Faster",
+   "url": "https://www.renesas.com/ja/blogs/collaboration-deployment-how-renesas-and-canonical-help-you-ship-secure-edge-ai-faster",
+   "published_on": "2026-11-04",
+   "source": "renesas-press",
+   "publisher": "ルネサス エレクトロニクス プレスルーム",
+   "kind": "company",
+   "reliability": "high",
+   "company": "renesas-electronics",
+   "reporting_hint": "primary",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "ルネサスが企業発表で示したエッジAI向け連携の紹介で、量産や採用の発表とは読み取れない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 6,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 1
+}
