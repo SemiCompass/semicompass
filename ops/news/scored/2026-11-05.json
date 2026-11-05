@@ -1,0 +1,203 @@
+{
+ "ranked": [
+  {
+   "title": "レゾナックはなぜ「今」300mm SiC基板を開発したのか",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/04/news055.html",
+   "published_on": "2026-11-04",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c07",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "resonac"
+   ],
+   "reason": "掲載企業のSiC基板開発の背景を伝える記事で、量産開始は読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 2,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "How to Balance Advanced Robot Control and Compact Design",
+   "url": "https://www.renesas.com/ja/blogs/how-balance-advanced-robot-control-and-compact-design",
+   "published_on": "2026-11-05",
+   "source": "renesas-press",
+   "publisher": "ルネサス エレクトロニクス プレスルーム",
+   "kind": "company",
+   "reliability": "high",
+   "company": "renesas-electronics",
+   "reporting_hint": "primary",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "掲載企業の技術解説で、事業への直接の影響は見出しから読み取れない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "「世界初」STT-MRAM搭載16nm AI SoC、65.7ミリ秒で起動",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/05/news036.html",
+   "published_on": "2026-11-05",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "「世界初」とする技術の報道だが、掲載企業の関与は見出しから分からない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "ルネサスが成長基盤の強化に向け、リーダーシップチームの変更を発表",
+   "url": "https://www.renesas.com/ja/about/newsroom/renesas-announces-leadership-changes-strengthen-foundation-growth",
+   "published_on": "2026-11-04",
+   "source": "renesas-press",
+   "publisher": "ルネサス エレクトロニクス プレスルーム",
+   "kind": "company",
+   "reliability": "high",
+   "company": "renesas-electronics",
+   "reporting_hint": "primary",
+   "id": "c05",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "掲載企業の経営体制の変更で、事業への直接の影響は見出しから分からない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 0,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "Infineon初のRISC-V車載マイコン、その実力と開発戦略を聞いた",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/04/news068.html",
+   "published_on": "2026-11-04",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c06",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "海外企業の車載マイコンの取材記事で、掲載企業への直接の影響はない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "ルネサス／インフィニオンがスタートアップに求めるものとは",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/02/news070.html",
+   "published_on": "2026-11-04",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c11",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "renesas-electronics"
+   ],
+   "reason": "スタートアップへの期待を扱う記事で、具体的な事実は見出しにない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "パワーデバイスの最新動向やAIの電力課題を語る 「パワーエレクトロニクス イニシアチブ」開催！",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/05/news029.html",
+   "published_on": "2026-11-05",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c04",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "パワーデバイスに関するイベントの告知で、個別の事実は見出しにない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 0,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 4,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 4
+}
