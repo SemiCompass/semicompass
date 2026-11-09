@@ -1,0 +1,62 @@
+{
+ "ranked": [
+  {
+   "title": "ニコン露光装置事業、26年度上期は営業利益137％増",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/06/news037.html",
+   "published_on": "2026-11-06",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "nikon"
+   ],
+   "reason": "掲載企業の露光装置事業の上期実績の報道。業績予想の修正とは読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "AIエージェント普及でCPUの重要性増す、Googleが語る新たな需要",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/06/news025.html",
+   "published_on": "2026-11-06",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c05",
+   "semiconductor_related": true,
+   "category": "supply_demand",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "海外企業がCPU需要について語る内容で、需要変化の公表とは読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 4
+}
