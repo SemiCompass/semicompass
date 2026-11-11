@@ -1,0 +1,33 @@
+{
+ "ranked": [
+  {
+   "title": "Qualcommとの特許係争で「完敗」続きのArm 両社の狙いは何か",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/10/news034.html",
+   "published_on": "2026-11-10",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "ArmとQualcommの特許係争の解説で、日本企業への影響は間接的。進展の程度は見出しから不明。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 3
+}
