@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "towa",
   "edinet_code": "E01708",
-  "updated_at": "2026-10-05T08:17:12+09:00",
+  "updated_at": "2026-11-10T11:27:04+09:00",
   "filings": [
     {
       "doc_id": "S100LQWT",
@@ -107,6 +107,19 @@
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YERT.pdf",
       "status": "ingested",
       "ingested_at": "2026-10-04T22:42:50+09:00"
+    },
+    {
+      "doc_id": "S100ZCG4",
+      "doc_type": "semiannual_report",
+      "edinet_doc_type_code": "160",
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "submitted_at": "2026-11-09T09:28:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100ZCG4.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-11-10T11:27:04+09:00"
     }
   ],
   "financials": [
@@ -1147,6 +1160,148 @@
             "context": "CurrentYearDuration_jpcrp030000-asr_E01708-000LaserProcessingMachinesMember",
             "doc_id": "S100YERT",
             "ingested_at": "2026-10-04T22:42:50+09:00"
+          }
+        }
+      ],
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100ZCG4",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 33717.759,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "InterimDuration",
+        "doc_id": "S100ZCG4",
+        "ingested_at": "2026-11-10T11:27:04+09:00"
+      },
+      "operating_income": {
+        "value": 5687.535,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "InterimDuration",
+        "doc_id": "S100ZCG4",
+        "ingested_at": "2026-11-10T11:27:04+09:00"
+      },
+      "ordinary_income": {
+        "value": 5280.472,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "InterimDuration",
+        "doc_id": "S100ZCG4",
+        "ingested_at": "2026-11-10T11:27:04+09:00"
+      },
+      "net_income": {
+        "value": 3832.934,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "InterimDuration",
+        "doc_id": "S100ZCG4",
+        "ingested_at": "2026-11-10T11:27:04+09:00"
+      },
+      "segments": [
+        {
+          "name": "SemiconductorEquipmentReportableSegmentsMember",
+          "member": "SemiconductorEquipmentReportableSegmentsMember",
+          "net_sales_external": {
+            "value": 31501.956,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpcrp_cor:RevenuesFromExternalCustomers",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000SemiconductorEquipmentReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
+          },
+          "net_sales_total": {
+            "value": 31501.956,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:NetSales",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000SemiconductorEquipmentReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
+          },
+          "profit": {
+            "value": 5401.109,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:OperatingIncome",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000SemiconductorEquipmentReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
+          }
+        },
+        {
+          "name": "MedicalDeviceReportableSegmentsMember",
+          "member": "MedicalDeviceReportableSegmentsMember",
+          "net_sales_external": {
+            "value": 1389.897,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpcrp_cor:RevenuesFromExternalCustomers",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000MedicalDeviceReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
+          },
+          "net_sales_total": {
+            "value": 1389.897,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:NetSales",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000MedicalDeviceReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
+          },
+          "profit": {
+            "value": 289.761,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:OperatingIncome",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000MedicalDeviceReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
+          }
+        },
+        {
+          "name": "LaserProcessingMachinesReportableSegmentsMember",
+          "member": "LaserProcessingMachinesReportableSegmentsMember",
+          "net_sales_external": {
+            "value": 825.906,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpcrp_cor:RevenuesFromExternalCustomers",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000LaserProcessingMachinesReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
+          },
+          "net_sales_total": {
+            "value": 825.906,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:NetSales",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000LaserProcessingMachinesReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
+          },
+          "profit": {
+            "value": -3.335,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:OperatingIncome",
+            "context": "InterimDuration_jpcrp040300-ssr_E01708-000LaserProcessingMachinesReportableSegmentsMember",
+            "doc_id": "S100ZCG4",
+            "ingested_at": "2026-11-10T11:27:04+09:00"
           }
         }
       ],
