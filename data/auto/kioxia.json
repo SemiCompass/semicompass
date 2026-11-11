@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "kioxia",
   "edinet_code": "E35948",
-  "updated_at": "2026-10-04T22:42:50+09:00",
+  "updated_at": "2026-11-11T10:19:48+09:00",
   "filings": [
     {
       "doc_id": "S100W440",
@@ -42,6 +42,19 @@
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YJ18.pdf",
       "status": "ingested",
       "ingested_at": "2026-10-04T22:42:50+09:00"
+    },
+    {
+      "doc_id": "S100ZCHE",
+      "doc_type": "semiannual_report",
+      "edinet_doc_type_code": "160",
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "submitted_at": "2026-11-06T11:22:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100ZCHE.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-11-11T10:19:48+09:00"
     }
   ],
   "financials": [
@@ -158,6 +171,45 @@
         "context": "CurrentYearDuration",
         "doc_id": "S100YJ18",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "segments": [],
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "accounting_standard": "ifrs",
+      "consolidated": true,
+      "doc_id": "S100ZCHE",
+      "net_sales_label": "売上収益",
+      "net_sales": {
+        "value": 4247152,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:RevenueIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100ZCHE",
+        "ingested_at": "2026-11-11T10:19:48+09:00"
+      },
+      "operating_income": {
+        "value": 3264727,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:OperatingProfitLossIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100ZCHE",
+        "ingested_at": "2026-11-11T10:19:48+09:00"
+      },
+      "net_income": {
+        "value": 2197871,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100ZCHE",
+        "ingested_at": "2026-11-11T10:19:48+09:00"
       },
       "segments": [],
       "regions": []
