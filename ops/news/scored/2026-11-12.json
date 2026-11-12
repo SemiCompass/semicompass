@@ -1,0 +1,172 @@
+{
+ "ranked": [
+  {
+   "title": "300mm SiCウエハーでパワー半導体、Infineonが実物を初公開",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/11/news046.html",
+   "published_on": "2026-11-11",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c05",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "海外企業が300mm SiCウエハーの実物を初公開し、材料から素子まで波及しうる。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 2,
+    "novelty": 3,
+    "reliability": 2
+   },
+   "total": 8,
+   "category_full": false
+  },
+  {
+   "title": "α型酸化ガリウム薄膜の基本物性を初めて実測 北大ら",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/12/news023.html",
+   "published_on": "2026-11-12",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "材料の基本物性を初めて実測した研究だが、掲載企業への直接の関わりは見出しから読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 3,
+    "reliability": 2
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "onsemiの第4世代SiC MOSFETはトレンチ構造を初採用 比オン抵抗50％減",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/11/news093.html",
+   "published_on": "2026-11-11",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c02",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "海外企業のSiC新世代品の技術発表で、日本企業への影響は間接的。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 2,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "シリコンウエハー出荷面積、27～29年まで過去最高を更新予定",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/11/news084.html",
+   "published_on": "2026-11-11",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "supply_demand",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "ウエハー出荷面積の見通しで業界全体に関わるが、前年比の変動幅は見出しから分からない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 2,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "GaNトランジスタの周波数分散を抑制、三菱電機",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/11/news026.html",
+   "published_on": "2026-11-11",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c06",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "mitsubishi-electric"
+   ],
+   "reason": "掲載企業の技術成果だが、量産開始や採用の発表とは読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "株価急落のキオクシア、「底力」が見えてくるのはこれからだ",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/10/news050.html",
+   "published_on": "2026-11-11",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c07",
+   "semiconductor_related": true,
+   "category": "supply_demand",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "kioxia"
+   ],
+   "reason": "掲載企業に関する論評記事で、新しい事実は見出しから読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 1
+}
