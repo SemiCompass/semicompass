@@ -1,0 +1,89 @@
+{
+ "ranked": [
+  {
+   "title": "NVIDIA創業者のJensen Huang氏が辞任、33年間の経営に幕",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/12/news075.html",
+   "published_on": "2026-11-12",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c07",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "海外企業の経営者交代の報道で、日本企業への影響は間接的。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 3,
+    "reliability": 2
+   },
+   "total": 7,
+   "category_full": false
+  },
+  {
+   "title": "レゾナック26年3Q、後工程材料の好調で純利益1468％増",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/12/news038.html",
+   "published_on": "2026-11-12",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c08",
+   "semiconductor_related": true,
+   "category": "earnings",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "resonac"
+   ],
+   "reason": "掲載企業の四半期決算の報道で、予想修正とは読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "2DEG密度4.6倍でも高移動度維持 新規GaNヘテロ接合",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/13/news034.html",
+   "published_on": "2026-11-13",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "GaN素子の研究成果で、業界への間接的な影響にとどまる。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 7
+}
