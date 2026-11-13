@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "tokyo-electron",
   "edinet_code": "E02652",
-  "updated_at": "2026-10-05T08:17:12+09:00",
+  "updated_at": "2026-11-13T09:46:23+09:00",
   "filings": [
     {
       "doc_id": "S100LJ5R",
@@ -107,6 +107,19 @@
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YEOO.pdf",
       "status": "ingested",
       "ingested_at": "2026-10-04T22:42:50+09:00"
+    },
+    {
+      "doc_id": "S100ZEBX",
+      "doc_type": "semiannual_report",
+      "edinet_doc_type_code": "160",
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "submitted_at": "2026-11-12T16:08:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100ZEBX.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-11-13T09:46:23+09:00"
     }
   ],
   "financials": [
@@ -691,6 +704,54 @@
         "context": "CurrentYearDuration",
         "doc_id": "S100YEOO",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "segments": [],
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100ZEBX",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 1667455,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "InterimDuration",
+        "doc_id": "S100ZEBX",
+        "ingested_at": "2026-11-13T09:46:23+09:00"
+      },
+      "operating_income": {
+        "value": 506776,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "InterimDuration",
+        "doc_id": "S100ZEBX",
+        "ingested_at": "2026-11-13T09:46:23+09:00"
+      },
+      "ordinary_income": {
+        "value": 514401,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "InterimDuration",
+        "doc_id": "S100ZEBX",
+        "ingested_at": "2026-11-13T09:46:23+09:00"
+      },
+      "net_income": {
+        "value": 376929,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "InterimDuration",
+        "doc_id": "S100ZEBX",
+        "ingested_at": "2026-11-13T09:46:23+09:00"
       },
       "segments": [],
       "regions": []
