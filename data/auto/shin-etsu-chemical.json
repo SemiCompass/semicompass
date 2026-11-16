@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "shin-etsu-chemical",
   "edinet_code": "E00776",
-  "updated_at": "2026-10-05T08:17:12+09:00",
+  "updated_at": "2026-11-16T08:37:59+09:00",
   "filings": [
     {
       "doc_id": "S100LV8Y",
@@ -163,6 +163,19 @@
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YE9I.pdf",
       "status": "ingested",
       "ingested_at": "2026-10-04T22:42:50+09:00"
+    },
+    {
+      "doc_id": "S100ZGX0",
+      "doc_type": "semiannual_report",
+      "edinet_doc_type_code": "160",
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "submitted_at": "2026-11-13T10:54:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100ZGX0.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-11-16T08:37:59+09:00"
     }
   ],
   "financials": [
@@ -2044,6 +2057,188 @@
         "context": "CurrentYearDuration_ReconcilingItemsMember",
         "doc_id": "S100YE9I",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100ZGX0",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 1420684,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "InterimDuration",
+        "doc_id": "S100ZGX0",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "operating_income": {
+        "value": 385918,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "InterimDuration",
+        "doc_id": "S100ZGX0",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "ordinary_income": {
+        "value": 415108,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "InterimDuration",
+        "doc_id": "S100ZGX0",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "net_income": {
+        "value": 286939,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "InterimDuration",
+        "doc_id": "S100ZGX0",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "segments": [
+        {
+          "name": "ElectronicsMaterialsReportableSegmentsMember",
+          "member": "ElectronicsMaterialsReportableSegmentsMember",
+          "net_sales_external": {
+            "value": 577740,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpcrp_cor:RevenuesFromExternalCustomers",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000ElectronicsMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "net_sales_total": {
+            "value": 581560,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:NetSales",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000ElectronicsMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "profit": {
+            "value": 218943,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:OperatingIncome",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000ElectronicsMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          }
+        },
+        {
+          "name": "InfrastructureMaterialsReportableSegmentsMember",
+          "member": "InfrastructureMaterialsReportableSegmentsMember",
+          "net_sales_external": {
+            "value": 522127,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpcrp_cor:RevenuesFromExternalCustomers",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000InfrastructureMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "net_sales_total": {
+            "value": 524562,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:NetSales",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000InfrastructureMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "profit": {
+            "value": 86253,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:OperatingIncome",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000InfrastructureMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          }
+        },
+        {
+          "name": "FunctionalMaterialsReportableSegmentsMember",
+          "member": "FunctionalMaterialsReportableSegmentsMember",
+          "net_sales_external": {
+            "value": 245643,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpcrp_cor:RevenuesFromExternalCustomers",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000FunctionalMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "net_sales_total": {
+            "value": 253752,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:NetSales",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000FunctionalMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "profit": {
+            "value": 63265,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:OperatingIncome",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000FunctionalMaterialsReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          }
+        },
+        {
+          "name": "ProcessingAndSpecializedServicesReportableSegmentsMember",
+          "member": "ProcessingAndSpecializedServicesReportableSegmentsMember",
+          "net_sales_external": {
+            "value": 75172,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpcrp_cor:RevenuesFromExternalCustomers",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000ProcessingAndSpecializedServicesReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "net_sales_total": {
+            "value": 155666,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:NetSales",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000ProcessingAndSpecializedServicesReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "profit": {
+            "value": 17485,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jppfs_cor:OperatingIncome",
+            "context": "InterimDuration_jpcrp040300-ssr_E00776-000ProcessingAndSpecializedServicesReportableSegmentsMember",
+            "doc_id": "S100ZGX0",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          }
+        }
+      ],
+      "segment_adjustment": {
+        "value": -30,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "InterimDuration_ReconcilingItemsMember",
+        "doc_id": "S100ZGX0",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
       },
       "regions": []
     }

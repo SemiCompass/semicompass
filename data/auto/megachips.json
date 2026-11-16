@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "megachips",
   "edinet_code": "E02042",
-  "updated_at": "2026-10-05T08:17:12+09:00",
+  "updated_at": "2026-11-16T08:37:59+09:00",
   "filings": [
     {
       "doc_id": "S100LKLI",
@@ -107,6 +107,19 @@
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YDEK.pdf",
       "status": "ingested",
       "ingested_at": "2026-10-04T22:42:50+09:00"
+    },
+    {
+      "doc_id": "S100ZGWT",
+      "doc_type": "semiannual_report",
+      "edinet_doc_type_code": "160",
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "submitted_at": "2026-11-13T11:31:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100ZGWT.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-11-16T08:37:59+09:00"
     }
   ],
   "financials": [
@@ -490,6 +503,54 @@
         "context": "CurrentYearDuration",
         "doc_id": "S100YDEK",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "segments": [],
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "accounting_standard": "jgaap",
+      "consolidated": true,
+      "doc_id": "S100ZGWT",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 19426.697,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:NetSales",
+        "context": "InterimDuration",
+        "doc_id": "S100ZGWT",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "operating_income": {
+        "value": 920.363,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OperatingIncome",
+        "context": "InterimDuration",
+        "doc_id": "S100ZGWT",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "ordinary_income": {
+        "value": 1536.551,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:OrdinaryIncome",
+        "context": "InterimDuration",
+        "doc_id": "S100ZGWT",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "net_income": {
+        "value": 33763.975,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jppfs_cor:ProfitLossAttributableToOwnersOfParent",
+        "context": "InterimDuration",
+        "doc_id": "S100ZGWT",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
       },
       "segments": [],
       "regions": []

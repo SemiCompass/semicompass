@@ -2,7 +2,7 @@
   "schema_version": 1,
   "company": "advantest",
   "edinet_code": "E01950",
-  "updated_at": "2026-10-05T08:17:12+09:00",
+  "updated_at": "2026-11-16T08:37:59+09:00",
   "filings": [
     {
       "doc_id": "S100LOF7",
@@ -121,6 +121,19 @@
       "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100YKTA.pdf",
       "status": "ingested",
       "ingested_at": "2026-10-04T22:42:50+09:00"
+    },
+    {
+      "doc_id": "S100ZG2A",
+      "doc_type": "semiannual_report",
+      "edinet_doc_type_code": "160",
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "submitted_at": "2026-11-13T11:14:00+09:00",
+      "url": "https://disclosure2dl.edinet-fsa.go.jp/searchdocument/pdf/S100ZG2A.pdf",
+      "status": "ingested",
+      "ingested_at": "2026-11-16T08:37:59+09:00"
     }
   ],
   "financials": [
@@ -1070,6 +1083,117 @@
         "context": "CurrentYearDuration_ReconcilingItemsMember",
         "doc_id": "S100YKTA",
         "ingested_at": "2026-10-04T22:42:50+09:00"
+      },
+      "regions": []
+    },
+    {
+      "fiscal_period_end": "2027-03",
+      "period_type": "half",
+      "period_start": "2026-04-01",
+      "period_end": "2026-09-30",
+      "accounting_standard": "ifrs",
+      "consolidated": true,
+      "doc_id": "S100ZG2A",
+      "net_sales_label": "売上高",
+      "net_sales": {
+        "value": 845200,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:NetSalesIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100ZG2A",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "operating_income": {
+        "value": 456809,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:OperatingProfitLossIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100ZG2A",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "net_income": {
+        "value": 368083,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:ProfitLossAttributableToOwnersOfParentIFRS",
+        "context": "InterimDuration",
+        "doc_id": "S100ZG2A",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
+      },
+      "segments": [
+        {
+          "name": "TestSystemBusinessReportableSegmentMember",
+          "member": "TestSystemBusinessReportableSegmentMember",
+          "net_sales_external": {
+            "value": 770231,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpigp_cor:SalesToExternalCustomersIFRS",
+            "context": "InterimDuration_jpcrp040300-ssr_E01950-000TestSystemBusinessReportableSegmentMember",
+            "doc_id": "S100ZG2A",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "net_sales_total": {
+            "value": 770231,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpigp_cor:NetSalesIFRS",
+            "context": "InterimDuration_jpcrp040300-ssr_E01950-000TestSystemBusinessReportableSegmentMember",
+            "doc_id": "S100ZG2A",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "profit": {
+            "value": 455564,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpigp_cor:SegmentProfitLossIFRS",
+            "context": "InterimDuration_jpcrp040300-ssr_E01950-000TestSystemBusinessReportableSegmentMember",
+            "doc_id": "S100ZG2A",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          }
+        },
+        {
+          "name": "ServicesSupportAndOthersReportableSegmentMember",
+          "member": "ServicesSupportAndOthersReportableSegmentMember",
+          "net_sales_external": {
+            "value": 74969,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpigp_cor:SalesToExternalCustomersIFRS",
+            "context": "InterimDuration_jpcrp040300-ssr_E01950-000ServicesSupportAndOthersReportableSegmentMember",
+            "doc_id": "S100ZG2A",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "net_sales_total": {
+            "value": 74969,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpigp_cor:NetSalesIFRS",
+            "context": "InterimDuration_jpcrp040300-ssr_E01950-000ServicesSupportAndOthersReportableSegmentMember",
+            "doc_id": "S100ZG2A",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          },
+          "profit": {
+            "value": 20866,
+            "unit": "million_yen",
+            "original_unit": "yen",
+            "element": "jpigp_cor:SegmentProfitLossIFRS",
+            "context": "InterimDuration_jpcrp040300-ssr_E01950-000ServicesSupportAndOthersReportableSegmentMember",
+            "doc_id": "S100ZG2A",
+            "ingested_at": "2026-11-16T08:37:59+09:00"
+          }
+        }
+      ],
+      "segment_adjustment": {
+        "value": -16986,
+        "unit": "million_yen",
+        "original_unit": "yen",
+        "element": "jpigp_cor:SegmentProfitLossIFRS",
+        "context": "InterimDuration_ReconcilingItemsMember",
+        "doc_id": "S100ZG2A",
+        "ingested_at": "2026-11-16T08:37:59+09:00"
       },
       "regions": []
     }
