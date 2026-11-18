@@ -1,0 +1,145 @@
+{
+ "ranked": [
+  {
+   "title": "鴻海、ソニーセミコンの車載カメラモジュール事業買収へ 約72億円",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/18/news054.html",
+   "published_on": "2026-11-18",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c02",
+   "semiconductor_related": true,
+   "category": "m_and_a",
+   "overseas": false,
+   "priority_hit": true,
+   "listed_companies": [
+    "sony"
+   ],
+   "reason": "ソニー側の事業売却の報道で、掲載企業が当事者となる案件。波及は1社にとどまる。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "製品情報 次世代AI/HPCデバイス向けにV93000 EXA Scale用の新テストヘッド「EXA Scale QX」を発表",
+   "url": "https://www.advantest.com/ja/news/2026/20261117.html",
+   "published_on": "2026-11-17",
+   "source": "advantest-news",
+   "publisher": "アドバンテスト ニュース",
+   "kind": "company",
+   "reliability": "high",
+   "company": "advantest",
+   "reporting_hint": "primary",
+   "id": "c05",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "advantest"
+   ],
+   "reason": "掲載企業による新製品の発表。量産開始や顧客採用の記載は見出しにない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 2,
+    "reliability": 3
+   },
+   "total": 8,
+   "category_full": false
+  },
+  {
+   "title": "光GPUで演算も省電力化 NTTのIOWN構想は次の領域へ",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/18/news059.html",
+   "published_on": "2026-11-18",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "光を使う演算の構想の報道で、業界への影響は間接的。新しさも見出しからは小さい。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "ADEKA、3D半導体向け材料の製造設備を新設 27年稼働予定",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/17/news065.html",
+   "published_on": "2026-11-17",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c06",
+   "semiconductor_related": true,
+   "category": "investment",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "材料の製造設備の新設。国内拠点か、投資額が基準に当たるかは見出しから不明。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "ロボットの「滑り」を早期検出 高速触覚センサー向けIC",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/17/news028.html",
+   "published_on": "2026-11-17",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c08",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "ロボット向けセンサーICの紹介で、掲載企業との関係や採用実績は見出しにない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 3
+}
