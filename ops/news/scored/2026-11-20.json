@@ -1,0 +1,87 @@
+{
+ "ranked": [
+  {
+   "title": "レンズ不要の深紫外マイクロLEDで2.1Gbps通信",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/19/news025.html",
+   "published_on": "2026-11-19",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "深紫外マイクロLEDの通信技術の報道。掲載企業の名前はなく、間接的な影響にとどまる。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "ヒューマノイドだらけのelectronica 半導体各社が狙う新商機",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/19/news013.html",
+   "published_on": "2026-11-19",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c04",
+   "semiconductor_related": true,
+   "category": "supply_demand",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "海外展示会での半導体各社の新用途の動向。需要変化の公表とは読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "AIエージェントで組み込み開発はどう変わる？ TIの最新技術を見た",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/19/news011.html",
+   "published_on": "2026-11-19",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c05",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "組み込み開発の技術動向の取材記事で、掲載企業の名前はなく量産や採用の発表でもない。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 2
+}
