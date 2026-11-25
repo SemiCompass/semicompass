@@ -1,0 +1,114 @@
+{
+ "ranked": [
+  {
+   "title": "熱にも強く、よく伸びる 先端半導体向け新ポリマー",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/25/news047.html",
+   "published_on": "2026-11-25",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c01",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "先端半導体向け材料の報道。掲載企業の名は見出しになく、業界への間接的な影響にとどめた。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  },
+  {
+   "title": "超伝導電流を電圧制御 磁性も備えた新型トランジスタ",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/25/news030.html",
+   "published_on": "2026-11-25",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c03",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "新型トランジスタの研究の報道で、量産や採用の発表は見出しから読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 0,
+    "supply_chain": 0,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 3,
+   "category_full": false
+  },
+  {
+   "title": "「右回り／左回り」の光を識別 発電もする半導体薄膜",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/24/news018.html",
+   "published_on": "2026-11-24",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c04",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "半導体薄膜の研究の報道で、日本企業への影響や量産の発表は見出しから読み取れない。",
+   "reporting": "press",
+   "score": {
+    "impact": 0,
+    "supply_chain": 0,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 3,
+   "category_full": false
+  }
+ ],
+ "observed": [
+  {
+   "title": "「半導体氷河期」を招く3つの衝撃――トランプ敗北、NVIDIAの経営混乱、メモリ各社の巨額投資",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/25/news044.html",
+   "published_on": "2026-11-25",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c02",
+   "semiconductor_related": true,
+   "category": "supply_demand",
+   "overseas": true,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "市況の先行きを論じる内容で、統計や公表の数字が見出しになく、基準に当たらない。",
+   "reporting": "speculative",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 1
+   },
+   "total": 4
+  }
+ ],
+ "excluded": 0
+}
