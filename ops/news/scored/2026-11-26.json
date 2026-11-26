@@ -1,0 +1,62 @@
+{
+ "ranked": [
+  {
+   "title": "朝昼夜を問わず地球観測 キヤノンが超高感度SPAD衛星",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/25/news032.html",
+   "published_on": "2026-11-25",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c06",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "canon"
+   ],
+   "reason": "掲載企業キヤノンの超高感度SPADセンサーの衛星搭載で、波及は1社にとどまる。",
+   "reporting": "press",
+   "score": {
+    "impact": 2,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 6,
+   "category_full": false
+  },
+  {
+   "title": "室温で最大級の性能、スピン流を電気信号に変換 磁気メモリなどに応用",
+   "url": "https://eetimes.itmedia.co.jp/ee/articles/2611/26/news027.html",
+   "published_on": "2026-11-26",
+   "source": "eetimes-japan",
+   "publisher": "EE Times Japan（ITmedia）",
+   "kind": "press",
+   "reliability": "medium",
+   "company": null,
+   "reporting_hint": "press",
+   "id": "c05",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [],
+   "reason": "磁気メモリなどに応用できる材料の研究成果で、業界への間接的な影響にとどまる。",
+   "reporting": "press",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 2
+   },
+   "total": 5,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 4
+}
