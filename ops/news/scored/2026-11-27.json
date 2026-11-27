@@ -1,0 +1,35 @@
+{
+ "ranked": [
+  {
+   "title": "トピックス TSMC社から「Excellent Performance Award」を2年連続で受賞",
+   "url": "https://www.advantest.com/ja/news/2026/20261126.html",
+   "published_on": "2026-11-26",
+   "source": "advantest-news",
+   "publisher": "アドバンテスト ニュース",
+   "kind": "company",
+   "reliability": "high",
+   "company": "advantest",
+   "reporting_hint": "primary",
+   "id": "c02",
+   "semiconductor_related": true,
+   "category": "technology",
+   "overseas": false,
+   "priority_hit": false,
+   "listed_companies": [
+    "advantest"
+   ],
+   "reason": "アドバンテストがTSMCから表彰を受けた発表。量産開始や標準・採用の発表ではない。",
+   "reporting": "primary",
+   "score": {
+    "impact": 1,
+    "supply_chain": 1,
+    "novelty": 1,
+    "reliability": 3
+   },
+   "total": 6,
+   "category_full": false
+  }
+ ],
+ "observed": [],
+ "excluded": 2
+}
